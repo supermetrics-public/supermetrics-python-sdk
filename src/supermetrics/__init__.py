@@ -1,8 +1,8 @@
 """Official Python SDK for Supermetrics API."""
 
-from supermetrics_sdk.__version__ import __version__
+from supermetrics.__version__ import __version__
 
 __author__ = "Supermetrics"
-__email__ = "support@supermetrics.com"
+__email__ = "opensource@supermetrics.com"
 
 __all__ = ["__version__"]
