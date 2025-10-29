@@ -1,0 +1,225 @@
+<story-context id="story-1.1-context" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1</storyId>
+    <title>Initialize Python Project Structure</title>
+    <status>Approved</status>
+    <generatedAt>2025-10-28</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/story-1.1.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>a properly structured Python project with modern tooling</iWant>
+    <soThat>the SDK has a professional foundation and follows Python best practices</soThat>
+    <tasks>
+      <task id="1" ac="1,2,3">
+        <description>Initialize project with cookiecutter</description>
+        <subtasks>
+          <subtask>Install cookiecutter: pip install -U cookiecutter</subtask>
+          <subtask>Run cookiecutter with pypackage template</subtask>
+          <subtask>Answer prompts with project configuration</subtask>
+        </subtasks>
+      </task>
+      <task id="2" ac="2">
+        <description>Convert to uv package management</description>
+        <subtasks>
+          <subtask>Navigate to project directory</subtask>
+          <subtask>Create virtual environment with uv</subtask>
+          <subtask>Activate virtual environment</subtask>
+          <subtask>Install project in editable mode</subtask>
+        </subtasks>
+      </task>
+      <task id="3" ac="2">
+        <description>Update pyproject.toml to use hatchling</description>
+        <subtasks>
+          <subtask>Set build system to hatchling</subtask>
+          <subtask>Configure project metadata</subtask>
+          <subtask>Add runtime dependencies (httpx, pydantic, python-dateutil, attrs)</subtask>
+          <subtask>Add development dependencies (openapi-python-client, pytest, ruff, mypy, etc.)</subtask>
+        </subtasks>
+      </task>
+      <task id="4" ac="1,3">
+        <description>Add open source governance files</description>
+        <subtasks>
+          <subtask>Create CONTRIBUTING.md</subtask>
+          <subtask>Create CODE_OF_CONDUCT.md</subtask>
+          <subtask>Create SECURITY.md</subtask>
+          <subtask>Create .github/ISSUE_TEMPLATE/ directory</subtask>
+          <subtask>Create .github/PULL_REQUEST_TEMPLATE.md</subtask>
+        </subtasks>
+      </task>
+      <task id="5" ac="3">
+        <description>Update project structure to src-layout</description>
+        <subtasks>
+          <subtask>Create src/supermetrics/ directory</subtask>
+          <subtask>Move package code to src/supermetrics/</subtask>
+          <subtask>Create __init__.py and __version__.py</subtask>
+          <subtask>Verify directory structure matches specification</subtask>
+        </subtasks>
+      </task>
+      <task id="6" ac="4">
+        <description>Verify Python 3.10+ compatibility</description>
+        <subtasks>
+          <subtask>Check Python version</subtask>
+          <subtask>Verify pyproject.toml requires-python setting</subtask>
+          <subtask>Test import of supermetrics_sdk</subtask>
+        </subtasks>
+      </task>
+      <task id="7" ac="5">
+        <description>Initialize git repository</description>
+        <subtasks>
+          <subtask>Initialize git</subtask>
+          <subtask>Add all files</subtask>
+          <subtask>Create initial commit</subtask>
+          <subtask>Verify commit log</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1">Repository created with .gitignore, LICENSE (Apache 2.0), and README.md skeleton</criterion>
+    <criterion id="2">pyproject.toml configured with project metadata, dependencies, and build system (hatchling or setuptools)</criterion>
+    <criterion id="3">Project structure created: supermetrics_sdk/ (source), tests/, examples/, docs/, scripts/</criterion>
+    <criterion id="4">Python 3.10+ compatibility verified</criterion>
+    <criterion id="5">Git repository initialized with initial commit</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture - Supermetrics Python SDK</title>
+        <section>Project Initialization</section>
+        <snippet>Complete initialization commands using cookiecutter-pypackage template with specific prompts for project metadata. Convert to uv package management and update pyproject.toml to use hatchling build system.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture - Supermetrics Python SDK</title>
+        <section>Decision Summary</section>
+        <snippet>Build system: hatchling (pyproject.toml native, fast). Package manager: uv (fast, lockfile support). Project layout: src-layout (best practice). Python versions: 3.10, 3.11, 3.12.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture - Supermetrics Python SDK</title>
+        <section>Project Structure</section>
+        <snippet>Complete directory structure specification with src-layout pattern, including src/supermetrics/, tests/, examples/, docs/, scripts/ directories and their contents.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Decision Architecture - Supermetrics Python SDK</title>
+        <section>Appendix A: pyproject.toml Template</section>
+        <snippet>Complete pyproject.toml template with build system configuration, project metadata, runtime dependencies (httpx, pydantic, python-dateutil, attrs), and development dependencies.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Project Foundation & Core SDK Generation</title>
+        <section>Acceptance Criteria #1: Project Foundation</section>
+        <snippet>Repository initialized with git, .gitignore, LICENSE (Apache 2.0), README skeleton. Project structure with src-layout. pyproject.toml configured with metadata, dependencies, and hatchling. Python 3.10+ compatibility. Initial commit created.</snippet>
+      </doc>
+      <doc>
+        <path>docs/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Project Foundation & Core SDK Generation</title>
+        <section>Dependencies and Integrations</section>
+        <snippet>Runtime dependencies: httpx>=0.25.0, pydantic>=2.0.0, python-dateutil>=2.8.0, attrs>=23.0.0. Development dependencies: openapi-python-client>=0.15.0, pytest>=7.4.0, pytest-asyncio>=0.21.0, pytest-cov>=4.1.0, ruff>=0.1.0, mypy>=1.7.0.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Supermetrics python SDK - Epic Breakdown</title>
+        <section>Story 1.1: Initialize Python Project Structure</section>
+        <snippet>Create properly structured Python project with modern tooling. Acceptance criteria include repository creation, pyproject.toml configuration, project structure with src-layout, Python 3.10+ compatibility, and git initialization.</snippet>
+      </doc>
+      <doc>
+        <path>docs/PRD.md</path>
+        <title>Supermetrics python SDK Product Requirements Document</title>
+        <section>Requirements - NFR002</section>
+        <snippet>SDK shall be published to PyPI, installable via pip install supermetrics-sdk, supporting Python 3.10+ on Linux, macOS, and Windows with minimal dependencies.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <!-- No existing code yet - this is the first story creating the project structure -->
+    </code>
+    <dependencies>
+      <python>
+        <runtime>
+          <package name="httpx" version=">=0.25.0">HTTP client with sync/async support</package>
+          <package name="pydantic" version=">=2.0.0">Type-safe data validation</package>
+          <package name="python-dateutil" version=">=2.8.0">ISO 8601 date parsing</package>
+          <package name="attrs" version=">=23.0.0">Class utilities</package>
+        </runtime>
+        <development>
+          <package name="openapi-python-client" version=">=0.15.0">OpenAPI code generator (Story 1.2)</package>
+          <package name="pytest" version=">=7.4.0">Testing framework</package>
+          <package name="pytest-asyncio" version=">=0.21.0">Async test support</package>
+          <package name="pytest-cov" version=">=4.1.0">Coverage measurement</package>
+          <package name="ruff" version=">=0.1.0">Linting and formatting</package>
+          <package name="mypy" version=">=1.7.0">Type checking</package>
+        </development>
+        <build>
+          <package name="hatchling">Build backend</package>
+        </build>
+      </python>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Use cookiecutter-pypackage template for initial project structure generation</constraint>
+    <constraint>Build system MUST be hatchling (not setuptools)</constraint>
+    <constraint>Package manager MUST be uv (not pip or poetry)</constraint>
+    <constraint>Project layout MUST use src-layout pattern (src/supermetrics/)</constraint>
+    <constraint>License MUST be Apache 2.0</constraint>
+    <constraint>Python version support: 3.10, 3.11, 3.12 only (requires-python = ">=3.10")</constraint>
+    <constraint>Exactly 4 runtime dependencies: httpx, pydantic, python-dateutil, attrs</constraint>
+    <constraint>Include open source governance files: CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md</constraint>
+    <constraint>Include GitHub templates: .github/ISSUE_TEMPLATE/, .github/PULL_REQUEST_TEMPLATE.md</constraint>
+    <constraint>Project name: supermetrics-sdk (PyPI), supermetrics_sdk (Python package)</constraint>
+    <constraint>Initial version: 0.1.0</constraint>
+    <constraint>Author: Supermetrics, email: support@supermetrics.com</constraint>
+  </constraints>
+
+  <interfaces>
+    <!-- No interfaces to implement in this story - creates structure only -->
+    <interface>
+      <name>supermetrics_sdk.__version__</name>
+      <kind>module-level constant</kind>
+      <signature>__version__: str = "0.1.0"</signature>
+      <path>src/supermetrics/__version__.py</path>
+    </interface>
+    <interface>
+      <name>supermetrics_sdk.__init__</name>
+      <kind>module initialization</kind>
+      <signature>Empty __init__.py for package (public exports added in Story 1.3)</signature>
+      <path>src/supermetrics/__init__.py</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Testing framework: pytest with pytest-asyncio for async tests. No tests required in this story (tests added in Stories 1.3-1.8). Test structure to be created: tests/unit/ and tests/integration/ directories. Test files follow pattern: test_*.py. Use pytest fixtures in tests/conftest.py for shared setup.</standards>
+    <locations>
+      <location>tests/unit/</location>
+      <location>tests/integration/</location>
+      <location>tests/conftest.py</location>
+    </locations>
+    <ideas>
+      <idea ac="1">Verify .gitignore exists and contains Python-specific ignores (__pycache__, .venv, *.pyc, etc.)</idea>
+      <idea ac="1">Verify LICENSE file exists and contains Apache 2.0 license text</idea>
+      <idea ac="1">Verify README.md exists with project title and basic structure</idea>
+      <idea ac="2">Parse pyproject.toml and verify build-system.build-backend = "hatchling.build"</idea>
+      <idea ac="2">Verify project.name, project.version, project.dependencies in pyproject.toml</idea>
+      <idea ac="2">Verify all 4 runtime dependencies present with correct version constraints</idea>
+      <idea ac="2">Verify all 6 dev dependencies present in [project.optional-dependencies.dev]</idea>
+      <idea ac="3">Verify src/supermetrics/ directory exists</idea>
+      <idea ac="3">Verify src/supermetrics/__init__.py exists</idea>
+      <idea ac="3">Verify src/supermetrics/__version__.py exists and defines __version__</idea>
+      <idea ac="3">Verify tests/, examples/, docs/, scripts/ directories exist</idea>
+      <idea ac="4">Verify python --version returns 3.10+</idea>
+      <idea ac="4">Verify import supermetrics_sdk succeeds</idea>
+      <idea ac="4">Verify pyproject.toml has requires-python = ">=3.10"</idea>
+      <idea ac="5">Verify .git directory exists</idea>
+      <idea ac="5">Verify git log shows at least one commit</idea>
+      <idea ac="5">Verify initial commit message contains "Initial project structure"</idea>
+    </ideas>
+  </tests>
+</story-context>
