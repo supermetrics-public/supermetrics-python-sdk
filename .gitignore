@@ -1,5 +1,9 @@
 # From https://github.com/github/gitignore/blob/main/Python.gitignore 2025-07-30
 
+# Note: src/supermetrics/_generated/ is NOT ignored - it's committed to version control
+# for transparency and to support offline development. The adapter pattern protects
+# users from monthly OpenAPI regeneration.
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -190,3 +194,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+.idea
+*.DS_Store
