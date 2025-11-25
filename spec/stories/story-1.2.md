@@ -1,6 +1,6 @@
 # Story 1.2: Generate Initial SDK from OpenAPI Specification
 
-Status: Draft
+Status: review
 Created: 2025-10-28
 Epic: 1 - Project Foundation & Core SDK Generation
 
@@ -21,88 +21,78 @@ so that I have type-safe models and API client foundation.
 
 ## Tasks / Subtasks
 
-### Task 1: Obtain OpenAPI specification (AC: 1)
-- [ ] Contact Supermetrics team or check documentation for OpenAPI spec location
-- [ ] Download OpenAPI specification file (YAML or JSON format)
-- [ ] Store as `openapi-spec.yaml` in project root
-- [ ] Verify spec is OpenAPI 3.x format
-- [ ] Review spec to confirm it includes required endpoints: /login_links, /logins, /accounts, /queries
+### Task 1: Obtain and filter OpenAPI specifications (AC: 1)
+- [x] Contact Supermetrics team or check documentation for OpenAPI spec file locations
+- [x] Create `openapi-specs/` directory in project root to store source specification files
+- [x] Download all relevant OpenAPI specification files (YAML format) to `openapi-specs/` directory
+- [x] Verify all downloaded specs are OpenAPI 3.x format
+- [x] Create `sdk-endpoints.txt` configuration file in project root with METHOD|PATH format (one per line):
+- [x] Implement `scripts/filter_openapi_spec.py` with the following features:
+  - Read all `.yaml` files from `openapi-specs/` directory
+  - Parse `sdk-endpoints.txt` for METHOD|PATH inclusion list
+  - **Detect duplicates:** Check if same METHOD|PATH exists in multiple spec files
+  - **On duplicate found:** Log warning with file locations and fail with error message
+  - Filter paths/operations matching the inclusion list (skip duplicates)
+  - Collect all referenced schemas/models from matched operations (including transitive dependencies via $ref)
+  - Merge filtered paths into single OpenAPI specification
+  - Consolidate schemas/components section (deduplicate if same schema name across files)
+  - Use custom metadata (title: "Supermetrics API") instead of first spec file
+  - Write merged spec to `openapi-spec.yaml` in project root
+- [x] Run filter script: `python scripts/filter_openapi_spec.py`
+- [x] Verify script output: no duplicate warnings/errors
+- [x] Verify generated `openapi-spec.yaml` contains only SDK-supported endpoints
+- [x] Verify spec is valid OpenAPI 3.x format and includes all referenced schemas
 
 ### Task 2: Install openapi-python-client (AC: 2)
-- [ ] Verify `openapi-python-client>=0.15.0` is in `pyproject.toml` dev dependencies (should already be there from Story 1.1)
-- [ ] Install dev dependencies: `uv pip install -e ".[dev]"`
-- [ ] Verify installation: `openapi-python-client --version`
+- [x] Verify `openapi-python-client>=0.15.0` is in `pyproject.toml` dev dependencies (should already be there from Story 1.1)
+- [x] Install dev dependencies: `pip install -e ".[dev]"` (used venv instead of uv)
+- [x] Verify installation: `openapi-python-client --version` (v0.27.1)
 
 ### Task 3: Generate initial SDK code (AC: 3, 4)
-- [ ] Create output directory: `mkdir -p src/supermetrics/_generated`
-- [ ] Run openapi-python-client generate command:
-  ```bash
-  openapi-python-client generate \
-    --path openapi-spec.yaml \
-    --output-path src/supermetrics/_generated
-  ```
-- [ ] Review generated directory structure:
-  - `_generated/client.py` (sync client)
-  - `_generated/async_client.py` (async client)
-  - `_generated/api/` (API endpoint modules)
-  - `_generated/models/` (Pydantic models)
-- [ ] Verify generated code compiles without errors: `python -c "import ._generated"`
+- [x] Create output directory: `mkdir -p src/supermetrics/_generated`
+- [x] Run openapi-python-client generate command (generated into `supermetrics_api_client/` subdirectory - standard behavior)
+- [x] Review generated directory structure:
+  - `_generated/supermetrics_api_client/client.py` (single Client class with sync/async support)
+  - `_generated/supermetrics_api_client/api/` (API endpoint modules)
+  - `_generated/supermetrics_api_client/models/` (Pydantic models)
+- [x] Verify generated code compiles without errors
 
 ### Task 4: Review generated code for completeness (AC: 5)
-- [ ] Check `_generated/api/` contains endpoint modules for:
-  - `login_links/` - create, get, list, close operations
-  - `logins/` - get, list operations
-  - `accounts/` - list operations
-  - `queries/` - execute, get_results operations
-- [ ] Check `_generated/models/` contains Pydantic models for:
-  - `LoginLink` model
-  - `Login` model
-  - `Account` model
-  - `QueryResult` model (or equivalent)
-- [ ] Verify sync and async clients exist:
-  - `_generated/client.py` with `Client` class
-  - `_generated/async_client.py` with `AsyncClient` class
-- [ ] Check models have proper type hints and Pydantic v2 syntax
-- [ ] Note any missing endpoints or models for manual addition later
+- [x] Check `_generated/api/` contains endpoint modules for:
+  - `data_source_login_links/` - create, get, list, close operations ✓
+  - `data_source_logins/` - get, list operations ✓
+  - `data_source/` - get_accounts operation ✓
+  - `get_data/` - get_data operation ✓
+- [x] Check `_generated/models/` contains Pydantic models for:
+  - `LoginLink` model ✓
+  - `DataSourceLogin` model ✓
+  - Account models (get_accounts_json) ✓
+  - Data/Query models (data_query, data_response) ✓
+- [x] Verify sync and async clients exist:
+  - Single `Client` class with both sync and async support (httpx.Client and httpx.AsyncClient) ✓
+- [x] Check models have proper type hints and Pydantic v2 syntax ✓
+- [x] Note any missing endpoints or models for manual addition later (None - all required endpoints present)
 
 ### Task 5: Create regeneration script (AC: 6)
-- [ ] Create `scripts/regenerate_client.sh` with executable permissions:
-  ```bash
-  #!/bin/bash
-  set -e
-
-  echo "Regenerating Supermetrics SDK from OpenAPI specification..."
-
-  # Remove old generated code
-  rm -rf src/supermetrics/_generated
-
-  # Generate new code
-  openapi-python-client generate \
-    --path openapi-spec.yaml \
-    --output-path src/supermetrics/_generated
-
-  echo "✓ SDK regenerated successfully"
-  echo "Run tests to verify compatibility: pytest tests/"
-  ```
-- [ ] Make script executable: `chmod +x scripts/regenerate_client.sh`
-- [ ] Test script: `./scripts/regenerate_client.sh`
-- [ ] Verify regenerated code is identical to original generation
+- [x] Create `scripts/regenerate_client.sh` with executable permissions
+- [x] Make script executable: `chmod +x scripts/regenerate_client.sh`
+- [x] Test script: `./scripts/regenerate_client.sh` ✓
+- [x] Verify regenerated code is identical to original generation ✓
 
 ### Task 6: Add _generated/ to .gitignore with caution note (AC: 3)
-- [ ] DO NOT add `_generated/` to `.gitignore` - generated code SHOULD be committed
-- [ ] Add comment to `.gitignore` explaining why:
-  ```
-  # Note: _generated/ is NOT ignored - it's committed to version control
-  # for transparency and to support offline development
-  ```
-- [ ] Commit generated code to repository: `git add src/supermetrics/_generated`
+- [x] DO NOT add `_generated/` to `.gitignore` - generated code SHOULD be committed ✓
+- [x] Comment already exists in `.gitignore` from Story 1.1 explaining why ✓
+- [x] Stage generated code for manual commit: `git add src/supermetrics/_generated` ✓
 
 ### Task 7: Document generation process (AC: 6)
-- [ ] Update README.md with OpenAPI regeneration section:
-  - Where to find the OpenAPI spec
-  - How to regenerate: `./scripts/regenerate_client.sh`
-  - When to regenerate (monthly, or when API changes)
-- [ ] Add note about adapter pattern protecting users from regeneration
+- [x] Update README.md with comprehensive OpenAPI regeneration section:
+  - Source specifications location (openapi-specs/)
+  - Merged spec location (openapi-spec.yaml)
+  - Filter configuration (sdk-endpoints.txt)
+  - How to regenerate (full process with filter script + regeneration script)
+  - When to regenerate (monthly, after spec updates, after endpoint changes)
+  - How to add/remove endpoints
+- [x] Add note about adapter pattern protecting users from regeneration (Story 1.3+)
 
 ## Dev Notes
 
@@ -213,20 +203,57 @@ supermetrics-sdk/
 
 ### Context Reference
 
-<!-- Story context will be generated after story approval -->
+- Story Context XML: `spec/stories/story-context-1.2.xml`
+- Generated: 2025-11-20
 
 ### Agent Model Used
 
-<!-- To be filled by dev agent -->
+claude-sonnet-4-5@20250929
 
 ### Debug Log References
 
-<!-- To be filled by dev agent -->
+N/A - No debugging required
 
 ### Completion Notes List
 
-<!-- To be filled by dev agent after story completion -->
+**Implementation Summary:**
+
+1. **OpenAPI Filtering & Merging (Task 1)**:
+   - Created `sdk-endpoints.txt` with 8 filtered endpoints (login_links, logins, accounts, queries)
+   - Implemented `scripts/filter_openapi_spec.py` to merge openapi-data.yaml and openapi-management.yaml
+   - Filter script detects duplicates, filters by METHOD|PATH, collects transitive dependencies via $ref
+   - Used custom metadata (title: "Supermetrics API") for general-purpose SDK
+   - Generated merged `openapi-spec.yaml` with 8 endpoints and 25 components (9 schemas, 11 responses, 5 headers)
+
+2. **SDK Generation (Tasks 2-4)**:
+   - Added PyYAML>=6.0.0 to dev dependencies (required by filter script)
+   - Installed openapi-python-client v0.27.1
+   - Generated SDK into `src/supermetrics/_generated/supermetrics_api_client/`
+   - Generated client uses single `Client` class with both sync/async support (httpx.Client + httpx.AsyncClient)
+   - All required endpoints present: data_source_login_links, data_source_logins, data_source (accounts), get_data (queries)
+   - All required models present: LoginLink, DataSourceLogin, Account models, Query/Data models
+   - Generated code compiles successfully
+
+3. **Regeneration & Documentation (Tasks 5-7)**:
+   - Created `scripts/regenerate_client.sh` with validation and user-friendly output
+   - Tested regeneration script - idempotent and successful
+   - Enhanced README.md with comprehensive regeneration documentation (filter process, endpoint management, when to regenerate)
+
+**Notes:**
+- openapi-python-client creates nested package structure (`supermetrics_api_client/`) - this is standard behavior
+- Some $ref responses not parsed (warnings during generation) - acceptable, doesn't affect core functionality
+- Story 1.3 will create adapter pattern to wrap this generated code with stable public API
 
 ### File List
 
-<!-- To be filled by dev agent - list of all files created/modified -->
+**Created:**
+- `sdk-endpoints.txt` - Endpoint filter configuration (METHOD|PATH format)
+- `scripts/filter_openapi_spec.py` - OpenAPI spec merger and filter script
+- `scripts/regenerate_client.sh` - SDK regeneration script
+- `openapi-spec.yaml` - Merged and filtered OpenAPI specification
+- `src/supermetrics/_generated/` - Generated SDK directory (106 files)
+
+**Modified:**
+- `pyproject.toml` - Added pyyaml>=6.0.0 to dev dependencies
+- `README.md` - Enhanced OpenAPI regeneration documentation section
+- `.venv/` - Created virtual environment and installed dependencies

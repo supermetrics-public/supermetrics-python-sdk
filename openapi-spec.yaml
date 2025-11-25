@@ -1,0 +1,1337 @@
+openapi: 3.0.3
+info:
+  title: Supermetrics API
+  version: 2.0.0
+  description: Supermetrics API for authentication and data querying. For more information,
+    visit https://supermetrics.com.
+  contact:
+    name: Supermetrics Support
+    email: support@supermetrics.com
+    url: https://supermetrics.com/support
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+- url: https://api.supermetrics.com/enterprise/v2
+  description: Global production public Supermetrics Data API base path.
+  x-internal: false
+- url: https://api.supermetrics.com
+  description: Global production public Supermetrics API base path for datasource
+    search.
+  x-internal: false
+- url: https://api.supermetrics.com/enterprise/v2
+  description: Global production public Supermetrics Management API base path.
+  x-internal: false
+paths:
+  /query/data/json:
+    get:
+      summary: Query data
+      description: Execute a query to retrieve data from a specified data source
+      operationId: getData
+      tags:
+      - Get data
+      parameters:
+      - name: json
+        in: query
+        required: true
+        description: JSON-encoded data query parameters
+        example:
+          ds_id: GA
+          start_date: yesterday
+          end_date: yesterday
+          fields:
+          - date
+          - sessions
+        schema:
+          $ref: '#/components/schemas/DataQuery'
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: Query executed successfully
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/X-RateLimit-Limit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/X-RateLimit-Remaining'
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /query/accounts:
+    get:
+      summary: Get accounts
+      description: Retrieve a list of available data source logins (authentications)
+        and their accounts
+      operationId: getAccounts
+      tags:
+      - Data source
+      parameters:
+      - name: json
+        in: query
+        required: true
+        description: JSON-encoded account query parameters
+        example:
+          ds_id: GA
+        schema:
+          type: object
+          required:
+          - ds_id
+          properties:
+            api_key:
+              type: string
+              maxLength: 255
+              pattern: ^[A-Za-z0-9_-]+$
+              description: API key when not using an authorization header
+            ds_id:
+              type: string
+              maxLength: 50
+              pattern: ^[A-Za-z0-9_-]+$
+              description: Data source ID
+            ds_users:
+              oneOf:
+              - type: string
+                maxLength: 255
+              - type: array
+                maxItems: 100
+                items:
+                  type: string
+                  maxLength: 255
+              description: List of data source login usernames to target (case-insensitive)
+            cache_minutes:
+              type: integer
+              format: int32
+              description: Maximum allowed age of cache in minutes
+              minimum: 60
+              maximum: 1440
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: Accounts retrieved successfully
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/X-RateLimit-Limit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/X-RateLimit-Remaining'
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        maxLength: 50
+                        pattern: ^[A-Za-z0-9_-]+$
+                        description: API request ID
+                      query:
+                        type: object
+                        properties:
+                          cache_minutes:
+                            type: integer
+                            nullable: true
+                            format: int32
+                            minimum: 60
+                            maximum: 1440
+                            description: Requested maximum age of cache in minutes
+                  data:
+                    type: array
+                    maxItems: 100
+                    items:
+                      type: object
+                      properties:
+                        ds_user:
+                          type: string
+                          maxLength: 255
+                          description: Data source login username
+                        display_name:
+                          type: string
+                          maxLength: 255
+                          description: Display name for login
+                        cache_time:
+                          type: string
+                          nullable: true
+                          format: date-time
+                          maxLength: 30
+                          description: ISO 8601 datetime for the last time the login
+                            data was fetched and cached
+                        accounts:
+                          type: array
+                          maxItems: 1000
+                          items:
+                            type: object
+                            properties:
+                              account_id:
+                                type: string
+                                maxLength: 50
+                                pattern: ^[A-Za-z0-9_-]+$
+                                description: Account ID
+                              account_name:
+                                type: string
+                                maxLength: 255
+                                description: Account name
+                              group_name:
+                                type: string
+                                maxLength: 255
+                                description: Account group name (empty string when
+                                  not available)
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /ds/logins:
+    get:
+      summary: List logins
+      description: Retrieve a list of all data source logins
+      operationId: listDataSourceLogins
+      tags:
+      - Data Source Logins
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: List of data source logins retrieved successfully
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/X-RateLimit-Limit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/X-RateLimit-Remaining'
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    $ref: '#/components/schemas/ResponseMeta'
+                  data:
+                    type: array
+                    maxItems: 1000
+                    items:
+                      $ref: '#/components/schemas/DataSourceLogin'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/LoginSearchFailed'
+  /ds/login/{login_id}:
+    get:
+      summary: Get login
+      description: Retrieve details of a specific data source login
+      operationId: getDataSourceLogin
+      tags:
+      - Data Source Logins
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: Data source login details retrieved successfully
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/X-RateLimit-Limit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/X-RateLimit-Remaining'
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    $ref: '#/components/schemas/ResponseMeta'
+                  data:
+                    $ref: '#/components/schemas/DataSourceLogin'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/LoginNotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/LoginSearchFailed'
+    parameters:
+    - name: login_id
+      in: path
+      required: true
+      schema:
+        type: string
+        maxLength: 50
+        pattern: ^[A-Za-z0-9_-]+$
+      description: Supermetrics login ID
+  /ds/login/links:
+    get:
+      summary: List login links
+      description: List all data source login links
+      operationId: listLoginLinks
+      tags:
+      - Data Source Login Links
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: List of login links retrieved successfully
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/X-RateLimit-Limit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/X-RateLimit-Remaining'
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    $ref: '#/components/schemas/ResponseMeta'
+                  data:
+                    type: array
+                    maxItems: 1000
+                    items:
+                      $ref: '#/components/schemas/LoginLink'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /ds/login/link:
+    post:
+      summary: Create login link
+      description: Create a new data source login link
+      operationId: createLoginLink
+      tags:
+      - Data Source Login Links
+      security:
+      - BearerAuth: []
+      requestBody:
+        description: Login link creation parameters including data source and expiration
+          settings
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - ds_id
+              - expiry_time
+              properties:
+                ds_id:
+                  type: string
+                  maxLength: 50
+                  pattern: ^[A-Za-z0-9_-]+$
+                  description: Data source ID
+                expiry_time:
+                  type: string
+                  format: date-time
+                  maxLength: 50
+                  description: Link expiry time as date, datetime or relative time
+                    string. Value is saved as ISO 8601, defaulting to midnight as
+                    time of day.
+                description:
+                  type: string
+                  maxLength: 1000
+                  description: Internal description for the link. Not shown during
+                    the authentication attempt.
+                require_username:
+                  type: string
+                  maxLength: 255
+                  description: Data source username that needs to be used in authentication
+                    attempt. Normally used when renewing existing credentials.
+                redirect_url:
+                  type: string
+                  format: uri
+                  maxLength: 500
+                  description: Custom URL to redirect to after successful authentication.
+            example:
+              ds_id: GA4
+              expiry_time: '2024-12-31T23:59:59Z'
+              description: Google Analytics login link for marketing team
+              require_username: marketing@company.com
+              redirect_url: https://company.com/auth/success
+      responses:
+        '201':
+          description: Login link created successfully
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/X-RateLimit-Limit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/X-RateLimit-Remaining'
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginLinkResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/LinkLimitExceeded'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /ds/login/link/{link_id}:
+    get:
+      summary: Get login link
+      description: Get details of a specific login link
+      operationId: getLoginLink
+      tags:
+      - Data Source Login Links
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: Login link details retrieved successfully
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/X-RateLimit-Limit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/X-RateLimit-Remaining'
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginLinkResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/LinkNotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    parameters:
+    - name: link_id
+      in: path
+      required: true
+      schema:
+        type: string
+        maxLength: 50
+        pattern: ^[A-Za-z0-9_-]+$
+      description: Supermetrics login link ID
+  /ds/login/link/{link_id}/close:
+    put:
+      summary: Close login link
+      description: Close a login link. Link will stop accepting new requests once
+        closed, but closing will not affect already started authentication attempts.
+      operationId: closeLoginLink
+      tags:
+      - Data Source Login Links
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: Login link closed successfully
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/X-RateLimit-Limit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/X-RateLimit-Remaining'
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginLinkResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/LinkNotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/LinkUpdateFailed'
+    parameters:
+    - name: link_id
+      in: path
+      required: true
+      schema:
+        type: string
+        maxLength: 50
+        pattern: ^[A-Za-z0-9_-]+$
+      description: Supermetrics login link ID
+components:
+  schemas:
+    DataQuery:
+      type: object
+      properties:
+        api_key:
+          type: string
+          maxLength: 255
+          pattern: ^[A-Za-z0-9_-]+$
+          description: API key when not using an authorization header
+          example: abc123def456
+        schedule_id:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+          description: Schedule ID for this query request. If not provided, one will
+            be generated from other query parameters
+          example: my_query_123
+        ds_id:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+          description: Target data source ID
+          example: GA
+        ds_accounts:
+          oneOf:
+          - type: string
+            maxLength: 50
+            pattern: ^[A-Za-z0-9_-]+$
+          - type: array
+            maxItems: 100
+            items:
+              type: string
+              maxLength: 50
+              pattern: ^[A-Za-z0-9_-]+$
+          - type: object
+          description: List of data source accounts the query should target, or a
+            filter for them
+          example:
+          - account123
+          - account456
+        ds_segments:
+          oneOf:
+          - type: string
+            maxLength: 50
+            pattern: ^[A-Za-z0-9_-]+$
+          - type: array
+            maxItems: 1000
+            items:
+              type: string
+              maxLength: 50
+              pattern: ^[A-Za-z0-9_-]+$
+          description: List of data source segment IDs the query should target
+          example:
+          - segment1
+          - segment2
+        ds_user:
+          type: string
+          maxLength: 255
+          description: Shorthand parameter to provide one value for ds_users
+          example: user@example.com
+        ds_users:
+          oneOf:
+          - type: string
+            maxLength: 255
+          - type: array
+            maxItems: 100
+            items:
+              type: string
+              maxLength: 255
+          description: List of data source login usernames to limit when searching
+            for suitable authentication
+        date_range_type:
+          type: string
+          maxLength: 50
+          description: Type of date range the query should use
+        start_date:
+          type: string
+          maxLength: 100
+          description: Fixed or relative start date for your query
+          example: yesterday
+        end_date:
+          type: string
+          maxLength: 100
+          description: Fixed or relative end date for your query
+          example: yesterday
+        compare_type:
+          type: string
+          maxLength: 50
+          description: Date range comparison type. Defaults to none
+        compare_show:
+          type: string
+          maxLength: 50
+          description: When compare_type is custom, display type for comparison values
+        compare_start_date:
+          type: string
+          maxLength: 100
+          description: When compare_type is custom, fixed or relative start date for
+            comparison
+        compare_end_date:
+          type: string
+          maxLength: 100
+          description: When compare_type is custom, fixed or relative end date for
+            comparison
+        fields:
+          oneOf:
+          - type: string
+            maxLength: 1000
+          - type: array
+            maxItems: 100
+            items:
+              type: string
+              maxLength: 100
+          - type: array
+            maxItems: 100
+            items:
+              type: object
+          description: Target data source fields the query should return
+        settings:
+          type: object
+          description: Settings that should be applied when performing the query
+        filter:
+          type: string
+          maxLength: 5000
+          description: Filter string that should be applied to the results
+        order_columns:
+          type: string
+          maxLength: 1000
+          description: Order instruction for fields that are split by column
+        order_rows:
+          oneOf:
+          - type: string
+            maxLength: 1000
+          - type: array
+            maxItems: 50
+            items:
+              type: string
+              maxLength: 100
+          description: List of order fields and sort directions for result rows
+        max_columns:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 1000
+          description: Maximum number of columns the query results should contain
+        max_rows:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 1000000
+          description: Maximum number of rows the query results should contain
+        offset_start:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 1000000
+          description: Starting row index for paginated response
+        offset_end:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 1000000
+          description: Ending row index for paginated response
+        cache_minutes:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 10080
+          description: Maximum allowed age of query results cache in minutes
+        sync_timeout:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 3600
+          description: Number of seconds the API should wait for query to finish
+      required:
+      - ds_id
+    DataSource:
+      type: object
+      properties:
+        '@type':
+          type: string
+          enum:
+          - ds
+        ds_id:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+          description: Data source ID
+        name:
+          type: string
+          maxLength: 255
+          description: Data source name
+    User:
+      type: object
+      properties:
+        '@type':
+          type: string
+          enum:
+          - user
+        user_id:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+          description: Supermetrics user ID
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          description: Supermetrics user email
+    DataSourceLogin:
+      type: object
+      properties:
+        '@type':
+          type: string
+          enum:
+          - ds_login
+        login_id:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+          description: Supermetrics login ID
+        login_type:
+          type: string
+          maxLength: 100
+          description: Authentication type. Note that some data sources support multiple
+            types, and user can choose between them.
+        username:
+          type: string
+          maxLength: 255
+          description: Authenticated username, used in queries as ds_user
+        display_name:
+          type: string
+          maxLength: 255
+          description: Visible name for this authentication in product UIs
+        ds_info:
+          $ref: '#/components/schemas/DataSource'
+        default_scopes:
+          type: array
+          maxItems: 100
+          description: List of default source API scopes used in authentication
+          items:
+            type: string
+            maxLength: 100
+        additional_scopes:
+          type: array
+          maxItems: 100
+          description: List of additional source API scopes user has granted to access
+            more data
+          items:
+            type: string
+            maxLength: 100
+        auth_time:
+          type: string
+          format: date-time
+          maxLength: 50
+          description: ISO 8601 datetime for when last user authentication occurred
+        auth_user_info:
+          $ref: '#/components/schemas/User'
+        expiry_time:
+          type: string
+          nullable: true
+          format: date-time
+          maxLength: 50
+          description: ISO 8601 datetime for when authentication expires, if any
+        revoked_time:
+          type: string
+          nullable: true
+          format: date-time
+          maxLength: 50
+          description: ISO 8601 datetime for when authentication was revoked, if any
+        is_refreshable:
+          type: boolean
+          description: Whether authentication can be automatically refreshed after
+            expiry time, without user involvement
+        is_shared:
+          type: boolean
+          description: Whether login is shared with all team users
+    LoginLinkResponse:
+      type: object
+      properties:
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+        data:
+          $ref: '#/components/schemas/LoginLink'
+    DataResponse:
+      type: object
+      properties:
+        meta:
+          type: object
+          properties:
+            request_id:
+              type: string
+              maxLength: 50
+              pattern: ^[A-Za-z0-9_-]+$
+              description: API request ID
+            schedule_id:
+              type: string
+              maxLength: 50
+              pattern: ^[A-Za-z0-9_-]+$
+              description: Custom or generated schedule ID for the query
+            status_code:
+              type: string
+              maxLength: 20
+              description: Status code for the query
+            query:
+              type: object
+              properties:
+                start_date:
+                  type: string
+                  maxLength: 10
+                  pattern: ^\d{4}-\d{2}-\d{2}$
+                  description: Query start date in YYYY-MM-DD format
+                end_date:
+                  type: string
+                  maxLength: 10
+                  pattern: ^\d{4}-\d{2}-\d{2}$
+                  description: Query end date in YYYY-MM-DD format
+                ds_accounts:
+                  type: array
+                  maxItems: 100
+                  items:
+                    type: string
+                    maxLength: 50
+                    pattern: ^[A-Za-z0-9_-]+$
+                  description: Data source account IDs used in the query
+                ds_segments:
+                  type: array
+                  maxItems: 1000
+                  items:
+                    type: string
+                    maxLength: 50
+                    pattern: ^[A-Za-z0-9_-]+$
+                  description: Data source segment IDs used in the query
+                fields:
+                  type: array
+                  maxItems: 100
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        maxLength: 100
+                        pattern: ^[A-Za-z0-9_-]+$
+                        description: Field ID from the request
+                      field_id:
+                        type: string
+                        maxLength: 100
+                        pattern: ^[A-Za-z0-9_-]+$
+                        description: Field ID the API uses
+                      field_name:
+                        type: string
+                        maxLength: 255
+                        description: Field name
+                      field_type:
+                        type: string
+                        maxLength: 10
+                        description: Field type
+                      field_split:
+                        type: string
+                        maxLength: 50
+                        description: Field split by type
+                      data_type:
+                        type: string
+                        maxLength: 50
+                        description: Field data type
+                      data_column:
+                        type: integer
+                        format: int32
+                        minimum: 0
+                        maximum: 1000
+                        description: Field value position in each data row
+                      visible:
+                        type: boolean
+                        description: Whether data for this field is visible
+                compare_type:
+                  type: string
+                  maxLength: 50
+                  description: Date range comparison type used
+                compare_show:
+                  type: string
+                  maxLength: 50
+                  description: Display type for comparison values
+                compare_start_date:
+                  type: string
+                  maxLength: 10
+                  pattern: ^\d{4}-\d{2}-\d{2}$
+                  description: Start date for comparison date range
+                compare_end_date:
+                  type: string
+                  maxLength: 10
+                  pattern: ^\d{4}-\d{2}-\d{2}$
+                  description: End date for comparison date range
+                settings:
+                  type: object
+                  description: Settings used in query
+                cache_minutes:
+                  type: integer
+                  format: int32
+                  minimum: 0
+                  maximum: 10080
+                  description: Requested maximum age of cache in minutes
+            result:
+              type: object
+              properties:
+                total_columns:
+                  type: integer
+                  format: int32
+                  minimum: 0
+                  maximum: 1000
+                  description: Total amount of columns
+                total_rows:
+                  type: integer
+                  format: int64
+                  minimum: 0
+                  maximum: 100000000
+                  description: Total amount of rows in data
+                run_seconds:
+                  type: number
+                  format: float
+                  minimum: 0
+                  maximum: 7200
+                  description: Number of seconds it took for the query to run
+                data_sampled:
+                  type: boolean
+                  description: If data source has provided sampled data
+                cache_used:
+                  type: boolean
+                  description: If cached data was used
+                cache_time:
+                  type: string
+                  format: date-time
+                  maxLength: 30
+                  description: ISO 8601 datetime for the most recent cached data
+            paginate:
+              type: object
+              properties:
+                prev:
+                  type: string
+                  format: uri
+                  maxLength: 500
+                  description: URL to previous offset
+                next:
+                  type: string
+                  format: uri
+                  maxLength: 500
+                  description: URL to next offset
+        data:
+          type: array
+          maxItems: 1000000
+          items:
+            type: array
+            maxItems: 1000
+            items:
+              type: string
+              maxLength: 10000
+          description: Query result rows
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          maxLength: 100
+          description: Error code
+          example: ACCESS_TOKEN_INVALID
+        message:
+          type: string
+          maxLength: 255
+          description: Error message
+          example: Invalid Access Token
+        description:
+          type: string
+          maxLength: 255
+          description: Error description
+          example: Provided access token is either missing, invalid or expired.
+    LoginLink:
+      type: object
+      properties:
+        link_id:
+          type: string
+          maxLength: 50
+          description: Supermetrics login link ID
+        status_code:
+          type: string
+          maxLength: 50
+          description: Current link status
+          enum:
+          - OPEN
+          - CLOSED
+          - EXPIRED
+        description:
+          type: string
+          maxLength: 1000
+          description: Internal link description. Not shown during authentication
+            attempt.
+        ds_id:
+          type: string
+          maxLength: 50
+          description: Data source ID
+        ds_name:
+          type: string
+          maxLength: 255
+          description: Data source name
+        require_username:
+          type: string
+          maxLength: 255
+          description: Data source username that must be used in authentication attempt
+        redirect_url:
+          type: string
+          maxLength: 500
+          description: Custom URL to redirect to after successful authentication,
+            if any
+        redirect_verifier:
+          type: string
+          maxLength: 255
+          description: Internal verifier string that is passed to redirect_url
+        user_id:
+          type: string
+          maxLength: 50
+          description: Supermetrics user ID of the user who will be marked as the
+            primary owner of the login credentials
+        user_email:
+          type: string
+          maxLength: 255
+          description: Supermetrics user email
+        login_url:
+          type: string
+          maxLength: 500
+          description: Full URL to initiate an authentication attempt. Can be accessed
+            multiple times while link is open.
+        created_time:
+          type: string
+          format: date-time
+          maxLength: 50
+          description: ISO 8601 datetime for when login link was created
+        expiry_time:
+          type: string
+          format: date-time
+          maxLength: 50
+          description: ISO 8601 datetime for when login link will expire
+        login_id:
+          type: string
+          nullable: true
+          maxLength: 50
+          description: Supermetrics login ID for a successful authentication
+        login_time:
+          type: string
+          nullable: true
+          format: date-time
+          maxLength: 50
+          description: ISO 8601 datetime for when authentication occurred
+        login_username:
+          type: string
+          nullable: true
+          maxLength: 255
+          description: Username used to authenticate to data source
+    ResponseMeta:
+      type: object
+      properties:
+        request_id:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+          description: API request ID
+  responses:
+    LinkLimitExceeded:
+      description: Link Limit Exceeded
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                maxLength: 100
+                enum:
+                - LINK_LIMIT_EXCEEDED
+              message:
+                type: string
+                maxLength: 255
+    TooManyRequests:
+      description: Too Many Requests - rate limit exceeded
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        Retry-After:
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 3600
+          description: Number of seconds to wait before making another request
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              meta:
+                $ref: '#/components/schemas/ResponseMeta'
+              error:
+                $ref: '#/components/schemas/Error'
+    LoginNotFound:
+      description: Login Not Found
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                maxLength: 100
+                enum:
+                - LOGIN_NOT_FOUND
+              message:
+                type: string
+                maxLength: 255
+    BadRequest:
+      $ref: ../../shared/responses/CommonResponses.yaml#/BadRequest
+    UnprocessableEntity:
+      description: Unprocessable Entity - request validation failed
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              meta:
+                $ref: '#/components/schemas/ResponseMeta'
+              error:
+                $ref: '#/components/schemas/Error'
+    LinkNotFound:
+      description: Link Not Found
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                maxLength: 100
+                enum:
+                - LINK_NOT_FOUND
+              message:
+                type: string
+                maxLength: 255
+    Forbidden:
+      $ref: ../../shared/responses/CommonResponses.yaml#/Forbidden
+    LoginSearchFailed:
+      description: Login Search Failed
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                maxLength: 100
+                enum:
+                - LOGIN_SEARCH_FAILED
+              message:
+                type: string
+                maxLength: 255
+    LinkUpdateFailed:
+      description: Link Update Failed
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                maxLength: 100
+                enum:
+                - LINK_UPDATE_FAILED
+              message:
+                type: string
+                maxLength: 255
+    InternalServerError:
+      description: Internal Server Error - unexpected server error
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              meta:
+                $ref: '#/components/schemas/ResponseMeta'
+              error:
+                $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized - invalid or missing authentication
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              meta:
+                $ref: '#/components/schemas/ResponseMeta'
+              error:
+                $ref: '#/components/schemas/Error'
+  parameters: {}
+  headers:
+    Location:
+      description: API URL of the created item
+      schema:
+        type: string
+        maxLength: 255
+        example: items/{id}
+    X-RateLimit-Remaining:
+      description: Remaining requests in current window
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        maximum: 10000
+        example: 49
+    Content-Type:
+      description: HTTP response content type
+      schema:
+        type: string
+        maxLength: 255
+        enum:
+        - application/json
+        example: application/json
+    Access-Control-Allow-Origin:
+      description: CORS header
+      schema:
+        type: string
+        maxLength: 255
+        enum:
+        - '*'
+        example: '*'
+    X-RateLimit-Limit:
+      description: Request limit per hour
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 10000
+        example: 100
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Bearer token authentication. Include the token in the Authorization
+        header:
+
+        `Authorization: Bearer <your-token>`
+
+        '
+security: []
