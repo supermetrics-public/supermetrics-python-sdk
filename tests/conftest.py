@@ -22,3 +22,31 @@ def add_src_to_path(project_root):
     # Cleanup
     if src_path in sys.path:
         sys.path.remove(src_path)
+
+
+@pytest.fixture
+def test_api_key() -> str:
+    """Provide a test API key for testing.
+
+    Returns:
+        A test API key string.
+    """
+    return "test-api-key-12345"
+
+
+@pytest.fixture
+def expected_headers(test_api_key: str) -> dict[str, str]:
+    """Provide expected default headers for testing.
+
+    Args:
+        test_api_key: The test API key fixture.
+
+    Returns:
+        Dictionary of expected HTTP headers.
+    """
+    # Note: Actual User-Agent will include version and Python version
+    # This is a simplified version for basic testing
+    return {
+        "Authorization": f"Bearer {test_api_key}",
+        # User-Agent is dynamic, so we'll test it separately
+    }

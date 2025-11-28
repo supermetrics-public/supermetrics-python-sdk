@@ -1,0 +1,234 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.3</storyId>
+    <title>Create Adapter Pattern Foundation</title>
+    <status>Approved</status>
+    <generatedAt>2025-11-26</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>spec/stories/story-1.3.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>a stable public API layer that wraps the generated code</iWant>
+    <soThat>monthly OpenAPI regeneration won't break existing users</soThat>
+    <tasks>
+### Task 1: Create SupermetricsClient (sync) (AC: 1, 3, 5, 6, 7)
+- Create `src/supermetrics/client.py`
+- Import generated client: `from supermetrics._generated.supermetrics_api_client.client import Client as GeneratedClient`
+- Define `SupermetricsClient` class with `__init__` method accepting: `api_key: str`, `user_agent: Optional[str] = None`, `custom_headers: Optional[dict[str, str]] = None`, `timeout: float = 30.0`, `base_url: str = "https://api.supermetrics.com"`
+- Build headers dict with Authorization bearer token, User-Agent, merge custom_headers
+- Create internal `_client` instance
+- Add `close()` method and context manager support
+- Add complete type hints and Google-style docstrings
+- Format with ruff and type check with mypy
+
+### Task 2: Create SupermetricsAsyncClient (async) (AC: 2, 3, 5, 6, 7)
+- Create `src/supermetrics/async_client.py`
+- Import generated async client
+- Define `SupermetricsAsyncClient` with same initialization signature
+- Add async `close()` method and async context manager
+- Add complete type hints and docstrings
+- Format with ruff and type check with mypy
+
+### Task 3: Update __init__.py to export public API (AC: 4)
+- Edit `src/supermetrics/__init__.py`
+- Import and export SupermetricsClient, SupermetricsAsyncClient, __version__
+
+### Task 4: Create tests/conftest.py with shared fixtures (AC: 8)
+- Create pytest fixtures for test API key and expected headers
+
+### Task 5: Create unit tests for client initialization (AC: 8)
+- Test sync/async client initialization
+- Test custom headers
+- Test context managers
+- Run pytest
+
+### Task 6: Run mypy type checking (AC: 6)
+- Run mypy on src directory
+- Fix any type errors
+
+### Task 7: Run ruff formatting and linting (AC: 7)
+- Format code with ruff
+- Check linting
+- Fix issues
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. `src/supermetrics/client.py` created with `SupermetricsClient` class accepting `api_key`, optional `user_agent`, and `custom_headers` parameters
+2. `src/supermetrics/async_client.py` created with `SupermetricsAsyncClient` class with same initialization signature
+3. Both clients wrap `_generated` client with custom headers injection
+4. `src/supermetrics/__init__.py` exports public API (both client classes)
+5. Complete type hints and docstrings added to public client classes
+6. Code passes `mypy` strict type checking
+7. Code formatted with `black` or `ruff` formatter
+8. Simple initialization test added (`tests/test_client_init.py`)
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>spec/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Project Foundation &amp; Core SDK Generation</title>
+        <section>Client Initialization Pattern (lines 976-1184)</section>
+        <snippet>Comprehensive client initialization pattern showing header injection, context manager support, and resource attachment. Provides complete implementation examples for both sync and async clients including parameter handling, User-Agent construction, and proper cleanup.</snippet>
+      </doc>
+      <doc>
+        <path>spec/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Project Foundation &amp; Core SDK Generation</title>
+        <section>Acceptance Criteria #3 (lines 582-590)</section>
+        <snippet>Story 1.3 acceptance criteria defining adapter pattern foundation requirements including client creation, header injection, type safety, and testing standards.</snippet>
+      </doc>
+      <doc>
+        <path>spec/architecture.md</path>
+        <title>Decision Architecture - Supermetrics Python SDK</title>
+        <section>ADR-001: Use Adapter Pattern (lines 1898-1917)</section>
+        <snippet>Architectural decision to implement adapter pattern for wrapping generated code, enabling monthly regeneration without breaking users. Explains rationale and consequences.</snippet>
+      </doc>
+      <doc>
+        <path>spec/architecture.md</path>
+        <title>Decision Architecture - Supermetrics Python SDK</title>
+        <section>ADR-002: Separate Sync/Async Clients (lines 1922-1944)</section>
+        <snippet>Decision to provide two separate client classes for type safety and clear API distinction. Explains why single client with detection was rejected.</snippet>
+      </doc>
+      <doc>
+        <path>spec/architecture.md</path>
+        <title>Decision Architecture - Supermetrics Python SDK</title>
+        <section>Type Hints (lines 682-747)</section>
+        <snippet>Mandatory type hint requirements using Python 3.10+ syntax including Optional, list[], dict[] patterns for all public APIs.</snippet>
+      </doc>
+      <doc>
+        <path>spec/architecture.md</path>
+        <title>Decision Architecture - Supermetrics Python SDK</title>
+        <section>Docstring Format (lines 750-843)</section>
+        <snippet>Google-style docstring template with comprehensive examples showing Args, Returns, Raises, Example sections for all public methods.</snippet>
+      </doc>
+      <doc>
+        <path>spec/epics.md</path>
+        <title>Supermetrics python SDK - Epic Breakdown</title>
+        <section>Story 1.3 (lines 75-93)</section>
+        <snippet>Original story specification with user story format, acceptance criteria, and prerequisite dependencies.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/supermetrics/__version__.py</path>
+        <kind>module</kind>
+        <symbol>__version__</symbol>
+        <lines>1-4</lines>
+        <reason>Version string needed for User-Agent header construction</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/_generated/supermetrics_api_client/client.py</path>
+        <kind>generated_client</kind>
+        <symbol>Client</symbol>
+        <lines>all</lines>
+        <reason>Generated sync client that will be wrapped by SupermetricsClient adapter</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/__init__.py</path>
+        <kind>module</kind>
+        <symbol>__all__</symbol>
+        <lines>1-9</lines>
+        <reason>Public API exports - will be updated to export new client classes</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <python>
+        <package name="httpx" version="&gt;=0.25.0">HTTP client with sync/async support (provided by generated code)</package>
+        <package name="pydantic" version="&gt;=2.0.0">Data validation and models (provided by generated code)</package>
+        <package name="python-dateutil" version="&gt;=2.8.0">ISO 8601 date parsing</package>
+        <package name="attrs" version="&gt;=23.0.0">Class utilities</package>
+        <package name="pytest" version="&gt;=7.4.0" dev="true">Testing framework</package>
+        <package name="pytest-asyncio" version="&gt;=0.21.0" dev="true">Async test support</package>
+        <package name="ruff" version="&gt;=0.1.0" dev="true">Linting and formatting</package>
+        <package name="mypy" version="&gt;=1.7.0" dev="true">Type checking</package>
+      </python>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- Python 3.10+ only (modern type hints with PEP 604 syntax)
+- Use adapter pattern - hand-written stable public API wraps regeneratable generated code
+- Dual sync/async support via separate client classes (not unified client)
+- Mandatory complete type hints on all public APIs (mypy strict mode)
+- Mandatory Google-style docstrings on all public methods
+- Use ruff for formatting and linting (not black + flake8)
+- Context manager support required for proper resource cleanup
+- API key stored privately, never logged or exposed in error messages
+- Default HTTPS enforcement (base_url defaults to https://api.supermetrics.com)
+- User-Agent format: "supermetrics-sdk/{version} python/{py_version}"
+- Custom headers must override defaults when provided
+- No breaking changes on monthly OpenAPI regeneration
+- Minimal runtime dependencies (&lt;5 libraries)
+- All code must pass: mypy src/, ruff check src/, ruff format src/
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>SupermetricsClient.__init__</name>
+      <kind>class initializer</kind>
+      <signature>def __init__(self, api_key: str, *, user_agent: Optional[str] = None, custom_headers: Optional[dict[str, str]] = None, timeout: float = 30.0, base_url: str = "https://api.supermetrics.com") -&gt; None</signature>
+      <path>spec/architecture.md:1009-1060</path>
+    </interface>
+    <interface>
+      <name>SupermetricsClient.close</name>
+      <kind>method</kind>
+      <signature>def close(self) -&gt; None</signature>
+      <path>spec/architecture.md:1062-1070</path>
+    </interface>
+    <interface>
+      <name>SupermetricsClient context manager</name>
+      <kind>protocol</kind>
+      <signature>def __enter__(self), def __exit__(self, *args)</signature>
+      <path>spec/architecture.md:1071-1077</path>
+    </interface>
+    <interface>
+      <name>SupermetricsAsyncClient.__init__</name>
+      <kind>class initializer</kind>
+      <signature>def __init__(self, api_key: str, *, user_agent: Optional[str] = None, custom_headers: Optional[dict[str, str]] = None, timeout: float = 30.0, base_url: str = "https://api.supermetrics.com") -&gt; None</signature>
+      <path>spec/architecture.md:1119-1167</path>
+    </interface>
+    <interface>
+      <name>SupermetricsAsyncClient.close</name>
+      <kind>method</kind>
+      <signature>async def close(self) -&gt; None</signature>
+      <path>spec/architecture.md:1169-1176</path>
+    </interface>
+    <interface>
+      <name>SupermetricsAsyncClient async context manager</name>
+      <kind>protocol</kind>
+      <signature>async def __aenter__(self), async def __aexit__(self, *args)</signature>
+      <path>spec/architecture.md:1177-1183</path>
+    </interface>
+    <interface>
+      <name>Generated Client</name>
+      <kind>class</kind>
+      <signature>Client(base_url: str, headers: dict[str, str], timeout: float)</signature>
+      <path>src/supermetrics/_generated/supermetrics_api_client/client.py</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+Use pytest as testing framework with pytest-asyncio for async tests. Tests should follow AAA pattern (Arrange, Act, Assert). Use httpx MockTransport for mocking HTTP responses (no additional mocking dependencies needed). All public methods require test coverage. Type checking with mypy strict mode is mandatory. Code must pass ruff formatting and linting checks.
+    </standards>
+    <locations>
+tests/conftest.py - Shared pytest fixtures
+tests/unit/test_client_init.py - Client initialization tests
+    </locations>
+    <ideas>
+AC1: Test SupermetricsClient initialization with API key, verify _client instance created and headers include Bearer token
+AC1: Test SupermetricsClient with custom User-Agent, verify header value
+AC1: Test SupermetricsClient with custom_headers, verify merge and user headers override defaults
+AC1: Test SupermetricsClient context manager (__enter__, __exit__, close called)
+AC2: Test SupermetricsAsyncClient initialization (async version of AC1 tests)
+AC2: Test SupermetricsAsyncClient async context manager (__aenter__, __aexit__, async close)
+AC4: Test public API exports - verify SupermetricsClient and SupermetricsAsyncClient are importable from supermetrics_sdk
+AC6: Test mypy passes on client.py and async_client.py with strict mode
+AC7: Test ruff formatting passes on both client files
+    </ideas>
+  </tests>
+</story-context>
