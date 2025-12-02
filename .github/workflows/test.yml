@@ -20,7 +20,7 @@ jobs:
         os: [ubuntu-latest]
         python-version: ['3.12', '3.13']
 
-    runs-on: ${{ matrix.os }}
+    runs-on: [ arc-ghc-default ]
 
     steps:
     - uses: actions/checkout@v4
