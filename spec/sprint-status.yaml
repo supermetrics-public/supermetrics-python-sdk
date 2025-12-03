@@ -1,0 +1,65 @@
+# generated: 2025-10-28
+# project: Supermetrics python SDK
+# project_key: Supermetrics python SDK
+# tracking_system: file-system
+# story_location: {project-root}/docs/stories
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic exists in epic file but not contexted
+#   - contexted: Epic tech context created (required before drafting stories)
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - drafted: Story file created in stories folder
+#   - ready-for-dev: Draft approved and story context created
+#   - in-progress: Developer actively working on implementation
+#   - review: Under SM review (via review-story workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - completed: Retrospective has been done
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epics should be 'contexted' before stories can be 'drafted'
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically drafts next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', SM reviews, then Dev moves to 'done'
+
+generated: 2025-10-28
+project: Supermetrics python SDK
+project_key: Supermetrics python SDK
+tracking_system: file-system
+story_location: "{project-root}/docs/stories"
+
+development_status:
+  # Epic 1: Project Foundation & Core SDK Generation
+  epic-1: contexted
+  1-1-initialize-python-project-structure: review
+  1-2-generate-initial-sdk-from-openapi-specification: review
+  1-3-create-adapter-pattern-foundation: drafted
+  1-4-implement-login-links-resource-adapter: drafted
+  1-5-implement-logins-resource-adapter: drafted
+  1-6-implement-accounts-resource-adapter: drafted
+  1-7-implement-queries-resource-adapter: drafted
+  1-8-create-basic-error-handling: drafted
+  1-9-create-poc-example-and-validation: drafted
+  epic-1-retrospective: optional
+
+  # Epic 2: Production SDK & Distribution
+  epic-2: backlog
+  2-1-expand-test-coverage-to-80-percent-plus: backlog
+  2-2-create-comprehensive-documentation: backlog
+  2-3-create-jupyter-notebook-examples: backlog
+  2-4-setup-ci-cd-pipeline: backlog
+  2-5-prepare-pypi-package: backlog
+  2-6-publish-to-pypi-and-verify-installation: backlog
+  2-7-create-regeneration-workflow: backlog
+  2-8-customer-onboarding-and-success-validation: backlog
+  epic-2-retrospective: optional
+
+
+

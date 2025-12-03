@@ -189,7 +189,7 @@ supermetrics-sdk/
 
 ### Context Reference
 
-- Story Context XML: `docs/stories/story-context-1.1.xml`
+- Story Context XML: `spec/stories/story-context-1.1.xml`
 - Generated: 2025-10-28
 
 ### Agent Model Used

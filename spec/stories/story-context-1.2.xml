@@ -1,0 +1,255 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>2</storyId>
+    <title>Generate Initial SDK from OpenAPI Specification</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-20</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>spec/stories/story-1.2.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>to generate Python client code from the Supermetrics OpenAPI specification</iWant>
+    <soThat>I have type-safe models and API client foundation</soThat>
+    <tasks>
+      <task id="1" title="Obtain and filter OpenAPI specifications">
+        - Create openapi-specs/ directory in project root
+        - Download OpenAPI specification files to openapi-specs/
+        - Create sdk-endpoints.txt with METHOD|PATH format
+        - Implement scripts/filter_openapi_spec.py to merge and filter specs
+        - Run filter script and verify output openapi-spec.yaml
+      </task>
+      <task id="2" title="Install openapi-python-client">
+        - Verify openapi-python-client>=0.15.0 in pyproject.toml dev dependencies
+        - Install dev dependencies: uv pip install -e ".[dev]"
+        - Verify installation: openapi-python-client --version
+      </task>
+      <task id="3" title="Generate initial SDK code">
+        - Create output directory: src/supermetrics/_generated
+        - Run openapi-python-client generate command
+        - Verify generated directory structure (client.py, async_client.py, api/, models/)
+      </task>
+      <task id="4" title="Review generated code for completeness">
+        - Check _generated/api/ contains endpoint modules: login_links/, logins/, accounts/, queries/
+        - Check _generated/models/ contains Pydantic models: LoginLink, Login, Account, QueryResult
+        - Verify sync and async clients exist
+        - Note any missing endpoints or models
+      </task>
+      <task id="5" title="Create regeneration script">
+        - Create scripts/regenerate_client.sh with executable permissions
+        - Test script: ./scripts/regenerate_client.sh
+        - Verify regenerated code is identical
+      </task>
+      <task id="6" title="Add _generated/ to version control">
+        - DO NOT add _generated/ to .gitignore
+        - Add comment explaining why generated code is committed
+        - Commit generated code to repository
+      </task>
+      <task id="7" title="Document generation process">
+        - Update README.md with OpenAPI regeneration section
+        - Document where to find spec, how to regenerate, when to regenerate
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="AC1">OpenAPI specification file obtained and stored in project root</criterion>
+    <criterion id="AC2">openapi-python-client installed as dev dependency</criterion>
+    <criterion id="AC3">Initial SDK generated into src/supermetrics/_generated/ directory</criterion>
+    <criterion id="AC4">Generated code includes sync and async clients, Pydantic models, and API endpoints</criterion>
+    <criterion id="AC5">Generated code reviewed for completeness (login_links, logins, accounts, queries endpoints present)</criterion>
+    <criterion id="AC6">Generation script created in scripts/regenerate_client.sh for future use</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>spec/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Project Foundation &amp; Core SDK Generation</title>
+        <section>System Architecture Alignment - Technology Stack</section>
+        <snippet>openapi-python-client (Story 1.2): Generates dual sync/async clients with Pydantic v2 models from OpenAPI spec. Built-in dual sync/async support, generates Pydantic v2 models, minimal dependencies, fast POC timeline.</snippet>
+      </doc>
+      <doc>
+        <path>spec/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Project Foundation &amp; Core SDK Generation</title>
+        <section>Project Structure</section>
+        <snippet>src/supermetrics/_generated/: OpenAPI-generated code (regeneratable). Never edited manually. Protected by adapter pattern. Contains client.py (sync client), async_client.py (async client), api/ (API endpoints), models/ (Pydantic models).</snippet>
+      </doc>
+      <doc>
+        <path>spec/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Project Foundation &amp; Core SDK Generation</title>
+        <section>Dependencies and Integrations</section>
+        <snippet>OpenAPI Specification: Used for client code generation. Location: openapi-spec.yaml in project root. Format: OpenAPI 3.x YAML. Generator: openapi-python-client CLI. Output: src/supermetrics/_generated/.</snippet>
+      </doc>
+      <doc>
+        <path>spec/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Project Foundation &amp; Core SDK Generation</title>
+        <section>Acceptance Criteria - AC2: OpenAPI Generation</section>
+        <snippet>OpenAPI specification file obtained and stored in project root as openapi-spec.yaml. openapi-python-client installed as dev dependency. Initial SDK generated into src/supermetrics/_generated/ directory. Generated code includes sync and async clients, Pydantic models, API endpoints. All required endpoints present: login_links, logins, accounts, queries. Generation script created: scripts/regenerate_client.sh</snippet>
+      </doc>
+      <doc>
+        <path>spec/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Project Foundation &amp; Core SDK Generation</title>
+        <section>Test Strategy Summary</section>
+        <snippet>No unit tests required for generated code (it's auto-generated). Manual verification of generated code completeness (Task 4). Integration tests will be added in later stories (1.3+) to verify adapter compatibility. Regeneration script should be tested to ensure it works.</snippet>
+      </doc>
+      <doc>
+        <path>spec/epics.md</path>
+        <title>Supermetrics python SDK - Epic Breakdown</title>
+        <section>Story 1.2: Generate Initial SDK from OpenAPI Specification</section>
+        <snippet>As a developer, I want to generate Python client code from the Supermetrics OpenAPI specification, so that I have type-safe models and API client foundation. Prerequisites: Story 1.1 complete.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/supermetrics/__init__.py</path>
+        <kind>module</kind>
+        <symbol>__all__</symbol>
+        <lines>1-9</lines>
+        <reason>Main package __init__ that exports public API. Will need to be updated in Story 1.3 to export client classes after generation.</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/__version__.py</path>
+        <kind>module</kind>
+        <symbol>__version__</symbol>
+        <lines>1-3</lines>
+        <reason>Version string management, already exists from Story 1.1.</reason>
+      </artifact>
+      <artifact>
+        <path>pyproject.toml</path>
+        <kind>config</kind>
+        <symbol>dependencies</symbol>
+        <lines>22-27</lines>
+        <reason>Runtime dependencies for generated client: httpx>=0.25.0, pydantic>=2.0.0, python-dateutil>=2.8.0, attrs>=23.0.0</reason>
+      </artifact>
+      <artifact>
+        <path>pyproject.toml</path>
+        <kind>config</kind>
+        <symbol>dev dependencies</symbol>
+        <lines>30-39</lines>
+        <reason>Development dependencies including openapi-python-client>=0.15.0 for code generation</reason>
+      </artifact>
+      <artifact>
+        <path>README.md</path>
+        <kind>documentation</kind>
+        <symbol>OpenAPI Client Regeneration section</symbol>
+        <lines>19-34</lines>
+        <reason>README already has regeneration section prepared by Story 1.1, needs to be validated/updated if needed</reason>
+      </artifact>
+      <artifact>
+        <path>openapi-specs/</path>
+        <kind>directory</kind>
+        <symbol>openapi-data.yaml, openapi-management.yaml</symbol>
+        <lines>N/A</lines>
+        <reason>Directory with existing OpenAPI specification files that need to be filtered and merged into single openapi-spec.yaml</reason>
+      </artifact>
+      <artifact>
+        <path>tests/test_project_structure.py</path>
+        <kind>test</kind>
+        <symbol>test functions</symbol>
+        <lines>N/A</lines>
+        <reason>Existing test file from Story 1.1, provides pattern for project structure validation</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <runtime>
+        <package name="httpx" version=">=0.25.0" purpose="HTTP client with sync/async support, used by generated client" />
+        <package name="pydantic" version=">=2.0.0" purpose="Data validation and type-safe models for API requests/responses" />
+        <package name="python-dateutil" version=">=2.8.0" purpose="ISO 8601 date parsing, dependency of openapi-python-client" />
+        <package name="attrs" version=">=23.0.0" purpose="Class utilities, dependency of openapi-python-client" />
+      </runtime>
+      <dev>
+        <package name="openapi-python-client" version=">=0.15.0" purpose="OpenAPI code generator for Python clients" />
+        <package name="pytest" version=">=7.4.0" purpose="Test framework" />
+        <package name="pytest-asyncio" version=">=0.21.0" purpose="Async test support" />
+        <package name="pytest-cov" version=">=4.1.0" purpose="Coverage measurement" />
+        <package name="ruff" version=">=0.1.0" purpose="Linting and formatting" />
+        <package name="mypy" version=">=1.7.0" purpose="Type checking" />
+      </dev>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Must use openapi-python-client generator (not other generators like openapi-generator or datamodel-code-generator)</constraint>
+    <constraint>Generated code MUST go into src/supermetrics/_generated/ directory (internal, regeneratable location)</constraint>
+    <constraint>NEVER edit generated code manually - it will be overwritten on regeneration</constraint>
+    <constraint>Generated code MUST be committed to version control (not in .gitignore) for transparency and offline development</constraint>
+    <constraint>Python 3.10+ only (modern type hints required)</constraint>
+    <constraint>Apache 2.0 license (specified in Story 1.1)</constraint>
+    <constraint>Minimal runtime dependencies (keep generated client lean)</constraint>
+    <constraint>OpenAPI spec must be OpenAPI 3.x format (not Swagger 2.0)</constraint>
+    <constraint>Regeneration script must be idempotent (running multiple times produces same result)</constraint>
+    <constraint>Filter script must detect and fail on duplicate METHOD|PATH across multiple spec files</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>OpenAPI Specification File</name>
+      <kind>file</kind>
+      <signature>openapi-spec.yaml - Merged and filtered OpenAPI 3.x specification in project root</signature>
+      <path>openapi-spec.yaml</path>
+    </interface>
+    <interface>
+      <name>OpenAPI Filter Script</name>
+      <kind>script</kind>
+      <signature>scripts/filter_openapi_spec.py - Reads openapi-specs/*.yaml, filters by sdk-endpoints.txt, outputs openapi-spec.yaml</signature>
+      <path>scripts/filter_openapi_spec.py</path>
+    </interface>
+    <interface>
+      <name>SDK Endpoints Configuration</name>
+      <kind>file</kind>
+      <signature>sdk-endpoints.txt - METHOD|PATH format, one per line (e.g., "POST|/login_links")</signature>
+      <path>sdk-endpoints.txt</path>
+    </interface>
+    <interface>
+      <name>Regeneration Script</name>
+      <kind>script</kind>
+      <signature>scripts/regenerate_client.sh - Removes old _generated/, runs openapi-python-client generate, validates output</signature>
+      <path>scripts/regenerate_client.sh</path>
+    </interface>
+    <interface>
+      <name>Generated Sync Client</name>
+      <kind>class</kind>
+      <signature>_generated/client.py: Client class with sync HTTP methods</signature>
+      <path>src/supermetrics/_generated/client.py</path>
+    </interface>
+    <interface>
+      <name>Generated Async Client</name>
+      <kind>class</kind>
+      <signature>_generated/async_client.py: AsyncClient class with async HTTP methods</signature>
+      <path>src/supermetrics/_generated/async_client.py</path>
+    </interface>
+    <interface>
+      <name>Generated API Endpoints</name>
+      <kind>modules</kind>
+      <signature>_generated/api/: Endpoint modules for login_links/, logins/, accounts/, queries/</signature>
+      <path>src/supermetrics/_generated/api/</path>
+    </interface>
+    <interface>
+      <name>Generated Pydantic Models</name>
+      <kind>modules</kind>
+      <signature>_generated/models/: Pydantic v2 models for LoginLink, Login, Account, QueryResult, etc.</signature>
+      <path>src/supermetrics/_generated/models/</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>No unit tests required for generated code (it's auto-generated and will be replaced on regeneration). Manual verification in Task 4 ensures generated code completeness. Regeneration script should be manually tested to verify it works correctly. Integration tests in later stories (1.3+) will validate adapter compatibility with generated code.</standards>
+    <locations>
+      <location>tests/</location>
+      <location>tests/unit/</location>
+      <location>tests/integration/</location>
+    </locations>
+    <ideas>
+      <idea ac="AC1">Manually verify openapi-spec.yaml exists in project root after Task 1 completion</idea>
+      <idea ac="AC2">Run `openapi-python-client --version` to verify installation after Task 2</idea>
+      <idea ac="AC3">Verify src/supermetrics/_generated/ directory exists and contains expected structure after Task 3</idea>
+      <idea ac="AC4">Manually check _generated/client.py, _generated/async_client.py, _generated/api/, _generated/models/ exist</idea>
+      <idea ac="AC5">Review _generated/api/ to confirm login_links/, logins/, accounts/, queries/ endpoint modules present. Review _generated/models/ to confirm LoginLink, Login, Account, QueryResult models exist.</idea>
+      <idea ac="AC6">Run scripts/regenerate_client.sh and verify output is identical to original generation (idempotency test)</idea>
+      <idea ac="ALL">Verify generated code compiles: `python -c "from supermetrics._generated import client"`</idea>
+    </ideas>
+  </tests>
+</story-context>
