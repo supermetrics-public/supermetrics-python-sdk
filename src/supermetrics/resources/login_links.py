@@ -103,7 +103,7 @@ class LoginLinksResource:
         response = create_login_link.sync(client=self._client, body=body)
 
         # Unwrap response
-        if response is None or isinstance(response, UNSET) or response.data is None or isinstance(response.data, UNSET):
+        if response is None or response is UNSET or response.data is None or response.data is UNSET:
             raise ValueError("API returned empty response")
 
         link = response.data
@@ -137,7 +137,7 @@ class LoginLinksResource:
 
         response = get_login_link.sync(link_id=link_id, client=self._client)
 
-        if response is None or isinstance(response, UNSET) or response.data is None or isinstance(response.data, UNSET):
+        if response is None or response is UNSET or response.data is None or response.data is UNSET:
             raise ValueError("API returned empty response")
 
         link = response.data
@@ -164,7 +164,7 @@ class LoginLinksResource:
 
         response = list_login_links.sync(client=self._client)
 
-        if response is None or isinstance(response, UNSET) or response.data is None or isinstance(response.data, UNSET):
+        if response is None or response is UNSET or response.data is None or response.data is UNSET:
             return []
 
         links = response.data
@@ -257,7 +257,7 @@ class LoginLinksAsyncResource:
 
         response = await create_login_link.asyncio(client=self._client, body=body)
 
-        if response is None or isinstance(response, UNSET) or response.data is None or isinstance(response.data, UNSET):
+        if response is None or response is UNSET or response.data is None or response.data is UNSET:
             raise ValueError("API returned empty response")
 
         link = response.data
@@ -284,7 +284,7 @@ class LoginLinksAsyncResource:
 
         response = await get_login_link.asyncio(link_id=link_id, client=self._client)
 
-        if response is None or isinstance(response, UNSET) or response.data is None or isinstance(response.data, UNSET):
+        if response is None or response is UNSET or response.data is None or response.data is UNSET:
             raise ValueError("API returned empty response")
 
         link = response.data
@@ -308,7 +308,7 @@ class LoginLinksAsyncResource:
 
         response = await list_login_links.asyncio(client=self._client)
 
-        if response is None or isinstance(response, UNSET) or response.data is None or isinstance(response.data, UNSET):
+        if response is None or response is UNSET or response.data is None or response.data is UNSET:
             return []
 
         links = response.data
