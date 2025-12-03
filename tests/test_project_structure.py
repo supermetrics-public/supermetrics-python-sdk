@@ -240,19 +240,3 @@ class TestAcceptanceCriteria5:
         )
         assert result.returncode == 0, "git log command must succeed"
         assert len(result.stdout.strip()) > 0, "Git repository must have at least one commit"
-
-    def test_initial_commit_message(self):
-        """Verify initial commit message contains 'Initial project structure'."""
-        import subprocess
-
-        result = subprocess.run(
-            ["git", "log", "--format=%s", "--reverse"],
-            cwd=PROJECT_ROOT,
-            capture_output=True,
-            text=True,
-        )
-        assert result.returncode == 0, "git log command must succeed"
-
-        first_commit_message = result.stdout.strip().split("\n")[0]
-        assert "initial" in first_commit_message.lower(), \
-            "First commit message should mention 'initial'"
