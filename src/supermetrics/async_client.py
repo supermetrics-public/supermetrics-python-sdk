@@ -8,6 +8,7 @@ import httpx
 
 from supermetrics.__version__ import __version__
 from supermetrics._generated.supermetrics_api_client.client import Client as GeneratedClient
+from supermetrics.resources.login_links import LoginLinksAsyncResource
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +82,9 @@ class SupermetricsAsyncClient:
 
         # Create internal generated client (supports both sync and async)
         self._client = GeneratedClient(base_url=base_url, headers=headers, timeout=httpx.Timeout(timeout))
+
+        # Attach resource adapters
+        self.login_links = LoginLinksAsyncResource(self._client)
 
         logger.info("SupermetricsAsyncClient initialized successfully")
 
