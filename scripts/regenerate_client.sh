@@ -19,6 +19,9 @@ if [ ! -d "src/supermetrics/_generated/supermetrics_api_client" ]; then
   exit 1
 fi
 
+echo "📁 Removing generated pyproject.toml file..."
+rm src/supermetrics/_generated/pyproject.toml
+
 echo "✓ SDK regenerated successfully"
 echo ""
 echo "📝 Next steps:"
