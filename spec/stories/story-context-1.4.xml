@@ -1,0 +1,303 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>4</storyId>
+    <title>Implement Login Links Resource Adapter</title>
+    <status>Draft</status>
+    <generatedAt>2025-12-02</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>spec/stories/story-1.4.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>a clean, Pythonic interface for login link operations</iWant>
+    <soThat>users can easily create and manage data source authentication links</soThat>
+    <tasks>
+**Task 1: Create LoginLinksResource (sync) (AC: 1, 2, 3, 6, 7)**
+- Create `src/supermetrics/resources/` directory
+- Create `src/supermetrics/resources/__init__.py`
+- Create `src/supermetrics/resources/login_links.py`
+- Import required types from generated client and models
+- Define `LoginLinksResource` class with `__init__(self, client: GeneratedClient)`
+- Implement `create(ds_id: str, description: str, **kwargs) -> LoginLink` method
+- Implement `get(link_id: str) -> LoginLink` method
+- Implement `list() -> list[LoginLink]` method
+- Implement `close(link_id: str) -> None` method
+- Add error handling with try/except for httpx exceptions
+- Map HTTP errors to SDK exceptions (401→AuthenticationError, 400→ValidationError, etc.)
+- Add logging (debug for operations, info for success, error for failures)
+- Add complete type hints to all methods
+- Add Google-style docstrings with Args, Returns, Raises, Examples
+- Format code with ruff and type check with mypy
+
+**Task 2: Create LoginLinksAsyncResource (async) (AC: 4, 6, 7)**
+- Define `LoginLinksAsyncResource` class in same file
+- Implement async versions of all methods (async def create, get, list, close)
+- Add same error handling and logging as sync version
+- Add complete type hints and docstrings
+- Ensure async methods use `await` for generated client calls
+
+**Task 3: Attach resources to clients (AC: 5)**
+- Edit `src/supermetrics/client.py`
+- Import `LoginLinksResource`
+- In `__init__`, add: `self.login_links = LoginLinksResource(self._client)`
+- Edit `src/supermetrics/async_client.py`
+- Import `LoginLinksAsyncResource`
+- In `__init__`, add: `self.login_links = LoginLinksAsyncResource(self._client)`
+
+**Task 4: Create unit tests (AC: 8)**
+- Create `tests/unit/test_login_links.py`
+- Test create() method (success and error scenarios)
+- Test get() method
+- Test list() method
+- Test close() method
+- Test error scenarios: 401, 400, 404, network errors
+- Test async versions of all methods using @pytest.mark.asyncio
+- Run tests with: `pytest tests/unit/test_login_links.py -v`
+
+**Task 5: Update __init__.py exports (AC: 6)**
+- Edit `src/supermetrics/__init__.py`
+- Verify public API exports work correctly
+
+**Task 6: Run code quality checks (AC: 7)**
+- Run mypy: `mypy src/`
+- Fix any type errors
+- Run ruff format: `ruff format src/`
+- Run ruff check: `ruff check src/`
+- Fix any linting issues
+</tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. `src/supermetrics/resources/login_links.py` created with `LoginLinksResource` class
+2. Methods implemented: `create()`, `get()`, `list()`, `close()`
+3. Methods wrap `_generated` client calls with proper parameter mapping
+4. Both sync and async versions implemented (`LoginLinksResource` and `LoginLinksAsyncResource`)
+5. Resources attached to client: `client.login_links` property
+6. Complete type hints and docstrings added for all public methods
+7. Code passes `mypy` strict type checking and formatted with `ruff`
+8. Unit tests added covering all CRUD operations
+</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>spec/architecture.md</path>
+        <title>Decision Architecture - Supermetrics Python SDK</title>
+        <section>Resource Adapter Pattern</section>
+        <snippet>Adapter pattern wrapping OpenAPI-generated code. Hand-written resource classes in resources/ provide stable public API. Pattern includes error handling (httpx exceptions → SDK exceptions), logging strategy (DEBUG/INFO/ERROR levels), and complete type hints with Google-style docstrings.</snippet>
+      </doc>
+      <doc>
+        <path>spec/architecture.md</path>
+        <title>Decision Architecture - Supermetrics Python SDK</title>
+        <section>Exception Mapping Pattern (lines 917-969)</section>
+        <snippet>HTTP status code mapping: 401→AuthenticationError, 400→ValidationError, 404/5xx→APIError, network→NetworkError. Include context in exceptions (status_code, endpoint, response_body). Example implementation in _map_http_exception() method.</snippet>
+      </doc>
+      <doc>
+        <path>spec/architecture.md</path>
+        <title>Decision Architecture - Supermetrics Python SDK</title>
+        <section>Logging Strategy (lines 1186-1251)</section>
+        <snippet>Use logging.getLogger(__name__). DEBUG for method calls with parameters, INFO for successful operations, ERROR for failures. NEVER log sensitive data (API keys). Default to WARNING level.</snippet>
+      </doc>
+      <doc>
+        <path>spec/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Epic 1</title>
+        <section>LoginLinksResource API (lines 179-196)</section>
+        <snippet>API interface: create(ds_id, description, **kwargs) -> LoginLink, get(link_id) -> LoginLink, list() -> list[LoginLink], close(link_id) -> None. All methods raise AuthenticationError, ValidationError, APIError, NetworkError.</snippet>
+      </doc>
+      <doc>
+        <path>spec/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Epic 1</title>
+        <section>LoginLink Model (lines 97-115)</section>
+        <snippet>LoginLink model fields: link_id, ds_id, ds_name, login_url, require_username, redirect_url, redirect_verifier, owner_user_id, owner_user_email, login_id, login_username, created_at, expires_at, login_at, status_code ("OPEN", "CLOSED", "EXPIRED").</snippet>
+      </doc>
+      <doc>
+        <path>spec/epics.md</path>
+        <title>Epic Breakdown</title>
+        <section>Story 1.4 (lines 95-113)</section>
+        <snippet>Story 1.4 implements LoginLinksResource adapter with create/get/list/close methods. Wraps generated client, provides stable API, both sync and async versions. Prerequisites: Story 1.3 complete.</snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <artifact>
+        <path>src/supermetrics/client.py</path>
+        <kind>client</kind>
+        <symbol>SupermetricsClient</symbol>
+        <lines>15-120</lines>
+        <reason>Existing sync client structure. Story 1.4 attaches login_links resource to this client in __init__ method.</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/async_client.py</path>
+        <kind>client</kind>
+        <symbol>SupermetricsAsyncClient</symbol>
+        <lines>1-120</lines>
+        <reason>Existing async client structure. Story 1.4 attaches async login_links resource to this client.</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/_generated/supermetrics_api_client/models/login_link.py</path>
+        <kind>model</kind>
+        <symbol>LoginLink</symbol>
+        <lines>18-266</lines>
+        <reason>Generated LoginLink Pydantic model. Resource methods return instances of this model.</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/_generated/supermetrics_api_client/api/data_source_login_links/create_login_link.py</path>
+        <kind>api_endpoint</kind>
+        <symbol>create_login_link</symbol>
+        <lines>all</lines>
+        <reason>Generated API endpoint for creating login links. LoginLinksResource.create() wraps this.</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/_generated/supermetrics_api_client/api/data_source_login_links/get_login_link.py</path>
+        <kind>api_endpoint</kind>
+        <symbol>get_login_link</symbol>
+        <lines>all</lines>
+        <reason>Generated API endpoint for retrieving login link by ID. LoginLinksResource.get() wraps this.</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/_generated/supermetrics_api_client/api/data_source_login_links/list_login_links.py</path>
+        <kind>api_endpoint</kind>
+        <symbol>list_login_links</symbol>
+        <lines>all</lines>
+        <reason>Generated API endpoint for listing login links. LoginLinksResource.list() wraps this.</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/_generated/supermetrics_api_client/api/data_source_login_links/close_login_link.py</path>
+        <kind>api_endpoint</kind>
+        <symbol>close_login_link</symbol>
+        <lines>all</lines>
+        <reason>Generated API endpoint for closing login link. LoginLinksResource.close() wraps this.</reason>
+      </artifact>
+      <artifact>
+        <path>tests/unit/test_client_init.py</path>
+        <kind>test</kind>
+        <symbol>test_client_initialization</symbol>
+        <lines>all</lines>
+        <reason>Example of existing test structure and patterns. Use as reference for test_login_links.py.</reason>
+      </artifact>
+      <artifact>
+        <path>tests/conftest.py</path>
+        <kind>test_fixture</kind>
+        <symbol>pytest fixtures</symbol>
+        <lines>all</lines>
+        <reason>Shared pytest fixtures and test configuration. May need to add fixtures for mocking httpx responses.</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <runtime>
+        <package name="httpx" version=">=0.25.0">HTTP client with sync/async support. Used for network calls and exception handling.</package>
+        <package name="pydantic" version=">=2.0.0">Data validation. LoginLink model uses Pydantic for type safety.</package>
+        <package name="python-dateutil" version=">=2.8.0">ISO 8601 date parsing for created_at, expires_at timestamps.</package>
+        <package name="attrs" version=">=23.0.0">Class utilities used by generated models.</package>
+      </runtime>
+      <dev>
+        <package name="pytest" version=">=7.4.0">Test framework for unit tests.</package>
+        <package name="pytest-asyncio" version=">=0.21.0">Async test support for LoginLinksAsyncResource tests.</package>
+        <package name="ruff" version=">=0.1.0">Code linting and formatting tool.</package>
+        <package name="mypy" version=">=1.7.0">Static type checker with strict mode enabled.</package>
+      </dev>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+**Architecture Pattern Constraints:**
+- MUST use adapter pattern: hand-written resources/ code wraps _generated/ code
+- MUST NOT modify _generated/ code (regeneratable from OpenAPI)
+- Resource methods MUST map httpx exceptions to SDK exceptions (AuthenticationError, ValidationError, APIError, NetworkError)
+- MUST provide both sync and async versions of all resources
+
+**Code Quality Constraints:**
+- MUST pass mypy strict type checking (pyproject.toml: strict = true)
+- MUST be formatted with ruff (line length 120, py312 target)
+- MUST have complete type hints on all public methods (from spec/architecture.md lines 681-747)
+- MUST have Google-style docstrings with Args, Returns, Raises, Examples sections
+
+**Error Handling Constraints:**
+- HTTP 401 → AuthenticationError("Invalid or expired API key")
+- HTTP 400 → ValidationError("Invalid request parameters")
+- HTTP 404 → APIError("Resource not found")
+- HTTP 5xx → APIError("Supermetrics API error")
+- Network errors → NetworkError("Network error")
+- Include context: status_code, endpoint, response_body
+
+**Logging Constraints:**
+- Use logging.getLogger(__name__)
+- DEBUG: Method calls with parameters (ds_id, link_id)
+- INFO: Successful operations (link created, id=...)
+- ERROR: Failures with exception info
+- NEVER log sensitive data (API keys, tokens)
+
+**Testing Constraints:**
+- Use pytest framework with pytest-asyncio for async tests
+- Follow AAA pattern (Arrange, Act, Assert)
+- Mock httpx responses - NO real API calls in unit tests
+- Test both success and error scenarios
+- Test both sync and async versions
+- Tests must be in tests/unit/test_login_links.py
+
+**Python Version Constraint:**
+- Python 3.10+ (from pyproject.toml: requires-python = ">=3.10")
+- Use modern type hints: list[T] not List[T], dict[K,V] not Dict[K,V], str | None not Optional[str]
+</constraints>
+
+  <interfaces>
+    <interface>
+      <name>LoginLinksResource.create</name>
+      <kind>method</kind>
+      <signature>def create(self, ds_id: str, description: str, **kwargs) -> LoginLink</signature>
+      <path>src/supermetrics/resources/login_links.py (to be created)</path>
+    </interface>
+    <interface>
+      <name>LoginLinksResource.get</name>
+      <kind>method</kind>
+      <signature>def get(self, link_id: str) -> LoginLink</signature>
+      <path>src/supermetrics/resources/login_links.py (to be created)</path>
+    </interface>
+    <interface>
+      <name>LoginLinksResource.list</name>
+      <kind>method</kind>
+      <signature>def list(self) -> list[LoginLink]</signature>
+      <path>src/supermetrics/resources/login_links.py (to be created)</path>
+    </interface>
+    <interface>
+      <name>LoginLinksResource.close</name>
+      <kind>method</kind>
+      <signature>def close(self, link_id: str) -> None</signature>
+      <path>src/supermetrics/resources/login_links.py (to be created)</path>
+    </interface>
+    <interface>
+      <name>GeneratedClient (from _generated)</name>
+      <kind>class</kind>
+      <signature>Client class with get_httpx_client() method and API endpoints</signature>
+      <path>src/supermetrics/_generated/supermetrics_api_client/client.py</path>
+    </interface>
+    <interface>
+      <name>create_login_link API</name>
+      <kind>function</kind>
+      <signature>Generated function for POST /login_links endpoint</signature>
+      <path>src/supermetrics/_generated/supermetrics_api_client/api/data_source_login_links/create_login_link.py</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+Tests use pytest framework with pytest-asyncio for async support. Follow AAA pattern (Arrange, Act, Assert). Mock httpx responses using httpx.MockTransport or mock the generated client methods. Test each CRUD operation (create, get, list, close) with both success and error scenarios. Test both sync and async versions of all methods. No real API calls in unit tests - all mocked. Tests located in tests/unit/ directory. Use fixtures from tests/conftest.py for reusable test data and mocked responses.
+</standards>
+    <locations>tests/unit/test_login_links.py (to be created)</locations>
+    <ideas>
+- Test successful create: mock response with LoginLink data, verify returned object has correct attributes
+- Test create with invalid API key (401): verify AuthenticationError raised with correct message and context
+- Test create with invalid ds_id (400): verify ValidationError raised
+- Test create network error: verify NetworkError raised
+- Test successful get: mock response, verify LoginLink returned
+- Test get not found (404): verify APIError raised
+- Test successful list: mock response with list of LoginLink objects
+- Test successful close: verify no return value (None)
+- Test async versions of all above using @pytest.mark.asyncio decorator
+- Map AC IDs: AC1,2,3→ resource class structure tests, AC4→ async tests, AC5→ client attachment tests, AC7→ mypy/ruff validation, AC8→ all CRUD operation tests
+</ideas>
+  </tests>
+</story-context>

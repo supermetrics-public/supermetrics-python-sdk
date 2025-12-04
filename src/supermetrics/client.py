@@ -8,6 +8,7 @@ import httpx
 
 from supermetrics.__version__ import __version__
 from supermetrics._generated.supermetrics_api_client.client import Client as GeneratedClient
+from supermetrics.resources.login_links import LoginLinksResource
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +84,9 @@ class SupermetricsClient:
 
         # Create internal generated client
         self._client = GeneratedClient(base_url=base_url, headers=headers, timeout=httpx.Timeout(timeout))
+
+        # Attach resource adapters
+        self.login_links = LoginLinksResource(self._client)
 
         logger.info("SupermetricsClient initialized successfully")
 
