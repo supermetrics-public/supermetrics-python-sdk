@@ -1,0 +1,255 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>5</storyId>
+    <title>Implement Logins Resource Adapter</title>
+    <status>Draft</status>
+    <generatedAt>2025-12-06</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>spec/stories/story-1.5.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>a clean interface for retrieving login information</iWant>
+    <soThat>users can verify authentication completion and obtain login credentials</soThat>
+    <tasks>
+### Task 1: Create LoginsResource (sync) (AC: 1, 2, 5, 6)
+- [ ] Create `src/supermetrics/resources/logins.py`
+- [ ] Import required types and Login model from `_generated.models`
+- [ ] Define `LoginsResource` class
+- [ ] Implement `get(link_id: str) -> Login` method
+- [ ] Implement `list() -> list[Login]` method
+- [ ] Implement `get_by_username(login_username: str) -> Login` method
+- [ ] Add error handling with httpx exception mapping
+- [ ] Add logging (debug/info/error)
+- [ ] Add complete type hints and Google-style docstrings
+- [ ] Format with ruff and type check with mypy
+
+### Task 2: Create LoginsAsyncResource (async) (AC: 3, 5, 6)
+- [ ] In same file, define `LoginsAsyncResource` class
+- [ ] Implement async versions of all methods
+- [ ] Add error handling and logging
+- [ ] Add type hints and docstrings
+
+### Task 3: Attach to clients (AC: 4)
+- [ ] Edit `client.py`: Add `self.logins = LoginsResource(self._client)`
+- [ ] Edit `async_client.py`: Add `self.logins = LoginsAsyncResource(self._client)`
+
+### Task 4: Create unit tests (AC: 7)
+- [ ] Create `tests/unit/test_logins.py`
+- [ ] Add mock Login response fixtures
+- [ ] Test `get()` method (by link_id)
+- [ ] Test `list()` method
+- [ ] Test `get_by_username()` method
+- [ ] Test error scenarios (401, 400, 404, network errors)
+- [ ] Test async versions
+- [ ] Run tests: `pytest tests/unit/test_logins.py -v`
+
+### Task 5: Code quality checks (AC: 6)
+- [ ] Run mypy: `mypy src/`
+- [ ] Run ruff format: `ruff format src/`
+- [ ] Run ruff check: `ruff check src/`
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. `src/supermetrics/resources/logins.py` created with `LoginsResource` class
+2. Methods implemented: `get()`, `list()`, `get_by_username()`
+3. Both sync and async versions implemented
+4. Resources attached to client: `client.logins` property
+5. Complete type hints and docstrings added
+6. Code passes `mypy` and `ruff`
+7. Unit tests covering all operations
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>spec/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Project Foundation & Core SDK Generation</title>
+        <section>Login Model (lines 117-135)</section>
+        <snippet>Defines the Login Pydantic model with fields: login_id, login_type, username, display_name, ds_id, ds_name, default_scopes, additional_scopes, login_at (auth_time in generated), owner_user_id (auth_user_info in generated), owner_user_email, expires_at (expiry_time in generated), revoked_at (revoked_time in generated), is_refreshable, is_shared</snippet>
+      </doc>
+      <doc>
+        <path>spec/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Project Foundation & Core SDK Generation</title>
+        <section>LoginsResource API (lines 230-240)</section>
+        <snippet>Defines three methods: get(link_id) to retrieve login by link ID, get_by_username(login_username) to get login by username, and list() to retrieve all logins. All return Login Pydantic models.</snippet>
+      </doc>
+      <doc>
+        <path>spec/architecture.md</path>
+        <title>System Architecture</title>
+        <section>Resource Adapter Pattern (lines 556-679)</section>
+        <snippet>Mandatory pattern for all resources: wrap generated API calls with stable public interface, include logging at DEBUG/INFO levels, map httpx exceptions to SDK exceptions, use Google-style docstrings with examples, handle response unwrapping from response.data</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/supermetrics/resources/login_links.py</path>
+        <kind>resource</kind>
+        <symbol>LoginLinksResource, LoginLinksAsyncResource</symbol>
+        <lines>entire file</lines>
+        <reason>Reference implementation showing exact pattern to follow: response unwrapping from .data field, UNSET handling, logging, error handling, sync/async dual implementation</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/_generated/supermetrics_api_client/api/data_source_logins/get_data_source_login.py</path>
+        <kind>generated-api</kind>
+        <symbol>sync, asyncio</symbol>
+        <lines>131-234</lines>
+        <reason>Generated endpoint to wrap for get() method. Takes login_id parameter, returns GetDataSourceLoginResponse200 with .data field containing DataSourceLogin</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/_generated/supermetrics_api_client/api/data_source_logins/list_data_source_logins.py</path>
+        <kind>generated-api</kind>
+        <symbol>sync, asyncio</symbol>
+        <lines>114-198</lines>
+        <reason>Generated endpoint to wrap for list() method. Returns ListDataSourceLoginsResponse200 with .data field containing list[DataSourceLogin]</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/_generated/supermetrics_api_client/models/data_source_login.py</path>
+        <kind>model</kind>
+        <symbol>DataSourceLogin</symbol>
+        <lines>23-266</lines>
+        <reason>Generated Pydantic model for Login entity. Uses auth_time instead of login_at, auth_user_info.user_id/user_email for owner fields, ds_info.ds_id/ds_name for data source fields</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/client.py</path>
+        <kind>client</kind>
+        <symbol>SupermetricsClient.__init__</symbol>
+        <lines>86-90</lines>
+        <reason>Where to attach logins resource: self.logins = LoginsResource(self._client)</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/async_client.py</path>
+        <kind>client</kind>
+        <symbol>SupermetricsAsyncClient.__init__</symbol>
+        <lines>similar to client.py</lines>
+        <reason>Where to attach async logins resource: self.logins = LoginsAsyncResource(self._client)</reason>
+      </artifact>
+      <artifact>
+        <path>tests/unit/test_login_links.py</path>
+        <kind>test</kind>
+        <symbol>TestLoginLinksResource</symbol>
+        <lines>entire file</lines>
+        <reason>Reference test pattern: mock generated API functions, test both sync/async, use fixtures for mock client and sample models</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <python>
+        <package>httpx</package>
+        <version>&gt;=0.25.0</version>
+        <usage>HTTP client for API requests</usage>
+      </python>
+      <python>
+        <package>pydantic</package>
+        <version>&gt;=2.0.0</version>
+        <usage>Data validation and models</usage>
+      </python>
+      <python>
+        <package>python-dateutil</package>
+        <version>&gt;=2.8.0</version>
+        <usage>Datetime parsing</usage>
+      </python>
+      <python>
+        <package>attrs</package>
+        <version>&gt;=23.0.0</version>
+        <usage>Used by generated models</usage>
+      </python>
+      <python>
+        <package>pytest</package>
+        <version>&gt;=7.4.0</version>
+        <usage>Testing framework (dev)</usage>
+      </python>
+      <python>
+        <package>pytest-asyncio</package>
+        <version>&gt;=0.21.0</version>
+        <usage>Async test support (dev)</usage>
+      </python>
+      <python>
+        <package>ruff</package>
+        <version>&gt;=0.1.0</version>
+        <usage>Linting and formatting (dev)</usage>
+      </python>
+      <python>
+        <package>mypy</package>
+        <version>&gt;=1.7.0</version>
+        <usage>Type checking (dev)</usage>
+      </python>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Use Python 3.10+ modern type hints (str | None instead of Optional[str], list[Login] instead of List[Login])</constraint>
+    <constraint>Follow exact resource adapter pattern from login_links.py: wrap generated API calls, unwrap .data from responses, use UNSET for optional parameters</constraint>
+    <constraint>Add logging: logger.debug() for method calls with parameters, logger.info() for successful operations with result summary</constraint>
+    <constraint>Use Google-style docstrings with Args, Returns, Raises, and Example sections for all public methods</constraint>
+    <constraint>Handle empty/None responses by raising ValueError with clear message</constraint>
+    <constraint>Import from _generated.supermetrics_api_client.api.data_source_logins and models</constraint>
+    <constraint>Note: Generated model uses auth_time (not login_at), auth_user_info (not owner_user_id/email), ds_info (not ds_id/ds_name directly)</constraint>
+    <constraint>For get_by_username(): No generated endpoint exists - implement by calling list() and filtering by username field, raise ValueError if not found</constraint>
+    <constraint>Both sync and async versions must have identical interfaces and behavior</constraint>
+    <constraint>Code must pass mypy strict type checking and ruff formatting (120 char line length)</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>LoginsResource.get</name>
+      <kind>method</kind>
+      <signature>def get(self, link_id: str) -> DataSourceLogin</signature>
+      <path>src/supermetrics/resources/logins.py</path>
+      <description>Get login by link ID. Wraps get_data_source_login.sync()</description>
+    </interface>
+    <interface>
+      <name>LoginsResource.list</name>
+      <kind>method</kind>
+      <signature>def list(self) -> list[DataSourceLogin]</signature>
+      <path>src/supermetrics/resources/logins.py</path>
+      <description>List all logins. Wraps list_data_source_logins.sync()</description>
+    </interface>
+    <interface>
+      <name>LoginsResource.get_by_username</name>
+      <kind>method</kind>
+      <signature>def get_by_username(self, login_username: str) -> DataSourceLogin</signature>
+      <path>src/supermetrics/resources/logins.py</path>
+      <description>Get login by username. Calls list() and filters by username field, raises ValueError if not found</description>
+    </interface>
+    <interface>
+      <name>LoginsAsyncResource.get</name>
+      <kind>async-method</kind>
+      <signature>async def get(self, link_id: str) -> DataSourceLogin</signature>
+      <path>src/supermetrics/resources/logins.py</path>
+      <description>Async version of get(). Wraps get_data_source_login.asyncio()</description>
+    </interface>
+    <interface>
+      <name>LoginsAsyncResource.list</name>
+      <kind>async-method</kind>
+      <signature>async def list(self) -> list[DataSourceLogin]</signature>
+      <path>src/supermetrics/resources/logins.py</path>
+      <description>Async version of list(). Wraps list_data_source_logins.asyncio()</description>
+    </interface>
+    <interface>
+      <name>LoginsAsyncResource.get_by_username</name>
+      <kind>async-method</kind>
+      <signature>async def get_by_username(self, login_username: str) -> DataSourceLogin</signature>
+      <path>src/supermetrics/resources/logins.py</path>
+      <description>Async version of get_by_username(). Calls list() and filters</description>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Use pytest with pytest-asyncio for testing. Mock generated API functions by patching the imported module functions. Create fixtures for mock client and sample DataSourceLogin models. Test both sync and async resource classes. Verify method calls, assert expected return values, test error scenarios. No real API calls - all mocked.</standards>
+    <locations>tests/unit/test_logins.py</locations>
+    <ideas>
+      <idea ac="1,2">Test get() method: mock get_data_source_login.sync to return response with .data=DataSourceLogin, assert returned login has expected fields</idea>
+      <idea ac="1,2">Test get() with empty response: mock returns None or UNSET, assert ValueError raised</idea>
+      <idea ac="1,2">Test list() method: mock list_data_source_logins.sync to return response with .data=[DataSourceLogin1, DataSourceLogin2], assert list length and content</idea>
+      <idea ac="1,2">Test list() with empty list: mock returns response with .data=[], assert empty list returned</idea>
+      <idea ac="1,2">Test get_by_username() success: mock list() to return logins with different usernames, call get_by_username("user1"), assert correct login returned</idea>
+      <idea ac="1,2">Test get_by_username() not found: mock list() to return logins without matching username, assert ValueError raised</idea>
+      <idea ac="3">Test async get() method: use @pytest.mark.asyncio, mock get_data_source_login.asyncio, verify async call made</idea>
+      <idea ac="3">Test async list() method: mock list_data_source_logins.asyncio, verify async call</idea>
+      <idea ac="3">Test async get_by_username(): mock async list(), verify filtering works</idea>
+    </ideas>
+  </tests>
+</story-context>
