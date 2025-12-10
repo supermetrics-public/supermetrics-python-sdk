@@ -1,0 +1,253 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>6</storyId>
+    <title>Implement Accounts Resource Adapter</title>
+    <status>Draft</status>
+    <generatedAt>2025-12-07</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>spec/stories/story-1.6.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>a clean interface for retrieving data source accounts</iWant>
+    <soThat>users can discover available accounts for querying</soThat>
+    <tasks>
+### Task 1: Create AccountsResource (sync) (AC: 1, 2, 5, 6)
+- [ ] Create `src/supermetrics/resources/accounts.py`
+- [ ] Import Account model from `_generated.models`
+- [ ] Define `AccountsResource` class
+- [ ] Implement `list()` method with optional filtering parameters:
+  - `login_username: Optional[str] = None`
+  - `ds_id: Optional[str] = None`
+  - `account_type: Optional[str] = None`
+  - `**kwargs` for additional filters
+- [ ] Add error handling and logging
+- [ ] Add type hints and docstrings
+- [ ] Format with ruff and type check with mypy
+
+### Task 2: Create AccountsAsyncResource (async) (AC: 3, 5, 6)
+- [ ] Define `AccountsAsyncResource` class
+- [ ] Implement async `list()` method with same parameters
+- [ ] Add error handling and logging
+
+### Task 3: Attach to clients (AC: 4)
+- [ ] Edit `client.py`: Add `self.accounts = AccountsResource(self._client)`
+- [ ] Edit `async_client.py`: Add `self.accounts = AccountsAsyncResource(self._client)`
+
+### Task 4: Create unit tests (AC: 7)
+- [ ] Create `tests/unit/test_accounts.py`
+- [ ] Test `list()` without filters
+- [ ] Test `list(login_username="...")`
+- [ ] Test `list(ds_id="...")`
+- [ ] Test `list()` with multiple filters
+- [ ] Test error scenarios
+- [ ] Test async versions
+- [ ] Run tests: `pytest tests/unit/test_accounts.py -v`
+
+### Task 5: Code quality checks (AC: 6)
+- [ ] Run mypy and ruff
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. `src/supermetrics/resources/accounts.py` created with `AccountsResource` class
+2. Methods implemented: `list()`, with support for filtering by `login_username`, `ds_id`, and other parameters
+3. Both sync and async versions implemented
+4. Resources attached to client: `client.accounts` property
+5. Complete type hints and docstrings added
+6. Code passes `mypy` and `ruff`
+7. Unit tests covering all operations
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>spec/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Project Foundation & Core SDK Generation</title>
+        <section>Account Model (lines 137-143)</section>
+        <snippet>Defines Account model with fields: account_id (str), account_name (str), group_name (str - empty when not available).</snippet>
+      </doc>
+      <doc>
+        <path>spec/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Project Foundation & Core SDK Generation</title>
+        <section>AccountsResource API (lines 211-224)</section>
+        <snippet>Lists accounts by login_username and ds_id with optional filtering. Returns list[Account].</snippet>
+      </doc>
+      <doc>
+        <path>spec/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Project Foundation & Core SDK Generation</title>
+        <section>Data Flow and Relationships (lines 169-189)</section>
+        <snippet>Shows flow: LoginLink → Login (with login_username) → Account[] (list by login_username) → QueryResult. Account.account_id is used in queries.</snippet>
+      </doc>
+      <doc>
+        <path>spec/architecture.md</path>
+        <title>System Architecture</title>
+        <section>Resource Adapter Pattern</section>
+        <snippet>Mandatory pattern for all resources: wrap generated API calls with stable public interface, include logging, map exceptions to SDK exceptions, use Google-style docstrings with examples.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/supermetrics/resources/login_links.py</path>
+        <kind>resource</kind>
+        <symbol>LoginLinksResource, LoginLinksAsyncResource</symbol>
+        <lines>entire file</lines>
+        <reason>Reference implementation for resource adapter pattern including response unwrapping, logging, error handling, and dual sync/async implementation.</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/resources/logins.py</path>
+        <kind>resource</kind>
+        <symbol>LoginsResource, LoginsAsyncResource</symbol>
+        <lines>entire file</lines>
+        <reason>Recent implementation showing resource adapter pattern with method filtering (get_by_username filters list results).</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/_generated/supermetrics_api_client/api/data_source/get_accounts.py</path>
+        <kind>generated-api</kind>
+        <symbol>sync, asyncio</symbol>
+        <lines>entire file</lines>
+        <reason>Generated endpoint to wrap. Takes GetAccountsJson with ds_id (required), ds_users (optional filter), cache_minutes. Returns GetAccountsResponse200.</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/_generated/supermetrics_api_client/models/get_accounts_json.py</path>
+        <kind>model</kind>
+        <symbol>GetAccountsJson</symbol>
+        <lines>14-28</lines>
+        <reason>Request model with fields: ds_id (str, required), ds_users (list[str] | str | Unset), cache_minutes (int | Unset). Use to filter accounts.</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/_generated/supermetrics_api_client/models/get_accounts_response_200.py</path>
+        <kind>model</kind>
+        <symbol>GetAccountsResponse200</symbol>
+        <lines>18-28</lines>
+        <reason>Response wrapper with .data field containing list[GetAccountsResponse200DataItem]. Need to unwrap and flatten.</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/_generated/supermetrics_api_client/models/get_accounts_response_200_data_item.py</path>
+        <kind>model</kind>
+        <symbol>GetAccountsResponse200DataItem</symbol>
+        <lines>20-34</lines>
+        <reason>Contains ds_user, display_name, cache_time, and accounts list. Each data item represents one login's accounts.</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/_generated/supermetrics_api_client/models/get_accounts_response_200_data_item_accounts_item.py</path>
+        <kind>model</kind>
+        <symbol>GetAccountsResponse200DataItemAccountsItem</symbol>
+        <lines>14-26</lines>
+        <reason>Actual Account model with account_id, account_name, group_name. This is what we return to users.</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/client.py</path>
+        <kind>client</kind>
+        <symbol>SupermetricsClient.__init__</symbol>
+        <lines>86-91</lines>
+        <reason>Where to attach accounts resource: self.accounts = AccountsResource(self._client)</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/async_client.py</path>
+        <kind>client</kind>
+        <symbol>SupermetricsAsyncClient.__init__</symbol>
+        <lines>similar to client.py</lines>
+        <reason>Where to attach async accounts resource: self.accounts = AccountsAsyncResource(self._client)</reason>
+      </artifact>
+      <artifact>
+        <path>tests/unit/test_logins.py</path>
+        <kind>test</kind>
+        <symbol>TestLoginsResource, TestLoginsAsyncResource</symbol>
+        <lines>entire file</lines>
+        <reason>Reference test pattern: mock generated API functions, test filtering, use fixtures for mock client and sample models with AsyncMock for async tests.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <python>
+        <package>httpx</package>
+        <version>&gt;=0.25.0</version>
+        <usage>HTTP client for API requests</usage>
+      </python>
+      <python>
+        <package>pydantic</package>
+        <version>&gt;=2.0.0</version>
+        <usage>Data validation and models</usage>
+      </python>
+      <python>
+        <package>python-dateutil</package>
+        <version>&gt;=2.8.0</version>
+        <usage>Datetime parsing</usage>
+      </python>
+      <python>
+        <package>attrs</package>
+        <version>&gt;=23.0.0</version>
+        <usage>Used by generated models</usage>
+      </python>
+      <python>
+        <package>pytest</package>
+        <version>&gt;=7.4.0</version>
+        <usage>Testing framework (dev)</usage>
+      </python>
+      <python>
+        <package>pytest-asyncio</package>
+        <version>&gt;=0.21.0</version>
+        <usage>Async test support (dev)</usage>
+      </python>
+      <python>
+        <package>ruff</package>
+        <version>&gt;=0.1.0</version>
+        <usage>Linting and formatting (dev)</usage>
+      </python>
+      <python>
+        <package>mypy</package>
+        <version>&gt;=1.7.0</version>
+        <usage>Type checking (dev)</usage>
+      </python>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Use Python 3.10+ modern type hints (str | None instead of Optional[str], list[Account] instead of List[Account])</constraint>
+    <constraint>Follow exact resource adapter pattern from login_links.py and logins.py: wrap generated API calls, unwrap .data from responses, use UNSET for optional parameters</constraint>
+    <constraint>Add logging: logger.debug() for method calls with parameters, logger.info() for successful operations with result count</constraint>
+    <constraint>Use Google-style docstrings with Args, Returns, Raises, and Example sections for all public methods</constraint>
+    <constraint>Handle empty/None responses by returning empty list (not raising error)</constraint>
+    <constraint>Import from _generated.supermetrics_api_client.api.data_source and models</constraint>
+    <constraint>Generated API uses GetAccountsJson request model with ds_id (required) and ds_users (optional filter by login usernames)</constraint>
+    <constraint>Response structure: GetAccountsResponse200.data contains list[GetAccountsResponse200DataItem], each with .accounts list. Must flatten all accounts from all data items.</constraint>
+    <constraint>Rename API parameters for better developer experience: ds_id → ds_id, ds_users → login_usernames (accepts str | list[str])</constraint>
+    <constraint>Both sync and async versions must have identical interfaces and behavior</constraint>
+    <constraint>Code must pass mypy strict type checking and ruff formatting (120 char line length)</constraint>
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>AccountsResource.list</name>
+      <kind>method</kind>
+      <signature>def list(self, ds_id: str, login_usernames: str | list[str] | None = None, cache_minutes: int | None = None) -> list[GetAccountsResponse200DataItemAccountsItem]</signature>
+      <path>src/supermetrics/resources/accounts.py</path>
+      <description>List all accounts for given data source, optionally filtered by login usernames. Wraps get_accounts.sync() and flattens response.data[].accounts[].</description>
+    </interface>
+    <interface>
+      <name>AccountsAsyncResource.list</name>
+      <kind>async-method</kind>
+      <signature>async def list(self, ds_id: str, login_usernames: str | list[str] | None = None, cache_minutes: int | None = None) -> list[GetAccountsResponse200DataItemAccountsItem]</signature>
+      <path>src/supermetrics/resources/accounts.py</path>
+      <description>Async version of list(). Wraps get_accounts.asyncio().</description>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>Use pytest with pytest-asyncio for testing. Mock generated API functions by patching the imported module functions. Create fixtures for mock client and sample Account models (GetAccountsResponse200DataItemAccountsItem). Test both sync and async resource classes. Verify method calls, assert expected return values (flattened accounts list), test filtering scenarios. No real API calls - all mocked. Use AsyncMock for async tests.</standards>
+    <locations>tests/unit/test_accounts.py</locations>
+    <ideas>
+      <idea ac="1,2">Test list(ds_id="GA4") without filters: mock get_accounts.sync to return response with 2 data items each having 2 accounts, assert flattened list has 4 accounts total</idea>
+      <idea ac="1,2">Test list(ds_id="GA4", login_usernames="user1"): mock to return filtered response with 1 data item, verify GetAccountsJson created with correct ds_users parameter</idea>
+      <idea ac="1,2">Test list(ds_id="GA4", login_usernames=["user1", "user2"]): verify list of usernames passed correctly</idea>
+      <idea ac="1,2">Test list() with cache_minutes: verify parameter passed to GetAccountsJson</idea>
+      <idea ac="1,2">Test list() with empty response: mock returns response with empty data list, assert empty list returned (not error)</idea>
+      <idea ac="1,2">Test list() with data items but empty accounts: mock returns data items with empty accounts lists, assert empty list returned</idea>
+      <idea ac="3">Test async list() method: use @pytest.mark.asyncio, mock get_accounts.asyncio with AsyncMock, verify async call made</idea>
+      <idea ac="3">Test async list() with filters: verify filtering works in async version</idea>
+      <idea ac="7">Test error handling: mock API to raise httpx exceptions, verify proper error handling</idea>
+    </ideas>
+  </tests>
+</story-context>
