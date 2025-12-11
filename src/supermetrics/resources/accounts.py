@@ -1,14 +1,17 @@
 """Accounts resource adapter for Supermetrics API."""
 
 import logging
+from typing import cast
 
+from supermetrics._generated.supermetrics_api_client import AuthenticatedClient
 from supermetrics._generated.supermetrics_api_client import Client as GeneratedClient
 from supermetrics._generated.supermetrics_api_client.api.data_source import get_accounts
 from supermetrics._generated.supermetrics_api_client.models.get_accounts_json import GetAccountsJson
+from supermetrics._generated.supermetrics_api_client.models.get_accounts_response_200 import GetAccountsResponse200
 from supermetrics._generated.supermetrics_api_client.models.get_accounts_response_200_data_item_accounts_item import (
     GetAccountsResponse200DataItemAccountsItem,
 )
-from supermetrics._generated.supermetrics_api_client.types import UNSET
+from supermetrics._generated.supermetrics_api_client.types import UNSET, Unset
 
 logger = logging.getLogger(__name__)
 
@@ -105,17 +108,24 @@ class AccountsResource:
         )
 
         # Call generated API
-        response = get_accounts.sync(client=self._client, json=request_params)
+        response = get_accounts.sync(client=cast(AuthenticatedClient, self._client), json=request_params)
 
         # Handle empty or error responses
-        if response is None or response is UNSET or response.data is None or response.data is UNSET:
+        if response is None or isinstance(response, Unset):
+            logger.info("No accounts found (empty response)")
+            return []
+
+        # Cast to success response type - error responses are handled by generated client
+        success_response = cast(GetAccountsResponse200, response)
+
+        if success_response.data is None or isinstance(success_response.data, Unset):
             logger.info("No accounts found (empty response)")
             return []
 
         # Flatten nested structure: response.data[].accounts[] -> single list
         all_accounts: list[GetAccountsResponse200DataItemAccountsItem] = []
-        for data_item in response.data:
-            if data_item.accounts is not None and data_item.accounts is not UNSET:
+        for data_item in success_response.data:
+            if data_item.accounts is not None and not isinstance(data_item.accounts, Unset):
                 all_accounts.extend(data_item.accounts)
 
         logger.info(f"Retrieved {len(all_accounts)} accounts for ds_id={ds_id}")
@@ -177,17 +187,24 @@ class AccountsAsyncResource:
         )
 
         # Call generated API
-        response = await get_accounts.asyncio(client=self._client, json=request_params)
+        response = await get_accounts.asyncio(client=cast(AuthenticatedClient, self._client), json=request_params)
 
         # Handle empty or error responses
-        if response is None or response is UNSET or response.data is None or response.data is UNSET:
+        if response is None or isinstance(response, Unset):
+            logger.info("No accounts found (async - empty response)")
+            return []
+
+        # Cast to success response type - error responses are handled by generated client
+        success_response = cast(GetAccountsResponse200, response)
+
+        if success_response.data is None or isinstance(success_response.data, Unset):
             logger.info("No accounts found (async - empty response)")
             return []
 
         # Flatten nested structure: response.data[].accounts[] -> single list
         all_accounts: list[GetAccountsResponse200DataItemAccountsItem] = []
-        for data_item in response.data:
-            if data_item.accounts is not None and data_item.accounts is not UNSET:
+        for data_item in success_response.data:
+            if data_item.accounts is not None and not isinstance(data_item.accounts, Unset):
                 all_accounts.extend(data_item.accounts)
 
         logger.info(f"Retrieved {len(all_accounts)} accounts (async) for ds_id={ds_id}")

@@ -1,14 +1,22 @@
 """Logins resource adapter for Supermetrics API."""
 
 import logging
+from typing import cast
 
+from supermetrics._generated.supermetrics_api_client import AuthenticatedClient
 from supermetrics._generated.supermetrics_api_client import Client as GeneratedClient
 from supermetrics._generated.supermetrics_api_client.api.data_source_logins import (
     get_data_source_login,
     list_data_source_logins,
 )
 from supermetrics._generated.supermetrics_api_client.models.data_source_login import DataSourceLogin
-from supermetrics._generated.supermetrics_api_client.types import UNSET
+from supermetrics._generated.supermetrics_api_client.models.get_data_source_login_response_200 import (
+    GetDataSourceLoginResponse200,
+)
+from supermetrics._generated.supermetrics_api_client.models.list_data_source_logins_response_200 import (
+    ListDataSourceLoginsResponse200,
+)
+from supermetrics._generated.supermetrics_api_client.types import UNSET, Unset
 
 logger = logging.getLogger(__name__)
 
@@ -69,12 +77,18 @@ class LoginsResource:
         """
         logger.debug(f"Retrieving login: login_id={login_id}")
 
-        response = get_data_source_login.sync(login_id=login_id, client=self._client)
+        response = get_data_source_login.sync(login_id=login_id, client=cast(AuthenticatedClient, self._client))
 
-        if response is None or response is UNSET or response.data is None or response.data is UNSET:
+        if response is None or isinstance(response, Unset):
             raise ValueError("API returned empty response")
 
-        login = response.data
+        # Cast to success response type - error responses are handled by generated client
+        success_response = cast(GetDataSourceLoginResponse200, response)
+
+        if success_response.data is None or isinstance(success_response.data, Unset):
+            raise ValueError("API returned empty response")
+
+        login = success_response.data
         logger.info(f"Retrieved login: id={login.login_id}, username={login.username}")
 
         return login
@@ -99,12 +113,18 @@ class LoginsResource:
         """
         logger.debug("Listing all logins")
 
-        response = list_data_source_logins.sync(client=self._client)
+        response = list_data_source_logins.sync(client=cast(AuthenticatedClient, self._client))
 
-        if response is None or response is UNSET or response.data is None or response.data is UNSET:
+        if response is None or isinstance(response, Unset):
             return []
 
-        logins = response.data
+        # Cast to success response type - error responses are handled by generated client
+        success_response = cast(ListDataSourceLoginsResponse200, response)
+
+        if success_response.data is None or isinstance(success_response.data, Unset):
+            return []
+
+        logins = success_response.data
         logger.info(f"Retrieved {len(logins)} logins")
 
         return logins
@@ -183,12 +203,18 @@ class LoginsAsyncResource:
         """
         logger.debug(f"Retrieving login (async): login_id={login_id}")
 
-        response = await get_data_source_login.asyncio(login_id=login_id, client=self._client)
+        response = await get_data_source_login.asyncio(login_id=login_id, client=cast(AuthenticatedClient, self._client))
 
-        if response is None or response is UNSET or response.data is None or response.data is UNSET:
+        if response is None or isinstance(response, Unset):
             raise ValueError("API returned empty response")
 
-        login = response.data
+        # Cast to success response type - error responses are handled by generated client
+        success_response = cast(GetDataSourceLoginResponse200, response)
+
+        if success_response.data is None or isinstance(success_response.data, Unset):
+            raise ValueError("API returned empty response")
+
+        login = success_response.data
         logger.info(f"Retrieved login (async): id={login.login_id}, username={login.username}")
 
         return login
@@ -207,12 +233,18 @@ class LoginsAsyncResource:
         """
         logger.debug("Listing all logins (async)")
 
-        response = await list_data_source_logins.asyncio(client=self._client)
+        response = await list_data_source_logins.asyncio(client=cast(AuthenticatedClient, self._client))
 
-        if response is None or response is UNSET or response.data is None or response.data is UNSET:
+        if response is None or isinstance(response, Unset):
             return []
 
-        logins = response.data
+        # Cast to success response type - error responses are handled by generated client
+        success_response = cast(ListDataSourceLoginsResponse200, response)
+
+        if success_response.data is None or isinstance(success_response.data, Unset):
+            return []
+
+        logins = success_response.data
         logger.info(f"Retrieved {len(logins)} logins (async)")
 
         return logins
