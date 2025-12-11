@@ -3,6 +3,8 @@
 import logging
 from typing import cast
 
+import httpx
+
 from supermetrics._generated.supermetrics_api_client import AuthenticatedClient
 from supermetrics._generated.supermetrics_api_client import Client as GeneratedClient
 from supermetrics._generated.supermetrics_api_client.api.data_source_logins import (
@@ -16,7 +18,8 @@ from supermetrics._generated.supermetrics_api_client.models.get_data_source_logi
 from supermetrics._generated.supermetrics_api_client.models.list_data_source_logins_response_200 import (
     ListDataSourceLoginsResponse200,
 )
-from supermetrics._generated.supermetrics_api_client.types import UNSET, Unset
+from supermetrics._generated.supermetrics_api_client.types import Unset
+from supermetrics.exceptions import APIError, AuthenticationError, NetworkError, ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -65,9 +68,10 @@ class LoginsResource:
             DataSourceLogin: The login details.
 
         Raises:
-            httpx.HTTPStatusError: If the API returns an error status code.
-            httpx.TimeoutException: If the request times out.
-            ValueError: If the API returns an empty response.
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            ValidationError: If request parameters are invalid (HTTP 400).
+            APIError: If the API returns a server error (HTTP 404, 5xx).
+            NetworkError: If a network-level error occurs (timeout, connection refused).
 
         Example:
             >>> login = client.logins.get("login_abc123")
@@ -77,21 +81,65 @@ class LoginsResource:
         """
         logger.debug(f"Retrieving login: login_id={login_id}")
 
-        response = get_data_source_login.sync(login_id=login_id, client=cast(AuthenticatedClient, self._client))
+        try:
+            response = get_data_source_login.sync(login_id=login_id, client=cast(AuthenticatedClient, self._client))
 
-        if response is None or isinstance(response, Unset):
-            raise ValueError("API returned empty response")
+            if response is None or isinstance(response, Unset):
+                raise ValueError("API returned empty response")
 
-        # Cast to success response type - error responses are handled by generated client
-        success_response = cast(GetDataSourceLoginResponse200, response)
+            # Cast to success response type - error responses are handled by generated client
+            success_response = cast(GetDataSourceLoginResponse200, response)
 
-        if success_response.data is None or isinstance(success_response.data, Unset):
-            raise ValueError("API returned empty response")
+            if success_response.data is None or isinstance(success_response.data, Unset):
+                raise ValueError("API returned empty response")
 
-        login = success_response.data
-        logger.info(f"Retrieved login: id={login.login_id}, username={login.username}")
+            login = success_response.data
+            logger.info(f"Retrieved login: id={login.login_id}, username={login.username}")
 
-        return login
+            return login
+
+        except httpx.HTTPStatusError as e:
+            # Map HTTP status codes to SDK exceptions
+            if e.response.status_code == 401:
+                raise AuthenticationError(
+                    "Invalid or expired API key",
+                    status_code=401,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 400:
+                raise ValidationError(
+                    f"Invalid request parameters: {e.response.text}",
+                    status_code=400,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 404:
+                raise APIError(
+                    f"Login not found: {e.response.text}",
+                    status_code=404,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code >= 500:
+                raise APIError(
+                    f"Supermetrics API error: {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            else:
+                raise APIError(
+                    f"API error ({e.response.status_code}): {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+        except httpx.RequestError as e:
+            raise NetworkError(
+                f"Network error: {str(e)}",
+                endpoint=str(e.request.url) if e.request else None,
+            ) from e
 
     def list(self) -> list[DataSourceLogin]:
         """List all logins for the authenticated user.
@@ -103,8 +151,10 @@ class LoginsResource:
             list[DataSourceLogin]: List of all logins.
 
         Raises:
-            httpx.HTTPStatusError: If the API returns an error status code.
-            httpx.TimeoutException: If the request times out.
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            ValidationError: If request parameters are invalid (HTTP 400).
+            APIError: If the API returns a server error (HTTP 404, 5xx).
+            NetworkError: If a network-level error occurs (timeout, connection refused).
 
         Example:
             >>> logins = client.logins.list()
@@ -113,21 +163,65 @@ class LoginsResource:
         """
         logger.debug("Listing all logins")
 
-        response = list_data_source_logins.sync(client=cast(AuthenticatedClient, self._client))
+        try:
+            response = list_data_source_logins.sync(client=cast(AuthenticatedClient, self._client))
 
-        if response is None or isinstance(response, Unset):
-            return []
+            if response is None or isinstance(response, Unset):
+                return []
 
-        # Cast to success response type - error responses are handled by generated client
-        success_response = cast(ListDataSourceLoginsResponse200, response)
+            # Cast to success response type - error responses are handled by generated client
+            success_response = cast(ListDataSourceLoginsResponse200, response)
 
-        if success_response.data is None or isinstance(success_response.data, Unset):
-            return []
+            if success_response.data is None or isinstance(success_response.data, Unset):
+                return []
 
-        logins = success_response.data
-        logger.info(f"Retrieved {len(logins)} logins")
+            logins = success_response.data
+            logger.info(f"Retrieved {len(logins)} logins")
 
-        return logins
+            return logins
+
+        except httpx.HTTPStatusError as e:
+            # Map HTTP status codes to SDK exceptions
+            if e.response.status_code == 401:
+                raise AuthenticationError(
+                    "Invalid or expired API key",
+                    status_code=401,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 400:
+                raise ValidationError(
+                    f"Invalid request parameters: {e.response.text}",
+                    status_code=400,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 404:
+                raise APIError(
+                    f"Login not found: {e.response.text}",
+                    status_code=404,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code >= 500:
+                raise APIError(
+                    f"Supermetrics API error: {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            else:
+                raise APIError(
+                    f"API error ({e.response.status_code}): {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+        except httpx.RequestError as e:
+            raise NetworkError(
+                f"Network error: {str(e)}",
+                endpoint=str(e.request.url) if e.request else None,
+            ) from e
 
     def get_by_username(self, login_username: str) -> DataSourceLogin:
         """Retrieve a login by username.
@@ -142,9 +236,10 @@ class LoginsResource:
             DataSourceLogin: The login with matching username.
 
         Raises:
-            httpx.HTTPStatusError: If the API returns an error status code.
-            httpx.TimeoutException: If the request times out.
-            ValueError: If no login with the specified username is found.
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            ValidationError: If request parameters are invalid (HTTP 400).
+            APIError: If the API returns a server error (HTTP 404, 5xx).
+            NetworkError: If a network-level error occurs (timeout, connection refused).
 
         Example:
             >>> login = client.logins.get_by_username("user@example.com")
@@ -197,27 +292,74 @@ class LoginsAsyncResource:
             DataSourceLogin: The login details.
 
         Raises:
-            httpx.HTTPStatusError: If the API returns an error.
-            httpx.TimeoutException: If the request times out.
-            ValueError: If the API returns an empty response.
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            ValidationError: If request parameters are invalid (HTTP 400).
+            APIError: If the API returns a server error (HTTP 404, 5xx).
+            NetworkError: If a network-level error occurs (timeout, connection refused).
         """
         logger.debug(f"Retrieving login (async): login_id={login_id}")
 
-        response = await get_data_source_login.asyncio(login_id=login_id, client=cast(AuthenticatedClient, self._client))
+        try:
+            response = await get_data_source_login.asyncio(
+                login_id=login_id, client=cast(AuthenticatedClient, self._client)
+            )
 
-        if response is None or isinstance(response, Unset):
-            raise ValueError("API returned empty response")
+            if response is None or isinstance(response, Unset):
+                raise ValueError("API returned empty response")
 
-        # Cast to success response type - error responses are handled by generated client
-        success_response = cast(GetDataSourceLoginResponse200, response)
+            # Cast to success response type - error responses are handled by generated client
+            success_response = cast(GetDataSourceLoginResponse200, response)
 
-        if success_response.data is None or isinstance(success_response.data, Unset):
-            raise ValueError("API returned empty response")
+            if success_response.data is None or isinstance(success_response.data, Unset):
+                raise ValueError("API returned empty response")
 
-        login = success_response.data
-        logger.info(f"Retrieved login (async): id={login.login_id}, username={login.username}")
+            login = success_response.data
+            logger.info(f"Retrieved login (async): id={login.login_id}, username={login.username}")
 
-        return login
+            return login
+
+        except httpx.HTTPStatusError as e:
+            # Map HTTP status codes to SDK exceptions
+            if e.response.status_code == 401:
+                raise AuthenticationError(
+                    "Invalid or expired API key",
+                    status_code=401,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 400:
+                raise ValidationError(
+                    f"Invalid request parameters: {e.response.text}",
+                    status_code=400,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 404:
+                raise APIError(
+                    f"Login not found: {e.response.text}",
+                    status_code=404,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code >= 500:
+                raise APIError(
+                    f"Supermetrics API error: {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            else:
+                raise APIError(
+                    f"API error ({e.response.status_code}): {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+        except httpx.RequestError as e:
+            raise NetworkError(
+                f"Network error: {str(e)}",
+                endpoint=str(e.request.url) if e.request else None,
+            ) from e
 
     async def list(self) -> list[DataSourceLogin]:
         """List all logins for the authenticated user.
@@ -228,26 +370,72 @@ class LoginsAsyncResource:
             list[DataSourceLogin]: List of all logins.
 
         Raises:
-            httpx.HTTPStatusError: If the API returns an error.
-            httpx.TimeoutException: If the request times out.
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            ValidationError: If request parameters are invalid (HTTP 400).
+            APIError: If the API returns a server error (HTTP 404, 5xx).
+            NetworkError: If a network-level error occurs (timeout, connection refused).
         """
         logger.debug("Listing all logins (async)")
 
-        response = await list_data_source_logins.asyncio(client=cast(AuthenticatedClient, self._client))
+        try:
+            response = await list_data_source_logins.asyncio(client=cast(AuthenticatedClient, self._client))
 
-        if response is None or isinstance(response, Unset):
-            return []
+            if response is None or isinstance(response, Unset):
+                return []
 
-        # Cast to success response type - error responses are handled by generated client
-        success_response = cast(ListDataSourceLoginsResponse200, response)
+            # Cast to success response type - error responses are handled by generated client
+            success_response = cast(ListDataSourceLoginsResponse200, response)
 
-        if success_response.data is None or isinstance(success_response.data, Unset):
-            return []
+            if success_response.data is None or isinstance(success_response.data, Unset):
+                return []
 
-        logins = success_response.data
-        logger.info(f"Retrieved {len(logins)} logins (async)")
+            logins = success_response.data
+            logger.info(f"Retrieved {len(logins)} logins (async)")
 
-        return logins
+            return logins
+
+        except httpx.HTTPStatusError as e:
+            # Map HTTP status codes to SDK exceptions
+            if e.response.status_code == 401:
+                raise AuthenticationError(
+                    "Invalid or expired API key",
+                    status_code=401,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 400:
+                raise ValidationError(
+                    f"Invalid request parameters: {e.response.text}",
+                    status_code=400,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 404:
+                raise APIError(
+                    f"Login not found: {e.response.text}",
+                    status_code=404,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code >= 500:
+                raise APIError(
+                    f"Supermetrics API error: {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            else:
+                raise APIError(
+                    f"API error ({e.response.status_code}): {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+        except httpx.RequestError as e:
+            raise NetworkError(
+                f"Network error: {str(e)}",
+                endpoint=str(e.request.url) if e.request else None,
+            ) from e
 
     async def get_by_username(self, login_username: str) -> DataSourceLogin:
         """Retrieve a login by username.
@@ -261,9 +449,10 @@ class LoginsAsyncResource:
             DataSourceLogin: The login with matching username.
 
         Raises:
-            httpx.HTTPStatusError: If the API returns an error.
-            httpx.TimeoutException: If the request times out.
-            ValueError: If no login with the specified username is found.
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            ValidationError: If request parameters are invalid (HTTP 400).
+            APIError: If the API returns a server error (HTTP 404, 5xx).
+            NetworkError: If a network-level error occurs (timeout, connection refused).
         """
         logger.debug(f"Searching for login by username (async): {login_username}")
 

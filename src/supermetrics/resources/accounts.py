@@ -3,6 +3,8 @@
 import logging
 from typing import cast
 
+import httpx
+
 from supermetrics._generated.supermetrics_api_client import AuthenticatedClient
 from supermetrics._generated.supermetrics_api_client import Client as GeneratedClient
 from supermetrics._generated.supermetrics_api_client.api.data_source import get_accounts
@@ -12,6 +14,7 @@ from supermetrics._generated.supermetrics_api_client.models.get_accounts_respons
     GetAccountsResponse200DataItemAccountsItem,
 )
 from supermetrics._generated.supermetrics_api_client.types import UNSET, Unset
+from supermetrics.exceptions import APIError, AuthenticationError, NetworkError, ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -76,8 +79,10 @@ class AccountsResource:
                 account_id, account_name, and group_name fields.
 
         Raises:
-            httpx.HTTPStatusError: If the API returns an error status code.
-            httpx.TimeoutException: If the request times out.
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            ValidationError: If request parameters are invalid (HTTP 400).
+            APIError: If the API returns a server error (HTTP 404, 5xx).
+            NetworkError: If a network-level error occurs (timeout, connection refused).
 
         Example:
             >>> # Get all accounts for Google Analytics 4
@@ -100,36 +105,80 @@ class AccountsResource:
             f"Listing accounts: ds_id={ds_id}, login_usernames={login_usernames}, cache_minutes={cache_minutes}"
         )
 
-        # Build request parameters
-        request_params = GetAccountsJson(
-            ds_id=ds_id,
-            ds_users=login_usernames if login_usernames is not None else UNSET,
-            cache_minutes=cache_minutes if cache_minutes is not None else UNSET,
-        )
+        try:
+            # Build request parameters
+            request_params = GetAccountsJson(
+                ds_id=ds_id,
+                ds_users=login_usernames if login_usernames is not None else UNSET,
+                cache_minutes=cache_minutes if cache_minutes is not None else UNSET,
+            )
 
-        # Call generated API
-        response = get_accounts.sync(client=cast(AuthenticatedClient, self._client), json=request_params)
+            # Call generated API
+            response = get_accounts.sync(client=cast(AuthenticatedClient, self._client), json=request_params)
 
-        # Handle empty or error responses
-        if response is None or isinstance(response, Unset):
-            logger.info("No accounts found (empty response)")
-            return []
+            # Handle empty or error responses
+            if response is None or isinstance(response, Unset):
+                logger.info("No accounts found (empty response)")
+                return []
 
-        # Cast to success response type - error responses are handled by generated client
-        success_response = cast(GetAccountsResponse200, response)
+            # Cast to success response type - error responses are handled by generated client
+            success_response = cast(GetAccountsResponse200, response)
 
-        if success_response.data is None or isinstance(success_response.data, Unset):
-            logger.info("No accounts found (empty response)")
-            return []
+            if success_response.data is None or isinstance(success_response.data, Unset):
+                logger.info("No accounts found (empty response)")
+                return []
 
-        # Flatten nested structure: response.data[].accounts[] -> single list
-        all_accounts: list[GetAccountsResponse200DataItemAccountsItem] = []
-        for data_item in success_response.data:
-            if data_item.accounts is not None and not isinstance(data_item.accounts, Unset):
-                all_accounts.extend(data_item.accounts)
+            # Flatten nested structure: response.data[].accounts[] -> single list
+            all_accounts: list[GetAccountsResponse200DataItemAccountsItem] = []
+            for data_item in success_response.data:
+                if data_item.accounts is not None and not isinstance(data_item.accounts, Unset):
+                    all_accounts.extend(data_item.accounts)
 
-        logger.info(f"Retrieved {len(all_accounts)} accounts for ds_id={ds_id}")
-        return all_accounts
+            logger.info(f"Retrieved {len(all_accounts)} accounts for ds_id={ds_id}")
+            return all_accounts
+
+        except httpx.HTTPStatusError as e:
+            # Map HTTP status codes to SDK exceptions
+            if e.response.status_code == 401:
+                raise AuthenticationError(
+                    "Invalid or expired API key",
+                    status_code=401,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 400:
+                raise ValidationError(
+                    f"Invalid request parameters: {e.response.text}",
+                    status_code=400,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 404:
+                raise APIError(
+                    f"Account not found: {e.response.text}",
+                    status_code=404,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code >= 500:
+                raise APIError(
+                    f"Supermetrics API error: {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            else:
+                raise APIError(
+                    f"API error ({e.response.status_code}): {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+        except httpx.RequestError as e:
+            raise NetworkError(
+                f"Network error: {str(e)}",
+                endpoint=str(e.request.url) if e.request else None,
+            ) from e
 
 
 class AccountsAsyncResource:
@@ -172,40 +221,86 @@ class AccountsAsyncResource:
                 of all accounts.
 
         Raises:
-            httpx.HTTPStatusError: If the API returns an error.
-            httpx.TimeoutException: If the request times out.
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            ValidationError: If request parameters are invalid (HTTP 400).
+            APIError: If the API returns a server error (HTTP 404, 5xx).
+            NetworkError: If a network-level error occurs (timeout, connection refused).
         """
         logger.debug(
             f"Listing accounts (async): ds_id={ds_id}, login_usernames={login_usernames}, cache_minutes={cache_minutes}"
         )
 
-        # Build request parameters
-        request_params = GetAccountsJson(
-            ds_id=ds_id,
-            ds_users=login_usernames if login_usernames is not None else UNSET,
-            cache_minutes=cache_minutes if cache_minutes is not None else UNSET,
-        )
+        try:
+            # Build request parameters
+            request_params = GetAccountsJson(
+                ds_id=ds_id,
+                ds_users=login_usernames if login_usernames is not None else UNSET,
+                cache_minutes=cache_minutes if cache_minutes is not None else UNSET,
+            )
 
-        # Call generated API
-        response = await get_accounts.asyncio(client=cast(AuthenticatedClient, self._client), json=request_params)
+            # Call generated API
+            response = await get_accounts.asyncio(client=cast(AuthenticatedClient, self._client), json=request_params)
 
-        # Handle empty or error responses
-        if response is None or isinstance(response, Unset):
-            logger.info("No accounts found (async - empty response)")
-            return []
+            # Handle empty or error responses
+            if response is None or isinstance(response, Unset):
+                logger.info("No accounts found (async - empty response)")
+                return []
 
-        # Cast to success response type - error responses are handled by generated client
-        success_response = cast(GetAccountsResponse200, response)
+            # Cast to success response type - error responses are handled by generated client
+            success_response = cast(GetAccountsResponse200, response)
 
-        if success_response.data is None or isinstance(success_response.data, Unset):
-            logger.info("No accounts found (async - empty response)")
-            return []
+            if success_response.data is None or isinstance(success_response.data, Unset):
+                logger.info("No accounts found (async - empty response)")
+                return []
 
-        # Flatten nested structure: response.data[].accounts[] -> single list
-        all_accounts: list[GetAccountsResponse200DataItemAccountsItem] = []
-        for data_item in success_response.data:
-            if data_item.accounts is not None and not isinstance(data_item.accounts, Unset):
-                all_accounts.extend(data_item.accounts)
+            # Flatten nested structure: response.data[].accounts[] -> single list
+            all_accounts: list[GetAccountsResponse200DataItemAccountsItem] = []
+            for data_item in success_response.data:
+                if data_item.accounts is not None and not isinstance(data_item.accounts, Unset):
+                    all_accounts.extend(data_item.accounts)
 
-        logger.info(f"Retrieved {len(all_accounts)} accounts (async) for ds_id={ds_id}")
-        return all_accounts
+            logger.info(f"Retrieved {len(all_accounts)} accounts (async) for ds_id={ds_id}")
+            return all_accounts
+
+        except httpx.HTTPStatusError as e:
+            # Map HTTP status codes to SDK exceptions
+            if e.response.status_code == 401:
+                raise AuthenticationError(
+                    "Invalid or expired API key",
+                    status_code=401,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 400:
+                raise ValidationError(
+                    f"Invalid request parameters: {e.response.text}",
+                    status_code=400,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 404:
+                raise APIError(
+                    f"Account not found: {e.response.text}",
+                    status_code=404,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code >= 500:
+                raise APIError(
+                    f"Supermetrics API error: {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            else:
+                raise APIError(
+                    f"API error ({e.response.status_code}): {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+        except httpx.RequestError as e:
+            raise NetworkError(
+                f"Network error: {str(e)}",
+                endpoint=str(e.request.url) if e.request else None,
+            ) from e

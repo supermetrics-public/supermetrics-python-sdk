@@ -1,6 +1,6 @@
 # Story 1.8: Create Basic Error Handling
 
-Status: Draft
+Status: Ready for Review
 Created: 2025-10-28
 Epic: 1 - Project Foundation & Core SDK Generation
 
@@ -317,11 +317,12 @@ tests/unit/
 
 ### Context Reference
 
-<!-- Story context will be generated after story approval -->
+- Story Context XML: `spec/stories/story-context-1.8.xml`
+- Generated: 2025-12-11
 
 ### Agent Model Used
 
-<!-- To be filled by dev agent -->
+claude-sonnet-4-5@20250929
 
 ### Debug Log References
 
@@ -329,8 +330,30 @@ tests/unit/
 
 ### Completion Notes List
 
-<!-- To be filled by dev agent -->
+- Created custom exception hierarchy in `src/supermetrics/exceptions.py` with SupermetricsError base class and 4 specific exception types (AuthenticationError, ValidationError, APIError, NetworkError)
+- Updated all resource adapters (login_links, logins, accounts, queries) with comprehensive HTTP error mapping - both sync and async versions
+- Exported all exceptions from `src/supermetrics/__init__.py` for public API
+- Created comprehensive exception tests in `tests/unit/test_exceptions.py` (22 tests)
+- Added error scenario tests to all 4 resource test files (20 new tests across resources)
+- All code passes mypy strict type checking and ruff linting/formatting
+- Total test suite: 68 tests passing (100% pass rate)
 
 ### File List
 
-<!-- To be filled by dev agent -->
+**New Files:**
+- src/supermetrics/exceptions.py
+- spec/1-8-create-basic-error-handling.context.xml
+- tests/unit/test_exceptions.py
+
+**Modified Files:**
+- src/supermetrics/__init__.py
+- src/supermetrics/resources/login_links.py
+- src/supermetrics/resources/logins.py
+- src/supermetrics/resources/accounts.py
+- src/supermetrics/resources/queries.py
+- tests/unit/test_login_links.py
+- tests/unit/test_logins.py
+- tests/unit/test_accounts.py
+- tests/unit/test_queries.py
+- spec/stories/story-1.8.md
+- spec/sprint-status.yaml
