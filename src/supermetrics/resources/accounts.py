@@ -13,6 +13,10 @@ from supermetrics._generated.supermetrics_api_client.models.get_accounts_respons
 from supermetrics._generated.supermetrics_api_client.models.get_accounts_response_200_data_item_accounts_item import (
     GetAccountsResponse200DataItemAccountsItem,
 )
+from supermetrics._generated.supermetrics_api_client.models.get_accounts_response_401 import GetAccountsResponse401
+from supermetrics._generated.supermetrics_api_client.models.get_accounts_response_422 import GetAccountsResponse422
+from supermetrics._generated.supermetrics_api_client.models.get_accounts_response_429 import GetAccountsResponse429
+from supermetrics._generated.supermetrics_api_client.models.get_accounts_response_500 import GetAccountsResponse500
 from supermetrics._generated.supermetrics_api_client.types import UNSET, Unset
 from supermetrics.exceptions import APIError, AuthenticationError, NetworkError, ValidationError
 
@@ -121,7 +125,31 @@ class AccountsResource:
                 logger.info("No accounts found (empty response)")
                 return []
 
-            # Cast to success response type - error responses are handled by generated client
+            # Handle error responses by checking type before casting
+            if isinstance(response, GetAccountsResponse401):
+                error_msg = response.error.message if response.error and not isinstance(response.error, Unset) else "Invalid or expired API key"
+                raise AuthenticationError(
+                    error_msg,
+                    status_code=401,
+                    endpoint="/ds/accounts",
+                )
+            elif isinstance(response, GetAccountsResponse422):
+                error_msg = response.error.message if response.error and not isinstance(response.error, Unset) else "Invalid request parameters"
+                raise ValidationError(
+                    error_msg,
+                    status_code=422,
+                    endpoint="/ds/accounts",
+                )
+            elif isinstance(response, (GetAccountsResponse429, GetAccountsResponse500)):
+                status = 429 if isinstance(response, GetAccountsResponse429) else 500
+                error_msg = response.error.message if response.error and not isinstance(response.error, Unset) else "Supermetrics API error"
+                raise APIError(
+                    error_msg,
+                    status_code=status,
+                    endpoint="/ds/accounts",
+                )
+
+            # Cast to success response type
             success_response = cast(GetAccountsResponse200, response)
 
             if success_response.data is None or isinstance(success_response.data, Unset):
@@ -137,6 +165,9 @@ class AccountsResource:
             logger.info(f"Retrieved {len(all_accounts)} accounts for ds_id={ds_id}")
             return all_accounts
 
+        except (AuthenticationError, ValidationError, APIError):
+            # Re-raise SDK exceptions
+            raise
         except httpx.HTTPStatusError as e:
             # Map HTTP status codes to SDK exceptions
             if e.response.status_code == 401:
@@ -246,7 +277,31 @@ class AccountsAsyncResource:
                 logger.info("No accounts found (async - empty response)")
                 return []
 
-            # Cast to success response type - error responses are handled by generated client
+            # Handle error responses by checking type before casting
+            if isinstance(response, GetAccountsResponse401):
+                error_msg = response.error.message if response.error and not isinstance(response.error, Unset) else "Invalid or expired API key"
+                raise AuthenticationError(
+                    error_msg,
+                    status_code=401,
+                    endpoint="/ds/accounts",
+                )
+            elif isinstance(response, GetAccountsResponse422):
+                error_msg = response.error.message if response.error and not isinstance(response.error, Unset) else "Invalid request parameters"
+                raise ValidationError(
+                    error_msg,
+                    status_code=422,
+                    endpoint="/ds/accounts",
+                )
+            elif isinstance(response, (GetAccountsResponse429, GetAccountsResponse500)):
+                status = 429 if isinstance(response, GetAccountsResponse429) else 500
+                error_msg = response.error.message if response.error and not isinstance(response.error, Unset) else "Supermetrics API error"
+                raise APIError(
+                    error_msg,
+                    status_code=status,
+                    endpoint="/ds/accounts",
+                )
+
+            # Cast to success response type
             success_response = cast(GetAccountsResponse200, response)
 
             if success_response.data is None or isinstance(success_response.data, Unset):
@@ -262,6 +317,9 @@ class AccountsAsyncResource:
             logger.info(f"Retrieved {len(all_accounts)} accounts (async) for ds_id={ds_id}")
             return all_accounts
 
+        except (AuthenticationError, ValidationError, APIError):
+            # Re-raise SDK exceptions
+            raise
         except httpx.HTTPStatusError as e:
             # Map HTTP status codes to SDK exceptions
             if e.response.status_code == 401:

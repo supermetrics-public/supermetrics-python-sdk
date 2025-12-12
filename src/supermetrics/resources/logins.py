@@ -15,8 +15,35 @@ from supermetrics._generated.supermetrics_api_client.models.data_source_login im
 from supermetrics._generated.supermetrics_api_client.models.get_data_source_login_response_200 import (
     GetDataSourceLoginResponse200,
 )
+from supermetrics._generated.supermetrics_api_client.models.get_data_source_login_response_401 import (
+    GetDataSourceLoginResponse401,
+)
+from supermetrics._generated.supermetrics_api_client.models.get_data_source_login_response_404 import (
+    GetDataSourceLoginResponse404,
+)
+from supermetrics._generated.supermetrics_api_client.models.get_data_source_login_response_422 import (
+    GetDataSourceLoginResponse422,
+)
+from supermetrics._generated.supermetrics_api_client.models.get_data_source_login_response_429 import (
+    GetDataSourceLoginResponse429,
+)
+from supermetrics._generated.supermetrics_api_client.models.get_data_source_login_response_500 import (
+    GetDataSourceLoginResponse500,
+)
 from supermetrics._generated.supermetrics_api_client.models.list_data_source_logins_response_200 import (
     ListDataSourceLoginsResponse200,
+)
+from supermetrics._generated.supermetrics_api_client.models.list_data_source_logins_response_401 import (
+    ListDataSourceLoginsResponse401,
+)
+from supermetrics._generated.supermetrics_api_client.models.list_data_source_logins_response_422 import (
+    ListDataSourceLoginsResponse422,
+)
+from supermetrics._generated.supermetrics_api_client.models.list_data_source_logins_response_429 import (
+    ListDataSourceLoginsResponse429,
+)
+from supermetrics._generated.supermetrics_api_client.models.list_data_source_logins_response_500 import (
+    ListDataSourceLoginsResponse500,
 )
 from supermetrics._generated.supermetrics_api_client.types import Unset
 from supermetrics.exceptions import APIError, AuthenticationError, NetworkError, ValidationError
@@ -87,7 +114,38 @@ class LoginsResource:
             if response is None or isinstance(response, Unset):
                 raise ValueError("API returned empty response")
 
-            # Cast to success response type - error responses are handled by generated client
+            # Handle error responses by checking type before casting
+            if isinstance(response, GetDataSourceLoginResponse401):
+                error_msg = response.error.message if response.error and not isinstance(response.error, Unset) else "Invalid or expired API key"
+                raise AuthenticationError(
+                    error_msg,
+                    status_code=401,
+                    endpoint="/ds/logins/{login_id}",
+                )
+            elif isinstance(response, GetDataSourceLoginResponse404):
+                error_msg = response.error.message if response.error and not isinstance(response.error, Unset) else "Login not found"
+                raise APIError(
+                    error_msg,
+                    status_code=404,
+                    endpoint="/ds/logins/{login_id}",
+                )
+            elif isinstance(response, GetDataSourceLoginResponse422):
+                error_msg = response.error.message if response.error and not isinstance(response.error, Unset) else "Invalid request parameters"
+                raise ValidationError(
+                    error_msg,
+                    status_code=422,
+                    endpoint="/ds/logins/{login_id}",
+                )
+            elif isinstance(response, (GetDataSourceLoginResponse429, GetDataSourceLoginResponse500)):
+                status = 429 if isinstance(response, GetDataSourceLoginResponse429) else 500
+                error_msg = response.error.message if response.error and not isinstance(response.error, Unset) else "Supermetrics API error"
+                raise APIError(
+                    error_msg,
+                    status_code=status,
+                    endpoint="/ds/logins/{login_id}",
+                )
+
+            # Cast to success response type
             success_response = cast(GetDataSourceLoginResponse200, response)
 
             if success_response.data is None or isinstance(success_response.data, Unset):
@@ -98,6 +156,9 @@ class LoginsResource:
 
             return login
 
+        except (AuthenticationError, ValidationError, APIError):
+            # Re-raise SDK exceptions
+            raise
         except httpx.HTTPStatusError as e:
             # Map HTTP status codes to SDK exceptions
             if e.response.status_code == 401:
@@ -169,7 +230,31 @@ class LoginsResource:
             if response is None or isinstance(response, Unset):
                 return []
 
-            # Cast to success response type - error responses are handled by generated client
+            # Handle error responses by checking type before casting
+            if isinstance(response, ListDataSourceLoginsResponse401):
+                error_msg = response.error.message if response.error and not isinstance(response.error, Unset) else "Invalid or expired API key"
+                raise AuthenticationError(
+                    error_msg,
+                    status_code=401,
+                    endpoint="/ds/logins",
+                )
+            elif isinstance(response, ListDataSourceLoginsResponse422):
+                error_msg = response.error.message if response.error and not isinstance(response.error, Unset) else "Invalid request parameters"
+                raise ValidationError(
+                    error_msg,
+                    status_code=422,
+                    endpoint="/ds/logins",
+                )
+            elif isinstance(response, (ListDataSourceLoginsResponse429, ListDataSourceLoginsResponse500)):
+                status = 429 if isinstance(response, ListDataSourceLoginsResponse429) else 500
+                error_msg = response.error.message if response.error and not isinstance(response.error, Unset) else "Supermetrics API error"
+                raise APIError(
+                    error_msg,
+                    status_code=status,
+                    endpoint="/ds/logins",
+                )
+
+            # Cast to success response type
             success_response = cast(ListDataSourceLoginsResponse200, response)
 
             if success_response.data is None or isinstance(success_response.data, Unset):
@@ -180,6 +265,9 @@ class LoginsResource:
 
             return logins
 
+        except (AuthenticationError, ValidationError, APIError):
+            # Re-raise SDK exceptions
+            raise
         except httpx.HTTPStatusError as e:
             # Map HTTP status codes to SDK exceptions
             if e.response.status_code == 401:
@@ -307,7 +395,38 @@ class LoginsAsyncResource:
             if response is None or isinstance(response, Unset):
                 raise ValueError("API returned empty response")
 
-            # Cast to success response type - error responses are handled by generated client
+            # Handle error responses by checking type before casting
+            if isinstance(response, GetDataSourceLoginResponse401):
+                error_msg = response.error.message if response.error and not isinstance(response.error, Unset) else "Invalid or expired API key"
+                raise AuthenticationError(
+                    error_msg,
+                    status_code=401,
+                    endpoint="/ds/logins/{login_id}",
+                )
+            elif isinstance(response, GetDataSourceLoginResponse404):
+                error_msg = response.error.message if response.error and not isinstance(response.error, Unset) else "Login not found"
+                raise APIError(
+                    error_msg,
+                    status_code=404,
+                    endpoint="/ds/logins/{login_id}",
+                )
+            elif isinstance(response, GetDataSourceLoginResponse422):
+                error_msg = response.error.message if response.error and not isinstance(response.error, Unset) else "Invalid request parameters"
+                raise ValidationError(
+                    error_msg,
+                    status_code=422,
+                    endpoint="/ds/logins/{login_id}",
+                )
+            elif isinstance(response, (GetDataSourceLoginResponse429, GetDataSourceLoginResponse500)):
+                status = 429 if isinstance(response, GetDataSourceLoginResponse429) else 500
+                error_msg = response.error.message if response.error and not isinstance(response.error, Unset) else "Supermetrics API error"
+                raise APIError(
+                    error_msg,
+                    status_code=status,
+                    endpoint="/ds/logins/{login_id}",
+                )
+
+            # Cast to success response type
             success_response = cast(GetDataSourceLoginResponse200, response)
 
             if success_response.data is None or isinstance(success_response.data, Unset):
@@ -318,6 +437,9 @@ class LoginsAsyncResource:
 
             return login
 
+        except (AuthenticationError, ValidationError, APIError):
+            # Re-raise SDK exceptions
+            raise
         except httpx.HTTPStatusError as e:
             # Map HTTP status codes to SDK exceptions
             if e.response.status_code == 401:
@@ -383,7 +505,31 @@ class LoginsAsyncResource:
             if response is None or isinstance(response, Unset):
                 return []
 
-            # Cast to success response type - error responses are handled by generated client
+            # Handle error responses by checking type before casting
+            if isinstance(response, ListDataSourceLoginsResponse401):
+                error_msg = response.error.message if response.error and not isinstance(response.error, Unset) else "Invalid or expired API key"
+                raise AuthenticationError(
+                    error_msg,
+                    status_code=401,
+                    endpoint="/ds/logins",
+                )
+            elif isinstance(response, ListDataSourceLoginsResponse422):
+                error_msg = response.error.message if response.error and not isinstance(response.error, Unset) else "Invalid request parameters"
+                raise ValidationError(
+                    error_msg,
+                    status_code=422,
+                    endpoint="/ds/logins",
+                )
+            elif isinstance(response, (ListDataSourceLoginsResponse429, ListDataSourceLoginsResponse500)):
+                status = 429 if isinstance(response, ListDataSourceLoginsResponse429) else 500
+                error_msg = response.error.message if response.error and not isinstance(response.error, Unset) else "Supermetrics API error"
+                raise APIError(
+                    error_msg,
+                    status_code=status,
+                    endpoint="/ds/logins",
+                )
+
+            # Cast to success response type
             success_response = cast(ListDataSourceLoginsResponse200, response)
 
             if success_response.data is None or isinstance(success_response.data, Unset):
@@ -394,6 +540,9 @@ class LoginsAsyncResource:
 
             return logins
 
+        except (AuthenticationError, ValidationError, APIError):
+            # Re-raise SDK exceptions
+            raise
         except httpx.HTTPStatusError as e:
             # Map HTTP status codes to SDK exceptions
             if e.response.status_code == 401:
