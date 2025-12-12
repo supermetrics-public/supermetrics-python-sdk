@@ -1,0 +1,245 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.8</storyId>
+    <title>Create Basic Error Handling</title>
+    <status>in-progress</status>
+    <generatedAt>2025-12-11</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>spec/stories/story-1.8.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>clear exceptions when API calls fail</iWant>
+    <soThat>SDK users can handle errors appropriately and understand what went wrong</soThat>
+    <tasks>
+      - Create exception hierarchy (SupermetricsError base + 4 specific types)
+      - Update LoginLinksResource with HTTP error mapping
+      - Update LoginsResource with HTTP error mapping
+      - Update AccountsResource with HTTP error mapping
+      - Update QueriesResource with HTTP error mapping
+      - Export exceptions from __init__.py
+      - Create unit tests for exception classes
+      - Add error scenario tests to all resource test files
+      - Run mypy and ruff for code quality validation
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. src/supermetrics/exceptions.py created with custom exception hierarchy
+    2. Base exception SupermetricsError defined with attributes: message, status_code, endpoint, response_body
+    3. Specific exceptions implemented: AuthenticationError, ValidationError, APIError, NetworkError
+    4. All resource adapters (login_links, logins, accounts, queries) updated to catch httpx exceptions and re-raise as SDK exceptions
+    5. HTTP status codes mapped: 401→AuthenticationError, 400→ValidationError, 404/5xx→APIError
+    6. Network errors (timeout, connection refused) mapped to NetworkError
+    7. Exception messages include context (status code, endpoint, error details from API)
+    8. Code passes mypy and ruff checks
+    9. Unit tests covering error scenarios for each resource
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>spec/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Project Foundation & Core SDK Generation</title>
+        <section>Exception API (lines 273-294)</section>
+        <snippet>Defines the exception hierarchy with SupermetricsError base class containing message, status_code, endpoint, response_body attributes. Four specific exceptions: AuthenticationError (401), ValidationError (400), APIError (5xx/404), NetworkError (network-level errors).</snippet>
+      </doc>
+      <doc>
+        <path>spec/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Project Foundation & Core SDK Generation</title>
+        <section>Adapter Pattern Flow (lines 363-383)</section>
+        <snippet>Resource adapters must catch httpx exceptions and map to SDK exceptions. Pattern: validate inputs → call generated client → catch httpx.HTTPStatusError and httpx.RequestError → map to appropriate SupermetricsError subclass → return Pydantic model.</snippet>
+      </doc>
+      <doc>
+        <path>spec/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Project Foundation & Core SDK Generation</title>
+        <section>Test Strategy - Error Scenarios (lines 762-774)</section>
+        <snippet>Test fixtures should mock httpx exceptions. Error scenario tests include: 401→AuthenticationError, 400→ValidationError, 404→APIError, 5xx→APIError, network timeout→NetworkError, connection refused→NetworkError. Each test validates exception type, message clarity, and contextual attributes.</snippet>
+      </doc>
+      <doc>
+        <path>spec/architecture.md</path>
+        <title>Decision Architecture - Supermetrics Python SDK</title>
+        <section>Exception Hierarchy (inferred from project structure)</section>
+        <snippet>Architecture mandates 4-level exception hierarchy with HTTP status mapping for clear error semantics. All exceptions must include diagnostic context for debugging while never exposing API keys or sensitive data in error messages.</snippet>
+      </doc>
+      <doc>
+        <path>spec/stories/story-1.8.md</path>
+        <title>Story 1.8: Create Basic Error Handling</title>
+        <section>Dev Notes - Error Handling Pattern (lines 223-238)</section>
+        <snippet>All resource methods follow try/except pattern: catch httpx.HTTPStatusError for HTTP errors (map by status code), catch httpx.RequestError for network errors. Clear, actionable error messages with context. Never log sensitive data.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/supermetrics/resources/login_links.py</path>
+        <kind>resource-adapter</kind>
+        <symbol>LoginLinksResource</symbol>
+        <lines>26-250</lines>
+        <reason>Needs error handling added to all methods (create, get, list, close). Currently raises raw httpx exceptions per docstrings (lines 81-82). Must wrap with try/except and map to SDK exceptions.</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/resources/logins.py</path>
+        <kind>resource-adapter</kind>
+        <symbol>LoginsResource</symbol>
+        <lines>all</lines>
+        <reason>Needs error handling added to get, list, get_by_username methods. Same httpx exception mapping pattern as login_links.</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/resources/accounts.py</path>
+        <kind>resource-adapter</kind>
+        <symbol>AccountsResource</symbol>
+        <lines>all</lines>
+        <reason>Needs error handling added to list method with filtering support. Same httpx exception mapping pattern.</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/resources/queries.py</path>
+        <kind>resource-adapter</kind>
+        <symbol>QueriesResource</symbol>
+        <lines>all</lines>
+        <reason>Needs error handling added to execute and get_results methods. Same httpx exception mapping pattern.</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/__init__.py</path>
+        <kind>module-exports</kind>
+        <symbol>__all__</symbol>
+        <lines>10-14</lines>
+        <reason>Must be updated to export exception classes: SupermetricsError, AuthenticationError, ValidationError, APIError, NetworkError. Current exports only include client classes.</reason>
+      </artifact>
+      <artifact>
+        <path>tests/unit/test_login_links.py</path>
+        <kind>unit-test</kind>
+        <symbol>TestLoginLinksResource</symbol>
+        <lines>16-100</lines>
+        <reason>Shows existing test pattern using MagicMock and pytest fixtures. Error scenario tests need to be added here following same mocking pattern but with httpx.HTTPStatusError and httpx.RequestError.</reason>
+      </artifact>
+      <artifact>
+        <path>tests/conftest.py</path>
+        <kind>test-fixtures</kind>
+        <symbol>test_api_key, expected_headers</symbol>
+        <lines>28-52</lines>
+        <reason>Shared test fixtures for API key and headers. May need additional fixtures for mocking httpx errors.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <python>
+        <runtime>
+          <package name="httpx" version=">=0.25.0">HTTP client that raises HTTPStatusError and RequestError exceptions that need to be caught and mapped</package>
+          <package name="pydantic" version=">=2.0.0">Data validation - already used in resource adapters</package>
+          <package name="python-dateutil" version=">=2.8.0">Date parsing utility</package>
+          <package name="attrs" version=">=23.0.0">Class utilities dependency</package>
+        </runtime>
+        <dev>
+          <package name="pytest" version=">=7.4.0">Testing framework - used for unit tests</package>
+          <package name="pytest-asyncio" version=">=0.21.0">Async test support</package>
+          <package name="pytest-cov" version=">=4.1.0">Coverage measurement</package>
+          <package name="ruff" version=">=0.1.0">Code quality - linting and formatting (AC #8)</package>
+          <package name="mypy" version=">=1.7.0">Type checking - strict mode required (AC #8)</package>
+        </dev>
+      </python>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - NEVER include API keys, tokens, or sensitive data in exception messages or logs
+    - All exceptions must inherit from SupermetricsError for consistent error handling
+    - Exception messages must be clear, actionable, and user-friendly
+    - HTTP status code mapping must be consistent across all resources
+    - Network errors (no HTTP status) should not include status_code attribute
+    - Type hints required on all exception classes and methods (mypy strict mode)
+    - Must pass ruff linting and formatting checks
+    - Pattern consistency: all resource adapters use identical try/except structure
+    - Backward compatibility: existing method signatures unchanged, only add error handling
+    - Testing: mock httpx exceptions, don't make real API calls in unit tests
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>SupermetricsError (base exception)</name>
+      <kind>Python Exception Class</kind>
+      <signature>
+class SupermetricsError(Exception):
+    def __init__(
+        self,
+        message: str,
+        status_code: Optional[int] = None,
+        endpoint: Optional[str] = None,
+        response_body: Optional[str] = None
+    ) -> None:
+        ...
+    message: str
+    status_code: Optional[int]
+    endpoint: Optional[str]
+    response_body: Optional[str]
+      </signature>
+      <path>src/supermetrics/exceptions.py</path>
+    </interface>
+    <interface>
+      <name>httpx.HTTPStatusError</name>
+      <kind>External Exception</kind>
+      <signature>
+class HTTPStatusError(httpx.HTTPError):
+    request: httpx.Request
+    response: httpx.Response
+      </signature>
+      <path>httpx library (external)</path>
+    </interface>
+    <interface>
+      <name>httpx.RequestError</name>
+      <kind>External Exception</kind>
+      <signature>
+class RequestError(httpx.HTTPError):
+    request: Optional[httpx.Request]
+      </signature>
+      <path>httpx library (external)</path>
+    </interface>
+    <interface>
+      <name>Resource Adapter Error Handling Pattern</name>
+      <kind>Code Pattern</kind>
+      <signature>
+try:
+    response = self._client.api_method(...)
+    return response
+except httpx.HTTPStatusError as e:
+    if e.response.status_code == 401:
+        raise AuthenticationError(...)
+    elif e.response.status_code == 400:
+        raise ValidationError(...)
+    # ... other status codes
+except httpx.RequestError as e:
+    raise NetworkError(...)
+      </signature>
+      <path>All resource adapter methods must follow this pattern</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Testing uses pytest with fixtures for mocking. Resource tests use MagicMock to mock the generated client and API responses. Error scenario tests must mock httpx exceptions (HTTPStatusError and RequestError) and verify SDK exceptions are raised with correct type, message, and attributes. Type checking with mypy strict mode required. All tests must pass before story completion.
+    </standards>
+    <locations>
+      - tests/unit/ - Unit tests for all modules
+      - tests/unit/test_exceptions.py - NEW: Exception class tests
+      - tests/unit/test_login_links.py - Add error scenario tests
+      - tests/unit/test_logins.py - Add error scenario tests
+      - tests/unit/test_accounts.py - Add error scenario tests
+      - tests/unit/test_queries.py - Add error scenario tests
+      - tests/conftest.py - Shared fixtures (may add httpx error mocks)
+    </locations>
+    <ideas>
+      - AC1-3: Test SupermetricsError base class instantiation and attribute access
+      - AC1-3: Test each specific exception type (Auth, Validation, API, Network) with proper attributes
+      - AC1-3: Test exception inheritance chain (all inherit from SupermetricsError)
+      - AC4-5: Test 401 response raises AuthenticationError with correct message and context
+      - AC4-5: Test 400 response raises ValidationError with parameter details
+      - AC4-5: Test 404 response raises APIError with "not found" message
+      - AC4-5: Test 500/5xx responses raise APIError with server error message
+      - AC6: Test network timeout raises NetworkError (no status_code attribute)
+      - AC6: Test connection refused raises NetworkError with diagnostic context
+      - AC7: Verify all exception messages are clear, actionable, and include endpoint/status
+      - AC7: Verify exception messages NEVER contain API keys or sensitive data
+      - AC9: Add error tests to each resource test file (login_links, logins, accounts, queries)
+    </ideas>
+  </tests>
+</story-context>

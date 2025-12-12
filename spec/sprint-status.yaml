@@ -45,7 +45,7 @@ development_status:
   1-5-implement-logins-resource-adapter: ready-for-review
   1-6-implement-accounts-resource-adapter: ready-for-review
   1-7-implement-queries-resource-adapter: done
-  1-8-create-basic-error-handling: drafted
+  1-8-create-basic-error-handling: review
   1-9-create-poc-example-and-validation: drafted
   epic-1-retrospective: optional
 
