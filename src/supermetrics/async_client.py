@@ -11,6 +11,7 @@ from supermetrics._generated.supermetrics_api_client.client import Client as Gen
 from supermetrics.resources.accounts import AccountsAsyncResource
 from supermetrics.resources.login_links import LoginLinksAsyncResource
 from supermetrics.resources.logins import LoginsAsyncResource
+from supermetrics.resources.queries import QueriesAsyncResource
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +90,7 @@ class SupermetricsAsyncClient:
         self.login_links = LoginLinksAsyncResource(self._client)
         self.logins = LoginsAsyncResource(self._client)
         self.accounts = AccountsAsyncResource(self._client)
+        self.queries = QueriesAsyncResource(self._client)
 
         logger.info("SupermetricsAsyncClient initialized successfully")
 

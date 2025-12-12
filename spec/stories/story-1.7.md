@@ -1,6 +1,6 @@
 # Story 1.7: Implement Queries Resource Adapter
 
-Status: Draft
+Status: Approved
 Created: 2025-10-28
 Epic: 1 - Project Foundation & Core SDK Generation
 
@@ -24,44 +24,44 @@ so that users can fetch marketing data with proper parameter validation.
 ## Tasks / Subtasks
 
 ### Task 1: Create QueriesResource (sync) (AC: 1, 2, 3, 6, 7)
-- [ ] Create `src/supermetrics/resources/queries.py`
-- [ ] Import QueryResult and Field models from `_generated.models`
-- [ ] Define `QueriesResource` class
-- [ ] Implement `execute()` method with parameters:
+- [x] Create `src/supermetrics/resources/queries.py`
+- [x] Import QueryResult and Field models from `_generated.models`
+- [x] Define `QueriesResource` class
+- [x] Implement `execute()` method with parameters:
   - `ds_id: str`
   - `ds_accounts: list[str]`
   - `fields: list[str]`
   - `start_date: str`
   - `end_date: str`
   - `**kwargs` for additional query parameters
-  - Returns: `QueryResult`
-- [ ] Implement `get_results(query_id: str) -> QueryResult` for async query polling
-- [ ] Add error handling and logging
-- [ ] Add type hints and docstrings with parameter explanations
-- [ ] Format with ruff and type check with mypy
+  - Returns: `DataResponse`
+- [x] Implement `get_results(query_id: str) -> DataResponse` for async query polling
+- [x] Add error handling and logging
+- [x] Add type hints and docstrings with parameter explanations
+- [x] Format with ruff and type check with mypy
 
 ### Task 2: Create QueriesAsyncResource (async) (AC: 4, 6, 7)
-- [ ] Define `QueriesAsyncResource` class
-- [ ] Implement async `execute()` method
-- [ ] Implement async `get_results()` method
-- [ ] Add error handling and logging
+- [x] Define `QueriesAsyncResource` class
+- [x] Implement async `execute()` method
+- [x] Implement async `get_results()` method
+- [x] Add error handling and logging
 
 ### Task 3: Attach to clients (AC: 5)
-- [ ] Edit `client.py`: Add `self.queries = QueriesResource(self._client)`
-- [ ] Edit `async_client.py`: Add `self.queries = QueriesAsyncResource(self._client)`
+- [x] Edit `client.py`: Add `self.queries = QueriesResource(self._client)`
+- [x] Edit `async_client.py`: Add `self.queries = QueriesAsyncResource(self._client)`
 
 ### Task 4: Create unit tests (AC: 8)
-- [ ] Create `tests/unit/test_queries.py`
-- [ ] Test `execute()` with successful query (status="completed")
-- [ ] Test `execute()` with pending query (status="pending")
-- [ ] Test `get_results()` for pending query retrieval
-- [ ] Test query with various parameters (fields, date ranges, accounts)
-- [ ] Test error scenarios
-- [ ] Test async versions
-- [ ] Run tests: `pytest tests/unit/test_queries.py -v`
+- [x] Create `tests/unit/test_queries.py`
+- [x] Test `execute()` with successful query (status="completed")
+- [x] Test `execute()` with pending query (status="pending")
+- [x] Test `get_results()` for pending query retrieval
+- [x] Test query with various parameters (fields, date ranges, accounts)
+- [x] Test error scenarios
+- [x] Test async versions
+- [x] Run tests: `pytest tests/unit/test_queries.py -v`
 
 ### Task 5: Code quality checks (AC: 7)
-- [ ] Run mypy and ruff
+- [x] Run mypy and ruff
 
 ## Dev Notes
 
@@ -132,11 +132,12 @@ if result.status_code == "pending":
 
 ### Context Reference
 
-<!-- Story context will be generated after story approval -->
+- Story Context XML: `spec/stories/story-context-1.7.xml`
+- Generated: 2025-12-09
 
 ### Agent Model Used
 
-<!-- To be filled by dev agent -->
+claude-sonnet-4-5@20250929
 
 ### Debug Log References
 
@@ -144,8 +145,41 @@ if result.status_code == "pending":
 
 ### Completion Notes List
 
-<!-- To be filled by dev agent -->
+**Implementation Summary:**
+- Implemented QueriesResource and QueriesAsyncResource classes following the adapter pattern
+- Created execute() and get_results() methods with full parameter support (ds_id, ds_accounts, fields, dates, **kwargs)
+- Implemented async query polling pattern using schedule_id parameter
+- Attached resources to SupermetricsClient and SupermetricsAsyncClient
+- Created comprehensive unit tests with 15 test cases covering all methods, async versions, and error scenarios
+- All tests passing (15/15)
+
+**Technical Notes:**
+- Used DataResponse model from generated code for query results
+- Implemented type-safe handling with cast(AuthenticatedClient, self._client) for client compatibility
+- Used isinstance(response, Unset) for proper UNSET type checking (mypy strict compliant)
+- Followed exact resource adapter pattern from accounts.py including response handling
+- Added proper logging at DEBUG and INFO levels
+- Used Google-style docstrings with Args, Returns, Raises, and Example sections
+- Return type: DataResponse | None (error responses handled by generated client via HTTPStatusError)
+
+**Code Quality:**
+- ruff format: 1 file reformatted ✓
+- ruff check: All checks passed! ✓
+- mypy --strict: Success, no issues found ✓ (proper use of cast() and isinstance())
+- pytest: 15 passed in 0.18s ✓
+
+**Files Modified:**
+- Created: src/supermetrics/resources/queries.py (380 lines)
+- Modified: src/supermetrics/client.py (+2 lines)
+- Modified: src/supermetrics/async_client.py (+2 lines)
+- Created: tests/unit/test_queries.py (592 lines)
 
 ### File List
 
-<!-- To be filled by dev agent -->
+**Created Files:**
+- src/supermetrics/resources/queries.py
+- tests/unit/test_queries.py
+
+**Modified Files:**
+- src/supermetrics/client.py
+- src/supermetrics/async_client.py

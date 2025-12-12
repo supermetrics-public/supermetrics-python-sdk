@@ -1,0 +1,378 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.7</storyId>
+    <title>Implement Queries Resource Adapter</title>
+    <status>Approved</status>
+    <generatedAt>2025-12-10</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>spec/stories/story-1.7.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>a clean interface for executing data queries</iWant>
+    <soThat>users can fetch marketing data with proper parameter validation</soThat>
+    <tasks>
+### Task 1: Create QueriesResource (sync) (AC: 1, 2, 3, 6, 7)
+- [ ] Create `src/supermetrics/resources/queries.py`
+- [ ] Import QueryResult and Field models from `_generated.models`
+- [ ] Define `QueriesResource` class
+- [ ] Implement `execute()` method with parameters:
+  - `ds_id: str`
+  - `ds_accounts: list[str]`
+  - `fields: list[str]`
+  - `start_date: str`
+  - `end_date: str`
+  - `**kwargs` for additional query parameters
+  - Returns: `DataResponse`
+- [ ] Implement `get_results(query_id: str) -> DataResponse` for async query polling
+- [ ] Add error handling and logging
+- [ ] Add type hints and docstrings with parameter explanations
+- [ ] Format with ruff and type check with mypy
+
+### Task 2: Create QueriesAsyncResource (async) (AC: 4, 6, 7)
+- [ ] Define `QueriesAsyncResource` class
+- [ ] Implement async `execute()` method
+- [ ] Implement async `get_results()` method
+- [ ] Add error handling and logging
+
+### Task 3: Attach to clients (AC: 5)
+- [ ] Edit `client.py`: Add `self.queries = QueriesResource(self._client)`
+- [ ] Edit `async_client.py`: Add `self.queries = QueriesAsyncResource(self._client)`
+
+### Task 4: Create unit tests (AC: 8)
+- [ ] Create `tests/unit/test_queries.py`
+- [ ] Test `execute()` with successful query (status="completed")
+- [ ] Test `execute()` with pending query (status="pending")
+- [ ] Test `get_results()` for pending query retrieval
+- [ ] Test query with various parameters (fields, date ranges, accounts)
+- [ ] Test error scenarios
+- [ ] Test async versions
+- [ ] Run tests: `pytest tests/unit/test_queries.py -v`
+
+### Task 5: Code quality checks (AC: 7)
+- [ ] Run mypy and ruff
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. `src/supermetrics/resources/queries.py` created with `QueriesResource` class
+2. Methods implemented: `execute()`, `get_results()`, with support for fields, date ranges, accounts, data source parameters
+3. Basic async query polling support implemented (check status, retrieve results)
+4. Both sync and async versions implemented
+5. Resources attached to client: `client.queries` property
+6. Complete type hints and docstrings added
+7. Code passes `mypy` and `ruff`
+8. Unit tests covering query execution and result retrieval
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <!-- Tech Spec: Queries Resource API and Data Models -->
+      <doc>
+        <path>spec/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Project Foundation & Core SDK Generation</title>
+        <section>QueriesResource API (lines 257-271)</section>
+        <snippet>
+# Execute data query
+result: DataResponse = client.queries.execute(
+    ds_id: str,
+    ds_accounts: list[str],
+    fields: list[str],
+    start_date: str,
+    end_date: str,
+    **kwargs
+) -> DataResponse
+
+# Get query results (for async queries)
+result: DataResponse = client.queries.get_results(query_id: str) -> DataResponse
+        </snippet>
+      </doc>
+
+      <!-- Tech Spec: Query Data Models -->
+      <doc>
+        <path>spec/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Query Data Models</title>
+        <section>QueryResult Model (lines 145-167)</section>
+        <snippet>
+class Field(BaseModel):
+    id: str                     # Field ID the API uses
+    requested_id: str           # Field ID from the request
+    name: str                   # Field name
+    type: str                   # Field type
+    split: str                  # Field split by type
+    data_type: str              # Field data type
+    data_column: int            # Field value position in each data row
+    visible: bool               # Whether data for this field is visible
+
+class QueryResult(BaseModel):
+    request_id: str             # API request ID
+    schedule_id: str            # Custom or generated schedule ID
+    status_code: str            # Status code for the query
+    data: list[dict]            # Actual data rows
+    fields: list[Field]         # Field definitions
+    row_count: int              # Number of rows returned
+    data_sampled: bool          # If data source provided sampled data
+    cache_used: bool            # If cached data was used
+    cache_time: datetime        # Most recent cached data timestamp
+        </snippet>
+      </doc>
+
+      <!-- Tech Spec: Async Query Polling Pattern -->
+      <doc>
+        <path>spec/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Async Query Polling</title>
+        <section>Workflows - Async Query Polling (lines 313-320)</section>
+        <snippet>
+# Execute query
+result = client.queries.execute(...)
+
+# If query is pending, poll for results
+if result.status_code == "pending":
+    result = client.queries.get_results(query_id=result.request_id)
+        </snippet>
+      </doc>
+
+      <!-- Architecture: Resource Adapter Pattern -->
+      <doc>
+        <path>spec/architecture.md</path>
+        <title>Architecture: Resource Adapter Pattern</title>
+        <section>Implementation Patterns (lines 556-679)</section>
+        <snippet>
+Resource Adapter Pattern (MANDATORY for all resources):
+- Import logging, httpx, generated client and models
+- Define sync resource class with __init__(self, client: GeneratedClient)
+- Implement public methods wrapping generated API calls
+- Add error handling with _map_http_exception pattern
+- Define async resource class with identical interface
+- Use logger.debug for method entry, logger.info for success, logger.error for failures
+        </snippet>
+      </doc>
+
+      <!-- Architecture: Type Hints and Docstrings -->
+      <doc>
+        <path>spec/architecture.md</path>
+        <title>Architecture: Type Hints and Docstring Standards</title>
+        <section>Type Hints and Docstring Format (lines 681-843)</section>
+        <snippet>
+Google Style Docstrings (MANDATORY):
+- Brief description on first line
+- Detailed explanation in paragraph
+- Args: Parameter descriptions with types and examples
+- Returns: Return value description with type
+- Raises: All possible exceptions with when they occur
+- Example: Code examples showing typical usage
+        </snippet>
+      </doc>
+    </docs>
+
+    <code>
+      <!-- Existing Pattern: AccountsResource Implementation -->
+      <artifact>
+        <path>src/supermetrics/resources/accounts.py</path>
+        <kind>resource adapter</kind>
+        <symbol>AccountsResource</symbol>
+        <lines>1-195</lines>
+        <reason>Reference implementation showing: resource class structure, logging patterns, generated API wrapping, sync/async dual implementation, parameter handling with UNSET, response flattening, docstring format</reason>
+      </artifact>
+
+      <!-- Client Integration Pattern -->
+      <artifact>
+        <path>src/supermetrics/client.py</path>
+        <kind>client</kind>
+        <symbol>SupermetricsClient</symbol>
+        <lines>88-93</lines>
+        <reason>Shows how to attach resource to client instance in __init__ method (line 93 will add: self.queries = QueriesResource(self._client))</reason>
+      </artifact>
+
+      <!-- Generated API: Query Execution -->
+      <artifact>
+        <path>src/supermetrics/_generated/supermetrics_api_client/api/get_data/get_data.py</path>
+        <kind>generated API</kind>
+        <symbol>get_data.sync, get_data.asyncio</symbol>
+        <lines>113-194</lines>
+        <reason>Generated API methods for executing queries. Use get_data.sync(client=self._client, json=DataQuery(...)) for sync, get_data.asyncio for async</reason>
+      </artifact>
+
+      <!-- Generated Model: DataQuery Request -->
+      <artifact>
+        <path>src/supermetrics/_generated/supermetrics_api_client/models/data_query.py</path>
+        <kind>generated model</kind>
+        <symbol>DataQuery</symbol>
+        <lines>21-81</lines>
+        <reason>Request model for queries. Required field: ds_id. Optional: ds_accounts, fields, start_date, end_date, cache_minutes, sync_timeout, and many more via **kwargs</reason>
+      </artifact>
+
+      <!-- Generated Model: DataResponse -->
+      <artifact>
+        <path>src/supermetrics/_generated/supermetrics_api_client/models/data_response.py</path>
+        <kind>generated model</kind>
+        <symbol>DataResponse</symbol>
+        <lines>18-28</lines>
+        <reason>Response model with meta (DataResponseMeta) and data (list[list[str]]). Return this from execute() and get_results()</reason>
+      </artifact>
+
+      <!-- Generated Model: DataResponseMeta -->
+      <artifact>
+        <path>src/supermetrics/_generated/supermetrics_api_client/models/data_response_meta.py</path>
+        <kind>generated model</kind>
+        <symbol>DataResponseMeta</symbol>
+        <lines>20-38</lines>
+        <reason>Response metadata with request_id, schedule_id, status_code (use for polling), query, result, and paginate info</reason>
+      </artifact>
+
+      <!-- Testing Pattern -->
+      <artifact>
+        <path>tests/unit/test_accounts.py</path>
+        <kind>test</kind>
+        <symbol>TestAccountsResource</symbol>
+        <lines>1-413</lines>
+        <reason>Testing patterns: fixtures for mock client, sample responses, patching generated API functions (accounts_module.get_accounts.sync), AAA test structure, async test with @pytest.mark.asyncio</reason>
+      </artifact>
+    </code>
+
+    <dependencies>
+      <python>
+        <runtime>
+          <package name="httpx" version=">=0.25.0">HTTP client with sync/async support</package>
+          <package name="pydantic" version=">=2.0.0">Type-safe models and validation</package>
+          <package name="python-dateutil" version=">=2.8.0">ISO 8601 date parsing</package>
+          <package name="attrs" version=">=23.0.0">Class utilities for generated code</package>
+        </runtime>
+        <dev>
+          <package name="pytest" version=">=7.4.0">Testing framework</package>
+          <package name="pytest-asyncio" version=">=0.21.0">Async test support</package>
+          <package name="pytest-cov" version=">=4.1.0">Coverage measurement</package>
+          <package name="ruff" version=">=0.1.0">Linting and formatting</package>
+          <package name="mypy" version=">=1.7.0">Type checking</package>
+        </dev>
+      </python>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+1. **Adapter Pattern**: Must wrap _generated.supermetrics_api_client.api.get_data functions, never call HTTP directly
+2. **Type Safety**: All public methods MUST have complete type hints including return types
+3. **UNSET Handling**: Use UNSET from ..types for optional parameters, not None
+4. **Sync/Async Dual**: Both QueriesResource and QueriesAsyncResource with identical interfaces
+5. **Logging**: Use logger.debug for entry, logger.info for success, logger.error for failures
+6. **Imports**: Use absolute imports starting with supermetrics._generated
+7. **Naming**: Method names execute() and get_results() per tech spec
+8. **Response Handling**: Return DataResponse directly, handle None/UNSET cases gracefully
+9. **Google Docstrings**: Complete docstrings with Args, Returns, Raises, Example sections
+10. **Code Quality**: Must pass mypy strict type checking and ruff formatting
+  </constraints>
+
+  <interfaces>
+<!-- Public API Interface that must be implemented -->
+<interface>
+  <name>QueriesResource</name>
+  <kind>class</kind>
+  <signature>
+class QueriesResource:
+    def __init__(self, client: GeneratedClient) -> None: ...
+
+    def execute(
+        self,
+        ds_id: str,
+        ds_accounts: list[str],
+        fields: list[str],
+        start_date: str,
+        end_date: str,
+        **kwargs
+    ) -> DataResponse: ...
+
+    def get_results(self, query_id: str) -> DataResponse: ...
+  </signature>
+  <path>src/supermetrics/resources/queries.py</path>
+</interface>
+
+<interface>
+  <name>QueriesAsyncResource</name>
+  <kind>class</kind>
+  <signature>
+class QueriesAsyncResource:
+    def __init__(self, client: GeneratedClient) -> None: ...
+
+    async def execute(
+        self,
+        ds_id: str,
+        ds_accounts: list[str],
+        fields: list[str],
+        start_date: str,
+        end_date: str,
+        **kwargs
+    ) -> DataResponse: ...
+
+    async def get_results(self, query_id: str) -> DataResponse: ...
+  </signature>
+  <path>src/supermetrics/resources/queries.py</path>
+</interface>
+
+<!-- Generated API to wrap -->
+<interface>
+  <name>get_data.sync</name>
+  <kind>function</kind>
+  <signature>
+def sync(*, client: AuthenticatedClient, json: DataQuery) -> DataResponse | None
+  </signature>
+  <path>src/supermetrics/_generated/supermetrics_api_client/api/get_data/get_data.py</path>
+</interface>
+
+<interface>
+  <name>get_data.asyncio</name>
+  <kind>function</kind>
+  <signature>
+async def asyncio(*, client: AuthenticatedClient, json: DataQuery) -> DataResponse | None
+  </signature>
+  <path>src/supermetrics/_generated/supermetrics_api_client/api/get_data/get_data.py</path>
+</interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+Testing Framework: pytest + pytest-asyncio for async tests
+Mock Strategy: Patch generated API functions (supermetrics.resources.queries.get_data.sync/asyncio)
+Fixtures: mock_client (GeneratedClient), sample_response (DataResponse with mock data)
+AAA Pattern: Arrange (setup mocks), Act (call method), Assert (verify behavior)
+Coverage: All public methods, success cases, error cases, edge cases (empty/None responses)
+Async Tests: Use @pytest.mark.asyncio decorator and AsyncMock for async methods
+    </standards>
+
+    <locations>
+tests/unit/test_queries.py - Unit tests for QueriesResource and QueriesAsyncResource
+    </locations>
+
+    <ideas>
+Test Ideas Mapped to Acceptance Criteria:
+
+AC1-2: Execute Query Success
+- test_execute_query_success(): Mock DataResponse with status_code="completed", verify all parameters passed correctly
+- test_execute_query_with_all_parameters(): Test with ds_accounts, fields, start_date, end_date, and **kwargs
+- test_execute_query_with_minimal_parameters(): Test with only ds_id
+
+AC3: Async Query Polling
+- test_execute_query_pending_status(): Mock response with status_code="pending", verify request_id returned
+- test_get_results_for_pending_query(): Mock get_results call, verify it returns completed DataResponse
+- test_async_query_polling_workflow(): Execute → status=pending → get_results → status=completed
+
+AC4: Async Versions
+- test_execute_async_query(): Test QueriesAsyncResource.execute() with AsyncMock
+- test_get_results_async(): Test QueriesAsyncResource.get_results() with AsyncMock
+- test_async_verify_await_syntax(): Ensure async methods are properly awaited
+
+AC5-6: Type Hints and Integration
+- Manual verification: mypy passes, client.queries property works
+- IDE autocomplete verification
+
+AC7: Code Quality
+- Automated: pytest run, mypy check, ruff format/check
+
+AC8: Error Scenarios
+- test_execute_query_empty_response(): Handle None/UNSET response gracefully
+- test_execute_query_with_invalid_params(): Test parameter validation
+- test_execute_query_network_error(): Mock httpx.RequestError
+    </ideas>
+  </tests>
+</story-context>
