@@ -1,8 +1,9 @@
 """Unit tests for LoginsResource and LoginsAsyncResource."""
 
 import datetime
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, Mock
 
+import httpx
 import pytest
 
 from supermetrics._generated.supermetrics_api_client.client import Client as GeneratedClient
@@ -17,6 +18,7 @@ from supermetrics._generated.supermetrics_api_client.models.list_data_source_log
 )
 from supermetrics._generated.supermetrics_api_client.models.user import User
 from supermetrics._generated.supermetrics_api_client.types import UNSET
+from supermetrics.exceptions import APIError, AuthenticationError, NetworkError, ValidationError
 from supermetrics.resources.logins import LoginsAsyncResource, LoginsResource
 
 
@@ -206,6 +208,158 @@ class TestLoginsResource:
 
         # Cleanup
         logins_module.list_data_source_logins.sync = original_list
+
+    def test_authentication_error_on_401(self, logins_resource: LoginsResource, mock_client: MagicMock) -> None:
+        """Test 401 response raises AuthenticationError."""
+        # Mock httpx to raise HTTPStatusError with 401
+        mock_response = Mock()
+        mock_response.status_code = 401
+        mock_response.text = "Unauthorized"
+
+        mock_request = Mock()
+        mock_request.url = "https://api.supermetrics.com/test"
+
+        error = httpx.HTTPStatusError(
+            "401 Unauthorized",
+            request=mock_request,
+            response=mock_response
+        )
+
+        # Mock the API method to raise the error
+        import supermetrics.resources.logins as logins_module
+
+        original_get = logins_module.get_data_source_login.sync
+        logins_module.get_data_source_login.sync = MagicMock(side_effect=error)
+
+        # Verify AuthenticationError is raised
+        with pytest.raises(AuthenticationError) as exc_info:
+            logins_resource.get("login_123")
+
+        assert exc_info.value.status_code == 401
+        assert "Invalid or expired API key" in str(exc_info.value)
+
+        # Cleanup
+        logins_module.get_data_source_login.sync = original_get
+
+    def test_validation_error_on_400(self, logins_resource: LoginsResource, mock_client: MagicMock) -> None:
+        """Test 400 response raises ValidationError."""
+        # Mock httpx to raise HTTPStatusError with 400
+        mock_response = Mock()
+        mock_response.status_code = 400
+        mock_response.text = "Bad Request: Invalid parameter"
+
+        mock_request = Mock()
+        mock_request.url = "https://api.supermetrics.com/test"
+
+        error = httpx.HTTPStatusError(
+            "400 Bad Request",
+            request=mock_request,
+            response=mock_response
+        )
+
+        # Mock the API method to raise the error
+        import supermetrics.resources.logins as logins_module
+
+        original_get = logins_module.get_data_source_login.sync
+        logins_module.get_data_source_login.sync = MagicMock(side_effect=error)
+
+        # Verify ValidationError is raised
+        with pytest.raises(ValidationError) as exc_info:
+            logins_resource.get("login_123")
+
+        assert exc_info.value.status_code == 400
+        assert "Invalid parameter" in str(exc_info.value)
+
+        # Cleanup
+        logins_module.get_data_source_login.sync = original_get
+
+    def test_api_error_on_404(self, logins_resource: LoginsResource, mock_client: MagicMock) -> None:
+        """Test 404 response raises APIError."""
+        # Mock httpx to raise HTTPStatusError with 404
+        mock_response = Mock()
+        mock_response.status_code = 404
+        mock_response.text = "Not Found"
+
+        mock_request = Mock()
+        mock_request.url = "https://api.supermetrics.com/test"
+
+        error = httpx.HTTPStatusError(
+            "404 Not Found",
+            request=mock_request,
+            response=mock_response
+        )
+
+        # Mock the API method to raise the error
+        import supermetrics.resources.logins as logins_module
+
+        original_get = logins_module.get_data_source_login.sync
+        logins_module.get_data_source_login.sync = MagicMock(side_effect=error)
+
+        # Verify APIError is raised
+        with pytest.raises(APIError) as exc_info:
+            logins_resource.get("login_123")
+
+        assert exc_info.value.status_code == 404
+        assert "not found" in str(exc_info.value).lower()
+
+        # Cleanup
+        logins_module.get_data_source_login.sync = original_get
+
+    def test_api_error_on_500(self, logins_resource: LoginsResource, mock_client: MagicMock) -> None:
+        """Test 500 response raises APIError."""
+        # Mock httpx to raise HTTPStatusError with 500
+        mock_response = Mock()
+        mock_response.status_code = 500
+        mock_response.text = "Internal Server Error"
+
+        mock_request = Mock()
+        mock_request.url = "https://api.supermetrics.com/test"
+
+        error = httpx.HTTPStatusError(
+            "500 Internal Server Error",
+            request=mock_request,
+            response=mock_response
+        )
+
+        # Mock the API method to raise the error
+        import supermetrics.resources.logins as logins_module
+
+        original_get = logins_module.get_data_source_login.sync
+        logins_module.get_data_source_login.sync = MagicMock(side_effect=error)
+
+        # Verify APIError is raised
+        with pytest.raises(APIError) as exc_info:
+            logins_resource.get("login_123")
+
+        assert exc_info.value.status_code == 500
+        assert "Supermetrics API error" in str(exc_info.value)
+
+        # Cleanup
+        logins_module.get_data_source_login.sync = original_get
+
+    def test_network_error_on_timeout(self, logins_resource: LoginsResource, mock_client: MagicMock) -> None:
+        """Test network timeout raises NetworkError."""
+        # Mock httpx.RequestError (not HTTPStatusError)
+        mock_request = Mock()
+        mock_request.url = "https://api.supermetrics.com/test"
+
+        error = httpx.TimeoutException("Request timeout", request=mock_request)
+
+        # Mock the API method to raise the error
+        import supermetrics.resources.logins as logins_module
+
+        original_get = logins_module.get_data_source_login.sync
+        logins_module.get_data_source_login.sync = MagicMock(side_effect=error)
+
+        # Verify NetworkError is raised
+        with pytest.raises(NetworkError) as exc_info:
+            logins_resource.get("login_123")
+
+        assert "Network error" in str(exc_info.value)
+        assert exc_info.value.status_code is None  # Network errors have no HTTP status
+
+        # Cleanup
+        logins_module.get_data_source_login.sync = original_get
 
 
 class TestLoginsAsyncResource:

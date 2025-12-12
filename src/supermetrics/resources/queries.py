@@ -3,12 +3,15 @@
 import logging
 from typing import Any, cast
 
+import httpx
+
 from supermetrics._generated.supermetrics_api_client import AuthenticatedClient
 from supermetrics._generated.supermetrics_api_client import Client as GeneratedClient
 from supermetrics._generated.supermetrics_api_client.api.get_data import get_data
 from supermetrics._generated.supermetrics_api_client.models.data_query import DataQuery
 from supermetrics._generated.supermetrics_api_client.models.data_response import DataResponse
 from supermetrics._generated.supermetrics_api_client.types import UNSET, Unset
+from supermetrics.exceptions import APIError, AuthenticationError, NetworkError, ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -95,8 +98,10 @@ class QueriesResource:
                 - response.data: List of data rows (each row is a list of strings)
 
         Raises:
-            httpx.HTTPStatusError: If the API returns an error status code.
-            httpx.TimeoutException: If the request times out.
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            ValidationError: If request parameters are invalid (HTTP 400).
+            APIError: If the API returns a server error (HTTP 404, 5xx).
+            NetworkError: If a network-level error occurs (timeout, connection refused).
 
         Example:
             >>> # Execute a simple query
@@ -139,36 +144,80 @@ class QueriesResource:
             f"fields={fields}, start_date={start_date}, end_date={end_date}, kwargs={kwargs}"
         )
 
-        # Build request parameters
-        request_params = DataQuery(
-            ds_id=ds_id,
-            ds_accounts=ds_accounts,
-            fields=fields,
-            start_date=start_date,
-            end_date=end_date,
-            **kwargs,
-        )
-
-        # Call generated API - cast client to AuthenticatedClient (compatible at runtime)
-        response = get_data.sync(client=cast(AuthenticatedClient, self._client), json=request_params)
-
-        # Handle response
-        if response is None or isinstance(response, Unset):
-            logger.info("Query executed but returned no response (empty)")
-            return None
-
-        # Cast to DataResponse - error responses are handled by generated client
-        data_response = cast(DataResponse, response)
-
-        if hasattr(data_response, "meta") and data_response.meta and hasattr(data_response.meta, "status_code"):
-            status = data_response.meta.status_code if data_response.meta.status_code is not UNSET else "unknown"
-            logger.info(
-                f"Query executed: status={status}, request_id={getattr(data_response.meta, 'request_id', 'N/A')}"
+        try:
+            # Build request parameters
+            request_params = DataQuery(
+                ds_id=ds_id,
+                ds_accounts=ds_accounts,
+                fields=fields,
+                start_date=start_date,
+                end_date=end_date,
+                **kwargs,
             )
-        else:
-            logger.info("Query executed successfully")
 
-        return data_response
+            # Call generated API - cast client to AuthenticatedClient (compatible at runtime)
+            response = get_data.sync(client=cast(AuthenticatedClient, self._client), json=request_params)
+
+            # Handle response
+            if response is None or isinstance(response, Unset):
+                logger.info("Query executed but returned no response (empty)")
+                return None
+
+            # Cast to DataResponse - error responses are handled by generated client
+            data_response = cast(DataResponse, response)
+
+            if hasattr(data_response, "meta") and data_response.meta and hasattr(data_response.meta, "status_code"):
+                status = data_response.meta.status_code if data_response.meta.status_code is not UNSET else "unknown"
+                logger.info(
+                    f"Query executed: status={status}, request_id={getattr(data_response.meta, 'request_id', 'N/A')}"
+                )
+            else:
+                logger.info("Query executed successfully")
+
+            return data_response
+
+        except httpx.HTTPStatusError as e:
+            # Map HTTP status codes to SDK exceptions
+            if e.response.status_code == 401:
+                raise AuthenticationError(
+                    "Invalid or expired API key",
+                    status_code=401,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 400:
+                raise ValidationError(
+                    f"Invalid request parameters: {e.response.text}",
+                    status_code=400,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 404:
+                raise APIError(
+                    f"Resource not found: {e.response.text}",
+                    status_code=404,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code >= 500:
+                raise APIError(
+                    f"Supermetrics API error: {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            else:
+                raise APIError(
+                    f"API error ({e.response.status_code}): {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+        except httpx.RequestError as e:
+            raise NetworkError(
+                f"Network error: {str(e)}",
+                endpoint=str(e.request.url) if e.request else None,
+            ) from e
 
     def get_results(self, query_id: str) -> DataResponse | None:
         """Retrieve results for a previously executed query.
@@ -193,8 +242,10 @@ class QueriesResource:
                 - response.data contains the actual data rows when complete
 
         Raises:
-            httpx.HTTPStatusError: If the API returns an error status code.
-            httpx.TimeoutException: If the request times out.
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            ValidationError: If request parameters are invalid (HTTP 400).
+            APIError: If the API returns a server error (HTTP 404, 5xx).
+            NetworkError: If a network-level error occurs (timeout, connection refused).
 
         Example:
             >>> # Execute query and check status
@@ -219,31 +270,75 @@ class QueriesResource:
         """
         logger.debug(f"Retrieving query results: query_id={query_id}")
 
-        # Build request parameters with schedule_id set to the query_id
-        # This tells the API to return results for this specific query
-        request_params = DataQuery(
-            ds_id="",  # Required field but not used for result retrieval
-            schedule_id=query_id,
-        )
+        try:
+            # Build request parameters with schedule_id set to the query_id
+            # This tells the API to return results for this specific query
+            request_params = DataQuery(
+                ds_id="",  # Required field but not used for result retrieval
+                schedule_id=query_id,
+            )
 
-        # Call generated API - cast client to AuthenticatedClient (compatible at runtime)
-        response = get_data.sync(client=cast(AuthenticatedClient, self._client), json=request_params)
+            # Call generated API - cast client to AuthenticatedClient (compatible at runtime)
+            response = get_data.sync(client=cast(AuthenticatedClient, self._client), json=request_params)
 
-        # Handle response
-        if response is None or isinstance(response, Unset):
-            logger.info(f"Query results retrieved but returned no response: query_id={query_id}")
-            return None
+            # Handle response
+            if response is None or isinstance(response, Unset):
+                logger.info(f"Query results retrieved but returned no response: query_id={query_id}")
+                return None
 
-        # Cast to DataResponse - error responses are handled by generated client
-        data_response = cast(DataResponse, response)
+            # Cast to DataResponse - error responses are handled by generated client
+            data_response = cast(DataResponse, response)
 
-        if hasattr(data_response, "meta") and data_response.meta and hasattr(data_response.meta, "status_code"):
-            status = data_response.meta.status_code if data_response.meta.status_code is not UNSET else "unknown"
-            logger.info(f"Query results retrieved: query_id={query_id}, status={status}")
-        else:
-            logger.info(f"Query results retrieved: query_id={query_id}")
+            if hasattr(data_response, "meta") and data_response.meta and hasattr(data_response.meta, "status_code"):
+                status = data_response.meta.status_code if data_response.meta.status_code is not UNSET else "unknown"
+                logger.info(f"Query results retrieved: query_id={query_id}, status={status}")
+            else:
+                logger.info(f"Query results retrieved: query_id={query_id}")
 
-        return data_response
+            return data_response
+
+        except httpx.HTTPStatusError as e:
+            # Map HTTP status codes to SDK exceptions
+            if e.response.status_code == 401:
+                raise AuthenticationError(
+                    "Invalid or expired API key",
+                    status_code=401,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 400:
+                raise ValidationError(
+                    f"Invalid request parameters: {e.response.text}",
+                    status_code=400,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 404:
+                raise APIError(
+                    f"Resource not found: {e.response.text}",
+                    status_code=404,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code >= 500:
+                raise APIError(
+                    f"Supermetrics API error: {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            else:
+                raise APIError(
+                    f"API error ({e.response.status_code}): {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+        except httpx.RequestError as e:
+            raise NetworkError(
+                f"Network error: {str(e)}",
+                endpoint=str(e.request.url) if e.request else None,
+            ) from e
 
 
 class QueriesAsyncResource:
@@ -298,43 +393,89 @@ class QueriesAsyncResource:
             DataResponse | None: Query response with metadata and data.
 
         Raises:
-            httpx.HTTPStatusError: If the API returns an error.
-            httpx.TimeoutException: If the request times out.
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            ValidationError: If request parameters are invalid (HTTP 400).
+            APIError: If the API returns a server error (HTTP 404, 5xx).
+            NetworkError: If a network-level error occurs (timeout, connection refused).
         """
         logger.debug(
             f"Executing query (async): ds_id={ds_id}, ds_accounts={ds_accounts}, "
             f"fields={fields}, start_date={start_date}, end_date={end_date}, kwargs={kwargs}"
         )
 
-        # Build request parameters
-        request_params = DataQuery(
-            ds_id=ds_id,
-            ds_accounts=ds_accounts,
-            fields=fields,
-            start_date=start_date,
-            end_date=end_date,
-            **kwargs,
-        )
+        try:
+            # Build request parameters
+            request_params = DataQuery(
+                ds_id=ds_id,
+                ds_accounts=ds_accounts,
+                fields=fields,
+                start_date=start_date,
+                end_date=end_date,
+                **kwargs,
+            )
 
-        # Call generated API - cast client to AuthenticatedClient (compatible at runtime)
-        response = await get_data.asyncio(client=cast(AuthenticatedClient, self._client), json=request_params)
+            # Call generated API - cast client to AuthenticatedClient (compatible at runtime)
+            response = await get_data.asyncio(client=cast(AuthenticatedClient, self._client), json=request_params)
 
-        # Handle response
-        if response is None or isinstance(response, Unset):
-            logger.info("Query executed (async) but returned no response (empty)")
-            return None
+            # Handle response
+            if response is None or isinstance(response, Unset):
+                logger.info("Query executed (async) but returned no response (empty)")
+                return None
 
-        # Cast to DataResponse - error responses are handled by generated client
-        data_response = cast(DataResponse, response)
+            # Cast to DataResponse - error responses are handled by generated client
+            data_response = cast(DataResponse, response)
 
-        if hasattr(data_response, "meta") and data_response.meta and hasattr(data_response.meta, "status_code"):
-            status = data_response.meta.status_code if data_response.meta.status_code is not UNSET else "unknown"
-            request_id = getattr(data_response.meta, "request_id", "N/A")
-            logger.info(f"Query executed (async): status={status}, request_id={request_id}")
-        else:
-            logger.info("Query executed (async) successfully")
+            if hasattr(data_response, "meta") and data_response.meta and hasattr(data_response.meta, "status_code"):
+                status = data_response.meta.status_code if data_response.meta.status_code is not UNSET else "unknown"
+                request_id = getattr(data_response.meta, "request_id", "N/A")
+                logger.info(f"Query executed (async): status={status}, request_id={request_id}")
+            else:
+                logger.info("Query executed (async) successfully")
 
-        return data_response
+            return data_response
+
+        except httpx.HTTPStatusError as e:
+            # Map HTTP status codes to SDK exceptions
+            if e.response.status_code == 401:
+                raise AuthenticationError(
+                    "Invalid or expired API key",
+                    status_code=401,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 400:
+                raise ValidationError(
+                    f"Invalid request parameters: {e.response.text}",
+                    status_code=400,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 404:
+                raise APIError(
+                    f"Resource not found: {e.response.text}",
+                    status_code=404,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code >= 500:
+                raise APIError(
+                    f"Supermetrics API error: {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            else:
+                raise APIError(
+                    f"API error ({e.response.status_code}): {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+        except httpx.RequestError as e:
+            raise NetworkError(
+                f"Network error: {str(e)}",
+                endpoint=str(e.request.url) if e.request else None,
+            ) from e
 
     async def get_results(self, query_id: str) -> DataResponse | None:
         """Retrieve results for a previously executed query.
@@ -348,32 +489,78 @@ class QueriesAsyncResource:
             DataResponse | None: Query results if available.
 
         Raises:
-            httpx.HTTPStatusError: If the API returns an error.
-            httpx.TimeoutException: If the request times out.
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            ValidationError: If request parameters are invalid (HTTP 400).
+            APIError: If the API returns a server error (HTTP 404, 5xx).
+            NetworkError: If a network-level error occurs (timeout, connection refused).
         """
         logger.debug(f"Retrieving query results (async): query_id={query_id}")
 
-        # Build request parameters with schedule_id set to the query_id
-        request_params = DataQuery(
-            ds_id="",  # Required field but not used for result retrieval
-            schedule_id=query_id,
-        )
+        try:
+            # Build request parameters with schedule_id set to the query_id
+            request_params = DataQuery(
+                ds_id="",  # Required field but not used for result retrieval
+                schedule_id=query_id,
+            )
 
-        # Call generated API - cast client to AuthenticatedClient (compatible at runtime)
-        response = await get_data.asyncio(client=cast(AuthenticatedClient, self._client), json=request_params)
+            # Call generated API - cast client to AuthenticatedClient (compatible at runtime)
+            response = await get_data.asyncio(client=cast(AuthenticatedClient, self._client), json=request_params)
 
-        # Handle response
-        if response is None or isinstance(response, Unset):
-            logger.info(f"Query results retrieved (async) but returned no response: query_id={query_id}")
-            return None
+            # Handle response
+            if response is None or isinstance(response, Unset):
+                logger.info(f"Query results retrieved (async) but returned no response: query_id={query_id}")
+                return None
 
-        # Cast to DataResponse - error responses are handled by generated client
-        data_response = cast(DataResponse, response)
+            # Cast to DataResponse - error responses are handled by generated client
+            data_response = cast(DataResponse, response)
 
-        if hasattr(data_response, "meta") and data_response.meta and hasattr(data_response.meta, "status_code"):
-            status = data_response.meta.status_code if data_response.meta.status_code is not UNSET else "unknown"
-            logger.info(f"Query results retrieved (async): query_id={query_id}, status={status}")
-        else:
-            logger.info(f"Query results retrieved (async): query_id={query_id}")
+            if hasattr(data_response, "meta") and data_response.meta and hasattr(data_response.meta, "status_code"):
+                status = data_response.meta.status_code if data_response.meta.status_code is not UNSET else "unknown"
+                logger.info(f"Query results retrieved (async): query_id={query_id}, status={status}")
+            else:
+                logger.info(f"Query results retrieved (async): query_id={query_id}")
 
-        return data_response
+            return data_response
+
+        except httpx.HTTPStatusError as e:
+            # Map HTTP status codes to SDK exceptions
+            if e.response.status_code == 401:
+                raise AuthenticationError(
+                    "Invalid or expired API key",
+                    status_code=401,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 400:
+                raise ValidationError(
+                    f"Invalid request parameters: {e.response.text}",
+                    status_code=400,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 404:
+                raise APIError(
+                    f"Resource not found: {e.response.text}",
+                    status_code=404,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code >= 500:
+                raise APIError(
+                    f"Supermetrics API error: {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            else:
+                raise APIError(
+                    f"API error ({e.response.status_code}): {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+        except httpx.RequestError as e:
+            raise NetworkError(
+                f"Network error: {str(e)}",
+                endpoint=str(e.request.url) if e.request else None,
+            ) from e
