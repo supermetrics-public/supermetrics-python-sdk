@@ -38,15 +38,15 @@ story_location: "{project-root}/docs/stories"
 development_status:
   # Epic 1: Project Foundation & Core SDK Generation
   epic-1: contexted
-  1-1-initialize-python-project-structure: review
-  1-2-generate-initial-sdk-from-openapi-specification: review
-  1-3-create-adapter-pattern-foundation: review
-  1-4-implement-login-links-resource-adapter: review
-  1-5-implement-logins-resource-adapter: ready-for-review
-  1-6-implement-accounts-resource-adapter: ready-for-review
+  1-1-initialize-python-project-structure: done
+  1-2-generate-initial-sdk-from-openapi-specification: done
+  1-3-create-adapter-pattern-foundation: done
+  1-4-implement-login-links-resource-adapter: done
+  1-5-implement-logins-resource-adapter: done
+  1-6-implement-accounts-resource-adapter: done
   1-7-implement-queries-resource-adapter: done
-  1-8-create-basic-error-handling: review
-  1-9-create-poc-example-and-validation: drafted
+  1-8-create-basic-error-handling: done
+  1-9-create-poc-example-and-validation: review
   epic-1-retrospective: optional
 
   # Epic 2: Production SDK & Distribution

@@ -1,6 +1,6 @@
 # Story 1.6: Implement Accounts Resource Adapter
 
-Status: ready-for-review
+Status: Done
 Created: 2025-10-28
 Epic: 1 - Project Foundation & Core SDK Generation
 

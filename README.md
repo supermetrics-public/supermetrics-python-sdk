@@ -12,9 +12,94 @@ Official Python client for Supermetrics
 ## Features
 
 * Type-safe Python client generated from OpenAPI specification
-* Dual sync/async support via single Client class
+* Dual sync/async support via separate Client classes
 * Pydantic v2 models for request/response validation
 * Comprehensive API coverage: login links, logins, accounts, queries
+* Custom exception hierarchy with HTTP status code mapping
+* Resource-based API organization
+
+## Quick Start
+
+### Installation
+
+```bash
+pip install supermetrics-sdk
+```
+
+### Basic Usage
+
+```python
+from supermetrics import SupermetricsClient
+
+# Initialize client
+client = SupermetricsClient(api_key="your_api_key")
+
+# Create login link for data source authentication
+link = client.login_links.create(
+    ds_id="GA4",
+    description="My Analytics Authentication"
+)
+
+# Get login details after user authenticates
+login = client.logins.get(login_id=link.login_id)
+
+# List available accounts
+accounts = client.accounts.list(
+    ds_id="GA4",
+    login_usernames=login.username
+)
+
+# Execute query
+result = client.queries.execute(
+    ds_id="GA4",
+    ds_accounts=[accounts[0].account_id],
+    fields=["Date", "Sessions", "Users"],
+    start_date="2024-01-01",
+    end_date="2024-01-07"
+)
+
+print(f"Retrieved {len(result.data)} rows")
+```
+
+## Examples
+
+See the [examples/](./examples/) directory for complete working examples:
+
+- `complete_flow.py` - Full sync workflow from authentication to query execution
+- `async_flow.py` - Async version of complete workflow
+
+See [examples/README.md](./examples/README.md) for setup and running instructions.
+
+## Error Handling
+
+The SDK provides specific exception types for different error scenarios:
+
+```python
+from supermetrics import (
+    SupermetricsClient,
+    AuthenticationError,
+    ValidationError,
+    APIError,
+    NetworkError,
+)
+
+client = SupermetricsClient(api_key="your_key")
+
+try:
+    link = client.login_links.create(ds_id="GA4", description="Test")
+except AuthenticationError as e:
+    print(f"Invalid API key: {e.message}")
+except ValidationError as e:
+    print(f"Invalid parameters: {e.message}")
+except APIError as e:
+    print(f"API error: {e.message}")
+except NetworkError as e:
+    print(f"Network error: {e.message}")
+```
+
+## Documentation
+
+- [Examples](./examples/) - Working code examples
 
 ## OpenAPI Client Regeneration
 
