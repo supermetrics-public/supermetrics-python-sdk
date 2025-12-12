@@ -2,8 +2,9 @@
 
 import datetime
 import logging
-from typing import Any
+from typing import Any, cast
 
+from supermetrics._generated.supermetrics_api_client import AuthenticatedClient
 from supermetrics._generated.supermetrics_api_client import Client as GeneratedClient
 from supermetrics._generated.supermetrics_api_client.api.data_source_login_links import (
     close_login_link,
@@ -12,8 +13,12 @@ from supermetrics._generated.supermetrics_api_client.api.data_source_login_links
     list_login_links,
 )
 from supermetrics._generated.supermetrics_api_client.models.create_login_link_body import CreateLoginLinkBody
+from supermetrics._generated.supermetrics_api_client.models.list_login_links_response_200 import (
+    ListLoginLinksResponse200,
+)
 from supermetrics._generated.supermetrics_api_client.models.login_link import LoginLink
-from supermetrics._generated.supermetrics_api_client.types import UNSET
+from supermetrics._generated.supermetrics_api_client.models.login_link_response import LoginLinkResponse
+from supermetrics._generated.supermetrics_api_client.types import UNSET, Unset
 
 logger = logging.getLogger(__name__)
 
@@ -100,13 +105,19 @@ class LoginLinksResource:
         )
 
         # Call generated API
-        response = create_login_link.sync(client=self._client, body=body)
+        response = create_login_link.sync(client=cast(AuthenticatedClient, self._client), body=body)
 
         # Unwrap response
-        if response is None or response is UNSET or response.data is None or response.data is UNSET:
+        if response is None or isinstance(response, Unset):
             raise ValueError("API returned empty response")
 
-        link = response.data
+        # Cast to success response type - error responses are handled by generated client
+        success_response = cast(LoginLinkResponse, response)
+
+        if success_response.data is None or isinstance(success_response.data, Unset):
+            raise ValueError("API returned empty response")
+
+        link = success_response.data
         logger.info(f"Created login link: id={link.link_id}, ds_id={link.ds_id}")
 
         return link
@@ -135,12 +146,18 @@ class LoginLinksResource:
         """
         logger.debug(f"Retrieving login link: link_id={link_id}")
 
-        response = get_login_link.sync(link_id=link_id, client=self._client)
+        response = get_login_link.sync(link_id=link_id, client=cast(AuthenticatedClient, self._client))
 
-        if response is None or response is UNSET or response.data is None or response.data is UNSET:
+        if response is None or isinstance(response, Unset):
             raise ValueError("API returned empty response")
 
-        link = response.data
+        # Cast to success response type - error responses are handled by generated client
+        success_response = cast(LoginLinkResponse, response)
+
+        if success_response.data is None or isinstance(success_response.data, Unset):
+            raise ValueError("API returned empty response")
+
+        link = success_response.data
         logger.info(f"Retrieved login link: id={link.link_id}, status={link.status_code}")
 
         return link
@@ -162,12 +179,18 @@ class LoginLinksResource:
         """
         logger.debug("Listing all login links")
 
-        response = list_login_links.sync(client=self._client)
+        response = list_login_links.sync(client=cast(AuthenticatedClient, self._client))
 
-        if response is None or response is UNSET or response.data is None or response.data is UNSET:
+        if response is None or isinstance(response, Unset):
             return []
 
-        links = response.data
+        # Cast to success response type - error responses are handled by generated client
+        success_response = cast(ListLoginLinksResponse200, response)
+
+        if success_response.data is None or isinstance(success_response.data, Unset):
+            return []
+
+        links = success_response.data
         logger.info(f"Retrieved {len(links)} login links")
 
         return links
@@ -190,7 +213,7 @@ class LoginLinksResource:
         """
         logger.debug(f"Closing login link: link_id={link_id}")
 
-        close_login_link.sync(link_id=link_id, client=self._client)
+        close_login_link.sync(link_id=link_id, client=cast(AuthenticatedClient, self._client))
 
         logger.info(f"Closed login link: id={link_id}")
 
@@ -255,12 +278,18 @@ class LoginLinksAsyncResource:
             redirect_url=kwargs.get("redirect_url", UNSET),
         )
 
-        response = await create_login_link.asyncio(client=self._client, body=body)
+        response = await create_login_link.asyncio(client=cast(AuthenticatedClient, self._client), body=body)
 
-        if response is None or response is UNSET or response.data is None or response.data is UNSET:
+        if response is None or isinstance(response, Unset):
             raise ValueError("API returned empty response")
 
-        link = response.data
+        # Cast to success response type - error responses are handled by generated client
+        success_response = cast(LoginLinkResponse, response)
+
+        if success_response.data is None or isinstance(success_response.data, Unset):
+            raise ValueError("API returned empty response")
+
+        link = success_response.data
         logger.info(f"Created login link (async): id={link.link_id}, ds_id={link.ds_id}")
 
         return link
@@ -282,12 +311,18 @@ class LoginLinksAsyncResource:
         """
         logger.debug(f"Retrieving login link (async): link_id={link_id}")
 
-        response = await get_login_link.asyncio(link_id=link_id, client=self._client)
+        response = await get_login_link.asyncio(link_id=link_id, client=cast(AuthenticatedClient, self._client))
 
-        if response is None or response is UNSET or response.data is None or response.data is UNSET:
+        if response is None or isinstance(response, Unset):
             raise ValueError("API returned empty response")
 
-        link = response.data
+        # Cast to success response type - error responses are handled by generated client
+        success_response = cast(LoginLinkResponse, response)
+
+        if success_response.data is None or isinstance(success_response.data, Unset):
+            raise ValueError("API returned empty response")
+
+        link = success_response.data
         logger.info(f"Retrieved login link (async): id={link.link_id}, status={link.status_code}")
 
         return link
@@ -306,12 +341,18 @@ class LoginLinksAsyncResource:
         """
         logger.debug("Listing all login links (async)")
 
-        response = await list_login_links.asyncio(client=self._client)
+        response = await list_login_links.asyncio(client=cast(AuthenticatedClient, self._client))
 
-        if response is None or response is UNSET or response.data is None or response.data is UNSET:
+        if response is None or isinstance(response, Unset):
             return []
 
-        links = response.data
+        # Cast to success response type - error responses are handled by generated client
+        success_response = cast(ListLoginLinksResponse200, response)
+
+        if success_response.data is None or isinstance(success_response.data, Unset):
+            return []
+
+        links = success_response.data
         logger.info(f"Retrieved {len(links)} login links (async)")
 
         return links
@@ -330,6 +371,6 @@ class LoginLinksAsyncResource:
         """
         logger.debug(f"Closing login link (async): link_id={link_id}")
 
-        await close_login_link.asyncio(link_id=link_id, client=self._client)
+        await close_login_link.asyncio(link_id=link_id, client=cast(AuthenticatedClient, self._client))
 
         logger.info(f"Closed login link (async): id={link_id}")
