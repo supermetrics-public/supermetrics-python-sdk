@@ -29,8 +29,10 @@ Note:
 """
 
 import os
+from dotenv import load_dotenv
 import time
 from datetime import datetime, timedelta
+from getpass import getpass
 
 from supermetrics import (
     APIError,
@@ -39,16 +41,19 @@ from supermetrics import (
     SupermetricsClient,
     ValidationError,
 )
-
+load_dotenv()
 
 def main() -> None:
     """Execute complete onboarding workflow."""
     # Set your API key as environment variable:
     # export SUPERMETRICS_API_KEY="your_api_key_here"
 
-    api_key = os.getenv("SUPERMETRICS_API_KEY")
-    if not api_key:
-        raise ValueError("SUPERMETRICS_API_KEY environment variable is required")
+    # api_key = os.getenv("SUPERMETRICS_API_KEY")
+    # if not api_key:
+    #     raise ValueError("SUPERMETRICS_API_KEY environment variable is required")
+
+    api_key = getpass("Enter your API key: ")
+    print("API key received.")
 
     try:
         # Step 1: Initialize the Supermetrics client
@@ -57,9 +62,14 @@ def main() -> None:
         print("✓ Client initialized")
 
         # Step 2: Create a login link for Google Analytics 4
-        # This generates a URL that the user visits to authenticate their GA4 account
+        # This generates a URL that the user visits to authenticate their datasource account
         # The link ID is used to check status and retrieve login credentials
-        link = client.login_links.create(ds_id="GA4", description="Complete Flow POC Example")
+
+        ds_id = input("Enter the data source ID (ds_id): ").strip()
+        if not ds_id:
+            raise ValueError("ds_id is required")
+
+        link = client.login_links.create(ds_id=ds_id, description="Complete Flow POC Example")
         print(f"✓ Login link created: {link.login_url}")
         print(f"  Link ID: {link.link_id}")
         print(f"  Status: {link.status_code}")
@@ -91,12 +101,11 @@ def main() -> None:
         login = client.logins.get(login_id=link.login_id)
         print("✓ Login details retrieved:")
         print(f"  Username: {login.username}")
-        print(f"  Data Source: {login.ds_info.ds_name if login.ds_info else 'N/A'}")
+        print(f"  Data Source: {login.ds_info.name if login.ds_info else 'N/A'}")
         print(f"  Login ID: {login.login_id}")
 
         # Step 5: List available accounts for this login
-        # Accounts are the data sources (GA4 properties, ad accounts, etc.) you can query
-        accounts = client.accounts.list(ds_id="GA4", login_usernames=login.username)
+        accounts = client.accounts.list(ds_id=ds_id, login_usernames=login.username)
         print(f"\n✓ Found {len(accounts)} accounts:")
         for account in accounts[:3]:  # Show first 3
             print(f"  - {account.account_name} (ID: {account.account_id})")
@@ -112,10 +121,23 @@ def main() -> None:
         end_date = datetime.now().date()
         start_date = end_date - timedelta(days=7)
 
+        # Ask fields interactively until blank
+        fields = []
+        while True:
+            field = input("Enter field name (blank to finish): ").strip()
+            if field == "":
+                break
+            fields.append(field)
+
+        if not fields:
+            raise ValueError("At least one field is required")
+
+
         result = client.queries.execute(
-            ds_id="GA4",
+            ds_id=ds_id,
             ds_accounts=[selected_account.account_id],
-            fields=["Date", "Sessions", "Users"],
+            # fields=["Date", "impressions"],
+            fields=fields,
             start_date=start_date.isoformat(),
             end_date=end_date.isoformat(),
         )
@@ -153,7 +175,7 @@ def main() -> None:
         print("QUERY RESULTS")
         print(f"{'=' * 60}\n")
 
-        if result.data:
+        if result.data and isinstance(result.data, list) and len(result.data) > 0:
             print(f"Retrieved {len(result.data)} rows")
             print("\nSample data (first 5 rows):")
             for i, row in enumerate(result.data[:5]):
@@ -165,8 +187,8 @@ def main() -> None:
             # Show result metadata
             if result.meta:
                 print("\nMetadata:")
-                print(f"  Data sampled: {result.meta.data_sampled}")
-                print(f"  Cache used: {result.meta.cache_used}")
+                print(f"  Request ID: {result.meta.request_id}")
+                print(f"  Status: {result.meta.status_code}")
         else:
             print("No data returned")
 
