@@ -143,12 +143,12 @@ def main() -> None:
         )
 
         print("\n✓ Query executed:")
-        print(f"  Status: {result.meta.status_code if result.meta else 'N/A'}")
-        print(f"  Request ID: {result.meta.request_id if result.meta else 'N/A'}")
+        print(f"  Status: {getattr(result.meta, 'status_code', 'N/A')}")
+        print(f"  Request ID: {getattr(result.meta, 'request_id', 'N/A')}")
 
         # Step 7: Handle async query results (if query status is "pending")
         # Large date ranges or complex queries may process asynchronously
-        if result.meta and result.meta.status_code == "pending":
+        if result.meta and hasattr(result.meta, "status_code") and result.meta.status_code == "pending":
             print(f"  Query is processing... Request ID: {result.meta.request_id}")
 
             # Poll for results every 2 seconds for up to 1 minute
@@ -175,7 +175,9 @@ def main() -> None:
         print("QUERY RESULTS")
         print(f"{'=' * 60}\n")
 
-        if result.data and isinstance(result.data, list) and len(result.data) > 0:
+        if hasattr(result, 'error'):
+            raise Exception(result.error.description)
+        elif hasattr(result, 'data') and isinstance(result.data, list) and len(result.data) > 0:
             print(f"Retrieved {len(result.data)} rows")
             print("\nSample data (first 5 rows):")
             for i, row in enumerate(result.data[:5]):
