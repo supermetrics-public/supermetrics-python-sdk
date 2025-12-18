@@ -26,6 +26,7 @@ Benefits of async:
     - Improved performance for batch operations
 """
 
+import traceback
 import asyncio
 import os
 from datetime import datetime, timedelta
@@ -56,7 +57,11 @@ async def main() -> None:
 
             # Step 2: Create login link
             # Same as sync version but with await
-            link = await client.login_links.create(ds_id="GA4", description="Async Flow POC Example")
+            ds_id = input("Enter the data source ID (ds_id): ").strip()
+            if not ds_id:
+                raise ValueError("ds_id is required")
+                
+            link = await client.login_links.create(ds_id=ds_id, description="Async Flow POC Example")
             print(f"✓ Login link created: {link.login_url}")
             print(f"  Link ID: {link.link_id}")
             print(f"  Status: {link.status_code}")
@@ -86,11 +91,11 @@ async def main() -> None:
             login = await client.logins.get(login_id=link.login_id)
             print("✓ Login details retrieved:")
             print(f"  Username: {login.username}")
-            print(f"  Data Source: {login.ds_info.ds_name if login.ds_info else 'N/A'}")
+            print(f"  Data Source: {login.ds_info.name if login.ds_info else 'N/A'}")
             print(f"  Login ID: {login.login_id}")
 
             # Step 5: List available accounts
-            accounts = await client.accounts.list(ds_id="GA4", login_usernames=login.username)
+            accounts = await client.accounts.list(ds_id=ds_id, login_usernames=login.username)
             print(f"\n✓ Found {len(accounts)} accounts:")
             for account in accounts[:3]:  # Show first 3
                 print(f"  - {account.account_name} (ID: {account.account_id})")
@@ -106,7 +111,7 @@ async def main() -> None:
             start_date = end_date - timedelta(days=7)
 
             result = await client.queries.execute(
-                ds_id="GA4",
+                ds_id=ds_id,
                 ds_accounts=[selected_account.account_id],
                 fields=["Date", "Sessions", "Users"],
                 start_date=start_date.isoformat(),
@@ -118,7 +123,7 @@ async def main() -> None:
             print(f"  Request ID: {result.meta.request_id if result.meta else 'N/A'}")
 
             # Step 7: Handle async query results
-            if result.meta and result.meta.status_code == "pending":
+            if result.meta and hasattr(result.meta, "status_code") and result.meta.status_code == "pending":
                 print(f"  Query is processing... Request ID: {result.meta.request_id}")
 
                 max_poll = 60  # 1 minute
@@ -143,7 +148,9 @@ async def main() -> None:
             print("QUERY RESULTS")
             print(f"{'=' * 60}\n")
 
-            if result.data:
+            if hasattr(result, 'error'):
+                raise Exception(result.error.description)
+            elif hasattr(result, 'data') and isinstance(result.data, list) and len(result.data) > 0:
                 print(f"Retrieved {len(result.data)} rows")
                 print("\nSample data (first 5 rows):")
                 for i, row in enumerate(result.data[:5]):
@@ -154,8 +161,8 @@ async def main() -> None:
 
                 if result.meta:
                     print("\nMetadata:")
-                    print(f"  Data sampled: {result.meta.data_sampled}")
-                    print(f"  Cache used: {result.meta.cache_used}")
+                    print(f"  Request ID: {result.meta.request_id}")
+                    print(f"  Status: {result.meta.status_code}")
             else:
                 print("No data returned")
 
@@ -187,6 +194,7 @@ async def main() -> None:
 
     except Exception as e:
         print(f"❌ Unexpected error: {e!s}")
+        traceback.print_exception(type(e), e, e.__traceback__)
 
 
 if __name__ == "__main__":

@@ -28,6 +28,7 @@ Note:
     recommended for production. Use webhooks or redirect URLs for production.
 """
 
+import traceback
 import os
 from dotenv import load_dotenv
 import time
@@ -219,6 +220,7 @@ def main() -> None:
 
     except Exception as e:
         print(f"❌ Unexpected error: {e!s}")
+        traceback.print_exception(type(e), e, e.__traceback__)
 
 
 if __name__ == "__main__":
