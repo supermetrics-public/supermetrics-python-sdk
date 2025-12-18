@@ -1,0 +1,271 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.9</storyId>
+    <title>Create POC Example and Validation</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-12</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>spec/stories/story-1.9.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>a working example demonstrating the complete onboarding flow</iWant>
+    <soThat>we can validate the POC with the enterprise customer and demonstrate SDK capabilities</soThat>
+    <tasks>
+### Task 1: Create complete_flow.py (sync example) (AC: 1, 3, 4, 5)
+- Create `examples/` directory
+- Create `examples/complete_flow.py`
+- Add imports (SupermetricsClient + exception types)
+- Implement complete workflow: client init → login link → poll → accounts → query → results
+- Add comprehensive error handling with try/except blocks
+- Add detailed comments explaining each step
+- Add file header with usage instructions
+
+### Task 2: Create async_flow.py (async example) (AC: 2, 3, 4, 5)
+- Create `examples/async_flow.py`
+- Import async client and asyncio
+- Implement async version of complete flow
+- Use asyncio.sleep() for polling
+- Demonstrate context manager with async with
+- Add same error handling as sync version
+- Add comments explaining async/await benefits
+
+### Task 3: Create examples/README.md (AC: 8)
+- Create `examples/README.md`
+- Add overview of available examples
+- Add prerequisites (Python 3.10+, API key)
+- Add setup instructions
+- Add running instructions
+- Add "What to Expect" section
+- Add troubleshooting section
+- Add notes on production adaptation
+
+### Task 4: Update project README.md (AC: 7)
+- Edit main README.md
+- Add "Quick Start" section with installation and basic usage
+- Add "Examples" section linking to examples/
+- Add "Error Handling" section
+- Add "Documentation" section placeholder
+
+### Task 5: Test examples manually (AC: 6)
+- Set up test environment
+- Run complete_flow.py and verify
+- Run async_flow.py and verify
+- Test error handling scenarios
+- Document test results
+
+### Task 6: POC validation checklist (AC: 9)
+- Validate end-to-end functionality
+- Validate developer experience (type hints, autocomplete, error messages)
+- Document POC validation results
+
+### Task 7: Code quality checks
+- Run ruff format on examples/
+- Run ruff check on examples/
+- Verify examples follow SDK patterns
+</tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. `examples/complete_flow.py` created demonstrating the full sync workflow
+2. `examples/async_flow.py` created with async version of complete flow
+3. Both examples demonstrate: initialize client → create login link → poll for login → list accounts → execute query → handle results
+4. Examples include detailed comments explaining each step and expected outcomes
+5. Error handling demonstrated with try/except blocks and clear error messages
+6. Both examples tested manually (either against Supermetrics API with test credentials or with mock responses)
+7. `README.md` updated with quick-start guide and links to examples
+8. `examples/README.md` created explaining how to run examples and what to expect
+9. POC validation completed: full flow works end-to-end with type safety, IDE autocomplete, and clear error messages
+</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <artifact>
+        <path>spec/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Epic 1</title>
+        <section>Complete Authentication & Query Flow</section>
+        <snippet>Comprehensive workflow documentation (lines 298-361) showing complete 7-step flow from client initialization through authentication, account discovery, and query execution with detailed sequence diagrams and error handling patterns.</snippet>
+      </artifact>
+      <artifact>
+        <path>spec/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Epic 1</title>
+        <section>Acceptance Criteria #9</section>
+        <snippet>POC Examples requirements (lines 633-639): complete_flow.py and async_flow.py must demonstrate full customer onboarding with comments, manual testing, and README updates including quick-start guide.</snippet>
+      </artifact>
+      <artifact>
+        <path>spec/tech-spec-epic-1.md</path>
+        <title>Technical Specification: Epic 1</title>
+        <section>Example Best Practices</section>
+        <snippet>Best practices for example code (lines 433-456): Use ✓/❌ symbols for feedback, explain WHAT and WHY in comments, include production tips, provide actionable error messages with context, suggest webhooks vs polling.</snippet>
+      </artifact>
+      <artifact>
+        <path>spec/architecture.md</path>
+        <title>Decision Architecture</title>
+        <section>Project Structure - examples/</section>
+        <snippet>Examples directory structure (lines 181-186): complete_flow.py, async_flow.py for Story 1.9; future notebooks/ subdirectory for Story 2.3 Jupyter examples.</snippet>
+      </artifact>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/supermetrics/client.py</path>
+        <kind>client</kind>
+        <symbol>SupermetricsClient</symbol>
+        <lines>all</lines>
+        <reason>Sync client class used in complete_flow.py - provides login_links, logins, accounts, queries resources</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/async_client.py</path>
+        <kind>client</kind>
+        <symbol>SupermetricsAsyncClient</symbol>
+        <lines>all</lines>
+        <reason>Async client class used in async_flow.py - same interface as sync but with await</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/exceptions.py</path>
+        <kind>module</kind>
+        <symbol>AuthenticationError, ValidationError, APIError, NetworkError</symbol>
+        <lines>all</lines>
+        <reason>Exception types for error handling demonstration in examples</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/resources/login_links.py</path>
+        <kind>resource</kind>
+        <symbol>LoginLinksResource, LoginLinksAsyncResource</symbol>
+        <lines>all</lines>
+        <reason>Login link creation and polling - first step in workflow examples</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/resources/logins.py</path>
+        <kind>resource</kind>
+        <symbol>LoginsResource, LoginsAsyncResource</symbol>
+        <lines>all</lines>
+        <reason>Login retrieval after authentication - second step in workflow</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/resources/accounts.py</path>
+        <kind>resource</kind>
+        <symbol>AccountsResource, AccountsAsyncResource</symbol>
+        <lines>all</lines>
+        <reason>Account discovery for queries - third step in workflow</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/resources/queries.py</path>
+        <kind>resource</kind>
+        <symbol>QueriesResource, QueriesAsyncResource</symbol>
+        <lines>all</lines>
+        <reason>Query execution and result handling - final step in workflow with async polling support</reason>
+      </artifact>
+      <artifact>
+        <path>src/supermetrics/__init__.py</path>
+        <kind>module</kind>
+        <symbol>__all__</symbol>
+        <lines>all</lines>
+        <reason>Public API exports - what users import in examples</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <python>
+        <package name="httpx" version=">=0.25.0">HTTP client (provided by openapi-python-client)</package>
+        <package name="pydantic" version=">=2.0.0">Type-safe models</package>
+        <package name="python-dateutil" version=">=2.8.0">Date parsing</package>
+        <package name="attrs" version=">=23.0.0">Class utilities</package>
+      </python>
+      <dev>
+        <package name="ruff" version=">=0.1.0">Code formatting and linting for examples</package>
+        <package name="mypy" version=">=1.7.0">Type checking</package>
+        <package name="pytest" version=">=7.4.0">Testing framework</package>
+        <package name="pytest-asyncio" version=">=0.21.0">Async test support</package>
+      </dev>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- Examples must work with Python 3.10+ (no Python 3.9 syntax)
+- Examples must demonstrate real-world polling patterns (5s interval for login, 2s for queries)
+- All exceptions must be caught with specific types (not bare except)
+- Examples must include ✓ and ❌ symbols for visual progress feedback
+- Comments must explain WHAT each step does and WHY it's needed
+- Must follow ruff code quality standards (formatting and linting)
+- Examples must use context managers (with/async with) for client cleanup
+- Environment variable pattern for API key (no hardcoded secrets)
+- Examples must be runnable without modification (except setting API key)
+- Error messages must be actionable (tell user what to do next)
+- Examples must reference production best practices (webhooks vs polling)
+</constraints>
+
+  <interfaces>
+    <interface>
+      <name>SupermetricsClient</name>
+      <kind>class</kind>
+      <signature>SupermetricsClient(api_key: str, user_agent: Optional[str] = None, custom_headers: Optional[dict[str, str]] = None, timeout: float = 30.0, base_url: str = "https://api.supermetrics.com")</signature>
+      <path>src/supermetrics/client.py</path>
+    </interface>
+    <interface>
+      <name>SupermetricsAsyncClient</name>
+      <kind>class</kind>
+      <signature>SupermetricsAsyncClient(api_key: str, user_agent: Optional[str] = None, custom_headers: Optional[dict[str, str]] = None, timeout: float = 30.0, base_url: str = "https://api.supermetrics.com")</signature>
+      <path>src/supermetrics/async_client.py</path>
+    </interface>
+    <interface>
+      <name>login_links.create</name>
+      <kind>method</kind>
+      <signature>create(ds_id: str, description: str, **kwargs) -> LoginLink</signature>
+      <path>src/supermetrics/resources/login_links.py</path>
+    </interface>
+    <interface>
+      <name>login_links.get</name>
+      <kind>method</kind>
+      <signature>get(link_id: str) -> LoginLink</signature>
+      <path>src/supermetrics/resources/login_links.py</path>
+    </interface>
+    <interface>
+      <name>logins.get</name>
+      <kind>method</kind>
+      <signature>get(login_id: str) -> Login</signature>
+      <path>src/supermetrics/resources/logins.py</path>
+    </interface>
+    <interface>
+      <name>accounts.list</name>
+      <kind>method</kind>
+      <signature>list(ds_id: str, login_usernames: Optional[str | list[str]] = None, **kwargs) -> list[Account]</signature>
+      <path>src/supermetrics/resources/accounts.py</path>
+    </interface>
+    <interface>
+      <name>queries.execute</name>
+      <kind>method</kind>
+      <signature>execute(ds_id: str, ds_accounts: list[str], fields: list[str], start_date: str, end_date: str, **kwargs) -> QueryResult</signature>
+      <path>src/supermetrics/resources/queries.py</path>
+    </interface>
+    <interface>
+      <name>queries.get_results</name>
+      <kind>method</kind>
+      <signature>get_results(query_id: str) -> QueryResult</signature>
+      <path>src/supermetrics/resources/queries.py</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+Examples must be manually testable. Use ruff for code quality (format + check). Examples should demonstrate complete flow even if mocked. Include error handling tests (invalid API key, invalid parameters, network errors). Code must be formatted with ruff format examples/ and pass ruff check examples/. Follow pytest patterns for future integration tests. Use Python 3.10+ type hints throughout.
+</standards>
+    <locations>
+examples/complete_flow.py
+examples/async_flow.py
+examples/README.md
+</locations>
+    <ideas>
+- Test complete_flow.py execution with valid API key (manual)
+- Test async_flow.py execution with asyncio (manual)
+- Test error handling: invalid API key → AuthenticationError
+- Test error handling: invalid ds_id → ValidationError
+- Test error handling: network timeout → NetworkError
+- Verify type hints work in IDE (autocomplete test)
+- Verify examples run without modification except API key
+- Test polling timeout scenarios (login not completed, query pending)
+- Verify README instructions are accurate and complete
+- Test both examples produce expected output format
+</ideas>
+  </tests>
+</story-context>

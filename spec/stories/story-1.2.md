@@ -1,6 +1,6 @@
 # Story 1.2: Generate Initial SDK from OpenAPI Specification
 
-Status: review
+Status: Done
 Created: 2025-10-28
 Epic: 1 - Project Foundation & Core SDK Generation
 
