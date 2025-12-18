@@ -7,7 +7,9 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.get_accounts_json import GetAccountsJson
 from ...models.get_accounts_response_200 import GetAccountsResponse200
+from ...models.get_accounts_response_400 import GetAccountsResponse400
 from ...models.get_accounts_response_401 import GetAccountsResponse401
+from ...models.get_accounts_response_403 import GetAccountsResponse403
 from ...models.get_accounts_response_422 import GetAccountsResponse422
 from ...models.get_accounts_response_429 import GetAccountsResponse429
 from ...models.get_accounts_response_500 import GetAccountsResponse500
@@ -38,7 +40,9 @@ def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
 ) -> (
     GetAccountsResponse200
+    | GetAccountsResponse400
     | GetAccountsResponse401
+    | GetAccountsResponse403
     | GetAccountsResponse422
     | GetAccountsResponse429
     | GetAccountsResponse500
@@ -49,10 +53,20 @@ def _parse_response(
 
         return response_200
 
+    if response.status_code == 400:
+        response_400 = GetAccountsResponse400.from_dict(response.json())
+
+        return response_400
+
     if response.status_code == 401:
         response_401 = GetAccountsResponse401.from_dict(response.json())
 
         return response_401
+
+    if response.status_code == 403:
+        response_403 = GetAccountsResponse403.from_dict(response.json())
+
+        return response_403
 
     if response.status_code == 422:
         response_422 = GetAccountsResponse422.from_dict(response.json())
@@ -79,7 +93,9 @@ def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
 ) -> Response[
     GetAccountsResponse200
+    | GetAccountsResponse400
     | GetAccountsResponse401
+    | GetAccountsResponse403
     | GetAccountsResponse422
     | GetAccountsResponse429
     | GetAccountsResponse500
@@ -98,7 +114,9 @@ def sync_detailed(
     json: GetAccountsJson,
 ) -> Response[
     GetAccountsResponse200
+    | GetAccountsResponse400
     | GetAccountsResponse401
+    | GetAccountsResponse403
     | GetAccountsResponse422
     | GetAccountsResponse429
     | GetAccountsResponse500
@@ -115,7 +133,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[GetAccountsResponse200 | GetAccountsResponse401 | GetAccountsResponse422 | GetAccountsResponse429 | GetAccountsResponse500]
+        Response[GetAccountsResponse200 | GetAccountsResponse400 | GetAccountsResponse401 | GetAccountsResponse403 | GetAccountsResponse422 | GetAccountsResponse429 | GetAccountsResponse500]
     """
 
     kwargs = _get_kwargs(
@@ -135,7 +153,9 @@ def sync(
     json: GetAccountsJson,
 ) -> (
     GetAccountsResponse200
+    | GetAccountsResponse400
     | GetAccountsResponse401
+    | GetAccountsResponse403
     | GetAccountsResponse422
     | GetAccountsResponse429
     | GetAccountsResponse500
@@ -153,7 +173,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        GetAccountsResponse200 | GetAccountsResponse401 | GetAccountsResponse422 | GetAccountsResponse429 | GetAccountsResponse500
+        GetAccountsResponse200 | GetAccountsResponse400 | GetAccountsResponse401 | GetAccountsResponse403 | GetAccountsResponse422 | GetAccountsResponse429 | GetAccountsResponse500
     """
 
     return sync_detailed(
@@ -168,7 +188,9 @@ async def asyncio_detailed(
     json: GetAccountsJson,
 ) -> Response[
     GetAccountsResponse200
+    | GetAccountsResponse400
     | GetAccountsResponse401
+    | GetAccountsResponse403
     | GetAccountsResponse422
     | GetAccountsResponse429
     | GetAccountsResponse500
@@ -185,7 +207,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[GetAccountsResponse200 | GetAccountsResponse401 | GetAccountsResponse422 | GetAccountsResponse429 | GetAccountsResponse500]
+        Response[GetAccountsResponse200 | GetAccountsResponse400 | GetAccountsResponse401 | GetAccountsResponse403 | GetAccountsResponse422 | GetAccountsResponse429 | GetAccountsResponse500]
     """
 
     kwargs = _get_kwargs(
@@ -203,7 +225,9 @@ async def asyncio(
     json: GetAccountsJson,
 ) -> (
     GetAccountsResponse200
+    | GetAccountsResponse400
     | GetAccountsResponse401
+    | GetAccountsResponse403
     | GetAccountsResponse422
     | GetAccountsResponse429
     | GetAccountsResponse500
@@ -221,7 +245,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        GetAccountsResponse200 | GetAccountsResponse401 | GetAccountsResponse422 | GetAccountsResponse429 | GetAccountsResponse500
+        GetAccountsResponse200 | GetAccountsResponse400 | GetAccountsResponse401 | GetAccountsResponse403 | GetAccountsResponse422 | GetAccountsResponse429 | GetAccountsResponse500
     """
 
     return (
