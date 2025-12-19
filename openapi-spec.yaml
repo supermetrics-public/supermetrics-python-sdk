@@ -685,114 +685,6 @@ components:
           description: Number of seconds the API should wait for query to finish
       required:
       - ds_id
-    DataSource:
-      type: object
-      properties:
-        '@type':
-          type: string
-          enum:
-          - ds
-        ds_id:
-          type: string
-          maxLength: 50
-          pattern: ^[A-Za-z0-9_-]+$
-          description: Data source ID
-        name:
-          type: string
-          maxLength: 255
-          description: Data source name
-    User:
-      type: object
-      properties:
-        '@type':
-          type: string
-          enum:
-          - user
-        user_id:
-          type: string
-          maxLength: 50
-          pattern: ^[A-Za-z0-9_-]+$
-          description: Supermetrics user ID
-        email:
-          type: string
-          format: email
-          maxLength: 255
-          description: Supermetrics user email
-    DataSourceLogin:
-      type: object
-      properties:
-        '@type':
-          type: string
-          enum:
-          - ds_login
-        login_id:
-          type: string
-          maxLength: 50
-          pattern: ^[A-Za-z0-9_-]+$
-          description: Supermetrics login ID
-        login_type:
-          type: string
-          maxLength: 100
-          description: Authentication type. Note that some data sources support multiple
-            types, and user can choose between them.
-        username:
-          type: string
-          maxLength: 255
-          description: Authenticated username, used in queries as ds_user
-        display_name:
-          type: string
-          maxLength: 255
-          description: Visible name for this authentication in product UIs
-        ds_info:
-          $ref: '#/components/schemas/DataSource'
-        default_scopes:
-          type: array
-          maxItems: 100
-          description: List of default source API scopes used in authentication
-          items:
-            type: string
-            maxLength: 100
-        additional_scopes:
-          type: array
-          maxItems: 100
-          description: List of additional source API scopes user has granted to access
-            more data
-          items:
-            type: string
-            maxLength: 100
-        auth_time:
-          type: string
-          format: date-time
-          maxLength: 50
-          description: ISO 8601 datetime for when last user authentication occurred
-        auth_user_info:
-          $ref: '#/components/schemas/User'
-        expiry_time:
-          type: string
-          nullable: true
-          format: date-time
-          maxLength: 50
-          description: ISO 8601 datetime for when authentication expires, if any
-        revoked_time:
-          type: string
-          nullable: true
-          format: date-time
-          maxLength: 50
-          description: ISO 8601 datetime for when authentication was revoked, if any
-        is_refreshable:
-          type: boolean
-          description: Whether authentication can be automatically refreshed after
-            expiry time, without user involvement
-        is_shared:
-          type: boolean
-          description: Whether login is shared with all team users
-    LoginLinkResponse:
-      type: object
-      properties:
-        meta:
-          $ref: '#/components/schemas/ResponseMeta'
-        data:
-          $ref: '#/components/schemas/LoginLink'
     DataResponse:
       type: object
       properties:
@@ -965,6 +857,90 @@ components:
               type: string
               maxLength: 10000
           description: Query result rows
+    DataSource:
+      type: object
+      properties:
+        '@type':
+          type: string
+          enum:
+          - ds
+        ds_id:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+          description: Data source ID
+        name:
+          type: string
+          maxLength: 255
+          description: Data source name
+    DataSourceLogin:
+      type: object
+      properties:
+        '@type':
+          type: string
+          enum:
+          - ds_login
+        login_id:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+          description: Supermetrics login ID
+        login_type:
+          type: string
+          maxLength: 100
+          description: Authentication type. Note that some data sources support multiple
+            types, and user can choose between them.
+        username:
+          type: string
+          maxLength: 255
+          description: Authenticated username, used in queries as ds_user
+        display_name:
+          type: string
+          maxLength: 255
+          description: Visible name for this authentication in product UIs
+        ds_info:
+          $ref: '#/components/schemas/DataSource'
+        default_scopes:
+          type: array
+          maxItems: 100
+          description: List of default source API scopes used in authentication
+          items:
+            type: string
+            maxLength: 100
+        additional_scopes:
+          type: array
+          maxItems: 100
+          description: List of additional source API scopes user has granted to access
+            more data
+          items:
+            type: string
+            maxLength: 100
+        auth_time:
+          type: string
+          format: date-time
+          maxLength: 50
+          description: ISO 8601 datetime for when last user authentication occurred
+        auth_user_info:
+          $ref: '#/components/schemas/User'
+        expiry_time:
+          type: string
+          nullable: true
+          format: date-time
+          maxLength: 50
+          description: ISO 8601 datetime for when authentication expires, if any
+        revoked_time:
+          type: string
+          nullable: true
+          format: date-time
+          maxLength: 50
+          description: ISO 8601 datetime for when authentication was revoked, if any
+        is_refreshable:
+          type: boolean
+          description: Whether authentication can be automatically refreshed after
+            expiry time, without user involvement
+        is_shared:
+          type: boolean
+          description: Whether login is shared with all team users
     Error:
       type: object
       properties:
@@ -1064,6 +1040,13 @@ components:
           nullable: true
           maxLength: 255
           description: Username used to authenticate to data source
+    LoginLinkResponse:
+      type: object
+      properties:
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+        data:
+          $ref: '#/components/schemas/LoginLink'
     ResponseMeta:
       type: object
       properties:
@@ -1072,7 +1055,182 @@ components:
           maxLength: 50
           pattern: ^[A-Za-z0-9_-]+$
           description: API request ID
+    User:
+      type: object
+      properties:
+        '@type':
+          type: string
+          enum:
+          - user
+        user_id:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+          description: Supermetrics user ID
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          description: Supermetrics user email
   responses:
+    BadRequest:
+      description: Bad request - invalid parameters
+      headers:
+        X-RateLimit-Limit:
+          description: Request limit per hour
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 10000
+            example: 5000
+        X-RateLimit-Remaining:
+          description: Remaining requests in current window
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 10000
+            example: 4999
+        Access-Control-Allow-Origin:
+          description: CORS header
+          schema:
+            type: string
+            maxLength: 255
+            enum:
+            - '*'
+            example: '*'
+      content:
+        application/problem+json:
+          schema:
+            type: object
+            description: RFC 9457 Problem Details for HTTP APIs
+            properties:
+              type:
+                type: string
+                format: uri
+                maxLength: 255
+                description: A URI reference that identifies the problem type
+                example: https://supermetrics.com/problems/unauthorized
+              title:
+                type: string
+                maxLength: 255
+                pattern: ^[A-Za-z0-9\s]+$
+                description: A short, human-readable summary of the problem type
+                example: Unauthorized
+              status:
+                type: integer
+                format: int32
+                minimum: 100
+                maximum: 599
+                description: The HTTP status code
+                example: 401
+              detail:
+                type: string
+                maxLength: 1000
+                pattern: ^[A-Za-z0-9\s.,\-]+$
+                description: A human-readable explanation specific to this occurrence
+                example: Authentication required
+              instance:
+                type: string
+                format: uri
+                maxLength: 255
+                description: A URI reference that identifies the specific occurrence
+                example: https://api.supermetrics.com/v2/api-keys
+            required:
+            - type
+            - title
+            - status
+            additionalProperties: false
+    Forbidden:
+      description: Access forbidden
+      headers:
+        X-RateLimit-Limit:
+          description: Request limit per hour
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 10000
+            example: 5000
+        X-RateLimit-Remaining:
+          description: Remaining requests in current window
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 10000
+            example: 4999
+        Access-Control-Allow-Origin:
+          description: CORS header
+          schema:
+            type: string
+            maxLength: 255
+            enum:
+            - '*'
+            example: '*'
+      content:
+        application/problem+json:
+          schema:
+            type: object
+            description: RFC 9457 Problem Details for HTTP APIs
+            properties:
+              type:
+                type: string
+                format: uri
+                maxLength: 255
+                description: A URI reference that identifies the problem type
+                example: https://supermetrics.com/problems/unauthorized
+              title:
+                type: string
+                maxLength: 255
+                pattern: ^[A-Za-z0-9\s]+$
+                description: A short, human-readable summary of the problem type
+                example: Unauthorized
+              status:
+                type: integer
+                format: int32
+                minimum: 100
+                maximum: 599
+                description: The HTTP status code
+                example: 401
+              detail:
+                type: string
+                maxLength: 1000
+                pattern: ^[A-Za-z0-9\s.,\-]+$
+                description: A human-readable explanation specific to this occurrence
+                example: Authentication required
+              instance:
+                type: string
+                format: uri
+                maxLength: 255
+                description: A URI reference that identifies the specific occurrence
+                example: https://api.supermetrics.com/v2/api-keys
+            required:
+            - type
+            - title
+            - status
+            additionalProperties: false
+    InternalServerError:
+      description: Internal Server Error - unexpected server error
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              meta:
+                $ref: '#/components/schemas/ResponseMeta'
+              error:
+                $ref: '#/components/schemas/Error'
     LinkLimitExceeded:
       description: Link Limit Exceeded
       headers:
@@ -1097,79 +1255,6 @@ components:
               message:
                 type: string
                 maxLength: 255
-    TooManyRequests:
-      description: Too Many Requests - rate limit exceeded
-      headers:
-        Content-Type:
-          $ref: '#/components/headers/Content-Type'
-        X-RateLimit-Limit:
-          $ref: '#/components/headers/X-RateLimit-Limit'
-        X-RateLimit-Remaining:
-          $ref: '#/components/headers/X-RateLimit-Remaining'
-        Retry-After:
-          schema:
-            type: integer
-            format: int32
-            minimum: 1
-            maximum: 3600
-          description: Number of seconds to wait before making another request
-        Access-Control-Allow-Origin:
-          $ref: '#/components/headers/Access-Control-Allow-Origin'
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              meta:
-                $ref: '#/components/schemas/ResponseMeta'
-              error:
-                $ref: '#/components/schemas/Error'
-    LoginNotFound:
-      description: Login Not Found
-      headers:
-        Content-Type:
-          $ref: '#/components/headers/Content-Type'
-        X-RateLimit-Limit:
-          $ref: '#/components/headers/X-RateLimit-Limit'
-        X-RateLimit-Remaining:
-          $ref: '#/components/headers/X-RateLimit-Remaining'
-        Access-Control-Allow-Origin:
-          $ref: '#/components/headers/Access-Control-Allow-Origin'
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              error:
-                type: string
-                maxLength: 100
-                enum:
-                - LOGIN_NOT_FOUND
-              message:
-                type: string
-                maxLength: 255
-    BadRequest:
-      $ref: ../../shared/responses/CommonResponses.yaml#/BadRequest
-    UnprocessableEntity:
-      description: Unprocessable Entity - request validation failed
-      headers:
-        Content-Type:
-          $ref: '#/components/headers/Content-Type'
-        X-RateLimit-Limit:
-          $ref: '#/components/headers/X-RateLimit-Limit'
-        X-RateLimit-Remaining:
-          $ref: '#/components/headers/X-RateLimit-Remaining'
-        Access-Control-Allow-Origin:
-          $ref: '#/components/headers/Access-Control-Allow-Origin'
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              meta:
-                $ref: '#/components/schemas/ResponseMeta'
-              error:
-                $ref: '#/components/schemas/Error'
     LinkNotFound:
       description: Link Not Found
       headers:
@@ -1191,32 +1276,6 @@ components:
                 maxLength: 100
                 enum:
                 - LINK_NOT_FOUND
-              message:
-                type: string
-                maxLength: 255
-    Forbidden:
-      $ref: ../../shared/responses/CommonResponses.yaml#/Forbidden
-    LoginSearchFailed:
-      description: Login Search Failed
-      headers:
-        Content-Type:
-          $ref: '#/components/headers/Content-Type'
-        X-RateLimit-Limit:
-          $ref: '#/components/headers/X-RateLimit-Limit'
-        X-RateLimit-Remaining:
-          $ref: '#/components/headers/X-RateLimit-Remaining'
-        Access-Control-Allow-Origin:
-          $ref: '#/components/headers/Access-Control-Allow-Origin'
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              error:
-                type: string
-                maxLength: 100
-                enum:
-                - LOGIN_SEARCH_FAILED
               message:
                 type: string
                 maxLength: 255
@@ -1244,8 +1303,8 @@ components:
               message:
                 type: string
                 maxLength: 255
-    InternalServerError:
-      description: Internal Server Error - unexpected server error
+    LoginNotFound:
+      description: Login Not Found
       headers:
         Content-Type:
           $ref: '#/components/headers/Content-Type'
@@ -1253,6 +1312,61 @@ components:
           $ref: '#/components/headers/X-RateLimit-Limit'
         X-RateLimit-Remaining:
           $ref: '#/components/headers/X-RateLimit-Remaining'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                maxLength: 100
+                enum:
+                - LOGIN_NOT_FOUND
+              message:
+                type: string
+                maxLength: 255
+    LoginSearchFailed:
+      description: Login Search Failed
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                maxLength: 100
+                enum:
+                - LOGIN_SEARCH_FAILED
+              message:
+                type: string
+                maxLength: 255
+    TooManyRequests:
+      description: Too Many Requests - rate limit exceeded
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        Retry-After:
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 3600
+          description: Number of seconds to wait before making another request
         Access-Control-Allow-Origin:
           $ref: '#/components/headers/Access-Control-Allow-Origin'
       content:
@@ -1284,30 +1398,28 @@ components:
                 $ref: '#/components/schemas/ResponseMeta'
               error:
                 $ref: '#/components/schemas/Error'
+    UnprocessableEntity:
+      description: Unprocessable Entity - request validation failed
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              meta:
+                $ref: '#/components/schemas/ResponseMeta'
+              error:
+                $ref: '#/components/schemas/Error'
   parameters: {}
   headers:
-    Location:
-      description: API URL of the created item
-      schema:
-        type: string
-        maxLength: 255
-        example: items/{id}
-    X-RateLimit-Remaining:
-      description: Remaining requests in current window
-      schema:
-        type: integer
-        format: int32
-        minimum: 0
-        maximum: 10000
-        example: 49
-    Content-Type:
-      description: HTTP response content type
-      schema:
-        type: string
-        maxLength: 255
-        enum:
-        - application/json
-        example: application/json
     Access-Control-Allow-Origin:
       description: CORS header
       schema:
@@ -1316,6 +1428,20 @@ components:
         enum:
         - '*'
         example: '*'
+    Content-Type:
+      description: HTTP response content type
+      schema:
+        type: string
+        maxLength: 255
+        enum:
+        - application/json
+        example: application/json
+    Location:
+      description: API URL of the created item
+      schema:
+        type: string
+        maxLength: 255
+        example: items/{id}
     X-RateLimit-Limit:
       description: Request limit per hour
       schema:
@@ -1324,6 +1450,14 @@ components:
         minimum: 1
         maximum: 10000
         example: 100
+    X-RateLimit-Remaining:
+      description: Remaining requests in current window
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        maximum: 10000
+        example: 49
   securitySchemes:
     BearerAuth:
       type: http

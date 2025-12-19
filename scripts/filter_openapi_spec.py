@@ -100,7 +100,8 @@ def collect_component_dependencies(
     refs = set()
     extract_refs(component_obj, refs)
 
-    for ref in refs:
+    # Sort refs for consistent order
+    for ref in sorted(refs):
         ref_type, ref_name = resolve_component_name(ref)
         if not ref_type or not ref_name:
             continue
@@ -122,6 +123,189 @@ def collect_component_dependencies(
                 ref_type,
                 collected
             )
+
+
+def resolve_external_file_reference(
+    ref_path: str,
+    base_path: Path,
+    ref_anchor: str,
+    resolved_cache: Dict[str, Any]
+) -> Dict[str, Any] | None:
+    """
+    Resolve an external file reference by loading the file and extracting the component.
+    Recursively resolves nested external references.
+
+    Args:
+        ref_path: The file path from the $ref (e.g., "../shared/responses/CommonResponses.yaml")
+        base_path: The base directory to resolve relative paths from
+        ref_anchor: The anchor/fragment part after # (e.g., "/BadRequest")
+        resolved_cache: Cache of already resolved references to avoid infinite loops
+
+    Returns:
+        The resolved component definition or None if file not found.
+    """
+    # Create a cache key for this reference
+    cache_key = f"{ref_path}#{ref_anchor}"
+
+    # Check if already resolved (avoid infinite loops)
+    if cache_key in resolved_cache:
+        return resolved_cache[cache_key]
+
+    try:
+        # Resolve the file path relative to base_path
+        full_path = (base_path / ref_path).resolve()
+
+        if not full_path.exists():
+            return None
+
+        # Load the YAML file
+        external_spec = load_yaml_file(full_path)
+
+        # Navigate to the component using the anchor
+        # Anchor format is typically like "#/BadRequest" or "#/components/responses/BadRequest"
+        anchor_parts = ref_anchor.strip('#/').split('/')
+
+        component = external_spec
+        for part in anchor_parts:
+            if isinstance(component, dict) and part in component:
+                component = component[part]
+            else:
+                return None
+
+        # Cache this result
+        resolved_cache[cache_key] = component
+
+        # Recursively resolve any nested external references in this component
+        component = resolve_nested_external_refs(component, full_path.parent, resolved_cache)
+
+        return component
+
+    except Exception as e:
+        print(f"      Error loading external file {ref_path}: {e}")
+        return None
+
+
+def resolve_nested_external_refs(
+    obj: Any,
+    base_path: Path,
+    resolved_cache: Dict[str, Any]
+) -> Any:
+    """
+    Recursively resolve external file references within an object.
+
+    Args:
+        obj: The object to process (dict, list, or primitive)
+        base_path: The base directory for resolving relative paths
+        resolved_cache: Cache of already resolved references
+
+    Returns:
+        The object with all external references resolved inline.
+    """
+    if isinstance(obj, dict):
+        result = {}
+        for key, value in obj.items():
+            # Check if this is an external $ref
+            if key == '$ref' and isinstance(value, str):
+                if '.yaml' in value or '.yml' in value:
+                    # Parse and resolve the external reference
+                    if '#' in value:
+                        ref_file, ref_anchor = value.split('#', 1)
+                    else:
+                        ref_file = value
+                        ref_anchor = ''
+
+                    resolved = resolve_external_file_reference(
+                        ref_file,
+                        base_path,
+                        ref_anchor,
+                        resolved_cache
+                    )
+
+                    if resolved:
+                        # Replace the $ref with the resolved content
+                        return resolved
+                    else:
+                        # Keep the broken ref as-is
+                        result[key] = value
+                else:
+                    # Internal ref, keep as-is
+                    result[key] = value
+            else:
+                # Recursively process the value
+                result[key] = resolve_nested_external_refs(value, base_path, resolved_cache)
+        return result
+    elif isinstance(obj, list):
+        return [resolve_nested_external_refs(item, base_path, resolved_cache) for item in obj]
+    else:
+        # Primitive value, return as-is
+        return obj
+
+
+def resolve_external_references(
+    components: Dict[str, Dict[str, Any]],
+    specs_dir: Path
+) -> Tuple[int, int]:
+    """
+    Replace external file references by loading and resolving them recursively.
+    Returns (replaced_count, failed_count).
+    """
+    replaced_count = 0
+    failed_count = 0
+    resolved_cache: Dict[str, Any] = {}
+
+    for comp_type in ['responses', 'schemas', 'parameters', 'headers']:
+        if comp_type not in components:
+            continue
+
+        comp_dict = components[comp_type]
+        components_to_replace = {}
+
+        for comp_name, comp_value in list(comp_dict.items()):
+            # Check if this is just an external file reference
+            if isinstance(comp_value, dict) and len(comp_value) == 1 and '$ref' in comp_value:
+                ref_value = comp_value['$ref']
+
+                # Check if it's an external file reference (not internal #/components/...)
+                if '.yaml' in ref_value or '.yml' in ref_value:
+                    # Parse the reference: "file.yaml#/ComponentName"
+                    if '#' in ref_value:
+                        ref_file, ref_anchor = ref_value.split('#', 1)
+                    else:
+                        ref_file = ref_value
+                        ref_anchor = ''
+
+                    # Try to resolve the external reference
+                    resolved_def = resolve_external_file_reference(
+                        ref_file,
+                        specs_dir,
+                        ref_anchor,
+                        resolved_cache
+                    )
+
+                    if resolved_def:
+                        components_to_replace[comp_name] = resolved_def
+                        replaced_count += 1
+                        print(f"   ✓ Resolved external ref: {comp_type}/{comp_name}")
+                        print(f"      From: {ref_value}")
+                    else:
+                        failed_count += 1
+                        print(f"   ❌ Failed to resolve: {comp_type}/{comp_name}")
+                        print(f"      File not found or invalid: {ref_value}")
+                        print(f"      Removing this component (will cause validation errors)")
+                        # Remove the component entirely to avoid broken refs
+                        components_to_replace[comp_name] = None
+
+        # Apply replacements and removals
+        for comp_name, new_value in components_to_replace.items():
+            if new_value is None:
+                # Remove the component
+                if comp_name in comp_dict:
+                    del comp_dict[comp_name]
+            else:
+                # Replace with resolved definition
+                comp_dict[comp_name] = new_value
+
+    return replaced_count, failed_count
 
 
 def main():
@@ -289,8 +473,8 @@ def main():
             if comp_type in file_components:
                 all_components[comp_type].update(file_components[comp_type])
 
-    # Resolve initial refs
-    for ref in all_refs:
+    # Resolve initial refs (sorted for consistent order)
+    for ref in sorted(all_refs):
         ref_type, ref_name = resolve_component_name(ref)
         if not ref_type or not ref_name:
             continue
@@ -308,9 +492,10 @@ def main():
                 collected_components
             )
 
-    # Copy collected components to merged spec
-    for comp_type, comp_names in collected_components.items():
-        for comp_name in comp_names:
+    # Copy collected components to merged spec (sorted for consistent order)
+    for comp_type in sorted(collected_components.keys()):
+        comp_names = collected_components[comp_type]
+        for comp_name in sorted(comp_names):
             if comp_type in all_components and comp_name in all_components[comp_type]:
                 merged_spec['components'][comp_type][comp_name] = all_components[comp_type][comp_name]
 
@@ -319,6 +504,14 @@ def main():
     for comp_type, comp_names in collected_components.items():
         if comp_names:
             print(f"      {comp_type}: {len(comp_names)}")
+
+    # Resolve external file references
+    print(f"\n🔧 Resolving external file references...")
+    replaced_count, failed_count = resolve_external_references(merged_spec['components'], specs_dir)
+    if replaced_count > 0:
+        print(f"   ✓ Resolved {replaced_count} external reference(s)")
+    if failed_count > 0:
+        print(f"   ❌ Failed to resolve {failed_count} external reference(s)")
 
     # Validate all endpoints from filter were found
     print(f"\n✅ Validation:")
