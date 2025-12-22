@@ -8,6 +8,9 @@ import pytest
 from supermetrics._generated.supermetrics_api_client.client import Client as GeneratedClient
 from supermetrics._generated.supermetrics_api_client.models.data_response import DataResponse
 from supermetrics._generated.supermetrics_api_client.models.data_response_meta import DataResponseMeta
+from supermetrics._generated.supermetrics_api_client.models.get_data_response_400 import GetDataResponse400
+from supermetrics._generated.supermetrics_api_client.models.get_data_response_401 import GetDataResponse401
+from supermetrics._generated.supermetrics_api_client.models.get_data_response_403 import GetDataResponse403
 from supermetrics._generated.supermetrics_api_client.types import UNSET
 from supermetrics.exceptions import APIError, AuthenticationError, NetworkError, ValidationError
 from supermetrics.resources.queries import QueriesAsyncResource, QueriesResource
@@ -384,25 +387,14 @@ class TestQueriesResource:
 
     def test_validation_error_on_400(self, queries_resource: QueriesResource, mock_client: MagicMock) -> None:
         """Test 400 response raises ValidationError."""
-        # Mock httpx to raise HTTPStatusError with 400
-        mock_response = Mock()
-        mock_response.status_code = 400
-        mock_response.text = "Bad Request: Invalid parameter"
-
-        mock_request = Mock()
-        mock_request.url = "https://api.supermetrics.com/test"
-
-        error = httpx.HTTPStatusError(
-            "400 Bad Request",
-            request=mock_request,
-            response=mock_response
-        )
-
-        # Mock the API method to raise the error
+        # Mock API to return GetDataResponse400 (generated client behavior)
         import supermetrics.resources.queries as queries_module
 
         original_get_data = queries_module.get_data.sync
-        queries_module.get_data.sync = MagicMock(side_effect=error)
+
+        # Create a GetDataResponse400 instance
+        error_response = GetDataResponse400()
+        queries_module.get_data.sync = MagicMock(return_value=error_response)
 
         # Verify ValidationError is raised
         with pytest.raises(ValidationError) as exc_info:
@@ -415,7 +407,7 @@ class TestQueriesResource:
             )
 
         assert exc_info.value.status_code == 400
-        assert "Invalid parameter" in str(exc_info.value)
+        assert "Invalid request parameters" in str(exc_info.value)
 
         # Cleanup
         queries_module.get_data.sync = original_get_data

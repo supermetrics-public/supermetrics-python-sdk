@@ -122,14 +122,17 @@ class TestLoginLinksResource:
     ) -> None:
         """Test successful listing of login links."""
         # Arrange
+        from supermetrics._generated.supermetrics_api_client.models.list_login_links_response_200 import (
+            ListLoginLinksResponse200,
+        )
+
         link2 = LoginLink(
             link_id="link_456def",
             status_code=LoginLinkStatusCode.CLOSED,
             ds_id="facebook_ads",
             ds_name="Facebook Ads",
         )
-        mock_response = MagicMock()
-        mock_response.data = [sample_login_link, link2]
+        mock_response = ListLoginLinksResponse200(data=[sample_login_link, link2])
 
         import supermetrics.resources.login_links as login_links_module
 
@@ -151,8 +154,11 @@ class TestLoginLinksResource:
     def test_list_login_links_empty(self, login_links_resource: LoginLinksResource, mock_client: MagicMock) -> None:
         """Test listing when no login links exist."""
         # Arrange
-        mock_response = MagicMock()
-        mock_response.data = UNSET
+        from supermetrics._generated.supermetrics_api_client.models.list_login_links_response_200 import (
+            ListLoginLinksResponse200,
+        )
+
+        mock_response = ListLoginLinksResponse200(data=UNSET)
 
         import supermetrics.resources.login_links as login_links_module
 
@@ -462,14 +468,17 @@ class TestLoginLinksAsyncResource:
     ) -> None:
         """Test async listing of login links."""
         # Arrange
-        mock_response = MagicMock()
-        mock_response.data = [sample_login_link]
+        from supermetrics._generated.supermetrics_api_client.models.list_login_links_response_200 import (
+            ListLoginLinksResponse200,
+        )
+
+        mock_response = ListLoginLinksResponse200(data=[sample_login_link])
 
         import supermetrics.resources.login_links as login_links_module
 
         original_list = login_links_module.list_login_links.asyncio
 
-        async def mock_list(*args: object, **kwargs: object) -> MagicMock:
+        async def mock_list(*args: object, **kwargs: object) -> ListLoginLinksResponse200:
             return mock_response
 
         login_links_module.list_login_links.asyncio = mock_list

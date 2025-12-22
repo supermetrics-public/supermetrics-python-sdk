@@ -14,9 +14,56 @@ from supermetrics._generated.supermetrics_api_client.api.data_source_login_links
     get_login_link,
     list_login_links,
 )
+from supermetrics._generated.supermetrics_api_client.models.close_login_link_response_401 import (
+    CloseLoginLinkResponse401,
+)
+from supermetrics._generated.supermetrics_api_client.models.close_login_link_response_404 import (
+    CloseLoginLinkResponse404,
+)
+from supermetrics._generated.supermetrics_api_client.models.close_login_link_response_422 import (
+    CloseLoginLinkResponse422,
+)
+from supermetrics._generated.supermetrics_api_client.models.close_login_link_response_429 import (
+    CloseLoginLinkResponse429,
+)
+from supermetrics._generated.supermetrics_api_client.models.close_login_link_response_500 import (
+    CloseLoginLinkResponse500,
+)
 from supermetrics._generated.supermetrics_api_client.models.create_login_link_body import CreateLoginLinkBody
+from supermetrics._generated.supermetrics_api_client.models.create_login_link_response_401 import (
+    CreateLoginLinkResponse401,
+)
+from supermetrics._generated.supermetrics_api_client.models.create_login_link_response_403 import (
+    CreateLoginLinkResponse403,
+)
+from supermetrics._generated.supermetrics_api_client.models.create_login_link_response_422 import (
+    CreateLoginLinkResponse422,
+)
+from supermetrics._generated.supermetrics_api_client.models.create_login_link_response_429 import (
+    CreateLoginLinkResponse429,
+)
+from supermetrics._generated.supermetrics_api_client.models.create_login_link_response_500 import (
+    CreateLoginLinkResponse500,
+)
+from supermetrics._generated.supermetrics_api_client.models.get_login_link_response_401 import GetLoginLinkResponse401
+from supermetrics._generated.supermetrics_api_client.models.get_login_link_response_404 import GetLoginLinkResponse404
+from supermetrics._generated.supermetrics_api_client.models.get_login_link_response_422 import GetLoginLinkResponse422
+from supermetrics._generated.supermetrics_api_client.models.get_login_link_response_429 import GetLoginLinkResponse429
+from supermetrics._generated.supermetrics_api_client.models.get_login_link_response_500 import GetLoginLinkResponse500
 from supermetrics._generated.supermetrics_api_client.models.list_login_links_response_200 import (
     ListLoginLinksResponse200,
+)
+from supermetrics._generated.supermetrics_api_client.models.list_login_links_response_401 import (
+    ListLoginLinksResponse401,
+)
+from supermetrics._generated.supermetrics_api_client.models.list_login_links_response_422 import (
+    ListLoginLinksResponse422,
+)
+from supermetrics._generated.supermetrics_api_client.models.list_login_links_response_429 import (
+    ListLoginLinksResponse429,
+)
+from supermetrics._generated.supermetrics_api_client.models.list_login_links_response_500 import (
+    ListLoginLinksResponse500,
 )
 from supermetrics._generated.supermetrics_api_client.models.login_link import LoginLink
 from supermetrics._generated.supermetrics_api_client.models.login_link_response import LoginLinkResponse
@@ -117,13 +164,57 @@ class LoginLinksResource:
             if response is None or isinstance(response, Unset):
                 raise ValueError("API returned empty response")
 
-            # Cast to success response type - error responses are handled by generated client
-            success_response = cast(LoginLinkResponse, response)
+            # Check for error responses and raise appropriate exceptions
+            if isinstance(response, CreateLoginLinkResponse401):
+                raise AuthenticationError(
+                    "Invalid or expired API key",
+                    status_code=401,
+                    endpoint="/ds/login/link",
+                    response_body=str(response),
+                )
+            elif isinstance(response, CreateLoginLinkResponse403):
+                raise APIError(
+                    "Forbidden - insufficient permissions",
+                    status_code=403,
+                    endpoint="/ds/login/link",
+                    response_body=str(response),
+                )
+            elif isinstance(response, CreateLoginLinkResponse422):
+                raise ValidationError(
+                    "Unprocessable entity - validation failed",
+                    status_code=422,
+                    endpoint="/ds/login/link",
+                    response_body=str(response),
+                )
+            elif isinstance(response, CreateLoginLinkResponse429):
+                raise APIError(
+                    "Rate limit exceeded - too many requests",
+                    status_code=429,
+                    endpoint="/ds/login/link",
+                    response_body=str(response),
+                )
+            elif isinstance(response, CreateLoginLinkResponse500):
+                raise APIError(
+                    "Supermetrics API internal server error",
+                    status_code=500,
+                    endpoint="/ds/login/link",
+                    response_body=str(response),
+                )
 
-            if success_response.data is None or isinstance(success_response.data, Unset):
+            # Defensive validation: ensure response is the expected success type
+            if not isinstance(response, LoginLinkResponse):
+                raise APIError(
+                    f"Unexpected response type: {type(response).__name__}",
+                    status_code=500,
+                    endpoint="/ds/login/link",
+                    response_body=str(response),
+                )
+
+            # After isinstance check, mypy knows response is LoginLinkResponse
+            if response.data is None or isinstance(response.data, Unset):
                 raise ValueError("API returned empty response")
 
-            link = success_response.data
+            link = response.data
             logger.info(f"Created login link: id={link.link_id}, ds_id={link.ds_id}")
 
             return link
@@ -203,13 +294,57 @@ class LoginLinksResource:
             if response is None or isinstance(response, Unset):
                 raise ValueError("API returned empty response")
 
-            # Cast to success response type - error responses are handled by generated client
-            success_response = cast(LoginLinkResponse, response)
+            # Check for error responses and raise appropriate exceptions
+            if isinstance(response, GetLoginLinkResponse401):
+                raise AuthenticationError(
+                    "Invalid or expired API key",
+                    status_code=401,
+                    endpoint=f"/ds/login/link/{link_id}",
+                    response_body=str(response),
+                )
+            elif isinstance(response, GetLoginLinkResponse404):
+                raise APIError(
+                    f"Login link not found: {link_id}",
+                    status_code=404,
+                    endpoint=f"/ds/login/link/{link_id}",
+                    response_body=str(response),
+                )
+            elif isinstance(response, GetLoginLinkResponse422):
+                raise ValidationError(
+                    "Unprocessable entity - validation failed",
+                    status_code=422,
+                    endpoint=f"/ds/login/link/{link_id}",
+                    response_body=str(response),
+                )
+            elif isinstance(response, GetLoginLinkResponse429):
+                raise APIError(
+                    "Rate limit exceeded - too many requests",
+                    status_code=429,
+                    endpoint=f"/ds/login/link/{link_id}",
+                    response_body=str(response),
+                )
+            elif isinstance(response, GetLoginLinkResponse500):
+                raise APIError(
+                    "Supermetrics API internal server error",
+                    status_code=500,
+                    endpoint=f"/ds/login/link/{link_id}",
+                    response_body=str(response),
+                )
 
-            if success_response.data is None or isinstance(success_response.data, Unset):
+            # Defensive validation: ensure response is the expected success type
+            if not isinstance(response, LoginLinkResponse):
+                raise APIError(
+                    f"Unexpected response type: {type(response).__name__}",
+                    status_code=500,
+                    endpoint=f"/ds/login/link/{link_id}",
+                    response_body=str(response),
+                )
+
+            # After isinstance check, mypy knows response is LoginLinkResponse
+            if response.data is None or isinstance(response.data, Unset):
                 raise ValueError("API returned empty response")
 
-            link = success_response.data
+            link = response.data
             logger.info(f"Retrieved login link: id={link.link_id}, status={link.status_code}")
 
             return link
@@ -282,13 +417,50 @@ class LoginLinksResource:
             if response is None or isinstance(response, Unset):
                 return []
 
-            # Cast to success response type - error responses are handled by generated client
-            success_response = cast(ListLoginLinksResponse200, response)
+            # Check for error responses and raise appropriate exceptions
+            if isinstance(response, ListLoginLinksResponse401):
+                raise AuthenticationError(
+                    "Invalid or expired API key",
+                    status_code=401,
+                    endpoint="/ds/login/links",
+                    response_body=str(response),
+                )
+            elif isinstance(response, ListLoginLinksResponse422):
+                raise ValidationError(
+                    "Unprocessable entity - validation failed",
+                    status_code=422,
+                    endpoint="/ds/login/links",
+                    response_body=str(response),
+                )
+            elif isinstance(response, ListLoginLinksResponse429):
+                raise APIError(
+                    "Rate limit exceeded - too many requests",
+                    status_code=429,
+                    endpoint="/ds/login/links",
+                    response_body=str(response),
+                )
+            elif isinstance(response, ListLoginLinksResponse500):
+                raise APIError(
+                    "Supermetrics API internal server error",
+                    status_code=500,
+                    endpoint="/ds/login/links",
+                    response_body=str(response),
+                )
 
-            if success_response.data is None or isinstance(success_response.data, Unset):
+            # Defensive validation: ensure response is the expected success type
+            if not isinstance(response, ListLoginLinksResponse200):
+                raise APIError(
+                    f"Unexpected response type: {type(response).__name__}",
+                    status_code=500,
+                    endpoint="/ds/login/links",
+                    response_body=str(response),
+                )
+
+            # After isinstance check, mypy knows response is ListLoginLinksResponse200
+            if response.data is None or isinstance(response.data, Unset):
                 return []
 
-            links = success_response.data
+            links = response.data
             logger.info(f"Retrieved {len(links)} login links")
 
             return links
@@ -357,7 +529,44 @@ class LoginLinksResource:
         logger.debug(f"Closing login link: link_id={link_id}")
 
         try:
-            close_login_link.sync(link_id=link_id, client=cast(AuthenticatedClient, self._client))
+            response = close_login_link.sync(link_id=link_id, client=cast(AuthenticatedClient, self._client))
+
+            # Check for error responses and raise appropriate exceptions
+            if isinstance(response, CloseLoginLinkResponse401):
+                raise AuthenticationError(
+                    "Invalid or expired API key",
+                    status_code=401,
+                    endpoint=f"/ds/login/link/{link_id}/close",
+                    response_body=str(response),
+                )
+            elif isinstance(response, CloseLoginLinkResponse404):
+                raise APIError(
+                    f"Login link not found: {link_id}",
+                    status_code=404,
+                    endpoint=f"/ds/login/link/{link_id}/close",
+                    response_body=str(response),
+                )
+            elif isinstance(response, CloseLoginLinkResponse422):
+                raise ValidationError(
+                    "Unprocessable entity - validation failed",
+                    status_code=422,
+                    endpoint=f"/ds/login/link/{link_id}/close",
+                    response_body=str(response),
+                )
+            elif isinstance(response, CloseLoginLinkResponse429):
+                raise APIError(
+                    "Rate limit exceeded - too many requests",
+                    status_code=429,
+                    endpoint=f"/ds/login/link/{link_id}/close",
+                    response_body=str(response),
+                )
+            elif isinstance(response, CloseLoginLinkResponse500):
+                raise APIError(
+                    "Supermetrics API internal server error",
+                    status_code=500,
+                    endpoint=f"/ds/login/link/{link_id}/close",
+                    response_body=str(response),
+                )
 
             logger.info(f"Closed login link: id={link_id}")
 
@@ -473,13 +682,57 @@ class LoginLinksAsyncResource:
             if response is None or isinstance(response, Unset):
                 raise ValueError("API returned empty response")
 
-            # Cast to success response type - error responses are handled by generated client
-            success_response = cast(LoginLinkResponse, response)
+            # Check for error responses and raise appropriate exceptions
+            if isinstance(response, CreateLoginLinkResponse401):
+                raise AuthenticationError(
+                    "Invalid or expired API key",
+                    status_code=401,
+                    endpoint="/ds/login/link",
+                    response_body=str(response),
+                )
+            elif isinstance(response, CreateLoginLinkResponse403):
+                raise APIError(
+                    "Forbidden - insufficient permissions",
+                    status_code=403,
+                    endpoint="/ds/login/link",
+                    response_body=str(response),
+                )
+            elif isinstance(response, CreateLoginLinkResponse422):
+                raise ValidationError(
+                    "Unprocessable entity - validation failed",
+                    status_code=422,
+                    endpoint="/ds/login/link",
+                    response_body=str(response),
+                )
+            elif isinstance(response, CreateLoginLinkResponse429):
+                raise APIError(
+                    "Rate limit exceeded - too many requests",
+                    status_code=429,
+                    endpoint="/ds/login/link",
+                    response_body=str(response),
+                )
+            elif isinstance(response, CreateLoginLinkResponse500):
+                raise APIError(
+                    "Supermetrics API internal server error",
+                    status_code=500,
+                    endpoint="/ds/login/link",
+                    response_body=str(response),
+                )
 
-            if success_response.data is None or isinstance(success_response.data, Unset):
+            # Defensive validation: ensure response is the expected success type
+            if not isinstance(response, LoginLinkResponse):
+                raise APIError(
+                    f"Unexpected response type: {type(response).__name__}",
+                    status_code=500,
+                    endpoint="/ds/login/link",
+                    response_body=str(response),
+                )
+
+            # After isinstance check, mypy knows response is LoginLinkResponse
+            if response.data is None or isinstance(response.data, Unset):
                 raise ValueError("API returned empty response")
 
-            link = success_response.data
+            link = response.data
             logger.info(f"Created login link (async): id={link.link_id}, ds_id={link.ds_id}")
 
             return link
@@ -552,13 +805,57 @@ class LoginLinksAsyncResource:
             if response is None or isinstance(response, Unset):
                 raise ValueError("API returned empty response")
 
-            # Cast to success response type - error responses are handled by generated client
-            success_response = cast(LoginLinkResponse, response)
+            # Check for error responses and raise appropriate exceptions
+            if isinstance(response, GetLoginLinkResponse401):
+                raise AuthenticationError(
+                    "Invalid or expired API key",
+                    status_code=401,
+                    endpoint=f"/ds/login/link/{link_id}",
+                    response_body=str(response),
+                )
+            elif isinstance(response, GetLoginLinkResponse404):
+                raise APIError(
+                    f"Login link not found: {link_id}",
+                    status_code=404,
+                    endpoint=f"/ds/login/link/{link_id}",
+                    response_body=str(response),
+                )
+            elif isinstance(response, GetLoginLinkResponse422):
+                raise ValidationError(
+                    "Unprocessable entity - validation failed",
+                    status_code=422,
+                    endpoint=f"/ds/login/link/{link_id}",
+                    response_body=str(response),
+                )
+            elif isinstance(response, GetLoginLinkResponse429):
+                raise APIError(
+                    "Rate limit exceeded - too many requests",
+                    status_code=429,
+                    endpoint=f"/ds/login/link/{link_id}",
+                    response_body=str(response),
+                )
+            elif isinstance(response, GetLoginLinkResponse500):
+                raise APIError(
+                    "Supermetrics API internal server error",
+                    status_code=500,
+                    endpoint=f"/ds/login/link/{link_id}",
+                    response_body=str(response),
+                )
 
-            if success_response.data is None or isinstance(success_response.data, Unset):
+            # Defensive validation: ensure response is the expected success type
+            if not isinstance(response, LoginLinkResponse):
+                raise APIError(
+                    f"Unexpected response type: {type(response).__name__}",
+                    status_code=500,
+                    endpoint=f"/ds/login/link/{link_id}",
+                    response_body=str(response),
+                )
+
+            # After isinstance check, mypy knows response is LoginLinkResponse
+            if response.data is None or isinstance(response.data, Unset):
                 raise ValueError("API returned empty response")
 
-            link = success_response.data
+            link = response.data
             logger.info(f"Retrieved login link (async): id={link.link_id}, status={link.status_code}")
 
             return link
@@ -628,13 +925,50 @@ class LoginLinksAsyncResource:
             if response is None or isinstance(response, Unset):
                 return []
 
-            # Cast to success response type - error responses are handled by generated client
-            success_response = cast(ListLoginLinksResponse200, response)
+            # Check for error responses and raise appropriate exceptions
+            if isinstance(response, ListLoginLinksResponse401):
+                raise AuthenticationError(
+                    "Invalid or expired API key",
+                    status_code=401,
+                    endpoint="/ds/login/links",
+                    response_body=str(response),
+                )
+            elif isinstance(response, ListLoginLinksResponse422):
+                raise ValidationError(
+                    "Unprocessable entity - validation failed",
+                    status_code=422,
+                    endpoint="/ds/login/links",
+                    response_body=str(response),
+                )
+            elif isinstance(response, ListLoginLinksResponse429):
+                raise APIError(
+                    "Rate limit exceeded - too many requests",
+                    status_code=429,
+                    endpoint="/ds/login/links",
+                    response_body=str(response),
+                )
+            elif isinstance(response, ListLoginLinksResponse500):
+                raise APIError(
+                    "Supermetrics API internal server error",
+                    status_code=500,
+                    endpoint="/ds/login/links",
+                    response_body=str(response),
+                )
 
-            if success_response.data is None or isinstance(success_response.data, Unset):
+            # Defensive validation: ensure response is the expected success type
+            if not isinstance(response, ListLoginLinksResponse200):
+                raise APIError(
+                    f"Unexpected response type: {type(response).__name__}",
+                    status_code=500,
+                    endpoint="/ds/login/links",
+                    response_body=str(response),
+                )
+
+            # After isinstance check, mypy knows response is ListLoginLinksResponse200
+            if response.data is None or isinstance(response.data, Unset):
                 return []
 
-            links = success_response.data
+            links = response.data
             logger.info(f"Retrieved {len(links)} login links (async)")
 
             return links
@@ -699,7 +1033,44 @@ class LoginLinksAsyncResource:
         logger.debug(f"Closing login link (async): link_id={link_id}")
 
         try:
-            await close_login_link.asyncio(link_id=link_id, client=cast(AuthenticatedClient, self._client))
+            response = await close_login_link.asyncio(link_id=link_id, client=cast(AuthenticatedClient, self._client))
+
+            # Check for error responses and raise appropriate exceptions
+            if isinstance(response, CloseLoginLinkResponse401):
+                raise AuthenticationError(
+                    "Invalid or expired API key",
+                    status_code=401,
+                    endpoint=f"/ds/login/link/{link_id}/close",
+                    response_body=str(response),
+                )
+            elif isinstance(response, CloseLoginLinkResponse404):
+                raise APIError(
+                    f"Login link not found: {link_id}",
+                    status_code=404,
+                    endpoint=f"/ds/login/link/{link_id}/close",
+                    response_body=str(response),
+                )
+            elif isinstance(response, CloseLoginLinkResponse422):
+                raise ValidationError(
+                    "Unprocessable entity - validation failed",
+                    status_code=422,
+                    endpoint=f"/ds/login/link/{link_id}/close",
+                    response_body=str(response),
+                )
+            elif isinstance(response, CloseLoginLinkResponse429):
+                raise APIError(
+                    "Rate limit exceeded - too many requests",
+                    status_code=429,
+                    endpoint=f"/ds/login/link/{link_id}/close",
+                    response_body=str(response),
+                )
+            elif isinstance(response, CloseLoginLinkResponse500):
+                raise APIError(
+                    "Supermetrics API internal server error",
+                    status_code=500,
+                    endpoint=f"/ds/login/link/{link_id}/close",
+                    response_body=str(response),
+                )
 
             logger.info(f"Closed login link (async): id={link_id}")
 
