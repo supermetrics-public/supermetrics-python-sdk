@@ -176,10 +176,7 @@ def main() -> None:
         print("QUERY RESULTS")
         print(f"{'=' * 60}\n")
 
-        # Query was unsuccessful
-        if hasattr(result, 'error'):
-            raise Exception(result.error.description)
-        elif hasattr(result, 'data') and isinstance(result.data, list) and len(result.data) > 0:
+        if hasattr(result, 'data') and isinstance(result.data, list) and len(result.data) > 0:
             print(f"Retrieved {len(result.data)} rows")
             print("\nSample data (first 5 rows):")
             for i, row in enumerate(result.data[:5]):
