@@ -96,7 +96,7 @@ class TestAccountsResource:
         accounts_module.get_accounts.sync = MagicMock(return_value=mock_response)
 
         # Act
-        accounts = accounts_resource.list(ds_id="GA4")
+        accounts = accounts_resource.list(ds_id="GAWA")
 
         # Assert
         assert len(accounts) == 4
@@ -131,7 +131,7 @@ class TestAccountsResource:
         accounts_module.get_accounts.sync = mock_sync
 
         # Act
-        accounts = accounts_resource.list(ds_id="GA4", login_usernames="user1@example.com")
+        accounts = accounts_resource.list(ds_id="GAWA", login_usernames="user1@example.com")
 
         # Assert
         assert len(accounts) == 1
@@ -140,7 +140,7 @@ class TestAccountsResource:
         # Verify the GetAccountsJson was created with correct ds_users parameter
         call_args = mock_sync.call_args
         json_param = call_args.kwargs["json"]
-        assert json_param.ds_id == "GA4"
+        assert json_param.ds_id == "GAWA"
         assert json_param.ds_users == "user1@example.com"
 
         # Cleanup
@@ -173,7 +173,7 @@ class TestAccountsResource:
 
         # Act
         accounts = accounts_resource.list(
-            ds_id="GA4", login_usernames=["user1@example.com", "user2@example.com"]
+            ds_id="GAWA", login_usernames=["user1@example.com", "user2@example.com"]
         )
 
         # Assert
@@ -205,7 +205,7 @@ class TestAccountsResource:
         accounts_module.get_accounts.sync = mock_sync
 
         # Act
-        accounts = accounts_resource.list(ds_id="GA4", cache_minutes=30)
+        accounts = accounts_resource.list(ds_id="GAWA", cache_minutes=30)
 
         # Assert
         assert len(accounts) == 1
@@ -231,7 +231,7 @@ class TestAccountsResource:
         accounts_module.get_accounts.sync = MagicMock(return_value=mock_response)
 
         # Act
-        accounts = accounts_resource.list(ds_id="GA4")
+        accounts = accounts_resource.list(ds_id="GAWA")
 
         # Assert
         assert accounts == []
@@ -260,7 +260,7 @@ class TestAccountsResource:
         accounts_module.get_accounts.sync = MagicMock(return_value=mock_response)
 
         # Act
-        accounts = accounts_resource.list(ds_id="GA4")
+        accounts = accounts_resource.list(ds_id="GAWA")
 
         # Assert
         assert accounts == []
@@ -279,7 +279,7 @@ class TestAccountsResource:
         accounts_module.get_accounts.sync = MagicMock(return_value=None)
 
         # Act
-        accounts = accounts_resource.list(ds_id="GA4")
+        accounts = accounts_resource.list(ds_id="GAWA")
 
         # Assert
         assert accounts == []
@@ -311,7 +311,7 @@ class TestAccountsResource:
 
         # Verify AuthenticationError is raised
         with pytest.raises(AuthenticationError) as exc_info:
-            accounts_resource.list(ds_id="GA4")
+            accounts_resource.list(ds_id="GAWA")
 
         assert exc_info.value.status_code == 401
         assert "Invalid or expired API key" in str(exc_info.value)
@@ -343,7 +343,7 @@ class TestAccountsResource:
 
         # Verify ValidationError is raised
         with pytest.raises(ValidationError) as exc_info:
-            accounts_resource.list(ds_id="GA4")
+            accounts_resource.list(ds_id="GAWA")
 
         assert exc_info.value.status_code == 400
         assert "Invalid parameter" in str(exc_info.value)
@@ -375,7 +375,7 @@ class TestAccountsResource:
 
         # Verify APIError is raised
         with pytest.raises(APIError) as exc_info:
-            accounts_resource.list(ds_id="GA4")
+            accounts_resource.list(ds_id="GAWA")
 
         assert exc_info.value.status_code == 404
         assert "not found" in str(exc_info.value).lower()
@@ -407,7 +407,7 @@ class TestAccountsResource:
 
         # Verify APIError is raised
         with pytest.raises(APIError) as exc_info:
-            accounts_resource.list(ds_id="GA4")
+            accounts_resource.list(ds_id="GAWA")
 
         assert exc_info.value.status_code == 500
         assert "Supermetrics API error" in str(exc_info.value)
@@ -431,7 +431,7 @@ class TestAccountsResource:
 
         # Verify NetworkError is raised
         with pytest.raises(NetworkError) as exc_info:
-            accounts_resource.list(ds_id="GA4")
+            accounts_resource.list(ds_id="GAWA")
 
         assert "Network error" in str(exc_info.value)
         assert exc_info.value.status_code is None  # Network errors have no HTTP status
@@ -493,7 +493,7 @@ class TestAccountsAsyncResource:
         accounts_module.get_accounts.asyncio = AsyncMock(return_value=mock_response)
 
         # Act
-        accounts = await accounts_async_resource.list(ds_id="GA4")
+        accounts = await accounts_async_resource.list(ds_id="GAWA")
 
         # Assert
         assert len(accounts) == 2
@@ -527,7 +527,7 @@ class TestAccountsAsyncResource:
 
         # Act
         accounts = await accounts_async_resource.list(
-            ds_id="GA4", login_usernames=["user1@example.com"], cache_minutes=60
+            ds_id="GAWA", login_usernames=["user1@example.com"], cache_minutes=60
         )
 
         # Assert
@@ -536,7 +536,7 @@ class TestAccountsAsyncResource:
         # Verify parameters passed correctly
         call_args = mock_asyncio.call_args
         json_param = call_args.kwargs["json"]
-        assert json_param.ds_id == "GA4"
+        assert json_param.ds_id == "GAWA"
         assert json_param.ds_users == ["user1@example.com"]
         assert json_param.cache_minutes == 60
 
@@ -557,7 +557,7 @@ class TestAccountsAsyncResource:
         accounts_module.get_accounts.asyncio = AsyncMock(return_value=mock_response)
 
         # Act
-        accounts = await accounts_async_resource.list(ds_id="GA4")
+        accounts = await accounts_async_resource.list(ds_id="GAWA")
 
         # Assert
         assert accounts == []

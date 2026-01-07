@@ -46,12 +46,12 @@ client = SupermetricsClient(
 ```python
 # Using context manager (recommended)
 with SupermetricsClient(api_key="your_key") as client:
-    accounts = client.accounts.list(ds_id="GA4")
+    accounts = client.accounts.list(ds_id="GAWA")
 
 # Manual lifecycle
 client = SupermetricsClient(api_key="your_key")
 try:
-    accounts = client.accounts.list(ds_id="GA4")
+    accounts = client.accounts.list(ds_id="GAWA")
 finally:
     client.close()
 ```
@@ -97,7 +97,7 @@ from supermetrics import SupermetricsAsyncClient
 
 async def main():
     async with SupermetricsAsyncClient(api_key="your_key") as client:
-        accounts = await client.accounts.list(ds_id="GA4")
+        accounts = await client.accounts.list(ds_id="GAWA")
         print(f"Found {len(accounts)} accounts")
 
 asyncio.run(main())
@@ -117,7 +117,7 @@ Create a login link for data source authentication.
 
 ```python
 link = client.login_links.create(
-    ds_id="GA4",
+    ds_id="GAWA",
     description="My Analytics Connection",
     expiry_time=None,
     **kwargs
@@ -126,7 +126,7 @@ link = client.login_links.create(
 
 **Parameters:**
 
-- `ds_id` (str, required): Data source ID (e.g., "GA4", "google_ads", "facebook_ads")
+- `ds_id` (str, required): Data source ID (e.g., "GAWA", "google_ads", "facebook_ads")
 - `description` (str, optional): Internal description for the link
 - `expiry_time` (datetime, optional): Link expiry time (default: 24 hours from creation)
 - `**kwargs`: Additional parameters:
@@ -141,7 +141,7 @@ link = client.login_links.create(
 
 ```python
 link = client.login_links.create(
-    ds_id="GA4",
+    ds_id="GAWA",
     description="Analytics Connection for Q1 Report"
 )
 print(f"Authentication URL: {link.login_url}")
@@ -304,7 +304,7 @@ List all accounts for a data source.
 
 ```python
 accounts = client.accounts.list(
-    ds_id="GA4",
+    ds_id="GAWA",
     login_usernames=None,
     cache_minutes=None
 )
@@ -312,7 +312,7 @@ accounts = client.accounts.list(
 
 **Parameters:**
 
-- `ds_id` (str, required): Data source ID (e.g., "GA4", "google_ads", "facebook_ads")
+- `ds_id` (str, required): Data source ID (e.g., "GAWA", "google_ads", "facebook_ads")
 - `login_usernames` (str | list[str], optional): Username(s) to filter accounts
 - `cache_minutes` (int, optional): Maximum age of cached data in minutes
 
@@ -323,12 +323,12 @@ accounts = client.accounts.list(
 **Example:**
 
 ```python
-# List all GA4 accounts
-accounts = client.accounts.list(ds_id="GA4")
+# List all GAWA accounts
+accounts = client.accounts.list(ds_id="GAWA")
 
 # Filter by specific username
 accounts = client.accounts.list(
-    ds_id="GA4",
+    ds_id="GAWA",
     login_usernames="analytics@company.com"
 )
 
@@ -355,7 +355,7 @@ Execute a data query.
 
 ```python
 result = client.queries.execute(
-    ds_id="GA4",
+    ds_id="GAWA",
     ds_accounts=["123456789"],
     fields=["Date", "Sessions", "Users"],
     start_date="2024-01-01",
@@ -387,7 +387,7 @@ result = client.queries.execute(
 
 ```python
 result = client.queries.execute(
-    ds_id="GA4",
+    ds_id="GAWA",
     ds_accounts=["123456789"],
     fields=["Date", "Sessions", "Users", "Pageviews"],
     start_date="2024-01-01",
@@ -423,7 +423,7 @@ result = client.queries.get_results(query_id="query_abc123")
 ```python
 # Execute query
 result = client.queries.execute(
-    ds_id="GA4",
+    ds_id="GAWA",
     ds_accounts=["123456789"],
     fields=["Date", "Sessions"],
     start_date="2024-01-01",
@@ -468,7 +468,7 @@ Represents a data source login link for OAuth authentication.
 **Example:**
 
 ```python
-link = client.login_links.create(ds_id="GA4")
+link = client.login_links.create(ds_id="GAWA")
 print(f"Visit: {link.login_url}")
 print(f"Expires: {link.expiry_time}")
 ```
@@ -514,7 +514,7 @@ Represents a data source account.
 **Example:**
 
 ```python
-accounts = client.accounts.list(ds_id="GA4")
+accounts = client.accounts.list(ds_id="GAWA")
 for account in accounts:
     print(f"ID: {account.account_id}")
     print(f"Name: {account.account_name}")
@@ -578,7 +578,7 @@ Base exception for all SDK errors.
 from supermetrics import SupermetricsError
 
 try:
-    client.accounts.list(ds_id="GA4")
+    client.accounts.list(ds_id="GAWA")
 except SupermetricsError as e:
     print(f"Error: {e.message}")
     print(f"Status: {e.status_code}")

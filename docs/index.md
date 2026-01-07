@@ -22,17 +22,17 @@ from supermetrics import SupermetricsClient
 client = SupermetricsClient(api_key="your_api_key")
 
 # Create login link
-link = client.login_links.create(ds_id="GA4", description="My Connection")
+link = client.login_links.create(ds_id="GAWA", description="My Connection")
 
 # Get login details
 login = client.logins.get(login_id=link.login_id)
 
 # List accounts
-accounts = client.accounts.list(ds_id="GA4", login_usernames=login.username)
+accounts = client.accounts.list(ds_id="GAWA", login_usernames=login.username)
 
 # Execute query
 result = client.queries.execute(
-    ds_id="GA4",
+    ds_id="GAWA",
     ds_accounts=[accounts[0].account_id],
     fields=["Date", "Sessions", "Users"],
     start_date="2024-01-01",
@@ -81,7 +81,7 @@ result = client.queries.execute(
 All request and response models are fully typed using Pydantic v2:
 
 ```python
-link = client.login_links.create(ds_id="GA4")
+link = client.login_links.create(ds_id="GAWA")
 # link is typed as LoginLink with full IDE autocomplete
 print(link.login_url)  # Type-safe access
 ```
@@ -95,13 +95,13 @@ Choose the right client for your use case:
 from supermetrics import SupermetricsClient
 
 client = SupermetricsClient(api_key="key")
-accounts = client.accounts.list(ds_id="GA4")
+accounts = client.accounts.list(ds_id="GAWA")
 
 # Asynchronous - for production apps
 from supermetrics import SupermetricsAsyncClient
 
 async with SupermetricsAsyncClient(api_key="key") as client:
-    accounts = await client.accounts.list(ds_id="GA4")
+    accounts = await client.accounts.list(ds_id="GAWA")
 ```
 
 ### Comprehensive Error Handling
@@ -152,7 +152,7 @@ client.queries.get_results(...)
 
 The SDK supports all Supermetrics data sources including:
 
-- Google Analytics 4 (GA4)
+- Google Analytics 4 (GAWA)
 - Google Ads
 - Facebook Ads
 - LinkedIn Ads

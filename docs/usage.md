@@ -18,7 +18,7 @@ client = SupermetricsClient(api_key="your_api_key_here")
 ```python
 # Create a login link for Google Analytics 4
 link = client.login_links.create(
-    ds_id="GA4",
+    ds_id="GAWA",
     description="My Analytics Connection"
 )
 
@@ -41,7 +41,7 @@ print(f"Login ID: {login.login_id}")
 ```python
 # List available accounts for the data source
 accounts = client.accounts.list(
-    ds_id="GA4",
+    ds_id="GAWA",
     login_usernames=login.username
 )
 
@@ -55,7 +55,7 @@ for account in accounts:
 ```python
 # Execute a query to retrieve marketing data
 result = client.queries.execute(
-    ds_id="GA4",
+    ds_id="GAWA",
     ds_accounts=[accounts[0].account_id],
     fields=["Date", "Sessions", "Users", "Pageviews"],
     start_date="2024-01-01",
@@ -78,7 +78,7 @@ client = SupermetricsClient(api_key="your_api_key")
 
 try:
     # Create login link
-    link = client.login_links.create(ds_id="GA4", description="Q1 Report")
+    link = client.login_links.create(ds_id="GAWA", description="Q1 Report")
     print(f"Please authenticate at: {link.login_url}")
 
     # Wait for authentication
@@ -89,11 +89,11 @@ try:
     login = client.logins.get(updated_link.login_id)
 
     # List accounts
-    accounts = client.accounts.list(ds_id="GA4", login_usernames=login.username)
+    accounts = client.accounts.list(ds_id="GAWA", login_usernames=login.username)
 
     # Execute query
     result = client.queries.execute(
-        ds_id="GA4",
+        ds_id="GAWA",
         ds_accounts=[accounts[0].account_id],
         fields=["Date", "Sessions", "Users"],
         start_date="2024-01-01",
@@ -123,7 +123,7 @@ client = SupermetricsClient(api_key="your_key")
 
 try:
     result = client.queries.execute(
-        ds_id="GA4",
+        ds_id="GAWA",
         ds_accounts=["123456789"],
         fields=["Date", "Sessions"],
         start_date="2024-01-01",
@@ -148,11 +148,11 @@ from supermetrics import SupermetricsAsyncClient
 async def main():
     async with SupermetricsAsyncClient(api_key="your_key") as client:
         # All methods are async
-        accounts = await client.accounts.list(ds_id="GA4")
+        accounts = await client.accounts.list(ds_id="GAWA")
         print(f"Found {len(accounts)} accounts")
 
         result = await client.queries.execute(
-            ds_id="GA4",
+            ds_id="GAWA",
             ds_accounts=[accounts[0].account_id],
             fields=["Date", "Sessions", "Users"],
             start_date="2024-01-01",

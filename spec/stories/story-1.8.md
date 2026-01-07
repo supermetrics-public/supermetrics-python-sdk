@@ -273,7 +273,7 @@ def test_authentication_error_on_401(mocker, test_client):
 
     # Verify AuthenticationError is raised
     with pytest.raises(AuthenticationError) as exc_info:
-        test_client.login_links.create(ds_id="GA4", description="Test")
+        test_client.login_links.create(ds_id="GAWA", description="Test")
 
     # Verify exception attributes
     assert exc_info.value.status_code == 401

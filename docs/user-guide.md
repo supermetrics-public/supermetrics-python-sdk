@@ -33,7 +33,7 @@ client = SupermetricsClient(api_key="your_api_key_here")
 
 # Create a login link for Google Analytics 4
 link = client.login_links.create(
-    ds_id="GA4",
+    ds_id="GAWA",
     description="My Analytics Connection"
 )
 
@@ -61,7 +61,7 @@ client = SupermetricsClient(api_key="your_api_key")
 
 # Step 1: Create login link
 link = client.login_links.create(
-    ds_id="GA4",
+    ds_id="GAWA",
     description="Q1 Analytics Report"
 )
 print(f"Please authenticate at: {link.login_url}")
@@ -81,7 +81,7 @@ print(f"Authenticated as: {login.username}")
 
 # Step 4: List available accounts
 accounts = client.accounts.list(
-    ds_id="GA4",
+    ds_id="GAWA",
     login_usernames=login.username
 )
 print(f"Found {len(accounts)} accounts:")
@@ -90,7 +90,7 @@ for account in accounts:
 
 # Step 5: Execute query
 result = client.queries.execute(
-    ds_id="GA4",
+    ds_id="GAWA",
     ds_accounts=[accounts[0].account_id],
     fields=["Date", "Sessions", "Users", "Pageviews"],
     start_date="2024-01-01",
@@ -114,14 +114,14 @@ Login links are URLs that users visit to authenticate with data sources.
 
 ```python
 # Basic login link
-link = client.login_links.create(ds_id="GA4")
+link = client.login_links.create(ds_id="GAWA")
 
 # With description and custom expiry
 from datetime import datetime, timedelta
 
 expiry = datetime.now() + timedelta(hours=2)
 link = client.login_links.create(
-    ds_id="GA4",
+    ds_id="GAWA",
     description="Analytics for Marketing Dashboard",
     expiry_time=expiry
 )
@@ -144,7 +144,7 @@ Poll the link status to see when authentication completes:
 ```python
 import time
 
-link = client.login_links.create(ds_id="GA4")
+link = client.login_links.create(ds_id="GAWA")
 print(f"Visit: {link.login_url}")
 
 # Poll every 5 seconds
@@ -201,12 +201,12 @@ print("Link closed successfully")
 Before querying, you need to know which accounts are available:
 
 ```python
-# List all GA4 accounts
-accounts = client.accounts.list(ds_id="GA4")
+# List all GAWA accounts
+accounts = client.accounts.list(ds_id="GAWA")
 
 # Filter by username
 accounts = client.accounts.list(
-    ds_id="GA4",
+    ds_id="GAWA",
     login_usernames="analytics@company.com"
 )
 
@@ -218,7 +218,7 @@ accounts = client.accounts.list(
 
 # Use cached data (faster)
 accounts = client.accounts.list(
-    ds_id="GA4",
+    ds_id="GAWA",
     cache_minutes=60  # Use cached data up to 1 hour old
 )
 
@@ -237,7 +237,7 @@ Retrieve marketing data from your data sources:
 ```python
 # Basic query
 result = client.queries.execute(
-    ds_id="GA4",
+    ds_id="GAWA",
     ds_accounts=["123456789"],
     fields=["Date", "Sessions", "Users"],
     start_date="2024-01-01",
@@ -246,7 +246,7 @@ result = client.queries.execute(
 
 # With filters
 result = client.queries.execute(
-    ds_id="GA4",
+    ds_id="GAWA",
     ds_accounts=["123456789"],
     fields=["Date", "Sessions", "Users", "BounceRate"],
     start_date="2024-01-01",
@@ -256,7 +256,7 @@ result = client.queries.execute(
 
 # With segments
 result = client.queries.execute(
-    ds_id="GA4",
+    ds_id="GAWA",
     ds_accounts=["123456789"],
     fields=["Date", "Sessions"],
     start_date="2024-01-01",
@@ -266,7 +266,7 @@ result = client.queries.execute(
 
 # With row limit
 result = client.queries.execute(
-    ds_id="GA4",
+    ds_id="GAWA",
     ds_accounts=["123456789"],
     fields=["Date", "Sessions", "Users"],
     start_date="2024-01-01",
@@ -276,7 +276,7 @@ result = client.queries.execute(
 
 # Use cached results
 result = client.queries.execute(
-    ds_id="GA4",
+    ds_id="GAWA",
     ds_accounts=["123456789"],
     fields=["Date", "Sessions"],
     start_date="2024-01-01",
@@ -289,7 +289,7 @@ result = client.queries.execute(
 
 ```python
 result = client.queries.execute(
-    ds_id="GA4",
+    ds_id="GAWA",
     ds_accounts=["123456789"],
     fields=["Date", "Sessions", "Users"],
     start_date="2024-01-01",
@@ -330,7 +330,7 @@ import time
 
 # Execute query
 result = client.queries.execute(
-    ds_id="GA4",
+    ds_id="GAWA",
     ds_accounts=["123456789"],
     fields=["Date", "Sessions", "Users"],
     start_date="2024-01-01",
@@ -370,7 +370,7 @@ Use relative date strings for dynamic queries:
 ```python
 # Today
 result = client.queries.execute(
-    ds_id="GA4",
+    ds_id="GAWA",
     ds_accounts=["123456789"],
     fields=["Date", "Sessions"],
     start_date="today",
@@ -379,7 +379,7 @@ result = client.queries.execute(
 
 # Yesterday
 result = client.queries.execute(
-    ds_id="GA4",
+    ds_id="GAWA",
     ds_accounts=["123456789"],
     fields=["Date", "Sessions"],
     start_date="yesterday",
@@ -388,7 +388,7 @@ result = client.queries.execute(
 
 # Last 7 days
 result = client.queries.execute(
-    ds_id="GA4",
+    ds_id="GAWA",
     ds_accounts=["123456789"],
     fields=["Date", "Sessions"],
     start_date="7daysago",
@@ -397,7 +397,7 @@ result = client.queries.execute(
 
 # Last 30 days
 result = client.queries.execute(
-    ds_id="GA4",
+    ds_id="GAWA",
     ds_accounts=["123456789"],
     fields=["Date", "Sessions"],
     start_date="30daysago",
@@ -406,7 +406,7 @@ result = client.queries.execute(
 
 # This month
 result = client.queries.execute(
-    ds_id="GA4",
+    ds_id="GAWA",
     ds_accounts=["123456789"],
     fields=["Date", "Sessions"],
     start_date="first_day_of_month",
@@ -415,7 +415,7 @@ result = client.queries.execute(
 
 # Last month
 result = client.queries.execute(
-    ds_id="GA4",
+    ds_id="GAWA",
     ds_accounts=["123456789"],
     fields=["Date", "Sessions"],
     start_date="first_day_of_last_month",
@@ -438,11 +438,11 @@ from supermetrics import SupermetricsAsyncClient
 async def main():
     async with SupermetricsAsyncClient(api_key="your_key") as client:
         # All methods are async
-        accounts = await client.accounts.list(ds_id="GA4")
+        accounts = await client.accounts.list(ds_id="GAWA")
         print(f"Found {len(accounts)} accounts")
 
         result = await client.queries.execute(
-            ds_id="GA4",
+            ds_id="GAWA",
             ds_accounts=[accounts[0].account_id],
             fields=["Date", "Sessions", "Users"],
             start_date="2024-01-01",
@@ -466,7 +466,7 @@ from supermetrics import SupermetricsAsyncClient
 async def fetch_data_for_account(client, account_id, start_date, end_date):
     """Fetch data for a single account."""
     result = await client.queries.execute(
-        ds_id="GA4",
+        ds_id="GAWA",
         ds_accounts=[account_id],
         fields=["Date", "Sessions", "Users"],
         start_date=start_date,
@@ -477,7 +477,7 @@ async def fetch_data_for_account(client, account_id, start_date, end_date):
 async def main():
     async with SupermetricsAsyncClient(api_key="your_key") as client:
         # Get accounts
-        accounts = await client.accounts.list(ds_id="GA4")
+        accounts = await client.accounts.list(ds_id="GAWA")
         account_ids = [acc.account_id for acc in accounts[:5]]  # First 5
 
         # Execute queries concurrently
@@ -573,11 +573,11 @@ Always use context managers to ensure proper resource cleanup:
 ```python
 # Good
 with SupermetricsClient(api_key="your_key") as client:
-    accounts = client.accounts.list(ds_id="GA4")
+    accounts = client.accounts.list(ds_id="GAWA")
 
 # Also good for async
 async with SupermetricsAsyncClient(api_key="your_key") as client:
-    accounts = await client.accounts.list(ds_id="GA4")
+    accounts = await client.accounts.list(ds_id="GAWA")
 ```
 
 ### 2. Handle Errors Gracefully
@@ -597,7 +597,7 @@ client = SupermetricsClient(api_key="your_key")
 
 try:
     result = client.queries.execute(
-        ds_id="GA4",
+        ds_id="GAWA",
         ds_accounts=["123456789"],
         fields=["Date", "Sessions"],
         start_date="2024-01-01",
@@ -625,13 +625,13 @@ Use `cache_minutes` to avoid redundant API calls:
 ```python
 # Cache account list for 1 hour
 accounts = client.accounts.list(
-    ds_id="GA4",
+    ds_id="GAWA",
     cache_minutes=60
 )
 
 # Cache query results for 30 minutes
 result = client.queries.execute(
-    ds_id="GA4",
+    ds_id="GAWA",
     ds_accounts=["123456789"],
     fields=["Date", "Sessions"],
     start_date="2024-01-01",
@@ -694,7 +694,7 @@ def query_with_retry(client, max_retries=3, **query_params):
 client = SupermetricsClient(api_key="your_key")
 result = query_with_retry(
     client,
-    ds_id="GA4",
+    ds_id="GAWA",
     ds_accounts=["123456789"],
     fields=["Date", "Sessions"],
     start_date="2024-01-01",
@@ -707,7 +707,7 @@ result = query_with_retry(
 Different data sources support different fields. Check data source documentation:
 
 ```python
-# GA4 example
+# GAWA example
 ga4_fields = ["Date", "Sessions", "Users", "Pageviews", "BounceRate"]
 
 # Google Ads example
@@ -738,10 +738,10 @@ for link in links:
 
 ## Common Data Sources
 
-### Google Analytics 4 (GA4)
+### Google Analytics 4 (GAWA)
 
 ```python
-ds_id = "GA4"
+ds_id = "GAWA"
 fields = ["Date", "Sessions", "Users", "Pageviews", "BounceRate"]
 ```
 

@@ -83,8 +83,8 @@ A large enterprise customer is currently blocked from POC without a Python SDK, 
    - *Expected outcome:* Client ready for API calls
 
 2. **Create Login Link for Data Source**
-   - Sarah creates a login link for Google Analytics 4 (GA4) data source
-   - Provides description: "Company Analytics Dashboard - GA4 Integration"
+   - Sarah creates a login link for Google Analytics 4 (GAWA) data source
+   - Provides description: "Company Analytics Dashboard - GAWA Integration"
    - *Expected outcome:* Login link created with unique ID and authentication URL
 
 3. **User Authentication Flow**
@@ -100,7 +100,7 @@ A large enterprise customer is currently blocked from POC without a Python SDK, 
 
 5. **Get Available Accounts**
    - Sarah requests accounts list using login_username
-   - SDK returns all accessible GA4 properties/accounts
+   - SDK returns all accessible GAWA properties/accounts
    - *Expected outcome:* List of accounts with IDs and metadata
 
 6. **Execute Data Query**

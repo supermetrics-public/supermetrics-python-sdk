@@ -38,7 +38,7 @@ You can catch specific exceptions for granular error handling, or catch `Superme
 from supermetrics import SupermetricsError
 
 try:
-    client.accounts.list(ds_id="GA4")
+    client.accounts.list(ds_id="GAWA")
 except SupermetricsError as e:
     print(f"SDK Error: {e.message}")
     print(f"HTTP Status: {e.status_code}")
@@ -195,7 +195,7 @@ client = SupermetricsClient(api_key="your_key")
 try:
     result = execute_query_with_validation(
         client,
-        ds_id="GA4",
+        ds_id="GAWA",
         account_ids=["123456789"],
         fields=["Date", "Sessions"],
         start_date="2024-01-01",
@@ -296,7 +296,7 @@ client = SupermetricsClient(api_key="your_key")
 try:
     result = execute_with_retry(
         client,
-        ds_id="GA4",
+        ds_id="GAWA",
         ds_accounts=["123456789"],
         fields=["Date", "Sessions"],
         start_date="2024-01-01",
@@ -401,7 +401,7 @@ client = SupermetricsClient(api_key="your_key")
 
 try:
     result = client.queries.execute(
-        ds_id="GA4",
+        ds_id="GAWA",
         ds_accounts=["123456789"],
         fields=["Date", "Sessions"],
         start_date="2024-01-01",
@@ -444,7 +444,7 @@ client = SupermetricsClient(api_key="your_key")
 
 try:
     result = client.queries.execute(
-        ds_id="GA4",
+        ds_id="GAWA",
         ds_accounts=["123456789"],
         fields=["Date", "Sessions"],
         start_date="2024-01-01",
@@ -521,7 +521,7 @@ async def fetch_with_error_handling(client, account_id):
     """Fetch data with error handling."""
     try:
         result = await client.queries.execute(
-            ds_id="GA4",
+            ds_id="GAWA",
             ds_accounts=[account_id],
             fields=["Date", "Sessions"],
             start_date="2024-01-01",
@@ -615,7 +615,7 @@ def execute_with_backoff(client, **query_params):
 
 result = execute_with_backoff(
     client,
-    ds_id="GA4",
+    ds_id="GAWA",
     ds_accounts=["123456789"],
     fields=["Date", "Sessions"],
     start_date="2024-01-01",
@@ -633,7 +633,7 @@ client = SupermetricsClient(api_key="your_key", timeout=60.0)
 
 try:
     result = client.queries.execute(
-        ds_id="GA4",
+        ds_id="GAWA",
         ds_accounts=["123456789"],
         fields=["Date", "Sessions"],
         start_date="2024-01-01",
@@ -653,7 +653,7 @@ client = SupermetricsClient(api_key="your_key")
 
 try:
     result = client.queries.execute(
-        ds_id="GA4",
+        ds_id="GAWA",
         ds_accounts=[],  # Empty list - invalid
         fields=["Date", "Sessions"],
         start_date="2024-01-01",

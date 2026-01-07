@@ -39,7 +39,7 @@ class QueriesResource:
         >>> client = SupermetricsClient(api_key="your-key")
         >>> # Execute a query for Google Analytics data
         >>> result = client.queries.execute(
-        ...     ds_id="GA4",
+        ...     ds_id="GAWA",
         ...     ds_accounts=["account_123"],
         ...     fields=["sessions", "users", "pageviews"],
         ...     start_date="2025-01-01",
@@ -78,7 +78,7 @@ class QueriesResource:
         completion.
 
         Args:
-            ds_id: Data source ID (e.g., "GA4", "google_ads", "facebook_ads").
+            ds_id: Data source ID (e.g., "GAWA", "google_ads", "facebook_ads").
                 See API documentation for full list of supported data sources.
             ds_accounts: List of account IDs to query. These are the account_id
                 values obtained from the accounts.list() method.
@@ -112,7 +112,7 @@ class QueriesResource:
         Example:
             >>> # Execute a simple query
             >>> result = client.queries.execute(
-            ...     ds_id="GA4",
+            ...     ds_id="GAWA",
             ...     ds_accounts=["12345"],
             ...     fields=["sessions", "users"],
             ...     start_date="2025-01-01",
@@ -123,7 +123,7 @@ class QueriesResource:
             >>>
             >>> # Execute with additional parameters
             >>> result = client.queries.execute(
-            ...     ds_id="GA4",
+            ...     ds_id="GAWA",
             ...     ds_accounts=["12345", "67890"],
             ...     fields=["sessions", "bounceRate", "avgSessionDuration"],
             ...     start_date="yesterday",
@@ -134,7 +134,7 @@ class QueriesResource:
             >>>
             >>> # Handle async query polling
             >>> result = client.queries.execute(
-            ...     ds_id="GA4",
+            ...     ds_id="GAWA",
             ...     ds_accounts=["12345"],
             ...     fields=["sessions"],
             ...     start_date="2025-01-01",
@@ -307,7 +307,7 @@ class QueriesResource:
         Example:
             >>> # Execute query and check status
             >>> result = client.queries.execute(
-            ...     ds_id="GA4",
+            ...     ds_id="GAWA",
             ...     ds_accounts=["12345"],
             ...     fields=["sessions"],
             ...     start_date="2025-01-01",
@@ -458,7 +458,7 @@ class QueriesAsyncResource:
     Example:
         >>> client = SupermetricsAsyncClient(api_key="your-key")
         >>> result = await client.queries.execute(
-        ...     ds_id="GA4",
+        ...     ds_id="GAWA",
         ...     ds_accounts=["account_123"],
         ...     fields=["sessions", "users"],
         ...     start_date="2025-01-01",
@@ -490,7 +490,7 @@ class QueriesAsyncResource:
         Async version of execute(). See QueriesResource.execute() for full documentation.
 
         Args:
-            ds_id: Data source ID (e.g., "GA4", "google_ads").
+            ds_id: Data source ID (e.g., "GAWA", "google_ads").
             ds_accounts: List of account IDs to query.
             fields: List of field IDs to retrieve.
             start_date: Start date in ISO 8601 or relative format.

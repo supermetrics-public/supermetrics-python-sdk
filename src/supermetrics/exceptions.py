@@ -30,7 +30,7 @@ class SupermetricsError(Exception):
     Example:
         ```python
         try:
-            client.login_links.create(ds_id="GA4", description="Test")
+            client.login_links.create(ds_id="GAWA", description="Test")
         except SupermetricsError as e:
             print(f"SDK Error: {e.message}")
             if e.status_code:
@@ -78,7 +78,7 @@ class AuthenticationError(SupermetricsError):
     Example:
         ```python
         try:
-            client.login_links.create(ds_id="GA4", description="Test")
+            client.login_links.create(ds_id="GAWA", description="Test")
         except AuthenticationError as e:
             print(f"Authentication failed: {e.message}")
             print(f"Status code: {e.status_code}")

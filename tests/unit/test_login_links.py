@@ -35,7 +35,7 @@ class TestLoginLinksResource:
             link_id="link_123abc",
             status_code=LoginLinkStatusCode.OPEN,
             description="Test link",
-            ds_id="GA4",
+            ds_id="GAWA",
             ds_name="Google Analytics 4",
             login_url="https://api.supermetrics.com/login/123",
             created_time=datetime.datetime.now(datetime.UTC),
@@ -60,11 +60,11 @@ class TestLoginLinksResource:
         login_links_module.create_login_link.sync = MagicMock(return_value=mock_response)
 
         # Act
-        link = login_links_resource.create(ds_id="GA4", description="Test link")
+        link = login_links_resource.create(ds_id="GAWA", description="Test link")
 
         # Assert
         assert link.link_id == "link_123abc"
-        assert link.ds_id == "GA4"
+        assert link.ds_id == "GAWA"
         assert link.status_code == LoginLinkStatusCode.OPEN
         assert login_links_module.create_login_link.sync.called
 
@@ -85,7 +85,7 @@ class TestLoginLinksResource:
         login_links_module.create_login_link.sync = MagicMock(return_value=mock_response)
 
         # Act
-        link = login_links_resource.create(ds_id="GA4", description="Test", expiry_time=custom_expiry)
+        link = login_links_resource.create(ds_id="GAWA", description="Test", expiry_time=custom_expiry)
 
         # Assert
         assert link is not None
@@ -205,7 +205,7 @@ class TestLoginLinksResource:
 
         # Act & Assert
         with pytest.raises(ValueError, match="API returned empty response"):
-            login_links_resource.create(ds_id="GA4", description="Test")
+            login_links_resource.create(ds_id="GAWA", description="Test")
 
         # Cleanup
         login_links_module.create_login_link.sync = original_create
@@ -251,7 +251,7 @@ class TestLoginLinksResource:
 
         # Verify AuthenticationError is raised
         with pytest.raises(AuthenticationError) as exc_info:
-            login_links_resource.create(ds_id="GA4", description="Test")
+            login_links_resource.create(ds_id="GAWA", description="Test")
 
         assert exc_info.value.status_code == 401
         assert "Invalid or expired API key" in str(exc_info.value)
@@ -283,7 +283,7 @@ class TestLoginLinksResource:
 
         # Verify ValidationError is raised
         with pytest.raises(ValidationError) as exc_info:
-            login_links_resource.create(ds_id="GA4", description="Test")
+            login_links_resource.create(ds_id="GAWA", description="Test")
 
         assert exc_info.value.status_code == 400
         assert "Invalid parameter" in str(exc_info.value)
@@ -315,7 +315,7 @@ class TestLoginLinksResource:
 
         # Verify APIError is raised
         with pytest.raises(APIError) as exc_info:
-            login_links_resource.create(ds_id="GA4", description="Test")
+            login_links_resource.create(ds_id="GAWA", description="Test")
 
         assert exc_info.value.status_code == 404
         assert "not found" in str(exc_info.value).lower()
@@ -347,7 +347,7 @@ class TestLoginLinksResource:
 
         # Verify APIError is raised
         with pytest.raises(APIError) as exc_info:
-            login_links_resource.create(ds_id="GA4", description="Test")
+            login_links_resource.create(ds_id="GAWA", description="Test")
 
         assert exc_info.value.status_code == 500
         assert "Supermetrics API error" in str(exc_info.value)
@@ -371,7 +371,7 @@ class TestLoginLinksResource:
 
         # Verify NetworkError is raised
         with pytest.raises(NetworkError) as exc_info:
-            login_links_resource.create(ds_id="GA4", description="Test")
+            login_links_resource.create(ds_id="GAWA", description="Test")
 
         assert "Network error" in str(exc_info.value)
         assert exc_info.value.status_code is None  # Network errors have no HTTP status
@@ -400,7 +400,7 @@ class TestLoginLinksAsyncResource:
             link_id="link_789xyz",
             status_code=LoginLinkStatusCode.OPEN,
             description="Async test link",
-            ds_id="GA4",
+            ds_id="GAWA",
             ds_name="Google Analytics 4",
             login_url="https://api.supermetrics.com/login/789",
             created_time=datetime.datetime.now(datetime.UTC),
@@ -425,11 +425,11 @@ class TestLoginLinksAsyncResource:
         login_links_module.create_login_link.asyncio = mock_create
 
         # Act
-        link = await login_links_async_resource.create(ds_id="GA4", description="Async test")
+        link = await login_links_async_resource.create(ds_id="GAWA", description="Async test")
 
         # Assert
         assert link.link_id == "link_789xyz"
-        assert link.ds_id == "GA4"
+        assert link.ds_id == "GAWA"
         assert link.status_code == LoginLinkStatusCode.OPEN
 
         # Cleanup
@@ -534,7 +534,7 @@ class TestLoginLinksAsyncResource:
 
         # Act & Assert
         with pytest.raises(ValueError, match="API returned empty response"):
-            await login_links_async_resource.create(ds_id="GA4", description="Test")
+            await login_links_async_resource.create(ds_id="GAWA", description="Test")
 
         # Cleanup
         login_links_module.create_login_link.asyncio = original_create
