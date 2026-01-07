@@ -386,7 +386,7 @@ paths:
                   maxLength: 500
                   description: Custom URL to redirect to after successful authentication.
             example:
-              ds_id: GA4
+              ds_id: GAWA
               expiry_time: '2024-12-31T23:59:59Z'
               description: Google Analytics login link for marketing team
               require_username: marketing@company.com

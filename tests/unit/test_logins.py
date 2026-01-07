@@ -40,7 +40,7 @@ class TestLoginsResource:
         """Create a sample DataSource for testing."""
         return DataSource(
             type_=UNSET,
-            ds_id="GA4",
+            ds_id="GAWA",
             name="Google Analytics 4",
         )
 
@@ -91,7 +91,7 @@ class TestLoginsResource:
         # Assert
         assert login.login_id == "login_abc123"
         assert login.username == "user@example.com"
-        assert login.ds_info.ds_id == "GA4"
+        assert login.ds_info.ds_id == "GAWA"
         assert logins_module.get_data_source_login.sync.called
 
         # Cleanup
@@ -380,7 +380,7 @@ class TestLoginsAsyncResource:
         """Create a sample DataSource for testing."""
         return DataSource(
             type_=UNSET,
-            ds_id="GA4",
+            ds_id="GAWA",
             name="Google Analytics 4",
         )
 

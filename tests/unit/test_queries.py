@@ -74,7 +74,7 @@ class TestQueriesResource:
 
         # Act
         result = queries_resource.execute(
-            ds_id="GA4",
+            ds_id="GAWA",
             ds_accounts=["account_123"],
             fields=["sessions", "users"],
             start_date="2025-01-01",
@@ -92,7 +92,7 @@ class TestQueriesResource:
         # Verify DataQuery was created with correct parameters
         call_args = queries_module.get_data.sync.call_args
         json_param = call_args.kwargs["json"]
-        assert json_param.ds_id == "GA4"
+        assert json_param.ds_id == "GAWA"
         assert json_param.ds_accounts == ["account_123"]
         assert json_param.fields == ["sessions", "users"]
         assert json_param.start_date == "2025-01-01"
@@ -116,7 +116,7 @@ class TestQueriesResource:
 
         # Act
         result = queries_resource.execute(
-            ds_id="GA4",
+            ds_id="GAWA",
             ds_accounts=["account_123"],
             fields=["sessions"],
             start_date="2025-01-01",
@@ -147,7 +147,7 @@ class TestQueriesResource:
 
         # Act
         result = queries_resource.execute(
-            ds_id="GA4",
+            ds_id="GAWA",
             ds_accounts=["account_123", "account_456"],
             fields=["sessions", "users", "pageviews"],
             start_date="2025-01-01",
@@ -164,7 +164,7 @@ class TestQueriesResource:
         # Verify all parameters passed correctly including kwargs
         call_args = mock_sync.call_args
         json_param = call_args.kwargs["json"]
-        assert json_param.ds_id == "GA4"
+        assert json_param.ds_id == "GAWA"
         assert json_param.ds_accounts == ["account_123", "account_456"]
         assert json_param.fields == ["sessions", "users", "pageviews"]
         assert json_param.start_date == "2025-01-01"
@@ -191,7 +191,7 @@ class TestQueriesResource:
 
         # Act
         result = queries_resource.execute(
-            ds_id="GA4",
+            ds_id="GAWA",
             ds_accounts=["account_123"],
             fields=["sessions"],
             start_date="yesterday",
@@ -247,7 +247,7 @@ class TestQueriesResource:
 
         # Act
         result = queries_resource.execute(
-            ds_id="GA4",
+            ds_id="GAWA",
             ds_accounts=["account_123"],
             fields=["sessions"],
             start_date="2025-01-01",
@@ -272,7 +272,7 @@ class TestQueriesResource:
 
         # Act
         result = queries_resource.execute(
-            ds_id="GA4",
+            ds_id="GAWA",
             ds_accounts=["account_123"],
             fields=["sessions"],
             start_date="2025-01-01",
@@ -324,7 +324,7 @@ class TestQueriesResource:
 
         # Act - Step 1: Execute query (returns pending)
         result = queries_resource.execute(
-            ds_id="GA4",
+            ds_id="GAWA",
             ds_accounts=["account_123"],
             fields=["sessions"],
             start_date="2025-01-01",
@@ -372,7 +372,7 @@ class TestQueriesResource:
         # Verify AuthenticationError is raised
         with pytest.raises(AuthenticationError) as exc_info:
             queries_resource.execute(
-                ds_id="GA4",
+                ds_id="GAWA",
                 ds_accounts=["account_123"],
                 fields=["sessions"],
                 start_date="2025-01-01",
@@ -399,7 +399,7 @@ class TestQueriesResource:
         # Verify ValidationError is raised
         with pytest.raises(ValidationError) as exc_info:
             queries_resource.execute(
-                ds_id="GA4",
+                ds_id="GAWA",
                 ds_accounts=["account_123"],
                 fields=["sessions"],
                 start_date="2025-01-01",
@@ -437,7 +437,7 @@ class TestQueriesResource:
         # Verify APIError is raised
         with pytest.raises(APIError) as exc_info:
             queries_resource.execute(
-                ds_id="GA4",
+                ds_id="GAWA",
                 ds_accounts=["account_123"],
                 fields=["sessions"],
                 start_date="2025-01-01",
@@ -475,7 +475,7 @@ class TestQueriesResource:
         # Verify APIError is raised
         with pytest.raises(APIError) as exc_info:
             queries_resource.execute(
-                ds_id="GA4",
+                ds_id="GAWA",
                 ds_accounts=["account_123"],
                 fields=["sessions"],
                 start_date="2025-01-01",
@@ -505,7 +505,7 @@ class TestQueriesResource:
         # Verify NetworkError is raised
         with pytest.raises(NetworkError) as exc_info:
             queries_resource.execute(
-                ds_id="GA4",
+                ds_id="GAWA",
                 ds_accounts=["account_123"],
                 fields=["sessions"],
                 start_date="2025-01-01",
@@ -577,7 +577,7 @@ class TestQueriesAsyncResource:
 
         # Act
         result = await queries_async_resource.execute(
-            ds_id="GA4",
+            ds_id="GAWA",
             ds_accounts=["account_123"],
             fields=["sessions", "users"],
             start_date="2025-01-01",
@@ -611,7 +611,7 @@ class TestQueriesAsyncResource:
 
         # Act
         result = await queries_async_resource.execute(
-            ds_id="GA4",
+            ds_id="GAWA",
             ds_accounts=["account_123", "account_456"],
             fields=["sessions", "users"],
             start_date="2025-01-01",
@@ -627,7 +627,7 @@ class TestQueriesAsyncResource:
         # Verify parameters passed correctly
         call_args = mock_asyncio.call_args
         json_param = call_args.kwargs["json"]
-        assert json_param.ds_id == "GA4"
+        assert json_param.ds_id == "GAWA"
         assert json_param.ds_accounts == ["account_123", "account_456"]
         assert json_param.max_rows == 500
         assert json_param.cache_minutes == 60
@@ -682,7 +682,7 @@ class TestQueriesAsyncResource:
 
         # Act
         result = await queries_async_resource.execute(
-            ds_id="GA4",
+            ds_id="GAWA",
             ds_accounts=["account_123"],
             fields=["sessions"],
             start_date="2025-01-01",
@@ -710,7 +710,7 @@ class TestQueriesAsyncResource:
 
         # Act
         result = await queries_async_resource.execute(
-            ds_id="GA4",
+            ds_id="GAWA",
             ds_accounts=["account_123"],
             fields=["sessions"],
             start_date="2025-01-01",
@@ -744,7 +744,7 @@ class TestQueriesAsyncResource:
 
         # Act - Step 1: Execute query (returns pending)
         result = await queries_async_resource.execute(
-            ds_id="GA4",
+            ds_id="GAWA",
             ds_accounts=["account_123"],
             fields=["sessions"],
             start_date="2025-01-01",

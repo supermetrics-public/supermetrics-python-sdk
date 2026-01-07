@@ -89,7 +89,7 @@ class LoginLinksResource:
     Example:
         >>> client = SupermetricsClient(api_key="your-key")
         >>> link = client.login_links.create(
-        ...     ds_id="GA4",
+        ...     ds_id="GAWA",
         ...     description="Google Analytics connection"
         ... )
         >>> print(f"Visit: {link.login_url}")
@@ -117,7 +117,7 @@ class LoginLinksResource:
         the OAuth flow.
 
         Args:
-            ds_id: Data source ID (e.g., "GA4", "google_ads", "facebook_ads").
+            ds_id: Data source ID (e.g., "GAWA", "google_ads", "facebook_ads").
             description: Optional internal description for the link. Not shown during
                 authentication.
             expiry_time: Optional expiry datetime for the link. Defaults to 24 hours
@@ -135,7 +135,7 @@ class LoginLinksResource:
 
         Example:
             >>> link = client.login_links.create(
-            ...     ds_id="GA4",
+            ...     ds_id="GAWA",
             ...     description="Q4 Analytics Setup"
             ... )
             >>> print(link.login_url)  # URL for user to visit
@@ -623,7 +623,7 @@ class LoginLinksAsyncResource:
     Example:
         >>> client = SupermetricsAsyncClient(api_key="your-key")
         >>> link = await client.login_links.create(
-        ...     ds_id="GA4",
+        ...     ds_id="GAWA",
         ...     description="Google Analytics connection"
         ... )
         >>> print(f"Visit: {link.login_url}")
@@ -649,7 +649,7 @@ class LoginLinksAsyncResource:
         Async version of create(). See LoginLinksResource.create() for full documentation.
 
         Args:
-            ds_id: Data source ID (e.g., "GA4", "google_ads").
+            ds_id: Data source ID (e.g., "GAWA", "google_ads").
             description: Optional internal description.
             expiry_time: Optional expiry datetime.
             **kwargs: Additional API parameters.

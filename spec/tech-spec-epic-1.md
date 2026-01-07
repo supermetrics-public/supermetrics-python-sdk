@@ -98,7 +98,7 @@ All data models are auto-generated from the OpenAPI specification using Pydantic
 ```python
 class LoginLink(BaseModel):
     link_id: str                      # Unique login link identifier
-    ds_id: str                        # Data source ID (e.g., "GA4", "google_ads")
+    ds_id: str                        # Data source ID (e.g., "GAWA", "google_ads")
     ds_name: str                      # Human-readable description
     login_url: str                    # Full URL to initiate an authentication attempt. Can be accessed multiple times while link is open.
     require_username: Optional[str]   # Data source username that must be used in authentication attempt
@@ -211,7 +211,7 @@ async_client = SupermetricsAsyncClient(...)
 ```python
 # Create login link
 link: LoginLink = client.login_links.create(
-    ds_id: str,                      # Data source ID (e.g., "GA4")
+    ds_id: str,                      # Data source ID (e.g., "GAWA")
     description: str,                # Human-readable description
     **kwargs                         # Additional API parameters
 ) -> LoginLink
@@ -308,7 +308,7 @@ class NetworkError(SupermetricsError):         # Network-level errors
    Returns ready client
 
 2. Create Login Link (Story 1.4)
-   client.login_links.create(ds_id="GA4", description="...")
+   client.login_links.create(ds_id="GAWA", description="...")
    ↓
    Adapter wraps generated client call
    Generated client sends POST /login_links
@@ -342,7 +342,7 @@ class NetworkError(SupermetricsError):         # Network-level errors
    Returns [Account(account_id="...", account_name="..."), ...]
 
 6. Execute Query (Story 1.7)
-   client.queries.execute(ds_id="GA4", ds_accounts=["..."], fields=["sessions"], ...)
+   client.queries.execute(ds_id="GAWA", ds_accounts=["..."], fields=["sessions"], ...)
    ↓
    Adapter wraps generated client call
    Generated client sends POST /queries

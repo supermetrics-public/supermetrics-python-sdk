@@ -125,7 +125,7 @@ tests/unit/
 ```python
 # Create login link
 link: LoginLink = client.login_links.create(
-    ds_id: str,                      # Data source ID (e.g., "GA4")
+    ds_id: str,                      # Data source ID (e.g., "GAWA")
     description: str,                # Human-readable description
     **kwargs                         # Additional API parameters
 ) -> LoginLink
@@ -212,11 +212,11 @@ def test_create_login_link_success(mocker, test_api_key):
 
     # Act: Call adapter method
     client = SupermetricsClient(api_key=test_api_key)
-    link = client.login_links.create(ds_id="GA4", description="Test")
+    link = client.login_links.create(ds_id="GAWA", description="Test")
 
     # Assert: Verify result
     assert link.link_id == "link_123"
-    assert link.ds_id == "GA4"
+    assert link.ds_id == "GAWA"
 ```
 
 [Source: tech-spec-epic-1.md - Test Strategy, lines 708-742]

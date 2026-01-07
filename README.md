@@ -36,7 +36,7 @@ client = SupermetricsClient(api_key="your_api_key")
 
 # Create login link for data source authentication
 link = client.login_links.create(
-    ds_id="GA4",
+    ds_id="GAWA",
     description="My Analytics Authentication"
 )
 
@@ -45,13 +45,13 @@ login = client.logins.get(login_id=link.login_id)
 
 # List available accounts
 accounts = client.accounts.list(
-    ds_id="GA4",
+    ds_id="GAWA",
     login_usernames=login.username
 )
 
 # Execute query
 result = client.queries.execute(
-    ds_id="GA4",
+    ds_id="GAWA",
     ds_accounts=[accounts[0].account_id],
     fields=["Date", "Sessions", "Users"],
     start_date="2024-01-01",
@@ -86,7 +86,7 @@ from supermetrics import (
 client = SupermetricsClient(api_key="your_key")
 
 try:
-    link = client.login_links.create(ds_id="GA4", description="Test")
+    link = client.login_links.create(ds_id="GAWA", description="Test")
 except AuthenticationError as e:
     print(f"Invalid API key: {e.message}")
 except ValidationError as e:

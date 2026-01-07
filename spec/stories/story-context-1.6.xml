@@ -239,9 +239,9 @@
     <standards>Use pytest with pytest-asyncio for testing. Mock generated API functions by patching the imported module functions. Create fixtures for mock client and sample Account models (GetAccountsResponse200DataItemAccountsItem). Test both sync and async resource classes. Verify method calls, assert expected return values (flattened accounts list), test filtering scenarios. No real API calls - all mocked. Use AsyncMock for async tests.</standards>
     <locations>tests/unit/test_accounts.py</locations>
     <ideas>
-      <idea ac="1,2">Test list(ds_id="GA4") without filters: mock get_accounts.sync to return response with 2 data items each having 2 accounts, assert flattened list has 4 accounts total</idea>
-      <idea ac="1,2">Test list(ds_id="GA4", login_usernames="user1"): mock to return filtered response with 1 data item, verify GetAccountsJson created with correct ds_users parameter</idea>
-      <idea ac="1,2">Test list(ds_id="GA4", login_usernames=["user1", "user2"]): verify list of usernames passed correctly</idea>
+      <idea ac="1,2">Test list(ds_id="GAWA") without filters: mock get_accounts.sync to return response with 2 data items each having 2 accounts, assert flattened list has 4 accounts total</idea>
+      <idea ac="1,2">Test list(ds_id="GAWA", login_usernames="user1"): mock to return filtered response with 1 data item, verify GetAccountsJson created with correct ds_users parameter</idea>
+      <idea ac="1,2">Test list(ds_id="GAWA", login_usernames=["user1", "user2"]): verify list of usernames passed correctly</idea>
       <idea ac="1,2">Test list() with cache_minutes: verify parameter passed to GetAccountsJson</idea>
       <idea ac="1,2">Test list() with empty response: mock returns response with empty data list, assert empty list returned (not error)</idea>
       <idea ac="1,2">Test list() with data items but empty accounts: mock returns data items with empty accounts lists, assert empty list returned</idea>

@@ -41,12 +41,12 @@ class AccountsResource:
     Example:
         >>> client = SupermetricsClient(api_key="your-key")
         >>> # List all accounts for a data source
-        >>> accounts = client.accounts.list(ds_id="GA4")
+        >>> accounts = client.accounts.list(ds_id="GAWA")
         >>> for account in accounts:
         ...     print(f"{account.account_name} ({account.account_id})")
         >>> # Filter by login username
         >>> accounts = client.accounts.list(
-        ...     ds_id="GA4",
+        ...     ds_id="GAWA",
         ...     login_usernames="user@example.com"
         ... )
     """
@@ -72,7 +72,7 @@ class AccountsResource:
         flattened from the nested API structure into a simple list.
 
         Args:
-            ds_id: Data source ID (e.g., "GA4", "google_ads", "facebook_ads").
+            ds_id: Data source ID (e.g., "GAWA", "google_ads", "facebook_ads").
             login_usernames: Optional login username(s) to filter accounts.
                 Can be a single string or list of strings. Only accounts
                 belonging to these login usernames will be returned.
@@ -92,18 +92,18 @@ class AccountsResource:
 
         Example:
             >>> # Get all accounts for Google Analytics 4
-            >>> accounts = client.accounts.list(ds_id="GA4")
+            >>> accounts = client.accounts.list(ds_id="GAWA")
             >>> print(f"Found {len(accounts)} accounts")
             >>>
             >>> # Filter by specific login
             >>> accounts = client.accounts.list(
-            ...     ds_id="GA4",
+            ...     ds_id="GAWA",
             ...     login_usernames="user@example.com"
             ... )
             >>>
             >>> # Filter by multiple logins
             >>> accounts = client.accounts.list(
-            ...     ds_id="GA4",
+            ...     ds_id="GAWA",
             ...     login_usernames=["user1@example.com", "user2@example.com"]
             ... )
         """
@@ -268,7 +268,7 @@ class AccountsAsyncResource:
 
     Example:
         >>> client = SupermetricsAsyncClient(api_key="your-key")
-        >>> accounts = await client.accounts.list(ds_id="GA4")
+        >>> accounts = await client.accounts.list(ds_id="GAWA")
         >>> print(f"Found {len(accounts)} accounts")
     """
 
@@ -291,7 +291,7 @@ class AccountsAsyncResource:
         Async version of list(). See AccountsResource.list() for full documentation.
 
         Args:
-            ds_id: Data source ID (e.g., "GA4", "google_ads").
+            ds_id: Data source ID (e.g., "GAWA", "google_ads").
             login_usernames: Optional login username(s) to filter accounts.
             cache_minutes: Maximum allowed age of cache in minutes.
 

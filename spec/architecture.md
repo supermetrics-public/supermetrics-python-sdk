@@ -431,7 +431,7 @@ __all__ = [
 from supermetrics_sdk import SupermetricsClient
 
 client = SupermetricsClient(api_key="your-key")
-link = client.login_links.create(ds_id="GA4", description="Test")
+link = client.login_links.create(ds_id="GAWA", description="Test")
 ```
 
 ### CI/CD → PyPI Distribution
@@ -594,7 +594,7 @@ class LoginLinksResource:
         """Create a new login link for data source authentication.
 
         Args:
-            ds_id: Data source identifier (e.g., "GA4", "google_ads")
+            ds_id: Data source identifier (e.g., "GAWA", "google_ads")
             description: Human-readable description for this login link
             **kwargs: Additional parameters passed to the API
 
@@ -610,7 +610,7 @@ class LoginLinksResource:
         Example:
             >>> client = SupermetricsClient(api_key="your-key")
             >>> link = client.login_links.create(
-            ...     ds_id="GA4",
+            ...     ds_id="GAWA",
             ...     description="Analytics Dashboard"
             ... )
             >>> print(link.auth_url)
@@ -718,7 +718,7 @@ def _build_headers(self, custom: Optional[dict[str, str]]) -> dict[str, str]:
 from typing import Optional, Union, Literal, TypeVar, Generic
 
 # Use Literal for specific string values
-def create(self, ds_id: Literal["GA4", "google_ads", "facebook"]) -> LoginLink:
+def create(self, ds_id: Literal["GAWA", "google_ads", "facebook"]) -> LoginLink:
     """Literal restricts to specific values."""
     ...
 
@@ -771,7 +771,7 @@ def create(
     4. Access accounts and query data
 
     Args:
-        ds_id: Data source identifier (e.g., "GA4", "google_ads", "facebook").
+        ds_id: Data source identifier (e.g., "GAWA", "google_ads", "facebook").
             See API documentation for full list of supported data sources.
         description: Human-readable description for this login link. Helps
             identify the purpose when viewing multiple links.
@@ -804,7 +804,7 @@ def create(
 
         >>> client = SupermetricsClient(api_key="your-key")
         >>> link = client.login_links.create(
-        ...     ds_id="GA4",
+        ...     ds_id="GAWA",
         ...     description="Analytics Dashboard - Production",
         ...     expires_in=3600  # Expires in 1 hour
         ... )
@@ -1003,7 +1003,7 @@ class SupermetricsClient:
     Example:
         >>> from supermetrics_sdk import SupermetricsClient
         >>> client = SupermetricsClient(api_key="your-key")
-        >>> link = client.login_links.create(ds_id="GA4", description="Test")
+        >>> link = client.login_links.create(ds_id="GAWA", description="Test")
     """
 
     def __init__(
@@ -1108,7 +1108,7 @@ class SupermetricsAsyncClient:
         >>> async def main():
         ...     async with SupermetricsAsyncClient(api_key="your-key") as client:
         ...         link = await client.login_links.create(
-        ...             ds_id="GA4",
+        ...             ds_id="GAWA",
         ...             description="Test"
         ...         )
         ...         print(link.id)
@@ -1278,20 +1278,20 @@ def test_create_login_link_success(mock_httpx_response):
     client = SupermetricsClient(api_key="test-api-key")
     mock_httpx_response.return_value = {
         "id": "link_123",
-        "ds_id": "GA4",
+        "ds_id": "GAWA",
         "description": "Test Link",
         "auth_url": "https://auth.supermetrics.com/link_123"
     }
 
     # Act
     link = client.login_links.create(
-        ds_id="GA4",
+        ds_id="GAWA",
         description="Test Link"
     )
 
     # Assert
     assert link.id == "link_123"
-    assert link.ds_id == "GA4"
+    assert link.ds_id == "GAWA"
     assert link.description == "Test Link"
     assert "auth.supermetrics.com" in link.auth_url
 
@@ -1302,7 +1302,7 @@ def test_create_login_link_invalid_api_key(mock_httpx_401_error):
 
     # Act & Assert
     with pytest.raises(AuthenticationError) as exc_info:
-        client.login_links.create(ds_id="GA4", description="Test")
+        client.login_links.create(ds_id="GAWA", description="Test")
 
     assert exc_info.value.status_code == 401
     assert "Invalid or expired API key" in str(exc_info.value)
@@ -1330,7 +1330,7 @@ async def test_create_login_link_async_success(mock_httpx_response):
 
     # Act
     link = await async_client.login_links.create(
-        ds_id="GA4",
+        ds_id="GAWA",
         description="Test"
     )
 
@@ -1553,7 +1553,7 @@ except APIError as e:
 ```python
 # Create login link
 link: LoginLink = client.login_links.create(
-    ds_id="GA4",
+    ds_id="GAWA",
     description="Analytics Dashboard"
 )
 
@@ -1585,7 +1585,7 @@ logins: list[Login] = client.logins.list()
 accounts: list[Account] = client.accounts.list(login_username="user_abc")
 
 # Get accounts by data source
-accounts: list[Account] = client.accounts.list(ds_id="GA4")
+accounts: list[Account] = client.accounts.list(ds_id="GAWA")
 
 # Filter accounts
 accounts: list[Account] = client.accounts.list(
@@ -1598,7 +1598,7 @@ accounts: list[Account] = client.accounts.list(
 ```python
 # Execute data query
 result: QueryResult = client.queries.execute(
-    ds_id="GA4",
+    ds_id="GAWA",
     ds_accounts=["account_123"],
     fields=["sessions", "users", "pageviews"],
     start_date="2025-01-01",
@@ -1713,7 +1713,7 @@ from supermetrics_sdk import SupermetricsAsyncClient
 async def fetch_query(client, account_id):
     """Fetch data for single account."""
     return await client.queries.execute(
-        ds_id="GA4",
+        ds_id="GAWA",
         ds_accounts=[account_id],
         fields=["sessions"],
         start_date="2025-01-01",

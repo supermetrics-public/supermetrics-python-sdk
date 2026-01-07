@@ -51,10 +51,10 @@ So that we can validate the POC with the enterprise customer and demonstrate SDK
 - [x] Implement Step 2: Create login link
   ```python
   # Step 2: Create a login link for Google Analytics 4
-  # This generates a URL that the user visits to authenticate their GA4 account
+  # This generates a URL that the user visits to authenticate their GAWA account
   link = client.login_links.create(
-      ds_id="GA4",
-      description="My GA4 Authentication"
+      ds_id="GAWA",
+      description="My GAWA Authentication"
   )
   print(f"✓ Login link created: {link.login_url}")
   print(f"  Link ID: {link.link_id}")
@@ -117,7 +117,7 @@ So that we can validate the POC with the enterprise customer and demonstrate SDK
   start_date = end_date - timedelta(days=7)
 
   result = client.queries.execute(
-      ds_id="GA4",
+      ds_id="GAWA",
       ds_accounts=[selected_account.account_id],
       fields=["Date", "Sessions", "Users"],
       start_date=start_date.isoformat(),
@@ -290,7 +290,7 @@ So that we can validate the POC with the enterprise customer and demonstrate SDK
 
   # Create login link for data source authentication
   link = client.login_links.create(
-      ds_id="GA4",
+      ds_id="GAWA",
       description="My Analytics Authentication"
   )
 
@@ -302,7 +302,7 @@ So that we can validate the POC with the enterprise customer and demonstrate SDK
 
   # Execute query
   result = client.queries.execute(
-      ds_id="GA4",
+      ds_id="GAWA",
       ds_accounts=[accounts[0].account_id],
       fields=["Date", "Sessions", "Users"],
       start_date="2024-01-01",
@@ -335,7 +335,7 @@ So that we can validate the POC with the enterprise customer and demonstrate SDK
   client = SupermetricsClient(api_key="your_key")
 
   try:
-      link = client.login_links.create(ds_id="GA4", description="Test")
+      link = client.login_links.create(ds_id="GAWA", description="Test")
   except AuthenticationError:
       print("Invalid API key")
   except ValidationError:
