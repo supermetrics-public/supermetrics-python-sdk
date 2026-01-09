@@ -1,0 +1,32 @@
+name: Release Pipeline for SuperPy-SDK
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    uses: ./.github/workflows/superpy-sdk-build.yml
+    with:
+      python-version: "3.10"
+
+  test-publish:
+    needs: build
+    uses: ./.github/workflows/superpy-sdk-test-pypi-publish.yml
+    with:
+      python-version: "3.10"
+    permissions:
+      id-token: write
+      contents: read
+    secrets: inherit
+
+  prod-publish:
+    needs: test-publish
+    uses: ./.github/workflows/superpy-sdk-pypi-publish.yml
+    with:
+      python-version: "3.10"
+    permissions:
+      id-token: write
+      contents: read
+    secrets: inherit
