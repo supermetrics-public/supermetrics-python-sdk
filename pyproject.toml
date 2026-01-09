@@ -1,45 +1,46 @@
 # Project metadata and configuration
 [project]
 name = "supermetrics"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Official Python client for Supermetrics"
 readme = "README.md"
 authors = [
-  { name = "Aleksei Popov", email = "aleksei.popov@supermetrics.com" },
-  { name = "Pablo Rojas", email = "pablo.rojas@supermetrics.com" },
+    { name = "Aleksei Popov", email = "aleksei.popov@supermetrics.com" },
+    { name = "Pablo Rojas", email = "pablo.rojas@supermetrics.com" },
 ]
 maintainers = [
-  { name = "Aleksei Popov", email = "aleksei.popov@supermetrics.com" },
-  { name = "Pablo Rojas", email = "pablo.rojas@supermetrics.com" },
+    { name = "Aleksei Popov", email = "aleksei.popov@supermetrics.com" },
+    { name = "Pablo Rojas", email = "pablo.rojas@supermetrics.com" },
+    { name = "Feroj Ahmod", email = "feroj.ahmod@supermetrics.com" }
 ]
 license = { text = "Apache-2.0" }
 requires-python = ">=3.10"
 classifiers = [
-  "Development Status :: 3 - Alpha",
-  "Intended Audience :: Developers",
-  "License :: OSI Approved :: Apache Software License",
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-  "httpx>=0.25.0",
-  "pydantic>=2.0.0",
-  "python-dateutil>=2.8.0",
-  "attrs>=23.0.0",
+    "httpx>=0.25.0",
+    "pydantic>=2.0.0",
+    "python-dateutil>=2.8.0",
+    "attrs>=23.0.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-  "openapi-python-client>=0.15.0",
-  "pytest>=7.4.0",
-  "pytest-asyncio>=0.21.0",
-  "pytest-cov>=4.1.0",
-  "ruff>=0.1.0",
-  "mypy>=1.7.0",
-  "pyyaml>=6.0.0",
-  "tomli>=2.0.0; python_version < '3.11'",
+    "openapi-python-client>=0.15.0",
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.1.0",
+    "mypy>=1.7.0",
+    "pyyaml>=6.0.0",
+    "tomli>=2.0.0; python_version < '3.11'",
 ]
 
 [project.urls]
@@ -49,12 +50,26 @@ changelog = "https://github.com/Supermetrics/SuperPy-SDK/blob/main/HISTORY.md"
 
 # Build system configuration
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "versioningit"]
 build-backend = "hatchling.build"
 
 # UV package manager configuration
 [tool.uv]
 package = true
+
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true
+
+[tool.hatch.version]
+source = "versioningit"
+
+[tool.hatch.version.format]
+distance = "{base_version}.post{distance}"
+dirty = "{base_version}"
+distance-dirty = "{base_version}.post{distance}"
 
 # Wheel build: include src/ layout
 [tool.hatch.build.targets.wheel]
@@ -78,12 +93,12 @@ skip-magic-trailing-comma = false
 [tool.ruff.lint]
 # Enabled rulesets
 select = [
-  "E",   # pycodestyle errors
-  "W",   # pycodestyle warnings
-  "F",   # Pyflakes
-  "I",   # isort
-  "B",   # flake8-bugbear
-  "UP",  # pyupgrade
+    "E", # pycodestyle errors
+    "W", # pycodestyle warnings
+    "F", # Pyflakes
+    "I", # isort
+    "B", # flake8-bugbear
+    "UP", # pyupgrade
 ]
 # per-file-ignores = {}
 
