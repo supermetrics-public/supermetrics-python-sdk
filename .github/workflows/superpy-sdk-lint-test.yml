@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   lint-test:
-    runs-on: ubuntu-latest
+    runs-on: arc-ghc-default
 
     strategy:
       matrix:
