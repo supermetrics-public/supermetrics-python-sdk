@@ -1,0 +1,40 @@
+name: Lint and Test SuperPy-SDK
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+    branches: ["main", "master"]
+
+permissions:
+  contents: read
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install uv with python ${{ matrix.python-version }}
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv pip install --system -r pyproject.toml --extra dev
+
+      - name: Lint with ruff
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          ruff check --select=E9,F63,F7,F82
+          # exit-zero treats all errors as warnings
+          ruff check --exit-zero --statistics
+
+      - name: Run tests with python ${{ matrix.python-version }}
+        run: PYTHONPATH=src pytest
