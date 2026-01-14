@@ -26,14 +26,14 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: uv pip install --system -r pyproject.toml --extra dev
+        run: uv sync --extra dev
 
       - name: Lint with ruff
         run: |
           # stop the build if there are Python syntax errors or undefined names
-          ruff check --select=E9,F63,F7,F82
+          uv run ruff check --select=E9,F63,F7,F82
           # exit-zero treats all errors as warnings
-          ruff check --exit-zero --statistics
+          uv run ruff check --exit-zero --statistics
 
       - name: Run tests with python ${{ matrix.python-version }}
-        run: PYTHONPATH=src pytest
+        run: uv run pytest
