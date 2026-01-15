@@ -26,7 +26,8 @@ updates:
       - "dependencies"
 
   - package-ecosystem: 'pip'
-    directory: '/'    schedule:
+    directory: '/'
+    schedule:
       interval: weekly
       time: "06:15"
       timezone: Europe/Helsinki
