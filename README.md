@@ -211,6 +211,10 @@ See the detailed [sdk-endpoints.txt documentation](#sdk-endpointstxt---endpoint-
 
 **Note:** The adapter pattern (implemented in Story 1.3+) protects users from breaking changes during regeneration
 
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines on how to contribute, run tests, and deploy releases.
+
 ## Credits
 
 This package was created with [Cookiecutter](https://github.com/audreyfeldroy/cookiecutter) and the [audreyfeldroy/cookiecutter-pypackage](https://github.com/audreyfeldroy/cookiecutter-pypackage) project template.

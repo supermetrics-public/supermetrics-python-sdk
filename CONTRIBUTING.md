@@ -93,6 +93,26 @@ Before you submit a pull request, check that it meets these guidelines:
 2. If the pull request adds functionality, the docs should be updated. Put your new functionality into a function with a docstring, and add the feature to the list in README.md.
 3. The pull request should work for Python 3.11, 3.12, 3.13 and 3.14. Tests run in GitHub Actions on every pull request to the main branch, make sure that the tests pass for all supported Python versions.
 
+## Deploying
+
+The release process is fully automated via GitHub Actions. To deploy a new version:
+
+1. Create a new release from the GitHub UI:
+   - Go to the repository's **Releases** page
+   - Click **Draft a new release**
+   - Create a new tag (e.g., `v1.2.3`) from the **main** branch - the version number is automatically derived from the tag
+   - Add release notes describing the changes
+   - Click **Publish release**
+
+   **Important**: The tag must be created from the `main` branch for the release pipeline to succeed.
+
+2. The release pipeline automatically triggers when the tag is pushed:
+   - **Build**: Package is built using `uv build`
+   - **TestPyPI**: Build artifacts are published to TestPyPI for verification
+   - **PyPI**: If TestPyPI publish succeeds, package is published to production PyPI
+
+All publishing uses OIDC trusted publishing, so no manual token management is required.
+
 ## Code of Conduct
 
 Please note that this project is released with a [Contributor Code of Conduct](CODE_OF_CONDUCT.md). By participating in this project you agree to abide by its terms.
