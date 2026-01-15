@@ -1,9 +1,10 @@
 name: Lint and Test SuperPy-SDK
 
 on:
-  workflow_dispatch:
   push:
-    branches: [ "API-97-replace-lint-test-workflow" ]
+    branches: ["main", "master"]
+  pull_request:
+    branches: ["main", "master"]
 
 
 permissions:
