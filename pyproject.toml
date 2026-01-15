@@ -13,15 +13,16 @@ maintainers = [
   { name = "Pablo Rojas", email = "pablo.rojas@supermetrics.com" },
 ]
 license = { text = "Apache-2.0" }
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
   "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
   "httpx>=0.25.0",
@@ -39,7 +40,6 @@ dev = [
   "ruff>=0.1.0",
   "mypy>=1.7.0",
   "pyyaml>=6.0.0",
-  "tomli>=2.0.0; python_version < '3.11'",
 ]
 
 [project.urls]
