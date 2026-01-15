@@ -22,7 +22,7 @@ variables:
   test_dir: "{project-root}/tests" # Root test directory
 
 # Output configuration
-default_output_file: "{project-root}/.github/workflows/test.yml" # GitHub Actions default
+default_output_file: "{project-root}/.github/workflows/superpy-sdk-lint-test.yml" # GitHub Actions default
 
 # Required tools
 required_tools:
