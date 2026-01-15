@@ -3,17 +3,11 @@
 This module validates all acceptance criteria for the project initialization story.
 """
 
-import os
 import sys
+import tomllib
 from pathlib import Path
 
 import pytest
-
-try:
-    import tomllib  # Python 3.11+
-except ImportError:
-    import tomli as tomllib  # Fallback for Python 3.10
-
 
 # Get project root directory
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -184,22 +178,22 @@ class TestAcceptanceCriteria3:
 
 
 class TestAcceptanceCriteria4:
-    """AC4: Python 3.10+ compatibility verified."""
+    """AC4: Python 3.11+ compatibility verified."""
 
-    def test_python_version_3_10_plus(self):
-        """Verify python --version returns 3.10+."""
-        assert sys.version_info >= (3, 10), \
-            f"Python version must be 3.10 or higher (current: {sys.version_info.major}.{sys.version_info.minor})"
+    def test_python_version_3_11_plus(self):
+        """Verify python --version returns 3.11+."""
+        assert sys.version_info >= (3, 11), \
+            f"Python version must be 3.11 or higher (current: {sys.version_info.major}.{sys.version_info.minor})"
 
     def test_requires_python_setting(self):
-        """Verify pyproject.toml has requires-python = '>=3.10'."""
+        """Verify pyproject.toml has requires-python = '>=3.11'."""
         pyproject_path = PROJECT_ROOT / "pyproject.toml"
         with open(pyproject_path, "rb") as f:
             data = tomllib.load(f)
 
         requires_python = data["project"].get("requires-python")
         assert requires_python is not None, "requires-python must be set"
-        assert "3.10" in requires_python, "requires-python must specify 3.10"
+        assert "3.11" in requires_python, "requires-python must specify 3.11"
         assert ">=" in requires_python or "==" in requires_python, \
             "requires-python must have version constraint"
 

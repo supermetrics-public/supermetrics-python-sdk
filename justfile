@@ -14,10 +14,10 @@ qa:
 
 # Run all the tests for all the supported Python versions
 testall:
-    uv run --python=3.10 --extra test pytest
     uv run --python=3.11 --extra test pytest
     uv run --python=3.12 --extra test pytest
     uv run --python=3.13 --extra test pytest
+    uv run --python=3.14 --extra test pytest
 
 # Run all the tests, but allow for arguments to be passed
 test *ARGS:

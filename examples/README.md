@@ -12,9 +12,9 @@ Same workflow as `complete_flow.py` but using async/await for non-blocking opera
 
 ## Prerequisites
 
-1. **Python 3.10 or higher**
+1. **Python 3.11 or higher**
    ```bash
-   python --version  # Should show 3.10+
+   python --version  # Should show 3.11+
    ```
 
 2. **Supermetrics API key**
