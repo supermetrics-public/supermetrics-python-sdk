@@ -1,29 +1,41 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar
+from typing import Any, TypeVar, BinaryIO, TextIO, TYPE_CHECKING, Generator
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
 
+from ..types import UNSET, Unset
+
+
+
+
+
+
 T = TypeVar("T", bound="GetAccountsResponse200DataItemAccountsItem")
+
 
 
 @_attrs_define
 class GetAccountsResponse200DataItemAccountsItem:
-    """
-    Attributes:
-        account_id (str | Unset): Account ID
-        account_name (str | Unset): Account name
-        group_name (str | Unset): Account group name (empty string when not available)
-    """
+    """ 
+        Attributes:
+            account_id (str | Unset): Account ID
+            account_name (str | Unset): Account name
+            group_name (str | Unset): Account group name (empty string when not available)
+     """
 
     account_id: str | Unset = UNSET
     account_name: str | Unset = UNSET
     group_name: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
+
+
+
+
 
     def to_dict(self) -> dict[str, Any]:
         account_id = self.account_id
@@ -32,9 +44,11 @@ class GetAccountsResponse200DataItemAccountsItem:
 
         group_name = self.group_name
 
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({})
+        field_dict.update({
+        })
         if account_id is not UNSET:
             field_dict["account_id"] = account_id
         if account_name is not UNSET:
@@ -43,6 +57,8 @@ class GetAccountsResponse200DataItemAccountsItem:
             field_dict["group_name"] = group_name
 
         return field_dict
+
+
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
@@ -58,6 +74,7 @@ class GetAccountsResponse200DataItemAccountsItem:
             account_name=account_name,
             group_name=group_name,
         )
+
 
         get_accounts_response_200_data_item_accounts_item.additional_properties = d
         return get_accounts_response_200_data_item_accounts_item

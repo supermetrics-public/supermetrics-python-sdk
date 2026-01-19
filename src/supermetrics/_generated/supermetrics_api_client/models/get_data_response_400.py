@@ -1,92 +1,96 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import Any, TypeVar, BinaryIO, TextIO, TYPE_CHECKING, Generator
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
 
-if TYPE_CHECKING:
-    from ..models.error import Error
-    from ..models.response_meta import ResponseMeta
+from ..types import UNSET, Unset
+
+
+
+
 
 
 T = TypeVar("T", bound="GetDataResponse400")
 
 
+
 @_attrs_define
 class GetDataResponse400:
-    """
-    Attributes:
-        meta (ResponseMeta | Unset):
-        error (Error | Unset):
-    """
+    """ RFC 9457 Problem Details for HTTP APIs
 
-    meta: ResponseMeta | Unset = UNSET
-    error: Error | Unset = UNSET
-    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
+        Attributes:
+            type_ (str): A URI reference that identifies the problem type Example:
+                https://supermetrics.com/problems/unauthorized.
+            title (str): A short, human-readable summary of the problem type Example: Unauthorized.
+            status (int): The HTTP status code Example: 401.
+            detail (str | Unset): A human-readable explanation specific to this occurrence Example: Authentication required.
+            instance (str | Unset): A URI reference that identifies the specific occurrence Example:
+                https://api.supermetrics.com/v2/api-keys.
+     """
+
+    type_: str
+    title: str
+    status: int
+    detail: str | Unset = UNSET
+    instance: str | Unset = UNSET
+
+
+
+
 
     def to_dict(self) -> dict[str, Any]:
-        meta: dict[str, Any] | Unset = UNSET
-        if not isinstance(self.meta, Unset):
-            meta = self.meta.to_dict()
+        type_ = self.type_
 
-        error: dict[str, Any] | Unset = UNSET
-        if not isinstance(self.error, Unset):
-            error = self.error.to_dict()
+        title = self.title
+
+        status = self.status
+
+        detail = self.detail
+
+        instance = self.instance
+
 
         field_dict: dict[str, Any] = {}
-        field_dict.update(self.additional_properties)
-        field_dict.update({})
-        if meta is not UNSET:
-            field_dict["meta"] = meta
-        if error is not UNSET:
-            field_dict["error"] = error
+
+        field_dict.update({
+            "type": type_,
+            "title": title,
+            "status": status,
+        })
+        if detail is not UNSET:
+            field_dict["detail"] = detail
+        if instance is not UNSET:
+            field_dict["instance"] = instance
 
         return field_dict
 
+
+
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.error import Error
-        from ..models.response_meta import ResponseMeta
-
         d = dict(src_dict)
-        _meta = d.pop("meta", UNSET)
-        meta: ResponseMeta | Unset
-        if isinstance(_meta, Unset):
-            meta = UNSET
-        else:
-            meta = ResponseMeta.from_dict(_meta)
+        type_ = d.pop("type")
 
-        _error = d.pop("error", UNSET)
-        error: Error | Unset
-        if isinstance(_error, Unset):
-            error = UNSET
-        else:
-            error = Error.from_dict(_error)
+        title = d.pop("title")
+
+        status = d.pop("status")
+
+        detail = d.pop("detail", UNSET)
+
+        instance = d.pop("instance", UNSET)
 
         get_data_response_400 = cls(
-            meta=meta,
-            error=error,
+            type_=type_,
+            title=title,
+            status=status,
+            detail=detail,
+            instance=instance,
         )
 
-        get_data_response_400.additional_properties = d
         return get_data_response_400
 
-    @property
-    def additional_keys(self) -> list[str]:
-        return list(self.additional_properties.keys())
-
-    def __getitem__(self, key: str) -> Any:
-        return self.additional_properties[key]
-
-    def __setitem__(self, key: str, value: Any) -> None:
-        self.additional_properties[key] = value
-
-    def __delitem__(self, key: str) -> None:
-        del self.additional_properties[key]
-
-    def __contains__(self, key: str) -> bool:
-        return key in self.additional_properties

@@ -100,6 +100,7 @@ except NetworkError as e:
 ## Documentation
 
 - [Examples](./examples/) - Working code examples
+- [Scripts](./scripts/README.md) - OpenAPI filtering, patching, and SDK generation
 
 ## OpenAPI Client Regeneration
 
@@ -108,81 +109,85 @@ The SDK client is auto-generated from the Supermetrics OpenAPI specification.
 ### Source Specifications
 
 - **Location:** `openapi-specs/` directory (contains `openapi-data.yaml` and `openapi-management.yaml`)
-- **Merged Spec:** `openapi-spec.yaml` (project root) - filtered and merged from source specs
-- **Endpoint Filter:** `sdk-endpoints.txt` - controls which endpoints are included in the SDK
+- **Merged Spec:** `openapi-spec.yaml` (project root) - filtered, patched, and merged from source specs
+- **Configuration:** `scripts/references/sdk-endpoint-filters.yaml` - controls which endpoints are included and applies patches/customizations
+- **Documentation:** See [scripts/README.md](./scripts/README.md) for detailed patch system documentation
 
-### SDK Endpoint Filtering
+### SDK Endpoint Filtering and Customization
 
-The SDK uses a two-step process to create a focused, maintainable client from multiple OpenAPI specifications:
+The SDK uses a configuration-driven process to create a focused, customizable client from multiple OpenAPI specifications.
 
-#### `sdk-endpoints.txt` - Endpoint Inclusion List
+#### `scripts/references/sdk-endpoint-filters.yaml` - Endpoint Configuration
 
-This file defines which API endpoints to include in the generated SDK. Use it to create a focused SDK that includes only the endpoints your application needs.
+This YAML file defines which API endpoints to include in the SDK and allows you to apply patches/customizations to both endpoints and shared components.
 
-**Format:**
+**Key Features:**
+- **Endpoint Filtering:** Include only the endpoints your application needs
+- **Endpoint Patches:** Customize individual endpoint definitions (descriptions, parameters, responses, etc.)
+- **Component Patches:** Apply surgical modifications to shared schemas, responses, and other components
+- **Merge & Replace Strategies:** Deep merge or complete replacement of OpenAPI sections
+
+**Basic Example:**
+```yaml
+endpoints:
+  - method: GET
+    path: /ds/logins
+
+  - method: GET
+    path: /query/data/json
+
+component_patches:
+  schemas:
+    DataResponse:
+      merge:
+        properties:
+          meta:
+            properties:
+              result:
+                properties:
+                  cache_time:
+                    nullable: true
 ```
-METHOD|PATH
-```
 
-**Example:**
-```
-GET|/ds/logins
-POST|/ds/login/link
-GET|/query/data/json
-```
+**For detailed documentation** on the configuration format, patch strategies, and comprehensive examples, see [scripts/README.md](./scripts/README.md).
 
-**Rules:**
-- One endpoint per line
-- Use `METHOD|PATH` format (pipe-separated)
-- METHOD must be uppercase (GET, POST, PUT, PATCH, DELETE)
-- PATH must match exactly as defined in the OpenAPI specs
-- Lines starting with `#` are comments
-- Empty lines are ignored
+#### `scripts/filter_openapi_spec.py` - Specification Filter, Patcher, and Merger
 
-**Purpose:**
-- Controls SDK size by including only needed endpoints
-- Maintains a clear list of supported operations
-- Simplifies SDK updates when API changes
-
-#### `scripts/filter_openapi_spec.py` - Specification Filter and Merger
-
-This Python script processes multiple OpenAPI specifications and creates a single, filtered `openapi-spec.yaml` file.
+This Python script processes multiple OpenAPI specifications, applies customizations, and creates a single `openapi-spec.yaml` file.
 
 **What it does:**
-1. Reads all `.yaml`/`.yml` files from `openapi-specs/` directory
-2. Filters endpoints based on `sdk-endpoints.txt` inclusion list
-3. Detects and fails on duplicate `METHOD|PATH` across specs
-4. Collects all referenced schemas via `$ref` traversal (dependency resolution)
-5. Merges filtered paths and schemas into single specification
-6. Validates all requested endpoints were found
+1. Reads configuration from `scripts/references/sdk-endpoint-filters.yaml`
+2. Scans and loads all `.yaml`/`.yml` files from `openapi-specs/` directory
+3. Filters endpoints based on configuration
+4. Applies endpoint patches (merge/replace operations)
+5. Collects all referenced components via `$ref` traversal (dependency resolution)
+6. Resolves external file references
+7. Applies component patches to shared schemas, responses, etc.
+8. Detects and fails on duplicate `METHOD|PATH` across specs
+9. Merges everything into single specification
+10. Validates all requested endpoints were found
 
 **Usage:**
 ```bash
 python scripts/filter_openapi_spec.py
 ```
 
-**Parameters:**
-None. The script uses these hardcoded paths relative to project root:
-- Input: `openapi-specs/*.yaml` and `sdk-endpoints.txt`
+**Configuration:**
+- Input: `openapi-specs/*.yaml` and `scripts/references/sdk-endpoint-filters.yaml`
 - Output: `openapi-spec.yaml`
 
 **Exit codes:**
 - `0` - Success
 - `1` - Error (missing files, duplicates, or validation failure)
 
-**Output:**
-The script provides detailed console output showing:
-- Endpoints matched from each source spec
-- Total components collected (schemas, responses, parameters)
-- Warnings for endpoints in filter but not found in specs
-- Errors for duplicate endpoints across multiple specs
+**For detailed documentation** on patch strategies, troubleshooting, and examples, see [scripts/README.md](./scripts/README.md).
 
 ### How to Regenerate
 
 **Full Regeneration (recommended):**
 ```bash
 # 1. Update source specs in openapi-specs/ if needed
-# 2. Update sdk-endpoints.txt to add/remove endpoints
+# 2. Update scripts/references/sdk-endpoint-filters.yaml to add/remove endpoints or apply patches
 # 3. Run filter script to regenerate merged spec
 python scripts/filter_openapi_spec.py
 
@@ -199,15 +204,21 @@ python scripts/filter_openapi_spec.py
 
 - Monthly (or when Supermetrics API changes)
 - After updating source specs in `openapi-specs/`
-- After adding/removing endpoints in `sdk-endpoints.txt`
+- After modifying `scripts/references/sdk-endpoint-filters.yaml` (adding/removing endpoints or changing patches)
 
-### Adding/Removing Endpoints
+### Adding/Removing Endpoints or Applying Patches
 
-1. Edit `sdk-endpoints.txt` - add or remove endpoints using `METHOD|PATH` format (see [SDK Endpoint Filtering](#sdk-endpoint-filtering) for format details)
+1. Edit `scripts/references/sdk-endpoint-filters.yaml`:
+   - Add/remove endpoints in the `endpoints` list
+   - Add/modify patches in `component_patches` or endpoint-level `patches`
 2. Run `python scripts/filter_openapi_spec.py` to regenerate the merged spec
 3. Run `./scripts/regenerate_client.sh` to regenerate the SDK client
 
-See the detailed [sdk-endpoints.txt documentation](#sdk-endpointstxt---endpoint-inclusion-list) above for format rules and examples.
+**See [scripts/README.md](./scripts/README.md)** for detailed documentation on:
+- Configuration file format
+- Endpoint and component patch strategies
+- Comprehensive examples
+- Troubleshooting guide
 
 **Note:** The adapter pattern (implemented in Story 1.3+) protects users from breaking changes during regeneration
 

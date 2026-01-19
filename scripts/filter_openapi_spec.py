@@ -3,12 +3,14 @@
 OpenAPI Specification Filter and Merger
 
 Reads multiple OpenAPI YAML files from openapi-specs/ directory,
-filters endpoints based on sdk-endpoints.txt configuration,
+filters endpoints based on scripts/references/sdk-endpoint-filters.yaml configuration,
 and merges them into a single openapi-spec.yaml file.
 
 Features:
 - Detects and fails on duplicate METHOD|PATH across multiple specs
 - Filters paths/operations matching inclusion list
+- Applies patches/overrides to endpoints via merge or replace operations
+- Applies patches/overrides to components (schemas, responses, etc.)
 - Collects all referenced schemas via $ref traversal
 - Merges filtered paths into single spec
 - Uses custom metadata for general-purpose SDK
@@ -16,9 +18,10 @@ Features:
 
 import sys
 from pathlib import Path
-from typing import Dict, Set, List, Tuple, Any
+from typing import Dict, Set, List, Tuple, Any, Optional
 import yaml
 import re
+from copy import deepcopy
 
 
 def load_yaml_file(file_path: Path) -> Dict[str, Any]:
@@ -33,30 +36,102 @@ def save_yaml_file(file_path: Path, data: Dict[str, Any]) -> None:
         yaml.dump(data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
 
 
-def load_endpoint_filter(filter_file: Path) -> Set[Tuple[str, str]]:
+def deep_merge(base: Dict[str, Any], updates: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Load endpoint filter from sdk-endpoints.txt.
-    Returns set of (METHOD, PATH) tuples.
+    Deep merge two dictionaries. Updates are merged into base.
+    Lists in updates replace lists in base (no concatenation).
     """
+    result = deepcopy(base)
+
+    for key, value in updates.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            # Recursively merge nested dictionaries
+            result[key] = deep_merge(result[key], value)
+        else:
+            # Replace the value (includes lists, primitives, and new keys)
+            result[key] = deepcopy(value)
+
+    return result
+
+
+def apply_patches(operation: Dict[str, Any], patches: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Apply patches to an OpenAPI operation definition.
+
+    Supports two patch types:
+    - merge: Deep merge patches into the operation
+    - replace: Completely replace specific sections
+
+    Args:
+        operation: The original operation definition
+        patches: Dictionary with 'merge' and/or 'replace' keys
+
+    Returns:
+        The patched operation definition
+    """
+    result = deepcopy(operation)
+
+    # Apply merge patches first (deep merge)
+    if 'merge' in patches and isinstance(patches['merge'], dict):
+        result = deep_merge(result, patches['merge'])
+
+    # Apply replace patches (complete replacement)
+    if 'replace' in patches and isinstance(patches['replace'], dict):
+        for key, value in patches['replace'].items():
+            result[key] = deepcopy(value)
+
+    return result
+
+
+def load_endpoint_config(config_file: Path) -> Tuple[Set[Tuple[str, str]], Dict[Tuple[str, str], Dict[str, Any]], Dict[str, Dict[str, Dict[str, Any]]]]:
+    """
+    Load endpoint configuration from sdk-endpoint-filters.yaml.
+
+    Returns:
+        Tuple of (endpoints_set, endpoint_patches_dict, component_patches_dict)
+        - endpoints_set: Set of (METHOD, PATH) tuples to include
+        - endpoint_patches_dict: Dict mapping (METHOD, PATH) to endpoint patch configuration
+        - component_patches_dict: Dict mapping component_type -> component_name -> patches
+    """
+    config = load_yaml_file(config_file)
     endpoints = set()
-    with open(filter_file, 'r', encoding='utf-8') as f:
-        for line in f:
-            line = line.strip()
-            # Skip comments and empty lines
-            if not line or line.startswith('#'):
+    endpoint_patches_map = {}
+    component_patches = {}
+
+    # Load endpoints
+    if 'endpoints' not in config or not isinstance(config['endpoints'], list):
+        print(f"⚠️  Warning: No 'endpoints' list found in {config_file.name}")
+    else:
+        for idx, endpoint_config in enumerate(config['endpoints']):
+            if not isinstance(endpoint_config, dict):
+                print(f"⚠️  Skipping invalid endpoint config at index {idx}: not a dictionary")
                 continue
 
-            # Parse METHOD|PATH format
-            if '|' not in line:
-                print(f"⚠️  Skipping invalid line (missing |): {line}")
+            # Extract method and path
+            method = endpoint_config.get('method', '').strip().upper()
+            path = endpoint_config.get('path', '').strip()
+
+            if not method or not path:
+                print(f"⚠️  Skipping endpoint at index {idx}: missing method or path")
                 continue
 
-            method, path = line.split('|', 1)
-            method = method.strip().upper()
-            path = path.strip()
-            endpoints.add((method, path))
+            endpoint_key = (method, path)
+            endpoints.add(endpoint_key)
 
-    return endpoints
+            # Extract patches if present
+            if 'patches' in endpoint_config and isinstance(endpoint_config['patches'], dict):
+                endpoint_patches_map[endpoint_key] = endpoint_config['patches']
+
+    # Load component patches
+    if 'component_patches' in config and isinstance(config['component_patches'], dict):
+        for comp_type, components in config['component_patches'].items():
+            if not isinstance(components, dict):
+                print(f"⚠️  Skipping invalid component_patches for '{comp_type}': not a dictionary")
+                continue
+
+            component_patches[comp_type] = components
+
+    return endpoints, endpoint_patches_map, component_patches
 
 
 def extract_refs(obj: Any, refs: Set[str]) -> None:
@@ -308,11 +383,52 @@ def resolve_external_references(
     return replaced_count, failed_count
 
 
+def apply_component_patches(
+    components: Dict[str, Dict[str, Any]],
+    component_patches: Dict[str, Dict[str, Dict[str, Any]]]
+) -> int:
+    """
+    Apply patches to OpenAPI components (schemas, responses, etc.).
+
+    Args:
+        components: The components dictionary from the merged spec
+        component_patches: Dict mapping component_type -> component_name -> patches
+
+    Returns:
+        Number of components patched
+    """
+    patched_count = 0
+
+    for comp_type, comp_patches in component_patches.items():
+        if comp_type not in components:
+            print(f"   ⚠️  Component type '{comp_type}' not found in spec")
+            continue
+
+        for comp_name, patches in comp_patches.items():
+            if not isinstance(patches, dict):
+                print(f"   ⚠️  Invalid patches for {comp_type}/{comp_name}: not a dictionary")
+                continue
+
+            if comp_name not in components[comp_type]:
+                print(f"   ⚠️  Component '{comp_name}' not found in {comp_type}")
+                continue
+
+            # Apply patches to this component
+            print(f"   🔧 Applying patches to {comp_type}/{comp_name}")
+            components[comp_type][comp_name] = apply_patches(
+                components[comp_type][comp_name],
+                patches
+            )
+            patched_count += 1
+
+    return patched_count
+
+
 def main():
     """Main filter and merge logic."""
     project_root = Path(__file__).parent.parent
     specs_dir = project_root / 'openapi-specs'
-    filter_file = project_root / 'sdk-endpoints.txt'
+    config_file = project_root / 'scripts' / 'references' / 'sdk-endpoint-filters.yaml'
     output_file = project_root / 'openapi-spec.yaml'
 
     # Validate inputs
@@ -320,14 +436,19 @@ def main():
         print(f"❌ Error: openapi-specs/ directory not found at {specs_dir}")
         sys.exit(1)
 
-    if not filter_file.exists():
-        print(f"❌ Error: sdk-endpoints.txt not found at {filter_file}")
+    if not config_file.exists():
+        print(f"❌ Error: sdk-endpoint-filters.yaml not found at {config_file}")
         sys.exit(1)
 
-    # Load endpoint filter
-    print(f"📋 Loading endpoint filter from {filter_file.name}...")
-    endpoint_filter = load_endpoint_filter(filter_file)
+    # Load endpoint configuration
+    print(f"📋 Loading endpoint configuration from {config_file.name}...")
+    endpoint_filter, endpoint_patches_map, component_patches = load_endpoint_config(config_file)
     print(f"   Found {len(endpoint_filter)} endpoints to include")
+    if endpoint_patches_map:
+        print(f"   Found {len(endpoint_patches_map)} endpoint(s) with patches")
+    if component_patches:
+        total_component_patches = sum(len(patches) for patches in component_patches.values())
+        print(f"   Found {total_component_patches} component patch(es)")
 
     # Load all YAML specs
     print(f"\n📂 Scanning {specs_dir.name}/ for OpenAPI specs...")
@@ -433,7 +554,15 @@ def main():
                     if path not in merged_spec['paths']:
                         merged_spec['paths'][path] = {}
 
-                    merged_spec['paths'][path][method] = path_item[method]
+                    # Copy the operation
+                    operation = deepcopy(path_item[method])
+
+                    # Apply endpoint patches if present
+                    if endpoint_key in endpoint_patches_map:
+                        print(f"      🔧 Applying endpoint patches to {method_upper} {path}")
+                        operation = apply_patches(operation, endpoint_patches_map[endpoint_key])
+
+                    merged_spec['paths'][path][method] = operation
 
                     # Also copy path-level parameters if present
                     if 'parameters' in path_item and 'parameters' not in merged_spec['paths'][path]:
@@ -512,6 +641,13 @@ def main():
         print(f"   ✓ Resolved {replaced_count} external reference(s)")
     if failed_count > 0:
         print(f"   ❌ Failed to resolve {failed_count} external reference(s)")
+
+    # Apply component patches
+    if component_patches:
+        print(f"\n🔧 Applying component patches...")
+        patched_count = apply_component_patches(merged_spec['components'], component_patches)
+        if patched_count > 0:
+            print(f"   ✓ Applied patches to {patched_count} component(s)")
 
     # Validate all endpoints from filter were found
     print(f"\n✅ Validation:")
