@@ -3,7 +3,7 @@
 OpenAPI Specification Filter and Merger
 
 Reads multiple OpenAPI YAML files from openapi-specs/ directory,
-filters endpoints based on scripts/sdk-endpoints.yaml configuration,
+filters endpoints based on scripts/references/sdk-endpoint-filters.yaml configuration,
 and merges them into a single openapi-spec.yaml file.
 
 Features:
@@ -85,7 +85,7 @@ def apply_patches(operation: Dict[str, Any], patches: Dict[str, Any]) -> Dict[st
 
 def load_endpoint_config(config_file: Path) -> Tuple[Set[Tuple[str, str]], Dict[Tuple[str, str], Dict[str, Any]], Dict[str, Dict[str, Dict[str, Any]]]]:
     """
-    Load endpoint configuration from sdk-endpoints.yaml.
+    Load endpoint configuration from sdk-endpoint-filters.yaml.
 
     Returns:
         Tuple of (endpoints_set, endpoint_patches_dict, component_patches_dict)
@@ -428,7 +428,7 @@ def main():
     """Main filter and merge logic."""
     project_root = Path(__file__).parent.parent
     specs_dir = project_root / 'openapi-specs'
-    config_file = project_root / 'scripts' / 'sdk-endpoints.yaml'
+    config_file = project_root / 'scripts' / 'references' / 'sdk-endpoint-filters.yaml'
     output_file = project_root / 'openapi-spec.yaml'
 
     # Validate inputs
@@ -437,7 +437,7 @@ def main():
         sys.exit(1)
 
     if not config_file.exists():
-        print(f"❌ Error: sdk-endpoints.yaml not found at {config_file}")
+        print(f"❌ Error: sdk-endpoint-filters.yaml not found at {config_file}")
         sys.exit(1)
 
     # Load endpoint configuration

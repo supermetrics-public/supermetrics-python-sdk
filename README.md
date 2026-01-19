@@ -110,14 +110,14 @@ The SDK client is auto-generated from the Supermetrics OpenAPI specification.
 
 - **Location:** `openapi-specs/` directory (contains `openapi-data.yaml` and `openapi-management.yaml`)
 - **Merged Spec:** `openapi-spec.yaml` (project root) - filtered, patched, and merged from source specs
-- **Configuration:** `scripts/sdk-endpoints.yaml` - controls which endpoints are included and applies patches/customizations
+- **Configuration:** `scripts/references/sdk-endpoint-filters.yaml` - controls which endpoints are included and applies patches/customizations
 - **Documentation:** See [scripts/README.md](./scripts/README.md) for detailed patch system documentation
 
 ### SDK Endpoint Filtering and Customization
 
 The SDK uses a configuration-driven process to create a focused, customizable client from multiple OpenAPI specifications.
 
-#### `scripts/sdk-endpoints.yaml` - Endpoint Configuration
+#### `scripts/references/sdk-endpoint-filters.yaml` - Endpoint Configuration
 
 This YAML file defines which API endpoints to include in the SDK and allows you to apply patches/customizations to both endpoints and shared components.
 
@@ -156,7 +156,7 @@ component_patches:
 This Python script processes multiple OpenAPI specifications, applies customizations, and creates a single `openapi-spec.yaml` file.
 
 **What it does:**
-1. Reads configuration from `scripts/sdk-endpoints.yaml`
+1. Reads configuration from `scripts/references/sdk-endpoint-filters.yaml`
 2. Scans and loads all `.yaml`/`.yml` files from `openapi-specs/` directory
 3. Filters endpoints based on configuration
 4. Applies endpoint patches (merge/replace operations)
@@ -173,7 +173,7 @@ python scripts/filter_openapi_spec.py
 ```
 
 **Configuration:**
-- Input: `openapi-specs/*.yaml` and `scripts/sdk-endpoints.yaml`
+- Input: `openapi-specs/*.yaml` and `scripts/references/sdk-endpoint-filters.yaml`
 - Output: `openapi-spec.yaml`
 
 **Exit codes:**
@@ -187,7 +187,7 @@ python scripts/filter_openapi_spec.py
 **Full Regeneration (recommended):**
 ```bash
 # 1. Update source specs in openapi-specs/ if needed
-# 2. Update scripts/sdk-endpoints.yaml to add/remove endpoints or apply patches
+# 2. Update scripts/references/sdk-endpoint-filters.yaml to add/remove endpoints or apply patches
 # 3. Run filter script to regenerate merged spec
 python scripts/filter_openapi_spec.py
 
@@ -204,11 +204,11 @@ python scripts/filter_openapi_spec.py
 
 - Monthly (or when Supermetrics API changes)
 - After updating source specs in `openapi-specs/`
-- After modifying `scripts/sdk-endpoints.yaml` (adding/removing endpoints or changing patches)
+- After modifying `scripts/references/sdk-endpoint-filters.yaml` (adding/removing endpoints or changing patches)
 
 ### Adding/Removing Endpoints or Applying Patches
 
-1. Edit `scripts/sdk-endpoints.yaml`:
+1. Edit `scripts/references/sdk-endpoint-filters.yaml`:
    - Add/remove endpoints in the `endpoints` list
    - Add/modify patches in `component_patches` or endpoint-level `patches`
 2. Run `python scripts/filter_openapi_spec.py` to regenerate the merged spec

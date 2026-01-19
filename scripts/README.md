@@ -22,7 +22,7 @@ This directory contains utility scripts for managing and generating the SuperPy 
 
 **Script:** `filter_openapi_spec.py`
 
-**Configuration:** `sdk-endpoints.yaml`
+**Configuration:** `references/sdk-endpoint-filters.yaml`
 
 This script filters and merges multiple OpenAPI specification files from the `openapi-specs/` directory into a single, customized `openapi-spec.yaml` file used for SDK generation.
 
@@ -48,7 +48,7 @@ The script allows you to:
 
 ### Configuration File
 
-**Location:** `scripts/sdk-endpoints.yaml`
+**Location:** `scripts/references/sdk-endpoint-filters.yaml`
 
 **Format:**
 
@@ -144,7 +144,7 @@ python3.13 scripts/filter_openapi_spec.py
 **Expected Output:**
 
 ```
-📋 Loading endpoint configuration from sdk-endpoints.yaml...
+📋 Loading endpoint configuration from sdk-endpoint-filters.yaml...
    Found 8 endpoints to include
    Found 1 component patch(es)
 
@@ -177,7 +177,7 @@ python3.13 scripts/filter_openapi_spec.py
 
 ### How It Works
 
-1. **Load Configuration**: Reads `scripts/sdk-endpoints.yaml` to get the list of endpoints, endpoint patches, and component patches
+1. **Load Configuration**: Reads `scripts/references/sdk-endpoint-filters.yaml` to get the list of endpoints, endpoint patches, and component patches
 2. **Scan Specs**: Discovers all `.yaml` and `.yml` files in `openapi-specs/`
 3. **Filter & Patch Endpoints**: For each spec file:
    - Matches endpoints against the configuration
@@ -642,13 +642,13 @@ source .venv/bin/activate
 pip install PyYAML
 ```
 
-#### Error: `sdk-endpoints.yaml not found`
+#### Error: `sdk-endpoint-filters.yaml not found`
 
-**Solution:** Ensure you're running the script from the project root and the file exists at `scripts/sdk-endpoints.yaml`
+**Solution:** Ensure you're running the script from the project root and the file exists at `scripts/references/sdk-endpoint-filters.yaml`
 
 #### Warning: `endpoint(s) from filter not found in specs`
 
-**Cause:** An endpoint is listed in `sdk-endpoints.yaml` but doesn't exist in any OpenAPI spec file
+**Cause:** An endpoint is listed in `sdk-endpoint-filters.yaml` but doesn't exist in any OpenAPI spec file
 
 **Solution:**
 - Verify the method and path are correct
