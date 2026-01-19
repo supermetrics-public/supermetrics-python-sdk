@@ -1,6 +1,6 @@
 # Project metadata and configuration
 [project]
-name = "supermetrics"
+name = "SuperPy-SDK"
 dynamic = ["version"]
 description = "Official Python client for Supermetrics"
 readme = "README.md"
