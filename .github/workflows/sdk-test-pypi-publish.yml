@@ -21,7 +21,7 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v7
         with:
-          name: supermetrics-build-artifact
+          name: sdk-build-artifact
           path: dist
 
       - name: Install uv
