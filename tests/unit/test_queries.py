@@ -392,8 +392,12 @@ class TestQueriesResource:
 
         original_get_data = queries_module.get_data.sync
 
-        # Create a GetDataResponse400 instance
-        error_response = GetDataResponse400()
+        # Create a GetDataResponse400 instance with required fields
+        error_response = GetDataResponse400(
+            type_="about:blank",
+            title="Bad Request",
+            status=400
+        )
         queries_module.get_data.sync = MagicMock(return_value=error_response)
 
         # Verify ValidationError is raised
