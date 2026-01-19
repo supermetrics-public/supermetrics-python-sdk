@@ -1,0 +1,109 @@
+# SDK Endpoints Configuration
+# This file defines which endpoints to include in the generated SDK
+# and allows applying patches/overrides to customize the OpenAPI spec.
+
+# Format:
+# endpoints:
+#   - method: HTTP_METHOD (GET, POST, PUT, PATCH, DELETE, etc.)
+#     path: /api/path
+#     patches:  # Optional - customize the endpoint definition
+#       merge:  # Deep merge these properties with the existing operation
+#         description: "Custom description"
+#         summary: "Custom summary"
+#         tags:
+#           - "Custom Tag"
+#       replace:  # Completely replace these sections
+#         responses:
+#           '200':
+#             description: "Success"
+
+endpoints:
+  # Data Source Logins
+  - method: GET
+    path: /ds/logins
+
+  - method: GET
+    path: /ds/login/{login_id}
+
+  # Data Source Login Links
+  - method: GET
+    path: /ds/login/links
+
+  - method: POST
+    path: /ds/login/link
+
+  - method: GET
+    path: /ds/login/link/{link_id}
+
+  - method: PUT
+    path: /ds/login/link/{link_id}/close
+
+  # Accounts
+  - method: GET
+    path: /query/accounts
+
+  # Queries
+  - method: GET
+    path: /query/data/json
+
+  # ==========================================
+  # EXAMPLE: Endpoint with comprehensive patches
+  # ==========================================
+  # - method: GET
+  #   path: /example/endpoint
+  #   patches:
+  #     merge:
+  #       # These properties are deep-merged with the existing operation
+  #       description: "Enhanced description for this endpoint"
+  #       summary: "Get example data"
+  #       tags:
+  #         - "Examples"
+  #       # Add or modify parameters
+  #       parameters:
+  #         - name: include_metadata
+  #           in: query
+  #           description: "Include metadata in response"
+  #           required: false
+  #           schema:
+  #             type: boolean
+  #             default: false
+  #     replace:
+  #       # These sections completely replace the existing ones
+  #       responses:
+  #         '200':
+  #           description: "Successful response"
+  #           content:
+  #             application/json:
+  #               schema:
+  #                 type: object
+  #                 properties:
+  #                   data:
+  #                     type: array
+  #                     items:
+  #                       type: string
+  #                   metadata:
+  #                     type: object
+  #         '400':
+  #           description: "Bad request"
+  #         '401':
+  #           description: "Unauthorized"
+
+# ==========================================
+# COMPONENT PATCHES
+# ==========================================
+# Apply patches to shared components (schemas, responses, parameters, etc.)
+# This is more efficient than inlining entire schemas in endpoint patches
+
+component_patches:
+  # Schemas patches
+  schemas:
+    # Make cache_time nullable in DataResponse schema
+    DataResponse:
+      merge:
+        properties:
+          meta:
+            properties:
+              result:
+                properties:
+                  cache_time:
+                    nullable: true
