@@ -83,7 +83,15 @@ class TestAcceptanceCriteria2:
         assert "supermetrics" in project["name"].lower(), \
             "project.name must contain 'supermetrics'"
 
-        assert project.get("version") == "0.1.0", "project.version must be 0.1.0"
+        # Version can be static or dynamic (via versioningit)
+        dynamic = project.get("dynamic", [])
+        if "version" in dynamic:
+            # Version is dynamic, verify versioningit is configured
+            hatch_version = pyproject_data.get("tool", {}).get("hatch", {}).get("version", {})
+            assert hatch_version.get("source") == "versioningit", \
+                "Dynamic version must use versioningit as source"
+        else:
+            assert project.get("version") == "0.1.0", "project.version must be 0.1.0"
 
         assert "description" in project, "project.description must be defined"
         assert len(project["description"]) > 0, "project.description must not be empty"
