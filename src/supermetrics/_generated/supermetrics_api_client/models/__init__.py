@@ -1,4 +1,4 @@
-"""Contains all the data models used in inputs/outputs"""
+""" Contains all the data models used in inputs/outputs """
 
 from .close_login_link_response_401 import CloseLoginLinkResponse401
 from .close_login_link_response_404 import CloseLoginLinkResponse404

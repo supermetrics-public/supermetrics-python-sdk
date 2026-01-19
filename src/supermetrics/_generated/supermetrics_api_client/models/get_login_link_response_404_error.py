@@ -1,6 +1,5 @@
 from enum import Enum
 
-
 class GetLoginLinkResponse404Error(str, Enum):
     LINK_NOT_FOUND = "LINK_NOT_FOUND"
 

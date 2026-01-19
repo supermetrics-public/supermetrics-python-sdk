@@ -1,68 +1,82 @@
 from http import HTTPStatus
-from typing import Any
+from typing import Any, cast
 
 import httpx
 
-from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...types import Response, UNSET
+from ... import errors
+
 from ...models.close_login_link_response_401 import CloseLoginLinkResponse401
 from ...models.close_login_link_response_404 import CloseLoginLinkResponse404
 from ...models.close_login_link_response_422 import CloseLoginLinkResponse422
 from ...models.close_login_link_response_429 import CloseLoginLinkResponse429
 from ...models.close_login_link_response_500 import CloseLoginLinkResponse500
 from ...models.login_link_response import LoginLinkResponse
-from ...types import Response
+from typing import cast
+
 
 
 def _get_kwargs(
     link_id: str,
+
 ) -> dict[str, Any]:
+    
+
+    
+
+    
+
     _kwargs: dict[str, Any] = {
         "method": "put",
-        "url": f"/ds/login/link/{link_id}/close",
+        "url": "/ds/login/link/{link_id}/close".format(link_id=link_id,),
     }
+
 
     return _kwargs
 
 
-def _parse_response(
-    *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> (
-    CloseLoginLinkResponse401
-    | CloseLoginLinkResponse404
-    | CloseLoginLinkResponse422
-    | CloseLoginLinkResponse429
-    | CloseLoginLinkResponse500
-    | LoginLinkResponse
-    | None
-):
+
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> CloseLoginLinkResponse401 | CloseLoginLinkResponse404 | CloseLoginLinkResponse422 | CloseLoginLinkResponse429 | CloseLoginLinkResponse500 | LoginLinkResponse | None:
     if response.status_code == 200:
         response_200 = LoginLinkResponse.from_dict(response.json())
+
+
 
         return response_200
 
     if response.status_code == 401:
         response_401 = CloseLoginLinkResponse401.from_dict(response.json())
 
+
+
         return response_401
 
     if response.status_code == 404:
         response_404 = CloseLoginLinkResponse404.from_dict(response.json())
+
+
 
         return response_404
 
     if response.status_code == 422:
         response_422 = CloseLoginLinkResponse422.from_dict(response.json())
 
+
+
         return response_422
 
     if response.status_code == 429:
         response_429 = CloseLoginLinkResponse429.from_dict(response.json())
 
+
+
         return response_429
 
     if response.status_code == 500:
         response_500 = CloseLoginLinkResponse500.from_dict(response.json())
+
+
 
         return response_500
 
@@ -72,16 +86,7 @@ def _parse_response(
         return None
 
 
-def _build_response(
-    *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[
-    CloseLoginLinkResponse401
-    | CloseLoginLinkResponse404
-    | CloseLoginLinkResponse422
-    | CloseLoginLinkResponse429
-    | CloseLoginLinkResponse500
-    | LoginLinkResponse
-]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[CloseLoginLinkResponse401 | CloseLoginLinkResponse404 | CloseLoginLinkResponse422 | CloseLoginLinkResponse429 | CloseLoginLinkResponse500 | LoginLinkResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -94,15 +99,9 @@ def sync_detailed(
     link_id: str,
     *,
     client: AuthenticatedClient,
-) -> Response[
-    CloseLoginLinkResponse401
-    | CloseLoginLinkResponse404
-    | CloseLoginLinkResponse422
-    | CloseLoginLinkResponse429
-    | CloseLoginLinkResponse500
-    | LoginLinkResponse
-]:
-    """Close login link
+
+) -> Response[CloseLoginLinkResponse401 | CloseLoginLinkResponse404 | CloseLoginLinkResponse422 | CloseLoginLinkResponse429 | CloseLoginLinkResponse500 | LoginLinkResponse]:
+    """ Close login link
 
      Close a login link. Link will stop accepting new requests once closed, but closing will not affect
     already started authentication attempts.
@@ -116,10 +115,12 @@ def sync_detailed(
 
     Returns:
         Response[CloseLoginLinkResponse401 | CloseLoginLinkResponse404 | CloseLoginLinkResponse422 | CloseLoginLinkResponse429 | CloseLoginLinkResponse500 | LoginLinkResponse]
-    """
+     """
+
 
     kwargs = _get_kwargs(
         link_id=link_id,
+
     )
 
     response = client.get_httpx_client().request(
@@ -128,21 +129,13 @@ def sync_detailed(
 
     return _build_response(client=client, response=response)
 
-
 def sync(
     link_id: str,
     *,
     client: AuthenticatedClient,
-) -> (
-    CloseLoginLinkResponse401
-    | CloseLoginLinkResponse404
-    | CloseLoginLinkResponse422
-    | CloseLoginLinkResponse429
-    | CloseLoginLinkResponse500
-    | LoginLinkResponse
-    | None
-):
-    """Close login link
+
+) -> CloseLoginLinkResponse401 | CloseLoginLinkResponse404 | CloseLoginLinkResponse422 | CloseLoginLinkResponse429 | CloseLoginLinkResponse500 | LoginLinkResponse | None:
+    """ Close login link
 
      Close a login link. Link will stop accepting new requests once closed, but closing will not affect
     already started authentication attempts.
@@ -156,27 +149,22 @@ def sync(
 
     Returns:
         CloseLoginLinkResponse401 | CloseLoginLinkResponse404 | CloseLoginLinkResponse422 | CloseLoginLinkResponse429 | CloseLoginLinkResponse500 | LoginLinkResponse
-    """
+     """
+
 
     return sync_detailed(
         link_id=link_id,
-        client=client,
-    ).parsed
+client=client,
 
+    ).parsed
 
 async def asyncio_detailed(
     link_id: str,
     *,
     client: AuthenticatedClient,
-) -> Response[
-    CloseLoginLinkResponse401
-    | CloseLoginLinkResponse404
-    | CloseLoginLinkResponse422
-    | CloseLoginLinkResponse429
-    | CloseLoginLinkResponse500
-    | LoginLinkResponse
-]:
-    """Close login link
+
+) -> Response[CloseLoginLinkResponse401 | CloseLoginLinkResponse404 | CloseLoginLinkResponse422 | CloseLoginLinkResponse429 | CloseLoginLinkResponse500 | LoginLinkResponse]:
+    """ Close login link
 
      Close a login link. Link will stop accepting new requests once closed, but closing will not affect
     already started authentication attempts.
@@ -190,31 +178,27 @@ async def asyncio_detailed(
 
     Returns:
         Response[CloseLoginLinkResponse401 | CloseLoginLinkResponse404 | CloseLoginLinkResponse422 | CloseLoginLinkResponse429 | CloseLoginLinkResponse500 | LoginLinkResponse]
-    """
+     """
+
 
     kwargs = _get_kwargs(
         link_id=link_id,
+
     )
 
-    response = await client.get_async_httpx_client().request(**kwargs)
+    response = await client.get_async_httpx_client().request(
+        **kwargs
+    )
 
     return _build_response(client=client, response=response)
-
 
 async def asyncio(
     link_id: str,
     *,
     client: AuthenticatedClient,
-) -> (
-    CloseLoginLinkResponse401
-    | CloseLoginLinkResponse404
-    | CloseLoginLinkResponse422
-    | CloseLoginLinkResponse429
-    | CloseLoginLinkResponse500
-    | LoginLinkResponse
-    | None
-):
-    """Close login link
+
+) -> CloseLoginLinkResponse401 | CloseLoginLinkResponse404 | CloseLoginLinkResponse422 | CloseLoginLinkResponse429 | CloseLoginLinkResponse500 | LoginLinkResponse | None:
+    """ Close login link
 
      Close a login link. Link will stop accepting new requests once closed, but closing will not affect
     already started authentication attempts.
@@ -228,11 +212,11 @@ async def asyncio(
 
     Returns:
         CloseLoginLinkResponse401 | CloseLoginLinkResponse404 | CloseLoginLinkResponse422 | CloseLoginLinkResponse429 | CloseLoginLinkResponse500 | LoginLinkResponse
-    """
+     """
 
-    return (
-        await asyncio_detailed(
-            link_id=link_id,
-            client=client,
-        )
-    ).parsed
+
+    return (await asyncio_detailed(
+        link_id=link_id,
+client=client,
+
+    )).parsed

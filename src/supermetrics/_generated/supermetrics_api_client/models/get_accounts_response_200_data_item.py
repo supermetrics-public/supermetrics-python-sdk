@@ -1,32 +1,39 @@
 from __future__ import annotations
 
-import datetime
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import Any, TypeVar, BinaryIO, TextIO, TYPE_CHECKING, Generator
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 from ..types import UNSET, Unset
 
+from ..types import UNSET, Unset
+from dateutil.parser import isoparse
+from typing import cast
+import datetime
+
 if TYPE_CHECKING:
-    from ..models.get_accounts_response_200_data_item_accounts_item import GetAccountsResponse200DataItemAccountsItem
+  from ..models.get_accounts_response_200_data_item_accounts_item import GetAccountsResponse200DataItemAccountsItem
+
+
+
 
 
 T = TypeVar("T", bound="GetAccountsResponse200DataItem")
 
 
+
 @_attrs_define
 class GetAccountsResponse200DataItem:
-    """
-    Attributes:
-        ds_user (str | Unset): Data source login username
-        display_name (str | Unset): Display name for login
-        cache_time (datetime.datetime | None | Unset): ISO 8601 datetime for the last time the login data was fetched
-            and cached
-        accounts (list[GetAccountsResponse200DataItemAccountsItem] | Unset):
-    """
+    """ 
+        Attributes:
+            ds_user (str | Unset): Data source login username
+            display_name (str | Unset): Display name for login
+            cache_time (datetime.datetime | None | Unset): ISO 8601 datetime for the last time the login data was fetched
+                and cached
+            accounts (list[GetAccountsResponse200DataItemAccountsItem] | Unset):
+     """
 
     ds_user: str | Unset = UNSET
     display_name: str | Unset = UNSET
@@ -34,7 +41,12 @@ class GetAccountsResponse200DataItem:
     accounts: list[GetAccountsResponse200DataItemAccountsItem] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
+
+
+
+
     def to_dict(self) -> dict[str, Any]:
+        from ..models.get_accounts_response_200_data_item_accounts_item import GetAccountsResponse200DataItemAccountsItem
         ds_user = self.ds_user
 
         display_name = self.display_name
@@ -54,9 +66,13 @@ class GetAccountsResponse200DataItem:
                 accounts_item = accounts_item_data.to_dict()
                 accounts.append(accounts_item)
 
+
+
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({})
+        field_dict.update({
+        })
         if ds_user is not UNSET:
             field_dict["ds_user"] = ds_user
         if display_name is not UNSET:
@@ -68,12 +84,11 @@ class GetAccountsResponse200DataItem:
 
         return field_dict
 
+
+
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.get_accounts_response_200_data_item_accounts_item import (
-            GetAccountsResponse200DataItemAccountsItem,
-        )
-
+        from ..models.get_accounts_response_200_data_item_accounts_item import GetAccountsResponse200DataItemAccountsItem
         d = dict(src_dict)
         ds_user = d.pop("ds_user", UNSET)
 
@@ -89,12 +104,15 @@ class GetAccountsResponse200DataItem:
                     raise TypeError()
                 cache_time_type_0 = isoparse(data)
 
+
+
                 return cache_time_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(datetime.datetime | None | Unset, data)
 
         cache_time = _parse_cache_time(d.pop("cache_time", UNSET))
+
 
         _accounts = d.pop("accounts", UNSET)
         accounts: list[GetAccountsResponse200DataItemAccountsItem] | Unset = UNSET
@@ -103,7 +121,10 @@ class GetAccountsResponse200DataItem:
             for accounts_item_data in _accounts:
                 accounts_item = GetAccountsResponse200DataItemAccountsItem.from_dict(accounts_item_data)
 
+
+
                 accounts.append(accounts_item)
+
 
         get_accounts_response_200_data_item = cls(
             ds_user=ds_user,
@@ -111,6 +132,7 @@ class GetAccountsResponse200DataItem:
             cache_time=cache_time,
             accounts=accounts,
         )
+
 
         get_accounts_response_200_data_item.additional_properties = d
         return get_accounts_response_200_data_item

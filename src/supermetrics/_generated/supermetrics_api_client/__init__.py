@@ -1,5 +1,5 @@
-"""A client library for accessing Supermetrics API"""
 
+""" A client library for accessing Supermetrics API """
 from .client import AuthenticatedClient, Client
 
 __all__ = (

@@ -1,42 +1,51 @@
 from __future__ import annotations
 
-import datetime
 from collections.abc import Mapping
-from typing import Any, TypeVar, cast
+from typing import Any, TypeVar, BinaryIO, TextIO, TYPE_CHECKING, Generator
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
+
+from ..types import UNSET, Unset
 
 from ..models.login_link_status_code import LoginLinkStatusCode
 from ..types import UNSET, Unset
+from dateutil.parser import isoparse
+from typing import cast
+import datetime
+
+
+
+
+
 
 T = TypeVar("T", bound="LoginLink")
 
 
+
 @_attrs_define
 class LoginLink:
-    """
-    Attributes:
-        link_id (str | Unset): Supermetrics login link ID
-        status_code (LoginLinkStatusCode | Unset): Current link status
-        description (str | Unset): Internal link description. Not shown during authentication attempt.
-        ds_id (str | Unset): Data source ID
-        ds_name (str | Unset): Data source name
-        require_username (str | Unset): Data source username that must be used in authentication attempt
-        redirect_url (str | Unset): Custom URL to redirect to after successful authentication, if any
-        redirect_verifier (str | Unset): Internal verifier string that is passed to redirect_url
-        user_id (str | Unset): Supermetrics user ID of the user who will be marked as the primary owner of the login
-            credentials
-        user_email (str | Unset): Supermetrics user email
-        login_url (str | Unset): Full URL to initiate an authentication attempt. Can be accessed multiple times while
-            link is open.
-        created_time (datetime.datetime | Unset): ISO 8601 datetime for when login link was created
-        expiry_time (datetime.datetime | Unset): ISO 8601 datetime for when login link will expire
-        login_id (None | str | Unset): Supermetrics login ID for a successful authentication
-        login_time (datetime.datetime | None | Unset): ISO 8601 datetime for when authentication occurred
-        login_username (None | str | Unset): Username used to authenticate to data source
-    """
+    """ 
+        Attributes:
+            link_id (str | Unset): Supermetrics login link ID
+            status_code (LoginLinkStatusCode | Unset): Current link status
+            description (str | Unset): Internal link description. Not shown during authentication attempt.
+            ds_id (str | Unset): Data source ID
+            ds_name (str | Unset): Data source name
+            require_username (str | Unset): Data source username that must be used in authentication attempt
+            redirect_url (str | Unset): Custom URL to redirect to after successful authentication, if any
+            redirect_verifier (str | Unset): Internal verifier string that is passed to redirect_url
+            user_id (str | Unset): Supermetrics user ID of the user who will be marked as the primary owner of the login
+                credentials
+            user_email (str | Unset): Supermetrics user email
+            login_url (str | Unset): Full URL to initiate an authentication attempt. Can be accessed multiple times while
+                link is open.
+            created_time (datetime.datetime | Unset): ISO 8601 datetime for when login link was created
+            expiry_time (datetime.datetime | Unset): ISO 8601 datetime for when login link will expire
+            login_id (None | str | Unset): Supermetrics login ID for a successful authentication
+            login_time (datetime.datetime | None | Unset): ISO 8601 datetime for when authentication occurred
+            login_username (None | str | Unset): Username used to authenticate to data source
+     """
 
     link_id: str | Unset = UNSET
     status_code: LoginLinkStatusCode | Unset = UNSET
@@ -56,12 +65,17 @@ class LoginLink:
     login_username: None | str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
+
+
+
+
     def to_dict(self) -> dict[str, Any]:
         link_id = self.link_id
 
         status_code: str | Unset = UNSET
         if not isinstance(self.status_code, Unset):
             status_code = self.status_code.value
+
 
         description = self.description
 
@@ -109,9 +123,11 @@ class LoginLink:
         else:
             login_username = self.login_username
 
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({})
+        field_dict.update({
+        })
         if link_id is not UNSET:
             field_dict["link_id"] = link_id
         if status_code is not UNSET:
@@ -147,6 +163,8 @@ class LoginLink:
 
         return field_dict
 
+
+
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
@@ -154,10 +172,13 @@ class LoginLink:
 
         _status_code = d.pop("status_code", UNSET)
         status_code: LoginLinkStatusCode | Unset
-        if isinstance(_status_code, Unset):
+        if isinstance(_status_code,  Unset):
             status_code = UNSET
         else:
             status_code = LoginLinkStatusCode(_status_code)
+
+
+
 
         description = d.pop("description", UNSET)
 
@@ -179,17 +200,23 @@ class LoginLink:
 
         _created_time = d.pop("created_time", UNSET)
         created_time: datetime.datetime | Unset
-        if isinstance(_created_time, Unset):
+        if isinstance(_created_time,  Unset):
             created_time = UNSET
         else:
             created_time = isoparse(_created_time)
 
+
+
+
         _expiry_time = d.pop("expiry_time", UNSET)
         expiry_time: datetime.datetime | Unset
-        if isinstance(_expiry_time, Unset):
+        if isinstance(_expiry_time,  Unset):
             expiry_time = UNSET
         else:
             expiry_time = isoparse(_expiry_time)
+
+
+
 
         def _parse_login_id(data: object) -> None | str | Unset:
             if data is None:
@@ -199,6 +226,7 @@ class LoginLink:
             return cast(None | str | Unset, data)
 
         login_id = _parse_login_id(d.pop("login_id", UNSET))
+
 
         def _parse_login_time(data: object) -> datetime.datetime | None | Unset:
             if data is None:
@@ -210,12 +238,15 @@ class LoginLink:
                     raise TypeError()
                 login_time_type_0 = isoparse(data)
 
+
+
                 return login_time_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(datetime.datetime | None | Unset, data)
 
         login_time = _parse_login_time(d.pop("login_time", UNSET))
+
 
         def _parse_login_username(data: object) -> None | str | Unset:
             if data is None:
@@ -225,6 +256,7 @@ class LoginLink:
             return cast(None | str | Unset, data)
 
         login_username = _parse_login_username(d.pop("login_username", UNSET))
+
 
         login_link = cls(
             link_id=link_id,
@@ -244,6 +276,7 @@ class LoginLink:
             login_time=login_time,
             login_username=login_username,
         )
+
 
         login_link.additional_properties = d
         return login_link
