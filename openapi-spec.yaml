@@ -834,6 +834,7 @@ components:
                   format: date-time
                   maxLength: 30
                   description: ISO 8601 datetime for the most recent cached data
+                  nullable: true
             paginate:
               type: object
               properties:
