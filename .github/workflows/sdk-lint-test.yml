@@ -1,4 +1,4 @@
-name: Lint and Test SuperPy-SDK
+name: Lint and test sdk
 
 on:
   push:

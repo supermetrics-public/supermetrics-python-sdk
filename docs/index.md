@@ -1,10 +1,10 @@
-# SuperPy-SDK Documentation
+# Supermetrics Python SDK Documentation
 
-Welcome to the official documentation for the SuperPy-SDK - the Python client for Supermetrics API.
+Welcome to the official documentation for the Supermetrics Python SDK – the Python client for Supermetrics API.
 
-## What is SuperPy-SDK?
+## What is the Supermetrics Python SDK?
 
-SuperPy-SDK is a type-safe Python client that provides seamless integration with the Supermetrics API. It features:
+The Supermetrics Python SDK is a type-safe Python client that provides seamless integration with the Supermetrics API. It features:
 
 - Type-safe Python client generated from OpenAPI specification
 - Dual sync/async support via separate Client classes

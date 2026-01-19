@@ -1,6 +1,6 @@
 # Error Handling Guide
 
-Comprehensive guide to handling errors in the SuperPy-SDK.
+Comprehensive guide to handling errors in the supermetrics Python SDK.
 
 ## Table of Contents
 

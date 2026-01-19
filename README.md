@@ -23,7 +23,7 @@ Official Python client for Supermetrics
 ### Installation
 
 ```bash
-pip install supermetrics-sdk
+pip install supermetrics
 ```
 
 ### Basic Usage

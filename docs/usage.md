@@ -1,6 +1,6 @@
 # Usage
 
-This page provides a quick overview of how to use the SuperPy-SDK. For detailed documentation, see the [User Guide](user-guide.md).
+This page provides a quick overview of how to use the Supermetrics Python SDK. For detailed documentation, see the [User Guide](user-guide.md).
 
 ## Basic Usage
 

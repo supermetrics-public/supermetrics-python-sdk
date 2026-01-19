@@ -1,6 +1,6 @@
-# SuperPy-SDK Setup Guide
+# Supermetrics Python SDK Setup Guide
 
-This guide explains how to set up a test project to use the SuperPy-SDK.
+This guide explains how to set up a test project to use the Supermetrics Python SDK.
 
 ## Directory Structure
 
@@ -8,7 +8,7 @@ Your workspace should look like this:
 
 ```
 workspace/
-├── SuperPy-SDK/              # SDK repository (this repo)
+├── supermetrics-python-sdk/  # SDK repository (this repo)
 │   ├── src/
 │   ├── examples/
 │   │   └── complete_flow.py
@@ -25,7 +25,7 @@ workspace/
 
 ### 1. Clone the SDK Repository
 
-Clone the SuperPy-SDK repository in your workspace
+Clone the supermetrics-python-sdk repository in your workspace
 
 ### 2. Create Your Test Project
 
@@ -50,14 +50,14 @@ source .venv/bin/activate
 Install the SDK in editable mode and required packages:
 
 ```bash
-pip install -e ../SuperPy-SDK
+pip install -e ../supermetrics-python-sdk
 pip install python-dotenv
 ```
 
 ### 5. Copy the Example File
 
 ```bash
-cp ../SuperPy-SDK/examples/complete_flow.py complete_flow.py
+cp ../supermetrics-python-sdk/examples/complete_flow.py complete_flow.py
 ```
 
 ### 6. Run the Example

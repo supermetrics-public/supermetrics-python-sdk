@@ -1,4 +1,4 @@
-name: Publish SuperPy-SDK to Test PyPI
+name: Publish sdk to test PyPI
 
 on:
   workflow_call:
@@ -21,7 +21,7 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v7
         with:
-          name: superPySdk-build-artifact
+          name: supermetrics-build-artifact
           path: dist
 
       - name: Install uv
