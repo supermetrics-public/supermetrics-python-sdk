@@ -1,4 +1,4 @@
-name: Release Pipeline for SuperPy-SDK
+name: Release pipeline for sdk
 
 on:
   push:
@@ -7,13 +7,13 @@ on:
 
 jobs:
   build:
-    uses: ./.github/workflows/superpy-sdk-build.yml
+    uses: ./.github/workflows/supermetrics-build.yml
     with:
       python-version: "3.11"
 
   test-publish:
     needs: build
-    uses: ./.github/workflows/superpy-sdk-test-pypi-publish.yml
+    uses: ./.github/workflows/supermetrics-test-pypi-publish.yml
     with:
       python-version: "3.11"
     permissions:
@@ -23,7 +23,7 @@ jobs:
 
   prod-publish:
     needs: test-publish
-    uses: ./.github/workflows/superpy-sdk-pypi-publish.yml
+    uses: ./.github/workflows/supermetrics-pypi-publish.yml
     with:
       python-version: "3.11"
     permissions:

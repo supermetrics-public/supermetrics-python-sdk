@@ -1,6 +1,6 @@
 # API Reference
 
-Complete reference for the SuperPy-SDK public API.
+Complete reference for the supermetrics Python SDK public API.
 
 ## Client Classes
 

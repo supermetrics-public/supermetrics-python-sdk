@@ -1,6 +1,6 @@
 # Project metadata and configuration
 [project]
-name = "SuperPy-SDK"
+name = "supermetrics"
 dynamic = ["version"]
 description = "Official Python client for Supermetrics"
 readme = "README.md"
@@ -45,9 +45,9 @@ dev = [
 ]
 
 [project.urls]
-homepage = "https://github.com/Supermetrics/SuperPy-SDK"
-bugs = "https://github.com/Supermetrics/SuperPy-SDK/issues"
-changelog = "https://github.com/Supermetrics/SuperPy-SDK/blob/main/HISTORY.md"
+homepage = "https://github.com/supermetrics-public/supermetrics-python-sdk"
+bugs = "https://github.com/supermetrics-public/supermetrics-python-sdk/issues"
+changelog = "https://github.com/supermetrics-public/supermetrics-python-sdk/blob/main/HISTORY.md"
 
 # Build system configuration
 [build-system]

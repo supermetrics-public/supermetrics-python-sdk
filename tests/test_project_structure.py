@@ -78,10 +78,10 @@ class TestAcceptanceCriteria2:
         assert "project" in pyproject_data, "pyproject.toml must have [project] section"
         project = pyproject_data["project"]
 
-        # Verify name (can be 'superpy-sdk' or 'supermetrics')
+        # Verify name is 'supermetrics'
         assert "name" in project, "project.name must be defined"
-        assert "superpy" in project["name"].lower() or "supermetrics" in project["name"].lower(), \
-            "project.name must contain 'superpy' or 'supermetrics'"
+        assert project["name"].lower() == "supermetrics", \
+            "project.name must be 'supermetrics'"
 
         # Version can be static or dynamic (via versioningit)
         dynamic = project.get("dynamic", [])

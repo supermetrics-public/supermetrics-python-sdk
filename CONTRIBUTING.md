@@ -8,7 +8,7 @@ You can contribute in many ways:
 
 ### Report Bugs
 
-Report bugs at https://github.com/Supermetrics/SuperPy-SDK/issues.
+Report bugs at https://github.com/supermetrics-public/supermetrics-python-sdk/issues.
 
 If you are reporting a bug, please include:
 
@@ -30,7 +30,7 @@ Supermetrics client for Python could always use more documentation, whether as p
 
 ### Submit Feedback
 
-The best way to send feedback is to file an issue at https://github.com/Supermetrics/supermetrics/issues.
+The best way to send feedback is to file an issue at https://github.com/supermetrics-public/supermetrics-python-sdk/issues.
 
 If you are proposing a feature:
 
@@ -40,19 +40,19 @@ If you are proposing a feature:
 
 ## Get Started!
 
-Ready to contribute? Here's how to set up `SuperPy-SDK` for local development.
+Ready to contribute? Here's how to set up `supermetrics-python-sdk` for local development.
 
-1. Fork the `SuperPy-SDK` repo on GitHub.
+1. Fork the `supermetrics-python-sdk` repo on GitHub.
 2. Clone your fork locally:
 
    ```sh
-   git clone git@github.com:your_name_here/SuperPy-SDK.git
+   git clone git@github.com:your_name_here/supermetrics-python-sdk.git
    ```
 
 3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development:
 
    ```sh
-   cd SuperPy-SDK
+   cd supermetrics-python-sdk
    uv venv
    source .venv/bin/activate
    uv pip install -e ".[dev]
@@ -109,7 +109,7 @@ The release process is fully automated via GitHub Actions. To deploy a new versi
 2. The release pipeline automatically triggers when the tag is pushed:
    - **Build**: Package is built using `uv build`
    - **TestPyPI**: Build artifacts are published to TestPyPI for verification
-   - **PyPI**: If TestPyPI publish succeeds, package is published to production PyPI
+   - **PyPI**: If TestPyPI publish succeeds, the package is published to production PyPI
 
 All publishing uses OIDC trusted publishing, so no manual token management is required.
 

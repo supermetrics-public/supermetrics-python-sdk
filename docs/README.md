@@ -1,6 +1,6 @@
-# SuperPy-SDK Documentation
+# Supermetrics Python SDK Documentation
 
-Complete documentation for the SuperPy-SDK - the Python client for Supermetrics API.
+Complete documentation for the Supermetrics Python SDK – the Python client for Supermetrics API.
 
 ## Documentation Structure
 
@@ -78,7 +78,7 @@ See [History](history.md) for version history and changelog.
 
 - [Supermetrics API Documentation](https://supermetrics.com/docs/)
 - [Supermetrics Field Reference](https://supermetrics.com/docs/product-fields/)
-- [GitHub Repository](https://github.com/Supermetrics/SuperPy-SDK)
+- [GitHub Repository](https://github.com/supermetrics-public/supermetrics-python-sdk)
 - [PyPI Package](https://pypi.org/project/supermetrics/)
 
 ## Support
@@ -86,7 +86,7 @@ See [History](history.md) for version history and changelog.
 For questions and issues:
 1. Check this documentation first
 2. Review the [examples/](../examples/) directory
-3. Search existing [GitHub issues](https://github.com/Supermetrics/SuperPy-SDK/issues)
+3. Search existing [GitHub issues](https://github.com/supermetrics-public/supermetrics-python-sdk/issues)
 4. Create a new issue if needed
 
 ## License

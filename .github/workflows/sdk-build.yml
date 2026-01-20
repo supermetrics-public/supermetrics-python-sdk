@@ -1,4 +1,4 @@
-name: Build SuperPy-SDK Package
+name: Build sdk package
 
 on:
   workflow_call:
@@ -31,6 +31,6 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v6
         with:
-          name: superPySdk-build-artifact
+          name: sdk-build-artifact
           path: dist
           retention-days: 7

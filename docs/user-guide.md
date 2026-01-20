@@ -1,6 +1,6 @@
 # User Guide
 
-Comprehensive guide to using the SuperPy-SDK for integrating with the Supermetrics API.
+Comprehensive guide to using the Supermetrics Python SDK for integrating with the Supermetrics API.
 
 ## Table of Contents
 
@@ -20,7 +20,7 @@ Comprehensive guide to using the SuperPy-SDK for integrating with the Supermetri
 Install the SDK using pip:
 
 ```bash
-pip install supermetrics-sdk
+pip install supermetrics
 ```
 
 ### Quick Start

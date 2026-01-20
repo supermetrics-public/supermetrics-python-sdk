@@ -1,4 +1,4 @@
-name: Publish SuperPy-SDK to PyPI
+name: Publish sdk to test PyPI
 
 on:
   workflow_call:
@@ -21,7 +21,7 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v7
         with:
-          name: superPySdk-build-artifact
+          name: sdk-build-artifact
           path: dist
 
       - name: Install uv
@@ -30,5 +30,5 @@ jobs:
           python-version: ${{ inputs.python-version }}
           enable-cache: false
 
-      - name: Publish to PyPI
-        run: uv publish
+      - name: Publish to TestPyPI
+        run: uv publish --index testpypi
