@@ -7,13 +7,13 @@ on:
 
 jobs:
   build:
-    uses: ./.github/workflows/supermetrics-build.yml
+    uses: ./.github/workflows/sdk-build.yml
     with:
       python-version: "3.11"
 
   test-publish:
     needs: build
-    uses: ./.github/workflows/supermetrics-test-pypi-publish.yml
+    uses: ./.github/workflows/sdk-test-pypi-publish.yml
     with:
       python-version: "3.11"
     permissions:
@@ -23,7 +23,7 @@ jobs:
 
   prod-publish:
     needs: test-publish
-    uses: ./.github/workflows/supermetrics-pypi-publish.yml
+    uses: ./.github/workflows/sdk-pypi-publish.yml
     with:
       python-version: "3.11"
     permissions:
