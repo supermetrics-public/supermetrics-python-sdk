@@ -7,7 +7,6 @@ Official Python client for Supermetrics
 
 * PyPI package: https://pypi.org/project/supermetrics/
 * Free software: Apache License v2
-* Documentation: https://supermetrics.readthedocs.io.
 
 ## Features
 
