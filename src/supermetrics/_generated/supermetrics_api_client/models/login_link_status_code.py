@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class LoginLinkStatusCode(str, Enum):
     CLOSED = "CLOSED"
     EXPIRED = "EXPIRED"

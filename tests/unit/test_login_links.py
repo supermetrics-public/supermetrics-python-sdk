@@ -227,7 +227,9 @@ class TestLoginLinksResource:
         # Cleanup
         login_links_module.get_login_link.sync = original_get
 
-    def test_authentication_error_on_401(self, login_links_resource: LoginLinksResource, mock_client: MagicMock) -> None:
+    def test_authentication_error_on_401(
+        self, login_links_resource: LoginLinksResource, mock_client: MagicMock
+    ) -> None:
         """Test 401 response raises AuthenticationError."""
         # Mock httpx to raise HTTPStatusError with 401
         mock_response = Mock()
@@ -237,11 +239,7 @@ class TestLoginLinksResource:
         mock_request = Mock()
         mock_request.url = "https://api.supermetrics.com/test"
 
-        error = httpx.HTTPStatusError(
-            "401 Unauthorized",
-            request=mock_request,
-            response=mock_response
-        )
+        error = httpx.HTTPStatusError("401 Unauthorized", request=mock_request, response=mock_response)
 
         # Mock the API method to raise the error
         import supermetrics.resources.login_links as login_links_module
@@ -269,11 +267,7 @@ class TestLoginLinksResource:
         mock_request = Mock()
         mock_request.url = "https://api.supermetrics.com/test"
 
-        error = httpx.HTTPStatusError(
-            "400 Bad Request",
-            request=mock_request,
-            response=mock_response
-        )
+        error = httpx.HTTPStatusError("400 Bad Request", request=mock_request, response=mock_response)
 
         # Mock the API method to raise the error
         import supermetrics.resources.login_links as login_links_module
@@ -301,11 +295,7 @@ class TestLoginLinksResource:
         mock_request = Mock()
         mock_request.url = "https://api.supermetrics.com/test"
 
-        error = httpx.HTTPStatusError(
-            "404 Not Found",
-            request=mock_request,
-            response=mock_response
-        )
+        error = httpx.HTTPStatusError("404 Not Found", request=mock_request, response=mock_response)
 
         # Mock the API method to raise the error
         import supermetrics.resources.login_links as login_links_module
@@ -333,11 +323,7 @@ class TestLoginLinksResource:
         mock_request = Mock()
         mock_request.url = "https://api.supermetrics.com/test"
 
-        error = httpx.HTTPStatusError(
-            "500 Internal Server Error",
-            request=mock_request,
-            response=mock_response
-        )
+        error = httpx.HTTPStatusError("500 Internal Server Error", request=mock_request, response=mock_response)
 
         # Mock the API method to raise the error
         import supermetrics.resources.login_links as login_links_module

@@ -131,8 +131,12 @@ class AccountsResource:
             if isinstance(response, GetAccountsResponse400):
                 error_msg: str = (
                     response.error.message
-                    if (response.error and not isinstance(response.error, Unset)
-                        and response.error.message and not isinstance(response.error.message, Unset))
+                    if (
+                        response.error
+                        and not isinstance(response.error, Unset)
+                        and response.error.message
+                        and not isinstance(response.error.message, Unset)
+                    )
                     else "Invalid request parameters"
                 )
                 raise ValidationError(
@@ -143,8 +147,12 @@ class AccountsResource:
             elif isinstance(response, GetAccountsResponse401):
                 error_msg = (
                     response.error.message
-                    if (response.error and not isinstance(response.error, Unset)
-                        and response.error.message and not isinstance(response.error.message, Unset))
+                    if (
+                        response.error
+                        and not isinstance(response.error, Unset)
+                        and response.error.message
+                        and not isinstance(response.error.message, Unset)
+                    )
                     else "Invalid or expired API key"
                 )
                 raise AuthenticationError(
@@ -155,8 +163,12 @@ class AccountsResource:
             elif isinstance(response, GetAccountsResponse403):
                 error_msg = (
                     response.error.message
-                    if (response.error and not isinstance(response.error, Unset)
-                        and response.error.message and not isinstance(response.error.message, Unset))
+                    if (
+                        response.error
+                        and not isinstance(response.error, Unset)
+                        and response.error.message
+                        and not isinstance(response.error.message, Unset)
+                    )
                     else "Forbidden - insufficient permissions"
                 )
                 raise APIError(
@@ -167,8 +179,12 @@ class AccountsResource:
             elif isinstance(response, GetAccountsResponse422):
                 error_msg = (
                     response.error.message
-                    if (response.error and not isinstance(response.error, Unset)
-                        and response.error.message and not isinstance(response.error.message, Unset))
+                    if (
+                        response.error
+                        and not isinstance(response.error, Unset)
+                        and response.error.message
+                        and not isinstance(response.error.message, Unset)
+                    )
                     else "Invalid request parameters"
                 )
                 raise ValidationError(
@@ -180,8 +196,12 @@ class AccountsResource:
                 status = 429 if isinstance(response, GetAccountsResponse429) else 500
                 error_msg = (
                     response.error.message
-                    if (response.error and not isinstance(response.error, Unset)
-                        and response.error.message and not isinstance(response.error.message, Unset))
+                    if (
+                        response.error
+                        and not isinstance(response.error, Unset)
+                        and response.error.message
+                        and not isinstance(response.error.message, Unset)
+                    )
                     else "Supermetrics API error"
                 )
                 raise APIError(
@@ -329,8 +349,12 @@ class AccountsAsyncResource:
             if isinstance(response, GetAccountsResponse400):
                 error_msg: str = (
                     response.error.message
-                    if (response.error and not isinstance(response.error, Unset)
-                        and response.error.message and not isinstance(response.error.message, Unset))
+                    if (
+                        response.error
+                        and not isinstance(response.error, Unset)
+                        and response.error.message
+                        and not isinstance(response.error.message, Unset)
+                    )
                     else "Invalid request parameters"
                 )
                 raise ValidationError(
@@ -341,8 +365,12 @@ class AccountsAsyncResource:
             elif isinstance(response, GetAccountsResponse401):
                 error_msg = (
                     response.error.message
-                    if (response.error and not isinstance(response.error, Unset)
-                        and response.error.message and not isinstance(response.error.message, Unset))
+                    if (
+                        response.error
+                        and not isinstance(response.error, Unset)
+                        and response.error.message
+                        and not isinstance(response.error.message, Unset)
+                    )
                     else "Invalid or expired API key"
                 )
                 raise AuthenticationError(
@@ -353,8 +381,12 @@ class AccountsAsyncResource:
             elif isinstance(response, GetAccountsResponse403):
                 error_msg = (
                     response.error.message
-                    if (response.error and not isinstance(response.error, Unset)
-                        and response.error.message and not isinstance(response.error.message, Unset))
+                    if (
+                        response.error
+                        and not isinstance(response.error, Unset)
+                        and response.error.message
+                        and not isinstance(response.error.message, Unset)
+                    )
                     else "Forbidden - insufficient permissions"
                 )
                 raise APIError(
@@ -365,8 +397,12 @@ class AccountsAsyncResource:
             elif isinstance(response, GetAccountsResponse422):
                 error_msg = (
                     response.error.message
-                    if (response.error and not isinstance(response.error, Unset)
-                        and response.error.message and not isinstance(response.error.message, Unset))
+                    if (
+                        response.error
+                        and not isinstance(response.error, Unset)
+                        and response.error.message
+                        and not isinstance(response.error.message, Unset)
+                    )
                     else "Invalid request parameters"
                 )
                 raise ValidationError(
@@ -378,8 +414,12 @@ class AccountsAsyncResource:
                 status = 429 if isinstance(response, GetAccountsResponse429) else 500
                 error_msg = (
                     response.error.message
-                    if (response.error and not isinstance(response.error, Unset)
-                        and response.error.message and not isinstance(response.error.message, Unset))
+                    if (
+                        response.error
+                        and not isinstance(response.error, Unset)
+                        and response.error.message
+                        and not isinstance(response.error.message, Unset)
+                    )
                     else "Supermetrics API error"
                 )
                 raise APIError(

@@ -28,12 +28,12 @@ Note:
     recommended for production. Use webhooks or redirect URLs for production.
 """
 
-import traceback
-import os
-from dotenv import load_dotenv
 import time
+import traceback
 from datetime import datetime, timedelta
 from getpass import getpass
+
+from dotenv import load_dotenv
 
 from supermetrics import (
     APIError,
@@ -42,7 +42,9 @@ from supermetrics import (
     SupermetricsClient,
     ValidationError,
 )
+
 load_dotenv()
+
 
 def main() -> None:
     """Execute complete onboarding workflow."""
@@ -132,7 +134,6 @@ def main() -> None:
 
         if not fields:
             raise ValueError("At least one field is required")
-
 
         result = client.queries.execute(
             ds_id=ds_id,

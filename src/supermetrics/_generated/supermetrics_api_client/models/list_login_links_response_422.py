@@ -1,47 +1,34 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar, BinaryIO, TextIO, TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
 
-from ..types import UNSET, Unset
-from typing import cast
-
 if TYPE_CHECKING:
-  from ..models.error import Error
-  from ..models.response_meta import ResponseMeta
-
-
-
+    from ..models.error import Error
+    from ..models.response_meta import ResponseMeta
 
 
 T = TypeVar("T", bound="ListLoginLinksResponse422")
 
 
-
 @_attrs_define
 class ListLoginLinksResponse422:
-    """ 
-        Attributes:
-            meta (ResponseMeta | Unset):
-            error (Error | Unset):
-     """
+    """
+    Attributes:
+        meta (ResponseMeta | Unset):
+        error (Error | Unset):
+    """
 
     meta: ResponseMeta | Unset = UNSET
     error: Error | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-
-
-
-
     def to_dict(self) -> dict[str, Any]:
-        from ..models.error import Error
-        from ..models.response_meta import ResponseMeta
         meta: dict[str, Any] | Unset = UNSET
         if not isinstance(self.meta, Unset):
             meta = self.meta.to_dict()
@@ -50,11 +37,9 @@ class ListLoginLinksResponse422:
         if not isinstance(self.error, Unset):
             error = self.error.to_dict()
 
-
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({
-        })
+        field_dict.update({})
         if meta is not UNSET:
             field_dict["meta"] = meta
         if error is not UNSET:
@@ -62,38 +47,30 @@ class ListLoginLinksResponse422:
 
         return field_dict
 
-
-
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.error import Error
         from ..models.response_meta import ResponseMeta
+
         d = dict(src_dict)
         _meta = d.pop("meta", UNSET)
         meta: ResponseMeta | Unset
-        if isinstance(_meta,  Unset):
+        if isinstance(_meta, Unset):
             meta = UNSET
         else:
             meta = ResponseMeta.from_dict(_meta)
 
-
-
-
         _error = d.pop("error", UNSET)
         error: Error | Unset
-        if isinstance(_error,  Unset):
+        if isinstance(_error, Unset):
             error = UNSET
         else:
             error = Error.from_dict(_error)
-
-
-
 
         list_login_links_response_422 = cls(
             meta=meta,
             error=error,
         )
-
 
         list_login_links_response_422.additional_properties = d
         return list_login_links_response_422

@@ -219,11 +219,7 @@ class TestLoginsResource:
         mock_request = Mock()
         mock_request.url = "https://api.supermetrics.com/test"
 
-        error = httpx.HTTPStatusError(
-            "401 Unauthorized",
-            request=mock_request,
-            response=mock_response
-        )
+        error = httpx.HTTPStatusError("401 Unauthorized", request=mock_request, response=mock_response)
 
         # Mock the API method to raise the error
         import supermetrics.resources.logins as logins_module
@@ -251,11 +247,7 @@ class TestLoginsResource:
         mock_request = Mock()
         mock_request.url = "https://api.supermetrics.com/test"
 
-        error = httpx.HTTPStatusError(
-            "400 Bad Request",
-            request=mock_request,
-            response=mock_response
-        )
+        error = httpx.HTTPStatusError("400 Bad Request", request=mock_request, response=mock_response)
 
         # Mock the API method to raise the error
         import supermetrics.resources.logins as logins_module
@@ -283,11 +275,7 @@ class TestLoginsResource:
         mock_request = Mock()
         mock_request.url = "https://api.supermetrics.com/test"
 
-        error = httpx.HTTPStatusError(
-            "404 Not Found",
-            request=mock_request,
-            response=mock_response
-        )
+        error = httpx.HTTPStatusError("404 Not Found", request=mock_request, response=mock_response)
 
         # Mock the API method to raise the error
         import supermetrics.resources.logins as logins_module
@@ -315,11 +303,7 @@ class TestLoginsResource:
         mock_request = Mock()
         mock_request.url = "https://api.supermetrics.com/test"
 
-        error = httpx.HTTPStatusError(
-            "500 Internal Server Error",
-            request=mock_request,
-            response=mock_response
-        )
+        error = httpx.HTTPStatusError("500 Internal Server Error", request=mock_request, response=mock_response)
 
         # Mock the API method to raise the error
         import supermetrics.resources.logins as logins_module

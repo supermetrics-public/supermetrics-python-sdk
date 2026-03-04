@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class CloseLoginLinkResponse500Error(str, Enum):
     LINK_UPDATE_FAILED = "LINK_UPDATE_FAILED"
 

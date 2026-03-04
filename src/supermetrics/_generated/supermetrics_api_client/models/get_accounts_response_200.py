@@ -1,47 +1,34 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar, BinaryIO, TextIO, TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
 
-from ..types import UNSET, Unset
-from typing import cast
-
 if TYPE_CHECKING:
-  from ..models.get_accounts_response_200_data_item import GetAccountsResponse200DataItem
-  from ..models.get_accounts_response_200_meta import GetAccountsResponse200Meta
-
-
-
+    from ..models.get_accounts_response_200_data_item import GetAccountsResponse200DataItem
+    from ..models.get_accounts_response_200_meta import GetAccountsResponse200Meta
 
 
 T = TypeVar("T", bound="GetAccountsResponse200")
 
 
-
 @_attrs_define
 class GetAccountsResponse200:
-    """ 
-        Attributes:
-            meta (GetAccountsResponse200Meta | Unset):
-            data (list[GetAccountsResponse200DataItem] | Unset):
-     """
+    """
+    Attributes:
+        meta (GetAccountsResponse200Meta | Unset):
+        data (list[GetAccountsResponse200DataItem] | Unset):
+    """
 
     meta: GetAccountsResponse200Meta | Unset = UNSET
     data: list[GetAccountsResponse200DataItem] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-
-
-
-
     def to_dict(self) -> dict[str, Any]:
-        from ..models.get_accounts_response_200_data_item import GetAccountsResponse200DataItem
-        from ..models.get_accounts_response_200_meta import GetAccountsResponse200Meta
         meta: dict[str, Any] | Unset = UNSET
         if not isinstance(self.meta, Unset):
             meta = self.meta.to_dict()
@@ -53,13 +40,9 @@ class GetAccountsResponse200:
                 data_item = data_item_data.to_dict()
                 data.append(data_item)
 
-
-
-
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({
-        })
+        field_dict.update({})
         if meta is not UNSET:
             field_dict["meta"] = meta
         if data is not UNSET:
@@ -67,22 +50,18 @@ class GetAccountsResponse200:
 
         return field_dict
 
-
-
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.get_accounts_response_200_data_item import GetAccountsResponse200DataItem
         from ..models.get_accounts_response_200_meta import GetAccountsResponse200Meta
+
         d = dict(src_dict)
         _meta = d.pop("meta", UNSET)
         meta: GetAccountsResponse200Meta | Unset
-        if isinstance(_meta,  Unset):
+        if isinstance(_meta, Unset):
             meta = UNSET
         else:
             meta = GetAccountsResponse200Meta.from_dict(_meta)
-
-
-
 
         _data = d.pop("data", UNSET)
         data: list[GetAccountsResponse200DataItem] | Unset = UNSET
@@ -91,16 +70,12 @@ class GetAccountsResponse200:
             for data_item_data in _data:
                 data_item = GetAccountsResponse200DataItem.from_dict(data_item_data)
 
-
-
                 data.append(data_item)
-
 
         get_accounts_response_200 = cls(
             meta=meta,
             data=data,
         )
-
 
         get_accounts_response_200.additional_properties = d
         return get_accounts_response_200

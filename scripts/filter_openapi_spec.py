@@ -17,26 +17,26 @@ Features:
 """
 
 import sys
-from pathlib import Path
-from typing import Dict, Set, List, Tuple, Any, Optional
-import yaml
-import re
 from copy import deepcopy
+from pathlib import Path
+from typing import Any
+
+import yaml
 
 
-def load_yaml_file(file_path: Path) -> Dict[str, Any]:
+def load_yaml_file(file_path: Path) -> dict[str, Any]:
     """Load and parse a YAML file."""
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, encoding='utf-8') as f:
         return yaml.safe_load(f)
 
 
-def save_yaml_file(file_path: Path, data: Dict[str, Any]) -> None:
+def save_yaml_file(file_path: Path, data: dict[str, Any]) -> None:
     """Save data to a YAML file."""
     with open(file_path, 'w', encoding='utf-8') as f:
         yaml.dump(data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
 
 
-def deep_merge(base: Dict[str, Any], updates: Dict[str, Any]) -> Dict[str, Any]:
+def deep_merge(base: dict[str, Any], updates: dict[str, Any]) -> dict[str, Any]:
     """
     Deep merge two dictionaries. Updates are merged into base.
     Lists in updates replace lists in base (no concatenation).
@@ -54,7 +54,7 @@ def deep_merge(base: Dict[str, Any], updates: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
-def apply_patches(operation: Dict[str, Any], patches: Dict[str, Any]) -> Dict[str, Any]:
+def apply_patches(operation: dict[str, Any], patches: dict[str, Any]) -> dict[str, Any]:
     """
     Apply patches to an OpenAPI operation definition.
 
@@ -83,7 +83,9 @@ def apply_patches(operation: Dict[str, Any], patches: Dict[str, Any]) -> Dict[st
     return result
 
 
-def load_endpoint_config(config_file: Path) -> Tuple[Set[Tuple[str, str]], Dict[Tuple[str, str], Dict[str, Any]], Dict[str, Dict[str, Dict[str, Any]]]]:
+def load_endpoint_config(
+    config_file: Path,
+) -> tuple[set[tuple[str, str]], dict[tuple[str, str], dict[str, Any]], dict[str, dict[str, dict[str, Any]]]]:
     """
     Load endpoint configuration from sdk-endpoint-filters.yaml.
 
@@ -134,7 +136,7 @@ def load_endpoint_config(config_file: Path) -> Tuple[Set[Tuple[str, str]], Dict[
     return endpoints, endpoint_patches_map, component_patches
 
 
-def extract_refs(obj: Any, refs: Set[str]) -> None:
+def extract_refs(obj: Any, refs: set[str]) -> None:
     """Recursively extract all $ref references from an object."""
     if isinstance(obj, dict):
         if '$ref' in obj:
@@ -146,7 +148,7 @@ def extract_refs(obj: Any, refs: Set[str]) -> None:
             extract_refs(item, refs)
 
 
-def resolve_component_name(ref: str) -> Tuple[str, str]:
+def resolve_component_name(ref: str) -> tuple[str, str]:
     """
     Parse a $ref like '#/components/schemas/LoginLink'
     Returns (component_type, component_name) e.g., ('schemas', 'LoginLink')
@@ -166,10 +168,7 @@ def resolve_component_name(ref: str) -> Tuple[str, str]:
 
 
 def collect_component_dependencies(
-    component_obj: Any,
-    all_components: Dict[str, Dict[str, Any]],
-    component_type: str,
-    collected: Dict[str, Set[str]]
+    component_obj: Any, all_components: dict[str, dict[str, Any]], component_type: str, collected: dict[str, set[str]]
 ) -> None:
     """Recursively collect all component dependencies via $ref traversal."""
     refs = set()
@@ -192,20 +191,12 @@ def collect_component_dependencies(
 
         # Recursively collect dependencies of this component
         if ref_type in all_components and ref_name in all_components[ref_type]:
-            collect_component_dependencies(
-                all_components[ref_type][ref_name],
-                all_components,
-                ref_type,
-                collected
-            )
+            collect_component_dependencies(all_components[ref_type][ref_name], all_components, ref_type, collected)
 
 
 def resolve_external_file_reference(
-    ref_path: str,
-    base_path: Path,
-    ref_anchor: str,
-    resolved_cache: Dict[str, Any]
-) -> Dict[str, Any] | None:
+    ref_path: str, base_path: Path, ref_anchor: str, resolved_cache: dict[str, Any]
+) -> dict[str, Any] | None:
     """
     Resolve an external file reference by loading the file and extracting the component.
     Recursively resolves nested external references.
@@ -260,11 +251,7 @@ def resolve_external_file_reference(
         return None
 
 
-def resolve_nested_external_refs(
-    obj: Any,
-    base_path: Path,
-    resolved_cache: Dict[str, Any]
-) -> Any:
+def resolve_nested_external_refs(obj: Any, base_path: Path, resolved_cache: dict[str, Any]) -> Any:
     """
     Recursively resolve external file references within an object.
 
@@ -289,12 +276,7 @@ def resolve_nested_external_refs(
                         ref_file = value
                         ref_anchor = ''
 
-                    resolved = resolve_external_file_reference(
-                        ref_file,
-                        base_path,
-                        ref_anchor,
-                        resolved_cache
-                    )
+                    resolved = resolve_external_file_reference(ref_file, base_path, ref_anchor, resolved_cache)
 
                     if resolved:
                         # Replace the $ref with the resolved content
@@ -316,17 +298,14 @@ def resolve_nested_external_refs(
         return obj
 
 
-def resolve_external_references(
-    components: Dict[str, Dict[str, Any]],
-    specs_dir: Path
-) -> Tuple[int, int]:
+def resolve_external_references(components: dict[str, dict[str, Any]], specs_dir: Path) -> tuple[int, int]:
     """
     Replace external file references by loading and resolving them recursively.
     Returns (replaced_count, failed_count).
     """
     replaced_count = 0
     failed_count = 0
-    resolved_cache: Dict[str, Any] = {}
+    resolved_cache: dict[str, Any] = {}
 
     for comp_type in ['responses', 'schemas', 'parameters', 'headers']:
         if comp_type not in components:
@@ -350,12 +329,7 @@ def resolve_external_references(
                         ref_anchor = ''
 
                     # Try to resolve the external reference
-                    resolved_def = resolve_external_file_reference(
-                        ref_file,
-                        specs_dir,
-                        ref_anchor,
-                        resolved_cache
-                    )
+                    resolved_def = resolve_external_file_reference(ref_file, specs_dir, ref_anchor, resolved_cache)
 
                     if resolved_def:
                         components_to_replace[comp_name] = resolved_def
@@ -366,7 +340,7 @@ def resolve_external_references(
                         failed_count += 1
                         print(f"   ❌ Failed to resolve: {comp_type}/{comp_name}")
                         print(f"      File not found or invalid: {ref_value}")
-                        print(f"      Removing this component (will cause validation errors)")
+                        print("      Removing this component (will cause validation errors)")
                         # Remove the component entirely to avoid broken refs
                         components_to_replace[comp_name] = None
 
@@ -384,8 +358,7 @@ def resolve_external_references(
 
 
 def apply_component_patches(
-    components: Dict[str, Dict[str, Any]],
-    component_patches: Dict[str, Dict[str, Dict[str, Any]]]
+    components: dict[str, dict[str, Any]], component_patches: dict[str, dict[str, dict[str, Any]]]
 ) -> int:
     """
     Apply patches to OpenAPI components (schemas, responses, etc.).
@@ -415,10 +388,7 @@ def apply_component_patches(
 
             # Apply patches to this component
             print(f"   🔧 Applying patches to {comp_type}/{comp_name}")
-            components[comp_type][comp_name] = apply_patches(
-                components[comp_type][comp_name],
-                patches
-            )
+            components[comp_type][comp_name] = apply_patches(components[comp_type][comp_name], patches)
             patched_count += 1
 
     return patched_count
@@ -461,7 +431,7 @@ def main():
     print(f"   Found {len(spec_files)} spec file(s): {', '.join(f.name for f in spec_files)}")
 
     # Track endpoints across files for duplicate detection
-    endpoint_sources: Dict[Tuple[str, str], str] = {}
+    endpoint_sources: dict[tuple[str, str], str] = {}
     duplicates_found = False
 
     # Merged output structure with custom metadata
@@ -474,23 +444,14 @@ def main():
             'contact': {
                 'name': 'Supermetrics Support',
                 'email': 'support@supermetrics.com',
-                'url': 'https://supermetrics.com/support'
+                'url': 'https://supermetrics.com/support',
             },
-            'license': {
-                'name': 'Apache 2.0',
-                'url': 'https://www.apache.org/licenses/LICENSE-2.0.html'
-            }
+            'license': {'name': 'Apache 2.0', 'url': 'https://www.apache.org/licenses/LICENSE-2.0.html'},
         },
         'servers': [],
         'paths': {},
-        'components': {
-            'schemas': {},
-            'responses': {},
-            'parameters': {},
-            'headers': {},
-            'securitySchemes': {}
-        },
-        'security': []
+        'components': {'schemas': {}, 'responses': {}, 'parameters': {}, 'headers': {}, 'securitySchemes': {}},
+        'security': [],
     }
 
     all_components_by_file = {}
@@ -572,8 +533,8 @@ def main():
 
     # Fail if duplicates found
     if duplicates_found:
-        print(f"\n❌ FAILURE: Duplicate METHOD|PATH found across multiple spec files")
-        print(f"   Please resolve duplicates before proceeding")
+        print("\n❌ FAILURE: Duplicate METHOD|PATH found across multiple spec files")
+        print("   Please resolve duplicates before proceeding")
         sys.exit(1)
 
     # Add collected servers and security schemes
@@ -581,8 +542,8 @@ def main():
     merged_spec['components']['securitySchemes'] = security_schemes
 
     # Collect all referenced components
-    print(f"\n🔗 Collecting referenced schemas and components...")
-    collected_components: Dict[str, Set[str]] = {}
+    print("\n🔗 Collecting referenced schemas and components...")
+    collected_components: dict[str, set[str]] = {}
 
     # Extract all refs from matched paths
     all_refs = set()
@@ -594,7 +555,7 @@ def main():
         'responses': {},
         'parameters': {},
         'headers': {},
-        'securitySchemes': security_schemes
+        'securitySchemes': security_schemes,
     }
 
     for file_components in all_components_by_file.values():
@@ -615,10 +576,7 @@ def main():
         # Recursively collect dependencies
         if ref_type in all_components and ref_name in all_components[ref_type]:
             collect_component_dependencies(
-                all_components[ref_type][ref_name],
-                all_components,
-                ref_type,
-                collected_components
+                all_components[ref_type][ref_name], all_components, ref_type, collected_components
             )
 
     # Copy collected components to merged spec (sorted for consistent order)
@@ -635,7 +593,7 @@ def main():
             print(f"      {comp_type}: {len(comp_names)}")
 
     # Resolve external file references
-    print(f"\n🔧 Resolving external file references...")
+    print("\n🔧 Resolving external file references...")
     replaced_count, failed_count = resolve_external_references(merged_spec['components'], specs_dir)
     if replaced_count > 0:
         print(f"   ✓ Resolved {replaced_count} external reference(s)")
@@ -644,13 +602,13 @@ def main():
 
     # Apply component patches
     if component_patches:
-        print(f"\n🔧 Applying component patches...")
+        print("\n🔧 Applying component patches...")
         patched_count = apply_component_patches(merged_spec['components'], component_patches)
         if patched_count > 0:
             print(f"   ✓ Applied patches to {patched_count} component(s)")
 
     # Validate all endpoints from filter were found
-    print(f"\n✅ Validation:")
+    print("\n✅ Validation:")
     missing_endpoints = []
     for endpoint_key in endpoint_filter:
         if endpoint_key not in endpoint_sources:
@@ -668,7 +626,7 @@ def main():
     print(f"\n💾 Writing merged spec to {output_file.name}...")
     save_yaml_file(output_file, merged_spec)
 
-    print(f"\n🎉 Success!")
+    print("\n🎉 Success!")
     print(f"   Input specs: {len(spec_files)}")
     print(f"   Filtered endpoints: {len(merged_spec['paths'])}")
     print(f"   Servers: {len(merged_spec['servers'])}")

@@ -46,6 +46,22 @@ endpoints:
   - method: GET
     path: /query/data/json
 
+  # DWH Backfills
+  - method: POST
+    path: /teams/{team_id}/transfers/{transfer_id}/backfills
+
+  - method: GET
+    path: /teams/{team_id}/transfers/{transfer_id}/backfills/latest
+
+  - method: GET
+    path: /teams/{team_id}/backfills
+
+  - method: GET
+    path: /teams/{team_id}/backfills/{backfill_id}
+
+  - method: PATCH
+    path: /teams/{team_id}/backfills/{backfill_id}
+
   # ==========================================
   # EXAMPLE: Endpoint with comprehensive patches
   # ==========================================

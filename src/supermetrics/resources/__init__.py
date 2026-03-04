@@ -10,9 +10,11 @@ auto-generated code in _generated/ to provide:
 - Complete type safety with IDE autocomplete support
 """
 
+from supermetrics.resources.backfills import BackfillsResource
 from supermetrics.resources.login_links import LoginLinksAsyncResource, LoginLinksResource
 
 __all__ = [
     "LoginLinksResource",
     "LoginLinksAsyncResource",
+    "BackfillsResource",
 ]

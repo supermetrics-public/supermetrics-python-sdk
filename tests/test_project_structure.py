@@ -25,10 +25,10 @@ class TestAcceptanceCriteria1:
         # Check for required patterns (accepting common variants)
         assert "__pycache__" in content, ".gitignore must contain '__pycache__'"
         assert ".venv" in content or "venv/" in content, ".gitignore must contain venv pattern"
-        assert "*.pyc" in content or "*.py[cod]" in content or "*.py[codz]" in content, \
+        assert "*.pyc" in content or "*.py[cod]" in content or "*.py[codz]" in content, (
             ".gitignore must contain compiled Python file pattern"
-        assert "*.egg-info" in content or ".egg-info/" in content, \
-            ".gitignore must contain egg-info pattern"
+        )
+        assert "*.egg-info" in content or ".egg-info/" in content, ".gitignore must contain egg-info pattern"
 
     def test_license_exists(self):
         """Verify LICENSE file exists and contains Apache 2.0 license text."""
@@ -36,10 +36,8 @@ class TestAcceptanceCriteria1:
         assert license_path.exists(), "LICENSE file must exist"
 
         content = license_path.read_text()
-        assert "Apache License" in content or "Apache-2.0" in content, \
-            "LICENSE must contain Apache 2.0 license text"
-        assert "Version 2.0" in content or "2.0" in content, \
-            "LICENSE must specify version 2.0"
+        assert "Apache License" in content or "Apache-2.0" in content, "LICENSE must contain Apache 2.0 license text"
+        assert "Version 2.0" in content or "2.0" in content, "LICENSE must specify version 2.0"
 
     def test_readme_exists(self):
         """Verify README.md exists with project title and basic structure."""
@@ -49,8 +47,9 @@ class TestAcceptanceCriteria1:
         content = readme_path.read_text()
         assert len(content) > 0, "README.md must not be empty"
         # Check for project name or SDK reference
-        assert "supermetrics" in content.lower() or "sdk" in content.lower(), \
+        assert "supermetrics" in content.lower() or "sdk" in content.lower(), (
             "README.md should mention project name or SDK"
+        )
 
 
 class TestAcceptanceCriteria2:
@@ -68,10 +67,8 @@ class TestAcceptanceCriteria2:
         """Parse pyproject.toml and verify build-system.build-backend = 'hatchling.build'."""
         assert "build-system" in pyproject_data, "pyproject.toml must have [build-system]"
         build_system = pyproject_data["build-system"]
-        assert build_system["build-backend"] == "hatchling.build", \
-            "Build backend must be hatchling.build"
-        assert "hatchling" in build_system["requires"], \
-            "Build system must require hatchling"
+        assert build_system["build-backend"] == "hatchling.build", "Build backend must be hatchling.build"
+        assert "hatchling" in build_system["requires"], "Build system must require hatchling"
 
     def test_project_metadata(self, pyproject_data):
         """Verify project.name, project.version, project.description in pyproject.toml."""
@@ -80,16 +77,14 @@ class TestAcceptanceCriteria2:
 
         # Verify name is 'supermetrics'
         assert "name" in project, "project.name must be defined"
-        assert project["name"].lower() == "supermetrics", \
-            "project.name must be 'supermetrics'"
+        assert project["name"].lower() == "supermetrics", "project.name must be 'supermetrics'"
 
         # Version can be static or dynamic (via versioningit)
         dynamic = project.get("dynamic", [])
         if "version" in dynamic:
             # Version is dynamic, verify versioningit is configured
             hatch_version = pyproject_data.get("tool", {}).get("hatch", {}).get("version", {})
-            assert hatch_version.get("source") == "versioningit", \
-                "Dynamic version must use versioningit as source"
+            assert hatch_version.get("source") == "versioningit", "Dynamic version must use versioningit as source"
         else:
             assert project.get("version") == "0.1.0", "project.version must be 0.1.0"
 
@@ -114,8 +109,7 @@ class TestAcceptanceCriteria2:
             for dep in dependencies:
                 if dep_name in dep.lower():
                     found = True
-                    assert ">=" in dep or "==" in dep, \
-                        f"{dep_name} must have version constraint"
+                    assert ">=" in dep or "==" in dep, f"{dep_name} must have version constraint"
                     break
             assert found, f"Required dependency '{dep_name}' must be present"
 
@@ -146,8 +140,7 @@ class TestAcceptanceCriteria3:
         """Verify src/supermetrics/ directory exists."""
         src_path = PROJECT_ROOT / "src" / "supermetrics"
 
-        assert src_path.exists(), \
-            "src/supermetrics/ or src/supermetrics/ directory must exist"
+        assert src_path.exists(), "src/supermetrics/ or src/supermetrics/ directory must exist"
 
     def test_init_file_exists(self):
         """Verify src/supermetrics/__init__.py exists."""
@@ -190,8 +183,9 @@ class TestAcceptanceCriteria4:
 
     def test_python_version_3_11_plus(self):
         """Verify python --version returns 3.11+."""
-        assert sys.version_info >= (3, 11), \
+        assert sys.version_info >= (3, 11), (
             f"Python version must be 3.11 or higher (current: {sys.version_info.major}.{sys.version_info.minor})"
+        )
 
     def test_requires_python_setting(self):
         """Verify pyproject.toml has requires-python = '>=3.11'."""
@@ -202,8 +196,7 @@ class TestAcceptanceCriteria4:
         requires_python = data["project"].get("requires-python")
         assert requires_python is not None, "requires-python must be set"
         assert "3.11" in requires_python, "requires-python must specify 3.11"
-        assert ">=" in requires_python or "==" in requires_python, \
-            "requires-python must have version constraint"
+        assert ">=" in requires_python or "==" in requires_python, "requires-python must have version constraint"
 
     def test_import_supermetrics(self):
         """Verify import supermetrics succeeds."""
@@ -213,8 +206,8 @@ class TestAcceptanceCriteria4:
 
         try:
             import supermetrics
-            assert hasattr(supermetrics, "__version__"), \
-                "Package must export __version__"
+
+            assert hasattr(supermetrics, "__version__"), "Package must export __version__"
         finally:
             # Clean up sys.path
             if str(src_path) in sys.path:

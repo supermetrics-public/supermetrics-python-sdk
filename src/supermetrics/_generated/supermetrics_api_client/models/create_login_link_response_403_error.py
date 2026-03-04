@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class CreateLoginLinkResponse403Error(str, Enum):
     LINK_LIMIT_EXCEEDED = "LINK_LIMIT_EXCEEDED"
 
