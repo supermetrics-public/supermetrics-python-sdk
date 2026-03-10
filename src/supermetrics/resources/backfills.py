@@ -71,6 +71,485 @@ from supermetrics.exceptions import APIError, AuthenticationError, NetworkError,
 logger = logging.getLogger(__name__)
 
 
+class BackfillsAsyncResource:
+    """Asynchronous resource adapter for Data Warehouse Backfills operations.
+
+    Async version of BackfillsResource for use with SupermetricsAsyncClient.
+    Provides the same interface but with async/await support for concurrent operations.
+
+    Example:
+        >>> client = SupermetricsAsyncClient(api_key="your-key")
+        >>> backfill = await client.backfills.create(
+        ...     team_id=12345,
+        ...     transfer_id=456789,
+        ...     range_start="2024-01-01",
+        ...     range_end="2024-01-31"
+        ... )
+    """
+
+    def __init__(self, client: GeneratedClient) -> None:
+        self._client = client
+
+    async def create(self, team_id: int, transfer_id: int, range_start: str, range_end: str) -> Backfill:
+        """Create a new backfill for a transfer.
+
+        Async version of BackfillsResource.create(). See sync version for full documentation.
+
+        Raises:
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            ValidationError: If request parameters are invalid (HTTP 400, 422).
+            APIError: If the API returns a server error (HTTP 403, 404, 429, 5xx).
+            NetworkError: If a network error occurs during the request.
+        """
+        endpoint = f"/teams/{team_id}/transfers/{transfer_id}/backfills"
+        try:
+            request = CreateBackfillRequest(range_start=range_start, range_end=range_end)
+            response = await create_backfill.asyncio(
+                client=cast(AuthenticatedClient, self._client),
+                team_id=team_id,
+                transfer_id=transfer_id,
+                body=request,
+            )
+
+            if isinstance(response, CreateBackfillResponse):
+                return response.data
+            elif isinstance(response, CreateBackfillResponse401):
+                raise AuthenticationError("Invalid or expired API key", status_code=401, endpoint=endpoint)
+            elif isinstance(response, CreateBackfillResponse400):
+                raise ValidationError(
+                    f"Invalid request parameters: {response}",
+                    status_code=400,
+                    endpoint=endpoint,
+                    response_body=str(response),
+                )
+            elif isinstance(response, CreateBackfillResponse403):
+                raise APIError(
+                    "Forbidden - insufficient permissions",
+                    status_code=403,
+                    endpoint=endpoint,
+                    response_body=str(response),
+                )
+            elif isinstance(response, ErrorResponse):
+                raise APIError(
+                    "Transfer not found or you do not have access to it",
+                    status_code=404,
+                    endpoint=endpoint,
+                    response_body=str(response),
+                )
+            elif isinstance(response, (CreateBackfillResponse429, CreateBackfillResponse500)):
+                status = 429 if isinstance(response, CreateBackfillResponse429) else 500
+                raise APIError(
+                    f"API error: {response}",
+                    status_code=status,
+                    endpoint=endpoint,
+                    response_body=str(response),
+                )
+            else:
+                raise APIError(
+                    f"Unexpected response type: {type(response).__name__}",
+                    status_code=500,
+                    endpoint=endpoint,
+                )
+
+        except (AuthenticationError, ValidationError, APIError):
+            raise
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 401:
+                raise AuthenticationError(
+                    "Invalid or expired API key",
+                    status_code=401,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 400:
+                raise ValidationError(
+                    f"Invalid request parameters: {e.response.text}",
+                    status_code=400,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 404:
+                raise APIError(
+                    f"Transfer not found: {e.response.text}",
+                    status_code=404,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code >= 500:
+                raise APIError(
+                    f"Supermetrics API error: {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            else:
+                raise APIError(
+                    f"API error ({e.response.status_code}): {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+        except httpx.RequestError as e:
+            raise NetworkError(
+                f"Network error: {str(e)}",
+                endpoint=str(e.request.url) if e.request else None,
+            ) from e
+
+    async def get(self, team_id: int, backfill_id: int) -> Backfill:
+        """Retrieve a backfill by ID.
+
+        Async version of BackfillsResource.get(). See sync version for full documentation.
+
+        Raises:
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            APIError: If the backfill is not found or API error (HTTP 403, 404, 429, 5xx).
+            NetworkError: If a network error occurs during the request.
+        """
+        endpoint = f"/teams/{team_id}/backfills/{backfill_id}"
+        try:
+            response = await get_backfill_by_id.asyncio(
+                client=cast(AuthenticatedClient, self._client),
+                team_id=team_id,
+                backfill_id=backfill_id,
+            )
+
+            if isinstance(response, GetBackfillResponse):
+                return response.data
+            elif isinstance(response, GetBackfillByIdResponse401):
+                raise AuthenticationError("Invalid or expired API key", status_code=401, endpoint=endpoint)
+            elif isinstance(response, GetBackfillByIdResponse403):
+                raise APIError(
+                    "Forbidden - insufficient permissions",
+                    status_code=403,
+                    endpoint=endpoint,
+                    response_body=str(response),
+                )
+            elif isinstance(response, ErrorResponse):
+                raise APIError(
+                    "Backfill not found or you do not have access to it",
+                    status_code=404,
+                    endpoint=endpoint,
+                    response_body=str(response),
+                )
+            elif isinstance(response, (GetBackfillByIdResponse429, GetBackfillByIdResponse500)):
+                status = 429 if isinstance(response, GetBackfillByIdResponse429) else 500
+                raise APIError(
+                    f"API error: {response}",
+                    status_code=status,
+                    endpoint=endpoint,
+                    response_body=str(response),
+                )
+            else:
+                raise APIError(
+                    f"Unexpected response type: {type(response).__name__}",
+                    status_code=500,
+                    endpoint=endpoint,
+                )
+
+        except (AuthenticationError, ValidationError, APIError):
+            raise
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 401:
+                raise AuthenticationError(
+                    "Invalid or expired API key",
+                    status_code=401,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 404:
+                raise APIError(
+                    f"Backfill not found: {e.response.text}",
+                    status_code=404,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code >= 500:
+                raise APIError(
+                    f"Supermetrics API error: {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            else:
+                raise APIError(
+                    f"API error ({e.response.status_code}): {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+        except httpx.RequestError as e:
+            raise NetworkError(
+                f"Network error: {str(e)}",
+                endpoint=str(e.request.url) if e.request else None,
+            ) from e
+
+    async def get_latest(self, team_id: int, transfer_id: int) -> Backfill:
+        """Get the latest backfill for a transfer.
+
+        Async version of BackfillsResource.get_latest(). See sync version for full documentation.
+
+        Raises:
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            APIError: If no backfill exists or API error (HTTP 403, 404, 429, 5xx).
+            NetworkError: If a network error occurs during the request.
+        """
+        endpoint = f"/teams/{team_id}/transfers/{transfer_id}/backfills/latest"
+        try:
+            response = await get_latest_backfill.asyncio(
+                client=cast(AuthenticatedClient, self._client),
+                team_id=team_id,
+                transfer_id=transfer_id,
+            )
+
+            if isinstance(response, GetBackfillResponse):
+                return response.data
+            elif isinstance(response, GetLatestBackfillResponse401):
+                raise AuthenticationError("Invalid or expired API key", status_code=401, endpoint=endpoint)
+            elif isinstance(response, GetLatestBackfillResponse403):
+                raise APIError(
+                    "Forbidden - insufficient permissions",
+                    status_code=403,
+                    endpoint=endpoint,
+                    response_body=str(response),
+                )
+            elif isinstance(response, ErrorResponse):
+                raise APIError(
+                    "No backfill found for this transfer",
+                    status_code=404,
+                    endpoint=endpoint,
+                    response_body=str(response),
+                )
+            elif isinstance(response, (GetLatestBackfillResponse429, GetLatestBackfillResponse500)):
+                status = 429 if isinstance(response, GetLatestBackfillResponse429) else 500
+                raise APIError(
+                    f"API error: {response}",
+                    status_code=status,
+                    endpoint=endpoint,
+                    response_body=str(response),
+                )
+            else:
+                raise APIError(
+                    f"Unexpected response type: {type(response).__name__}",
+                    status_code=500,
+                    endpoint=endpoint,
+                )
+
+        except (AuthenticationError, ValidationError, APIError):
+            raise
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 401:
+                raise AuthenticationError(
+                    "Invalid or expired API key",
+                    status_code=401,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 404:
+                raise APIError(
+                    f"Backfill not found: {e.response.text}",
+                    status_code=404,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code >= 500:
+                raise APIError(
+                    f"Supermetrics API error: {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            else:
+                raise APIError(
+                    f"API error ({e.response.status_code}): {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+        except httpx.RequestError as e:
+            raise NetworkError(
+                f"Network error: {str(e)}",
+                endpoint=str(e.request.url) if e.request else None,
+            ) from e
+
+    async def list_incomplete(self, team_id: int) -> list[Backfill]:
+        """List all incomplete backfills for a team.
+
+        Async version of BackfillsResource.list_incomplete(). See sync version for full documentation.
+
+        Raises:
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            APIError: If the API returns a server error (HTTP 403, 429, 5xx).
+            NetworkError: If a network error occurs during the request.
+        """
+        endpoint = f"/teams/{team_id}/backfills"
+        try:
+            response = await list_incomplete_backfills.asyncio(
+                client=cast(AuthenticatedClient, self._client),
+                team_id=team_id,
+            )
+
+            if isinstance(response, ListIncompleteBackfillsResponse200):
+                return response.data
+            elif isinstance(response, ListIncompleteBackfillsResponse401):
+                raise AuthenticationError("Invalid or expired API key", status_code=401, endpoint=endpoint)
+            elif isinstance(response, ListIncompleteBackfillsResponse403):
+                raise APIError(
+                    "Forbidden - insufficient permissions",
+                    status_code=403,
+                    endpoint=endpoint,
+                    response_body=str(response),
+                )
+            elif isinstance(response, (ListIncompleteBackfillsResponse429, ListIncompleteBackfillsResponse500)):
+                status = 429 if isinstance(response, ListIncompleteBackfillsResponse429) else 500
+                raise APIError(
+                    f"API error: {response}",
+                    status_code=status,
+                    endpoint=endpoint,
+                    response_body=str(response),
+                )
+            else:
+                raise APIError(
+                    f"Unexpected response type: {type(response).__name__}",
+                    status_code=500,
+                    endpoint=endpoint,
+                )
+
+        except (AuthenticationError, ValidationError, APIError):
+            raise
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 401:
+                raise AuthenticationError(
+                    "Invalid or expired API key",
+                    status_code=401,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code >= 500:
+                raise APIError(
+                    f"Supermetrics API error: {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            else:
+                raise APIError(
+                    f"API error ({e.response.status_code}): {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+        except httpx.RequestError as e:
+            raise NetworkError(
+                f"Network error: {str(e)}",
+                endpoint=str(e.request.url) if e.request else None,
+            ) from e
+
+    async def cancel(self, team_id: int, backfill_id: int) -> Backfill:
+        """Cancel a backfill.
+
+        Async version of BackfillsResource.cancel(). See sync version for full documentation.
+
+        Raises:
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            ValidationError: If request parameters are invalid (HTTP 400).
+            APIError: If the backfill is not found or cannot be cancelled (HTTP 403, 404, 429, 5xx).
+            NetworkError: If a network error occurs during the request.
+        """
+        endpoint = f"/teams/{team_id}/backfills/{backfill_id}"
+        try:
+            body = UpdateBackfillStatusBody(status=UpdateBackfillStatusBodyStatus.CANCELLED)
+            response = await update_backfill_status.asyncio(
+                client=cast(AuthenticatedClient, self._client),
+                team_id=team_id,
+                backfill_id=backfill_id,
+                body=body,
+            )
+
+            if isinstance(response, GetBackfillResponse):
+                return response.data
+            elif isinstance(response, UpdateBackfillStatusResponse401):
+                raise AuthenticationError("Invalid or expired API key", status_code=401, endpoint=endpoint)
+            elif isinstance(response, UpdateBackfillStatusResponse400):
+                raise ValidationError(
+                    f"Cannot cancel backfill - it may already be in a final state: {response}",
+                    status_code=400,
+                    endpoint=endpoint,
+                    response_body=str(response),
+                )
+            elif isinstance(response, UpdateBackfillStatusResponse403):
+                raise APIError(
+                    "Forbidden - insufficient permissions",
+                    status_code=403,
+                    endpoint=endpoint,
+                    response_body=str(response),
+                )
+            elif isinstance(response, ErrorResponse):
+                raise APIError(
+                    "Backfill not found or you do not have access to it",
+                    status_code=404,
+                    endpoint=endpoint,
+                    response_body=str(response),
+                )
+            elif isinstance(response, (UpdateBackfillStatusResponse429, UpdateBackfillStatusResponse500)):
+                status = 429 if isinstance(response, UpdateBackfillStatusResponse429) else 500
+                raise APIError(
+                    f"API error: {response}",
+                    status_code=status,
+                    endpoint=endpoint,
+                    response_body=str(response),
+                )
+            else:
+                raise APIError(
+                    f"Unexpected response type: {type(response).__name__}",
+                    status_code=500,
+                    endpoint=endpoint,
+                )
+
+        except (AuthenticationError, ValidationError, APIError):
+            raise
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 401:
+                raise AuthenticationError(
+                    "Invalid or expired API key",
+                    status_code=401,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 400:
+                raise ValidationError(
+                    f"Cannot cancel backfill: {e.response.text}",
+                    status_code=400,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code == 404:
+                raise APIError(
+                    f"Backfill not found: {e.response.text}",
+                    status_code=404,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            elif e.response.status_code >= 500:
+                raise APIError(
+                    f"Supermetrics API error: {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+            else:
+                raise APIError(
+                    f"API error ({e.response.status_code}): {e.response.text}",
+                    status_code=e.response.status_code,
+                    endpoint=str(e.request.url),
+                    response_body=e.response.text,
+                ) from e
+        except httpx.RequestError as e:
+            raise NetworkError(
+                f"Network error: {str(e)}",
+                endpoint=str(e.request.url) if e.request else None,
+            ) from e
+
+
 class BackfillsResource:
     """Synchronous resource adapter for Data Warehouse Backfills operations.
 
