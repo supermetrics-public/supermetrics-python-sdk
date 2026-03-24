@@ -13,6 +13,7 @@ from typing import Any, NoReturn
 import httpx
 
 from supermetrics._generated.supermetrics_api_client.models.error_response import ErrorResponse
+from supermetrics._generated.supermetrics_api_client.types import Unset
 from supermetrics.exceptions import APIError, AuthenticationError, NetworkError, ValidationError
 
 
@@ -48,10 +49,13 @@ def _raise_for_response(
             back to ``"Invalid request parameters: {response}"`` when omitted.
 
     Raises:
+        ValueError: If response is None or Unset (empty response).
         AuthenticationError: On type_401 match.
         ValidationError: On type_400 match (when type_400 is provided).
         APIError: On type_403, ErrorResponse, type_429/type_500, or unexpected type.
     """
+    if response is None or isinstance(response, Unset):
+        raise ValueError("API returned empty response")
     if isinstance(response, type_401):
         raise AuthenticationError("Invalid or expired API key", status_code=401, endpoint=endpoint)
     if type_400 is not None and isinstance(response, type_400):
