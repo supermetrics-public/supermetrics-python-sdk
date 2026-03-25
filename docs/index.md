@@ -70,9 +70,8 @@ result = client.queries.execute(
 
 ### Additional Resources
 
-- [Examples](../examples/) - Working code examples
-- [Contributing](contributing.md) - Contributing guidelines
-- [History](history.md) - Version history and changelog
+- [Examples](https://github.com/supermetrics-public/SuperPy-SDK/tree/main/examples) - Working code examples
+- [Contributing](https://github.com/supermetrics-public/SuperPy-SDK/blob/main/CONTRIBUTING.md) - Contributing guidelines
 
 ## Key Features
 
@@ -166,14 +165,9 @@ See the [User Guide](user-guide.md#common-data-sources) for data source-specific
 - Check the [User Guide](user-guide.md) for tutorials and examples
 - Review the [API Reference](api-reference.md) for detailed method documentation
 - See [Error Handling](error-handling.md) for troubleshooting
-- Explore the [examples/](../examples/) directory for working code
+- Explore the [examples](https://github.com/supermetrics-public/SuperPy-SDK/tree/main/examples) directory for working code
 
 ## License
 
 This project is licensed under the Apache License v2. See the LICENSE file for details.
 
-## Indices and Tables
-
-- [Index](genindex)
-- [Module Index](modindex)
-- [Search](search)

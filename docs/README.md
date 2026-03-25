@@ -33,7 +33,7 @@ Complete documentation for the Supermetrics Python SDK – the Python client for
 
 - [API Reference](api-reference.md) - Quick lookup for methods and parameters
 - [Error Handling](error-handling.md) - Production error handling patterns
-- [Examples](../examples/) - Working code examples
+- [Examples](https://github.com/supermetrics-public/SuperPy-SDK/tree/main/examples) - Working code examples
 
 ## Documentation Topics
 
@@ -61,18 +61,16 @@ Complete documentation for the Supermetrics Python SDK – the Python client for
 
 ## Examples
 
-All documentation includes practical examples. For complete working code, see the [examples/](../examples/) directory:
+All documentation includes practical examples. For complete working code, see the [examples](https://github.com/supermetrics-public/SuperPy-SDK/tree/main/examples) directory:
 
 - `complete_flow.py` - Full sync workflow
 - `async_flow.py` - Full async workflow
 
 ## Contributing
 
-See [Contributing](contributing.md) for guidelines on contributing to the documentation or SDK.
+See [Contributing](https://github.com/supermetrics-public/SuperPy-SDK/blob/main/CONTRIBUTING.md) for guidelines on contributing to the documentation or SDK.
 
 ## Version History
-
-See [History](history.md) for version history and changelog.
 
 ## External Resources
 
@@ -85,7 +83,7 @@ See [History](history.md) for version history and changelog.
 
 For questions and issues:
 1. Check this documentation first
-2. Review the [examples/](../examples/) directory
+2. Review the [examples](https://github.com/supermetrics-public/SuperPy-SDK/tree/main/examples) directory
 3. Search existing [GitHub issues](https://github.com/supermetrics-public/supermetrics-python-sdk/issues)
 4. Create a new issue if needed
 
