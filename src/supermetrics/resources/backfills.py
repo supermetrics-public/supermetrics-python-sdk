@@ -1,6 +1,7 @@
 """Backfills resource adapter for Supermetrics Data Warehouse API."""
 
 import logging
+from datetime import date
 from typing import cast
 
 import httpx
@@ -78,19 +79,20 @@ class BackfillsAsyncResource:
     Provides the same interface but with async/await support for concurrent operations.
 
     Example:
+        >>> from datetime import date
         >>> client = SupermetricsAsyncClient(api_key="your-key")
         >>> backfill = await client.backfills.create(
         ...     team_id=12345,
         ...     transfer_id=456789,
-        ...     range_start="2024-01-01",
-        ...     range_end="2024-01-31"
+        ...     range_start=date(2024, 1, 1),
+        ...     range_end=date(2024, 1, 31)
         ... )
     """
 
     def __init__(self, client: GeneratedClient) -> None:
         self._client = client
 
-    async def create(self, team_id: int, transfer_id: int, range_start: str, range_end: str) -> Backfill:
+    async def create(self, team_id: int, transfer_id: int, range_start: date, range_end: date) -> Backfill:
         """Create a new backfill for a transfer.
 
         Async version of BackfillsResource.create(). See sync version for full documentation.
@@ -283,13 +285,14 @@ class BackfillsResource:
     - Complete type safety
 
     Example:
+        >>> from datetime import date
         >>> client = SupermetricsClient(api_key="your-key")
         >>> # Create a backfill
         >>> backfill = client.backfills.create(
         ...     team_id=12345,
         ...     transfer_id=456789,
-        ...     range_start="2024-01-01",
-        ...     range_end="2024-01-31"
+        ...     range_start=date(2024, 1, 1),
+        ...     range_end=date(2024, 1, 31)
         ... )
         >>> print(f"Backfill created: {backfill.transfer_backfill_id}")
         >>> # Get latest backfill for a transfer
@@ -308,7 +311,7 @@ class BackfillsResource:
         """
         self._client = client
 
-    def create(self, team_id: int, transfer_id: int, range_start: str, range_end: str) -> Backfill:
+    def create(self, team_id: int, transfer_id: int, range_start: date, range_end: date) -> Backfill:
         """Create a new backfill for a transfer.
 
         Schedules a new backfill to re-process historical data for the specified date range.
@@ -316,8 +319,8 @@ class BackfillsResource:
         Args:
             team_id: The unique identifier of the team.
             transfer_id: The unique identifier of the transfer.
-            range_start: Start date of the backfill range (YYYY-MM-DD).
-            range_end: End date of the backfill range (YYYY-MM-DD).
+            range_start: Start date of the backfill range as a date object.
+            range_end: End date of the backfill range as a date object.
 
         Returns:
             Backfill: The created backfill object with status "CREATED".
@@ -329,11 +332,12 @@ class BackfillsResource:
             NetworkError: If a network error occurs during the request.
 
         Example:
+            >>> from datetime import date
             >>> backfill = client.backfills.create(
             ...     team_id=12345,
             ...     transfer_id=456789,
-            ...     range_start="2024-01-01",
-            ...     range_end="2024-01-31"
+            ...     range_start=date(2024, 1, 1),
+            ...     range_end=date(2024, 1, 31)
             ... )
         """
         endpoint = f"/teams/{team_id}/transfers/{transfer_id}/backfills"

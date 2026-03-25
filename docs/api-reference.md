@@ -34,6 +34,7 @@ client = SupermetricsClient(
 - `logins`: Access to LoginsResource
 - `accounts`: Access to AccountsResource
 - `queries`: Access to QueriesResource
+- `backfills`: Access to BackfillsResource
 
 **Methods:**
 
@@ -82,6 +83,7 @@ client = SupermetricsAsyncClient(
 - `logins`: Access to LoginsAsyncResource
 - `accounts`: Access to AccountsAsyncResource
 - `queries`: Access to QueriesAsyncResource
+- `backfills`: Access to BackfillsAsyncResource
 
 **Methods:**
 
@@ -445,7 +447,294 @@ if result and result.meta and result.meta.status_code == "pending":
 
 ---
 
+### BackfillsResource
+
+Schedule and manage historical data backfills for Data Warehouse transfers.
+
+> **Important:** Backfill endpoints are served from a separate base URL. You must initialize the client with `base_url="https://dts-api.supermetrics.com/v1"` when using any backfill operations:
+>
+> ```python
+> client = SupermetricsClient(
+>     api_key="your_api_key",
+>     base_url="https://dts-api.supermetrics.com/v1"
+> )
+> ```
+
+**Required API key scopes:**
+- `dwh_transfers_write` — for creating and cancelling backfills
+- `dwh_transfers_read` — for retrieving backfill information
+
+**Required user permissions:**
+- `dwh.transfer.edit` — for creating and cancelling backfills
+- `dwh.transfer.view` — for retrieving backfill information
+
+#### create()
+
+Schedule a new backfill for a transfer.
+
+```python
+backfill = client.backfills.create(
+    team_id=12345,
+    transfer_id=456789,
+    range_start=date(2024, 1, 1),
+    range_end=date(2024, 1, 31)
+)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `transfer_id` (int, required): Unique identifier of the transfer
+- `range_start` (date, required): Start date of the backfill range (inclusive)
+- `range_end` (date, required): End date of the backfill range (inclusive)
+
+**Returns:** `Backfill` object with status `"CREATED"`
+
+**Raises:** `AuthenticationError`, `ValidationError`, `APIError`, `NetworkError`
+
+**Notes:**
+- The date range cannot overlap with an existing active backfill
+- Backfills are processed asynchronously
+- The transfer must exist and belong to your team
+
+**Example:**
+
+```python
+from datetime import date
+from supermetrics import SupermetricsClient
+
+with SupermetricsClient(api_key="your_key") as client:
+    backfill = client.backfills.create(
+        team_id=12345,
+        transfer_id=456789,
+        range_start=date(2024, 1, 1),
+        range_end=date(2024, 1, 31)
+    )
+    print(f"Backfill ID: {backfill.transfer_backfill_id}")
+    print(f"Status: {backfill.status}")  # "CREATED"
+    print(f"Total runs: {backfill.transfer_runs_total}")
+```
+
+#### get()
+
+Retrieve a backfill by its ID.
+
+```python
+backfill = client.backfills.get(team_id=12345, backfill_id=67890)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `backfill_id` (int, required): Unique identifier of the backfill
+
+**Returns:** `Backfill` object with current status and progress
+
+**Raises:** `AuthenticationError`, `APIError` (404 if not found), `NetworkError`
+
+**Example:**
+
+```python
+backfill = client.backfills.get(team_id=12345, backfill_id=67890)
+print(f"Status: {backfill.status}")
+print(f"Progress: {backfill.transfer_runs_completed}/{backfill.transfer_runs_total}")
+
+if backfill.error_report:
+    for err in backfill.error_report:
+        print(f"Error on {err.transfer_run_date}: {err.error}")
+```
+
+#### get_latest()
+
+Retrieve the most recent backfill for a transfer.
+
+```python
+backfill = client.backfills.get_latest(team_id=12345, transfer_id=456789)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `transfer_id` (int, required): Unique identifier of the transfer
+
+**Returns:** `Backfill` object — the latest backfill regardless of status
+
+**Raises:** `AuthenticationError`, `APIError` (404 if no backfill has ever been created), `NetworkError`
+
+**Example:**
+
+```python
+try:
+    latest = client.backfills.get_latest(team_id=12345, transfer_id=456789)
+    print(f"Latest backfill: {latest.transfer_backfill_id}")
+    print(f"Status: {latest.status}")
+    print(f"Range: {latest.range_start_date} — {latest.range_end_date}")
+except APIError as e:
+    if e.status_code == 404:
+        print("No backfill has been created for this transfer yet")
+```
+
+#### list_incomplete()
+
+List all incomplete backfills for a team.
+
+```python
+backfills = client.backfills.list_incomplete(team_id=12345)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+
+**Returns:** `list[Backfill]` — backfills with status `CREATED`, `SCHEDULED`, `RUNNING`, or `FAILED`, sorted by creation time (newest first). Returns an empty list if none exist.
+
+**Raises:** `AuthenticationError`, `APIError`, `NetworkError`
+
+**Example:**
+
+```python
+backfills = client.backfills.list_incomplete(team_id=12345)
+
+if not backfills:
+    print("No incomplete backfills")
+else:
+    for backfill in backfills:
+        print(f"[{backfill.status}] Backfill {backfill.transfer_backfill_id} "
+              f"(transfer {backfill.transfer_id}): "
+              f"{backfill.transfer_runs_completed}/{backfill.transfer_runs_total} runs done")
+```
+
+#### cancel()
+
+Cancel a backfill by setting its status to `"CANCELLED"`.
+
+```python
+backfill = client.backfills.cancel(team_id=12345, backfill_id=67890)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `backfill_id` (int, required): Unique identifier of the backfill to cancel
+
+**Returns:** `Backfill` object with status `"CANCELLED"` and updated timestamps
+
+**Raises:** `AuthenticationError`, `ValidationError` (if backfill is already in a final state), `APIError` (404 if not found), `NetworkError`
+
+**Notes:**
+- Only backfills with status `CREATED`, `SCHEDULED`, `RUNNING`, or `FAILED` can be cancelled
+- Pending/queued transfer runs are cancelled immediately
+- Transfer runs already in progress will complete
+- The backfill record is retained with status `"CANCELLED"` — it is not deleted
+
+**Example:**
+
+```python
+from supermetrics import ValidationError, APIError
+
+try:
+    cancelled = client.backfills.cancel(team_id=12345, backfill_id=67890)
+    print(f"Status: {cancelled.status}")        # "CANCELLED"
+    print(f"Ended at: {cancelled.end_time}")
+except ValidationError:
+    print("Cannot cancel — backfill is already in a final state")
+except APIError as e:
+    if e.status_code == 404:
+        print("Backfill not found")
+```
+
+**Async usage** (all methods above are also available on `BackfillsAsyncResource`):
+
+```python
+import asyncio
+from datetime import date
+from supermetrics import SupermetricsAsyncClient
+
+async def main():
+    async with SupermetricsAsyncClient(
+        api_key="your_key",
+        base_url="https://dts-api.supermetrics.com/v1"
+    ) as client:
+        backfill = await client.backfills.create(
+            team_id=12345,
+            transfer_id=456789,
+            range_start=date(2024, 1, 1),
+            range_end=date(2024, 1, 31)
+        )
+        print(f"Created backfill: {backfill.transfer_backfill_id}")
+
+        incomplete = await client.backfills.list_incomplete(team_id=12345)
+        print(f"Incomplete backfills: {len(incomplete)}")
+
+asyncio.run(main())
+```
+
+---
+
 ## Models
+
+### Backfill
+
+Represents a Data Warehouse backfill job.
+
+**Attributes:**
+
+- `transfer_backfill_id` (int): Unique identifier of the backfill
+- `transfer_id` (int): ID of the transfer this backfill belongs to
+- `range_start_date` (str): Start date of the backfill range (`YYYY-MM-DD`)
+- `range_end_date` (str): End date of the backfill range (`YYYY-MM-DD`)
+- `status` (str): Current status — one of `CREATED`, `SCHEDULED`, `RUNNING`, `FAILED`, `COMPLETED`, `CANCELLED`
+- `created_time` (str): ISO 8601 timestamp when the backfill was created
+- `created_user_id` (int): ID of the user who created the backfill
+- `start_time` (str | None): ISO 8601 timestamp when processing started
+- `end_time` (str | None): ISO 8601 timestamp when processing completed or was cancelled
+- `removed_time` (str | None): ISO 8601 timestamp when the backfill was cancelled
+- `removed_user_id` (int | None): ID of the user who cancelled the backfill
+- `transfer_runs_total` (int): Total number of transfer runs for this backfill
+- `transfer_runs_created` (int): Number of transfer runs that have been created
+- `transfer_runs_completed` (int): Number of transfer runs that completed successfully
+- `transfer_runs_failed` (int): Number of transfer runs that failed
+- `error_report` (list[TransferBackfillRunError]): Errors from failed transfer runs (empty if none)
+
+**Example:**
+
+```python
+backfill = client.backfills.get(team_id=12345, backfill_id=67890)
+
+# Check status
+print(f"Status: {backfill.status}")
+
+# Track progress
+total = backfill.transfer_runs_total
+done = backfill.transfer_runs_completed
+failed = backfill.transfer_runs_failed
+print(f"Progress: {done}/{total} completed, {failed} failed")
+
+# Check for errors
+for err in backfill.error_report:
+    print(f"  {err.transfer_run_date}: {err.error}")
+```
+
+---
+
+### TransferBackfillRunError
+
+Represents an error that occurred during a single transfer run within a backfill.
+
+**Attributes:**
+
+- `transfer_run_date` (str): The date (`YYYY-MM-DD`) of the transfer run that failed
+- `error` (str): Error message describing what went wrong
+
+**Example:**
+
+```python
+backfill = client.backfills.get(team_id=12345, backfill_id=67890)
+for err in backfill.error_report:
+    print(f"Run on {err.transfer_run_date} failed: {err.error}")
+```
+
+---
 
 ### LoginLink
 

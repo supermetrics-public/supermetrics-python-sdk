@@ -59,8 +59,32 @@ def _raise_for_response(
     if isinstance(response, type_401):
         raise AuthenticationError("Invalid or expired API key", status_code=401, endpoint=endpoint)
     if type_400 is not None and isinstance(response, type_400):
+        # Handle two different 400 response formats:
+        # 1. New format with meta and error attributes (e.g., CreateBackfillResponse400)
+        # 2. RFC 9457 format with type_, title, status, detail (e.g., UpdateBackfillStatusResponse400)
+        if hasattr(response, 'error'):
+            error_msg = (
+                response.error.message
+                if (
+                    response.error
+                    and not isinstance(response.error, Unset)
+                    and response.error.message
+                    and not isinstance(response.error.message, Unset)
+                )
+                else "Invalid request parameters"
+            )
+        elif hasattr(response, 'detail'):
+            # RFC 9457 format
+            error_msg = (
+                response.detail
+                if response.detail and not isinstance(response.detail, Unset)
+                else (bad_request_msg if bad_request_msg else "Invalid request parameters")
+            )
+        else:
+            error_msg = bad_request_msg if bad_request_msg else "Invalid request parameters"
+
         raise ValidationError(
-            bad_request_msg or f"Invalid request parameters: {response}",
+            error_msg,
             status_code=400,
             endpoint=endpoint,
             response_body=str(response),

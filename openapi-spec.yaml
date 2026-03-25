@@ -1876,163 +1876,55 @@ components:
               description: The requested backfill could not be found or you do not
                 have access to it.
     BadRequest:
-      description: Bad request - invalid parameters
+      description: Bad Request - The request was invalid or cannot be served.
       headers:
-        X-RateLimit-Limit:
-          description: Request limit per hour
-          schema:
-            type: integer
-            format: int32
-            minimum: 1
-            maximum: 10000
-            example: 5000
-        X-RateLimit-Remaining:
-          description: Remaining requests in current window
-          schema:
-            type: integer
-            format: int32
-            minimum: 0
-            maximum: 10000
-            example: 4999
-        Access-Control-Allow-Origin:
-          description: CORS header
-          schema:
-            type: string
-            maxLength: 255
-            enum:
-            - '*'
-            example: '*'
-      content:
-        application/problem+json:
-          schema:
-            type: object
-            description: RFC 9457 Problem Details for HTTP APIs
-            properties:
-              type:
-                type: string
-                format: uri
-                maxLength: 255
-                description: A URI reference that identifies the problem type
-                example: https://supermetrics.com/problems/unauthorized
-              title:
-                type: string
-                maxLength: 255
-                pattern: ^[A-Za-z0-9\s]+$
-                description: A short, human-readable summary of the problem type
-                example: Unauthorized
-              status:
-                type: integer
-                format: int32
-                minimum: 100
-                maximum: 599
-                description: The HTTP status code
-                example: 401
-              detail:
-                type: string
-                maxLength: 1000
-                pattern: ^[A-Za-z0-9\s.,\-]+$
-                description: A human-readable explanation specific to this occurrence
-                example: Authentication required
-              instance:
-                type: string
-                format: uri
-                maxLength: 255
-                description: A URI reference that identifies the specific occurrence
-                example: https://api.supermetrics.com/v2/api-keys
-            required:
-            - type
-            - title
-            - status
-            additionalProperties: false
-    Forbidden:
-      description: Access forbidden
-      headers:
-        X-RateLimit-Limit:
-          description: Request limit per hour
-          schema:
-            type: integer
-            format: int32
-            minimum: 1
-            maximum: 10000
-            example: 5000
-        X-RateLimit-Remaining:
-          description: Remaining requests in current window
-          schema:
-            type: integer
-            format: int32
-            minimum: 0
-            maximum: 10000
-            example: 4999
-        Access-Control-Allow-Origin:
-          description: CORS header
-          schema:
-            type: string
-            maxLength: 255
-            enum:
-            - '*'
-            example: '*'
-      content:
-        application/problem+json:
-          schema:
-            type: object
-            description: RFC 9457 Problem Details for HTTP APIs
-            properties:
-              type:
-                type: string
-                format: uri
-                maxLength: 255
-                description: A URI reference that identifies the problem type
-                example: https://supermetrics.com/problems/unauthorized
-              title:
-                type: string
-                maxLength: 255
-                pattern: ^[A-Za-z0-9\s]+$
-                description: A short, human-readable summary of the problem type
-                example: Unauthorized
-              status:
-                type: integer
-                format: int32
-                minimum: 100
-                maximum: 599
-                description: The HTTP status code
-                example: 401
-              detail:
-                type: string
-                maxLength: 1000
-                pattern: ^[A-Za-z0-9\s.,\-]+$
-                description: A human-readable explanation specific to this occurrence
-                example: Authentication required
-              instance:
-                type: string
-                format: uri
-                maxLength: 255
-                description: A URI reference that identifies the specific occurrence
-                example: https://api.supermetrics.com/v2/api-keys
-            required:
-            - type
-            - title
-            - status
-            additionalProperties: false
-    InternalServerError:
-      description: Internal Server Error - unexpected server error
-      headers:
-        Content-Type:
-          $ref: '#/components/headers/Content-Type'
-        X-RateLimit-Limit:
-          $ref: '#/components/headers/X-RateLimit-Limit'
-        X-RateLimit-Remaining:
-          $ref: '#/components/headers/X-RateLimit-Remaining'
         Access-Control-Allow-Origin:
           $ref: '#/components/headers/Access-Control-Allow-Origin'
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              meta:
-                $ref: '#/components/schemas/ResponseMeta'
-              error:
-                $ref: '#/components/schemas/Error'
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            meta:
+              request_id: 01892A4D-7586-7000-8000-000000000000
+            error:
+              code: INVALID_PARAMETER
+              message: Invalid Parameter
+              description: The request contains invalid or malformed parameters.
+    Forbidden:
+      description: Forbidden - The request is understood, but it has been refused
+        or access is not allowed.
+      headers:
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            meta:
+              request_id: 01892A4D-7586-7000-8000-000000000000
+            error:
+              code: ACCESS_DENIED
+              message: Access Denied
+              description: You do not have permission to perform this operation.
+    InternalServerError:
+      description: Internal Server Error - An error occurred on the server.
+      headers:
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            meta:
+              request_id: 01892A4D-7586-7000-8000-000000000000
+            error:
+              code: INTERNAL_SERVER_ERROR
+              message: Internal Server Error
+              description: An unexpected error occurred. Please try again later or
+                contact support.
     LinkLimitExceeded:
       description: Link Limit Exceeded
       headers:
@@ -2154,52 +2046,40 @@ components:
                 type: string
                 maxLength: 255
     TooManyRequests:
-      description: Too Many Requests - rate limit exceeded
+      description: Too Many Requests - Rate limit exceeded.
       headers:
-        Content-Type:
-          $ref: '#/components/headers/Content-Type'
-        X-RateLimit-Limit:
-          $ref: '#/components/headers/X-RateLimit-Limit'
-        X-RateLimit-Remaining:
-          $ref: '#/components/headers/X-RateLimit-Remaining'
         Retry-After:
-          schema:
-            type: integer
-            format: int32
-            minimum: 1
-            maximum: 3600
-          description: Number of seconds to wait before making another request
+          $ref: '#/components/headers/Retry-After'
         Access-Control-Allow-Origin:
           $ref: '#/components/headers/Access-Control-Allow-Origin'
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              meta:
-                $ref: '#/components/schemas/ResponseMeta'
-              error:
-                $ref: '#/components/schemas/Error'
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            meta:
+              request_id: 01892A4D-7586-7000-8000-000000000000
+            error:
+              code: RATE_LIMIT_EXCEEDED
+              message: Rate Limit Exceeded
+              description: You have exceeded the rate limit. Please try again later.
     Unauthorized:
-      description: Unauthorized - invalid or missing authentication
+      description: Unauthorized - Authentication is required and has failed or has
+        not been provided.
       headers:
-        Content-Type:
-          $ref: '#/components/headers/Content-Type'
-        X-RateLimit-Limit:
-          $ref: '#/components/headers/X-RateLimit-Limit'
-        X-RateLimit-Remaining:
-          $ref: '#/components/headers/X-RateLimit-Remaining'
         Access-Control-Allow-Origin:
           $ref: '#/components/headers/Access-Control-Allow-Origin'
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              meta:
-                $ref: '#/components/schemas/ResponseMeta'
-              error:
-                $ref: '#/components/schemas/Error'
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            meta:
+              request_id: 01892A4D-7586-7000-8000-000000000000
+            error:
+              code: INVALID_ACCESS_TOKEN
+              message: Invalid Access Token
+              description: Provided access token is either missing, invalid or expired.
     UnprocessableEntity:
       description: Unprocessable Entity - request validation failed
       headers:
@@ -2277,6 +2157,14 @@ components:
         type: string
         maxLength: 255
         example: items/{id}
+    Retry-After:
+      description: Seconds until rate limit resets
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 86400
+        example: 3600
     X-RateLimit-Limit:
       description: Request limit per hour
       schema:

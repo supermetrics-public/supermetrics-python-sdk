@@ -182,7 +182,12 @@ class TestBackfillsResource:
         import supermetrics.resources.backfills as backfills_module
 
         original = backfills_module.create_backfill.sync
-        backfills_module.create_backfill.sync = MagicMock(return_value=CreateBackfillResponse401())
+        backfills_module.create_backfill.sync = MagicMock(
+            return_value=CreateBackfillResponse401(
+                meta=Meta(request_id="req-id"),
+                error=ErrorResponseError(code="UNAUTHORIZED", message="Invalid API key")
+            )
+        )
 
         with pytest.raises(AuthenticationError) as exc_info:
             backfills_resource.create(team_id=12345, transfer_id=456789, range_start="2024-01-01", range_end="2024-01-31")
@@ -201,7 +206,10 @@ class TestBackfillsResource:
 
         original = backfills_module.create_backfill.sync
         backfills_module.create_backfill.sync = MagicMock(
-            return_value=CreateBackfillResponse400(type_="about:blank", title="Bad Request", status=400)
+            return_value=CreateBackfillResponse400(
+                meta=Meta(request_id="req-id"),
+                error=ErrorResponseError(code="BAD_REQUEST", message="Invalid request parameters")
+            )
         )
 
         with pytest.raises(ValidationError) as exc_info:
@@ -243,7 +251,12 @@ class TestBackfillsResource:
         import supermetrics.resources.backfills as backfills_module
 
         original = backfills_module.create_backfill.sync
-        backfills_module.create_backfill.sync = MagicMock(return_value=CreateBackfillResponse500())
+        backfills_module.create_backfill.sync = MagicMock(
+            return_value=CreateBackfillResponse500(
+                meta=Meta(request_id="req-id"),
+                error=ErrorResponseError(code="INTERNAL_ERROR", message="Internal server error")
+            )
+        )
 
         with pytest.raises(APIError) as exc_info:
             backfills_resource.create(team_id=12345, transfer_id=456789, range_start="2024-01-01", range_end="2024-01-31")
@@ -261,7 +274,12 @@ class TestBackfillsResource:
         import supermetrics.resources.backfills as backfills_module
 
         original = backfills_module.create_backfill.sync
-        backfills_module.create_backfill.sync = MagicMock(return_value=CreateBackfillResponse403(type_="about:blank", title="Forbidden", status=403))
+        backfills_module.create_backfill.sync = MagicMock(
+            return_value=CreateBackfillResponse403(
+                meta=Meta(request_id="req-id"),
+                error=ErrorResponseError(code="FORBIDDEN", message="Forbidden")
+            )
+        )
 
         with pytest.raises(APIError) as exc_info:
             backfills_resource.create(team_id=12345, transfer_id=456789, range_start="2024-01-01", range_end="2024-01-31")
@@ -280,7 +298,12 @@ class TestBackfillsResource:
         import supermetrics.resources.backfills as backfills_module
 
         original = backfills_module.create_backfill.sync
-        backfills_module.create_backfill.sync = MagicMock(return_value=CreateBackfillResponse429())
+        backfills_module.create_backfill.sync = MagicMock(
+            return_value=CreateBackfillResponse429(
+                meta=Meta(request_id="req-id"),
+                error=ErrorResponseError(code="RATE_LIMIT", message="Rate limit exceeded")
+            )
+        )
 
         with pytest.raises(APIError) as exc_info:
             backfills_resource.create(team_id=12345, transfer_id=456789, range_start="2024-01-01", range_end="2024-01-31")
@@ -1037,7 +1060,12 @@ class TestBackfillsAsyncResource:
         import supermetrics.resources.backfills as backfills_module
 
         original = backfills_module.create_backfill.asyncio
-        backfills_module.create_backfill.asyncio = AsyncMock(return_value=CreateBackfillResponse401())
+        backfills_module.create_backfill.asyncio = AsyncMock(
+            return_value=CreateBackfillResponse401(
+                meta=Meta(request_id="req-id"),
+                error=ErrorResponseError(code="UNAUTHORIZED", message="Invalid API key")
+            )
+        )
 
         with pytest.raises(AuthenticationError):
             await backfills_async_resource.create(
@@ -1055,7 +1083,12 @@ class TestBackfillsAsyncResource:
         import supermetrics.resources.backfills as backfills_module
 
         original = backfills_module.create_backfill.asyncio
-        backfills_module.create_backfill.asyncio = AsyncMock(return_value=CreateBackfillResponse429())
+        backfills_module.create_backfill.asyncio = AsyncMock(
+            return_value=CreateBackfillResponse429(
+                meta=Meta(request_id="req-id"),
+                error=ErrorResponseError(code="RATE_LIMIT", message="Rate limit exceeded")
+            )
+        )
 
         with pytest.raises(APIError) as exc_info:
             await backfills_async_resource.create(
