@@ -781,4 +781,4 @@ For complete field lists, refer to the [Supermetrics field documentation](https:
 
 - Review the [API Reference](api-reference.md) for detailed method documentation
 - Check out [Error Handling](error-handling.md) for robust error management
-- Explore the [examples/](../examples/) directory for complete working code
+- Explore the [examples](https://github.com/supermetrics-public/SuperPy-SDK/tree/main/examples) directory for complete working code

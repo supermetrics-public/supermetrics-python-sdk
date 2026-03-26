@@ -1,7 +1,7 @@
 # Supermetrics client for Python.
 
 ![PyPI version](https://img.shields.io/pypi/v/supermetrics.svg)
-[![Documentation Status](https://readthedocs.org/projects/supermetrics/badge/?version=latest)](https://supermetrics.readthedocs.io/en/latest/?version=latest)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://supermetrics-public.github.io/supermetrics-python-sdk/)
 
 Official Python client for Supermetrics
 

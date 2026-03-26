@@ -170,4 +170,4 @@ asyncio.run(main())
 - [User Guide](user-guide.md) - Comprehensive tutorials and examples
 - [API Reference](api-reference.md) - Complete API documentation
 - [Error Handling](error-handling.md) - Error handling patterns and best practices
-- [Examples](../examples/) - Working code examples
+- [Examples](https://github.com/supermetrics-public/SuperPy-SDK/tree/main/examples) - Working code examples
