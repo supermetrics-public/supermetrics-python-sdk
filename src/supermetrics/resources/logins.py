@@ -118,8 +118,12 @@ class LoginsResource:
             if isinstance(response, GetDataSourceLoginResponse401):
                 error_msg: str = (
                     response.error.message
-                    if (response.error and not isinstance(response.error, Unset)
-                        and response.error.message and not isinstance(response.error.message, Unset))
+                    if (
+                        response.error
+                        and not isinstance(response.error, Unset)
+                        and response.error.message
+                        and not isinstance(response.error.message, Unset)
+                    )
                     else "Invalid or expired API key"
                 )
                 raise AuthenticationError(
@@ -130,9 +134,13 @@ class LoginsResource:
             elif isinstance(response, GetDataSourceLoginResponse404):
                 error_msg = (
                     response.error.message
-                    if (response.error and not isinstance(response.error, Unset)
+                    if (
+                        response.error
+                        and not isinstance(response.error, Unset)
                         and hasattr(response.error, 'message')
-                        and response.error.message and not isinstance(response.error.message, Unset))
+                        and response.error.message
+                        and not isinstance(response.error.message, Unset)
+                    )
                     else "Login not found"
                 )
                 raise APIError(
@@ -143,8 +151,12 @@ class LoginsResource:
             elif isinstance(response, GetDataSourceLoginResponse422):
                 error_msg = (
                     response.error.message
-                    if (response.error and not isinstance(response.error, Unset)
-                        and response.error.message and not isinstance(response.error.message, Unset))
+                    if (
+                        response.error
+                        and not isinstance(response.error, Unset)
+                        and response.error.message
+                        and not isinstance(response.error.message, Unset)
+                    )
                     else "Invalid request parameters"
                 )
                 raise ValidationError(
@@ -156,9 +168,13 @@ class LoginsResource:
                 status = 429 if isinstance(response, GetDataSourceLoginResponse429) else 500
                 error_msg = (
                     response.error.message
-                    if (response.error and not isinstance(response.error, Unset)
+                    if (
+                        response.error
+                        and not isinstance(response.error, Unset)
                         and hasattr(response.error, 'message')
-                        and response.error.message and not isinstance(response.error.message, Unset))
+                        and response.error.message
+                        and not isinstance(response.error.message, Unset)
+                    )
                     else "Supermetrics API error"
                 )
                 raise APIError(
@@ -263,8 +279,12 @@ class LoginsResource:
             if isinstance(response, ListDataSourceLoginsResponse401):
                 error_msg: str = (
                     response.error.message
-                    if (response.error and not isinstance(response.error, Unset)
-                        and response.error.message and not isinstance(response.error.message, Unset))
+                    if (
+                        response.error
+                        and not isinstance(response.error, Unset)
+                        and response.error.message
+                        and not isinstance(response.error.message, Unset)
+                    )
                     else "Invalid or expired API key"
                 )
                 raise AuthenticationError(
@@ -275,8 +295,12 @@ class LoginsResource:
             elif isinstance(response, ListDataSourceLoginsResponse422):
                 error_msg = (
                     response.error.message
-                    if (response.error and not isinstance(response.error, Unset)
-                        and response.error.message and not isinstance(response.error.message, Unset))
+                    if (
+                        response.error
+                        and not isinstance(response.error, Unset)
+                        and response.error.message
+                        and not isinstance(response.error.message, Unset)
+                    )
                     else "Invalid request parameters"
                 )
                 raise ValidationError(
@@ -288,9 +312,13 @@ class LoginsResource:
                 status = 429 if isinstance(response, ListDataSourceLoginsResponse429) else 500
                 error_msg = (
                     response.error.message
-                    if (response.error and not isinstance(response.error, Unset)
+                    if (
+                        response.error
+                        and not isinstance(response.error, Unset)
                         and hasattr(response.error, 'message')
-                        and response.error.message and not isinstance(response.error.message, Unset))
+                        and response.error.message
+                        and not isinstance(response.error.message, Unset)
+                    )
                     else "Supermetrics API error"
                 )
                 raise APIError(
@@ -451,8 +479,12 @@ class LoginsAsyncResource:
             if isinstance(response, GetDataSourceLoginResponse401):
                 error_msg: str = (
                     response.error.message
-                    if (response.error and not isinstance(response.error, Unset)
-                        and response.error.message and not isinstance(response.error.message, Unset))
+                    if (
+                        response.error
+                        and not isinstance(response.error, Unset)
+                        and response.error.message
+                        and not isinstance(response.error.message, Unset)
+                    )
                     else "Invalid or expired API key"
                 )
                 raise AuthenticationError(
@@ -463,9 +495,13 @@ class LoginsAsyncResource:
             elif isinstance(response, GetDataSourceLoginResponse404):
                 error_msg = (
                     response.error.message
-                    if (response.error and not isinstance(response.error, Unset)
+                    if (
+                        response.error
+                        and not isinstance(response.error, Unset)
                         and hasattr(response.error, 'message')
-                        and response.error.message and not isinstance(response.error.message, Unset))
+                        and response.error.message
+                        and not isinstance(response.error.message, Unset)
+                    )
                     else "Login not found"
                 )
                 raise APIError(
@@ -476,8 +512,12 @@ class LoginsAsyncResource:
             elif isinstance(response, GetDataSourceLoginResponse422):
                 error_msg = (
                     response.error.message
-                    if (response.error and not isinstance(response.error, Unset)
-                        and response.error.message and not isinstance(response.error.message, Unset))
+                    if (
+                        response.error
+                        and not isinstance(response.error, Unset)
+                        and response.error.message
+                        and not isinstance(response.error.message, Unset)
+                    )
                     else "Invalid request parameters"
                 )
                 raise ValidationError(
@@ -489,9 +529,13 @@ class LoginsAsyncResource:
                 status = 429 if isinstance(response, GetDataSourceLoginResponse429) else 500
                 error_msg = (
                     response.error.message
-                    if (response.error and not isinstance(response.error, Unset)
+                    if (
+                        response.error
+                        and not isinstance(response.error, Unset)
                         and hasattr(response.error, 'message')
-                        and response.error.message and not isinstance(response.error.message, Unset))
+                        and response.error.message
+                        and not isinstance(response.error.message, Unset)
+                    )
                     else "Supermetrics API error"
                 )
                 raise APIError(
@@ -590,8 +634,12 @@ class LoginsAsyncResource:
             if isinstance(response, ListDataSourceLoginsResponse401):
                 error_msg: str = (
                     response.error.message
-                    if (response.error and not isinstance(response.error, Unset)
-                        and response.error.message and not isinstance(response.error.message, Unset))
+                    if (
+                        response.error
+                        and not isinstance(response.error, Unset)
+                        and response.error.message
+                        and not isinstance(response.error.message, Unset)
+                    )
                     else "Invalid or expired API key"
                 )
                 raise AuthenticationError(
@@ -602,8 +650,12 @@ class LoginsAsyncResource:
             elif isinstance(response, ListDataSourceLoginsResponse422):
                 error_msg = (
                     response.error.message
-                    if (response.error and not isinstance(response.error, Unset)
-                        and response.error.message and not isinstance(response.error.message, Unset))
+                    if (
+                        response.error
+                        and not isinstance(response.error, Unset)
+                        and response.error.message
+                        and not isinstance(response.error.message, Unset)
+                    )
                     else "Invalid request parameters"
                 )
                 raise ValidationError(
@@ -615,9 +667,13 @@ class LoginsAsyncResource:
                 status = 429 if isinstance(response, ListDataSourceLoginsResponse429) else 500
                 error_msg = (
                     response.error.message
-                    if (response.error and not isinstance(response.error, Unset)
+                    if (
+                        response.error
+                        and not isinstance(response.error, Unset)
                         and hasattr(response.error, 'message')
-                        and response.error.message and not isinstance(response.error.message, Unset))
+                        and response.error.message
+                        and not isinstance(response.error.message, Unset)
+                    )
                     else "Supermetrics API error"
                 )
                 raise APIError(

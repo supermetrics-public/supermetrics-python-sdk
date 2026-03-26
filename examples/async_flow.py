@@ -26,9 +26,9 @@ Benefits of async:
     - Improved performance for batch operations
 """
 
-import traceback
 import asyncio
 import os
+import traceback
 from datetime import datetime, timedelta
 
 from supermetrics import (
@@ -60,7 +60,7 @@ async def main() -> None:
             ds_id = input("Enter the data source ID (ds_id): ").strip()
             if not ds_id:
                 raise ValueError("ds_id is required")
-                
+
             link = await client.login_links.create(ds_id=ds_id, description="Async Flow POC Example")
             print(f"✓ Login link created: {link.login_url}")
             print(f"  Link ID: {link.link_id}")

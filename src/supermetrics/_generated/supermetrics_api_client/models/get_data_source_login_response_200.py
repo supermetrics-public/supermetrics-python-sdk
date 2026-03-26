@@ -1,47 +1,34 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar, BinaryIO, TextIO, TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
 
-from ..types import UNSET, Unset
-from typing import cast
-
 if TYPE_CHECKING:
-  from ..models.data_source_login import DataSourceLogin
-  from ..models.response_meta import ResponseMeta
-
-
-
+    from ..models.data_source_login import DataSourceLogin
+    from ..models.response_meta import ResponseMeta
 
 
 T = TypeVar("T", bound="GetDataSourceLoginResponse200")
 
 
-
 @_attrs_define
 class GetDataSourceLoginResponse200:
-    """ 
-        Attributes:
-            meta (ResponseMeta | Unset):
-            data (DataSourceLogin | Unset):
-     """
+    """
+    Attributes:
+        meta (ResponseMeta | Unset):
+        data (DataSourceLogin | Unset):
+    """
 
     meta: ResponseMeta | Unset = UNSET
     data: DataSourceLogin | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-
-
-
-
     def to_dict(self) -> dict[str, Any]:
-        from ..models.data_source_login import DataSourceLogin
-        from ..models.response_meta import ResponseMeta
         meta: dict[str, Any] | Unset = UNSET
         if not isinstance(self.meta, Unset):
             meta = self.meta.to_dict()
@@ -50,11 +37,9 @@ class GetDataSourceLoginResponse200:
         if not isinstance(self.data, Unset):
             data = self.data.to_dict()
 
-
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({
-        })
+        field_dict.update({})
         if meta is not UNSET:
             field_dict["meta"] = meta
         if data is not UNSET:
@@ -62,38 +47,30 @@ class GetDataSourceLoginResponse200:
 
         return field_dict
 
-
-
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.data_source_login import DataSourceLogin
         from ..models.response_meta import ResponseMeta
+
         d = dict(src_dict)
         _meta = d.pop("meta", UNSET)
         meta: ResponseMeta | Unset
-        if isinstance(_meta,  Unset):
+        if isinstance(_meta, Unset):
             meta = UNSET
         else:
             meta = ResponseMeta.from_dict(_meta)
 
-
-
-
         _data = d.pop("data", UNSET)
         data: DataSourceLogin | Unset
-        if isinstance(_data,  Unset):
+        if isinstance(_data, Unset):
             data = UNSET
         else:
             data = DataSourceLogin.from_dict(_data)
-
-
-
 
         get_data_source_login_response_200 = cls(
             meta=meta,
             data=data,
         )
-
 
         get_data_source_login_response_200.additional_properties = d
         return get_data_source_login_response_200

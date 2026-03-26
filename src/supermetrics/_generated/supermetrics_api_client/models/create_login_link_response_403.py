@@ -1,54 +1,39 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar, BinaryIO, TextIO, TYPE_CHECKING, Generator
+from typing import Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..types import UNSET, Unset
-
 from ..models.create_login_link_response_403_error import CreateLoginLinkResponse403Error
 from ..types import UNSET, Unset
-
-
-
-
-
 
 T = TypeVar("T", bound="CreateLoginLinkResponse403")
 
 
-
 @_attrs_define
 class CreateLoginLinkResponse403:
-    """ 
-        Attributes:
-            error (CreateLoginLinkResponse403Error | Unset):
-            message (str | Unset):
-     """
+    """
+    Attributes:
+        error (CreateLoginLinkResponse403Error | Unset):
+        message (str | Unset):
+    """
 
     error: CreateLoginLinkResponse403Error | Unset = UNSET
     message: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
-
-
-
-
 
     def to_dict(self) -> dict[str, Any]:
         error: str | Unset = UNSET
         if not isinstance(self.error, Unset):
             error = self.error.value
 
-
         message = self.message
-
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({
-        })
+        field_dict.update({})
         if error is not UNSET:
             field_dict["error"] = error
         if message is not UNSET:
@@ -56,20 +41,15 @@ class CreateLoginLinkResponse403:
 
         return field_dict
 
-
-
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
         _error = d.pop("error", UNSET)
         error: CreateLoginLinkResponse403Error | Unset
-        if isinstance(_error,  Unset):
+        if isinstance(_error, Unset):
             error = UNSET
         else:
             error = CreateLoginLinkResponse403Error(_error)
-
-
-
 
         message = d.pop("message", UNSET)
 
@@ -77,7 +57,6 @@ class CreateLoginLinkResponse403:
             error=error,
             message=message,
         )
-
 
         create_login_link_response_403.additional_properties = d
         return create_login_link_response_403

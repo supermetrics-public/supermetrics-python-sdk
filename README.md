@@ -13,7 +13,7 @@ Official Python client for Supermetrics
 * Type-safe Python client generated from OpenAPI specification
 * Dual sync/async support via separate Client classes
 * Pydantic v2 models for request/response validation
-* Comprehensive API coverage: login links, logins, accounts, queries
+* Comprehensive API coverage: login links, logins, accounts, queries, DWH backfills
 * Custom exception hierarchy with HTTP status code mapping
 * Resource-based API organization
 
@@ -58,6 +58,40 @@ result = client.queries.execute(
 )
 
 print(f"Retrieved {len(result.data)} rows")
+```
+
+### Data Warehouse Backfills
+
+```python
+from supermetrics import SupermetricsClient
+
+# Initialize client
+client = SupermetricsClient(api_key="your_api_key")
+
+# Create a backfill for historical data
+backfill = client.backfills.create(
+    team_id=12345,
+    transfer_id=456789,
+    range_start="2024-01-01",
+    range_end="2024-01-31"
+)
+
+print(f"Backfill created: {backfill.transfer_backfill_id}")
+print(f"Status: {backfill.status}")
+
+# Get the latest backfill for a transfer
+latest = client.backfills.get_latest(team_id=12345, transfer_id=456789)
+print(f"Latest backfill status: {latest.status}")
+print(f"Progress: {latest.transfer_runs_completed}/{latest.transfer_runs_total}")
+
+# List all incomplete backfills for a team
+backfills = client.backfills.list_incomplete(team_id=12345)
+for bf in backfills:
+    print(f"Backfill {bf.transfer_backfill_id}: {bf.status}")
+
+# Cancel a backfill
+cancelled = client.backfills.cancel(team_id=12345, backfill_id=67890)
+print(f"Backfill cancelled: {cancelled.status}")
 ```
 
 ## Examples

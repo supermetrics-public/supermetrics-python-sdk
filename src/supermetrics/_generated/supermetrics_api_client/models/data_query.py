@@ -1,64 +1,57 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar, BinaryIO, TextIO, TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
 
-from ..types import UNSET, Unset
-from typing import cast
-
 if TYPE_CHECKING:
-  from ..models.data_query_ds_accounts_type_2 import DataQueryDsAccountsType2
-  from ..models.data_query_fields_type_2_item import DataQueryFieldsType2Item
-  from ..models.data_query_settings import DataQuerySettings
-
-
-
+    from ..models.data_query_ds_accounts_type_2 import DataQueryDsAccountsType2
+    from ..models.data_query_fields_type_2_item import DataQueryFieldsType2Item
+    from ..models.data_query_settings import DataQuerySettings
 
 
 T = TypeVar("T", bound="DataQuery")
 
 
-
 @_attrs_define
 class DataQuery:
-    """ 
-        Attributes:
-            ds_id (str): Target data source ID Example: GA.
-            api_key (str | Unset): API key when not using an authorization header Example: abc123def456.
-            schedule_id (str | Unset): Schedule ID for this query request. If not provided, one will be generated from other
-                query parameters Example: my_query_123.
-            ds_accounts (DataQueryDsAccountsType2 | list[str] | str | Unset): List of data source accounts the query should
-                target, or a filter for them Example: ['account123', 'account456'].
-            ds_segments (list[str] | str | Unset): List of data source segment IDs the query should target Example:
-                ['segment1', 'segment2'].
-            ds_user (str | Unset): Shorthand parameter to provide one value for ds_users Example: user@example.com.
-            ds_users (list[str] | str | Unset): List of data source login usernames to limit when searching for suitable
-                authentication
-            date_range_type (str | Unset): Type of date range the query should use
-            start_date (str | Unset): Fixed or relative start date for your query Example: yesterday.
-            end_date (str | Unset): Fixed or relative end date for your query Example: yesterday.
-            compare_type (str | Unset): Date range comparison type. Defaults to none
-            compare_show (str | Unset): When compare_type is custom, display type for comparison values
-            compare_start_date (str | Unset): When compare_type is custom, fixed or relative start date for comparison
-            compare_end_date (str | Unset): When compare_type is custom, fixed or relative end date for comparison
-            fields (list[DataQueryFieldsType2Item] | list[str] | str | Unset): Target data source fields the query should
-                return
-            settings (DataQuerySettings | Unset): Settings that should be applied when performing the query
-            filter_ (str | Unset): Filter string that should be applied to the results
-            order_columns (str | Unset): Order instruction for fields that are split by column
-            order_rows (list[str] | str | Unset): List of order fields and sort directions for result rows
-            max_columns (int | Unset): Maximum number of columns the query results should contain
-            max_rows (int | Unset): Maximum number of rows the query results should contain
-            offset_start (int | Unset): Starting row index for paginated response
-            offset_end (int | Unset): Ending row index for paginated response
-            cache_minutes (int | Unset): Maximum allowed age of query results cache in minutes
-            sync_timeout (int | Unset): Number of seconds the API should wait for query to finish
-     """
+    """
+    Attributes:
+        ds_id (str): Target data source ID Example: GA.
+        api_key (str | Unset): API key when not using an authorization header Example: abc123def456.
+        schedule_id (str | Unset): Schedule ID for this query request. If not provided, one will be generated from other
+            query parameters Example: my_query_123.
+        ds_accounts (DataQueryDsAccountsType2 | list[str] | str | Unset): List of data source accounts the query should
+            target, or a filter for them Example: ['account123', 'account456'].
+        ds_segments (list[str] | str | Unset): List of data source segment IDs the query should target Example:
+            ['segment1', 'segment2'].
+        ds_user (str | Unset): Shorthand parameter to provide one value for ds_users Example: user@example.com.
+        ds_users (list[str] | str | Unset): List of data source login usernames to limit when searching for suitable
+            authentication
+        date_range_type (str | Unset): Type of date range the query should use
+        start_date (str | Unset): Fixed or relative start date for your query Example: yesterday.
+        end_date (str | Unset): Fixed or relative end date for your query Example: yesterday.
+        compare_type (str | Unset): Date range comparison type. Defaults to none
+        compare_show (str | Unset): When compare_type is custom, display type for comparison values
+        compare_start_date (str | Unset): When compare_type is custom, fixed or relative start date for comparison
+        compare_end_date (str | Unset): When compare_type is custom, fixed or relative end date for comparison
+        fields (list[DataQueryFieldsType2Item] | list[str] | str | Unset): Target data source fields the query should
+            return
+        settings (DataQuerySettings | Unset): Settings that should be applied when performing the query
+        filter_ (str | Unset): Filter string that should be applied to the results
+        order_columns (str | Unset): Order instruction for fields that are split by column
+        order_rows (list[str] | str | Unset): List of order fields and sort directions for result rows
+        max_columns (int | Unset): Maximum number of columns the query results should contain
+        max_rows (int | Unset): Maximum number of rows the query results should contain
+        offset_start (int | Unset): Starting row index for paginated response
+        offset_end (int | Unset): Ending row index for paginated response
+        cache_minutes (int | Unset): Maximum allowed age of query results cache in minutes
+        sync_timeout (int | Unset): Number of seconds the API should wait for query to finish
+    """
 
     ds_id: str
     api_key: str | Unset = UNSET
@@ -87,14 +80,9 @@ class DataQuery:
     sync_timeout: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-
-
-
-
     def to_dict(self) -> dict[str, Any]:
         from ..models.data_query_ds_accounts_type_2 import DataQueryDsAccountsType2
-        from ..models.data_query_fields_type_2_item import DataQueryFieldsType2Item
-        from ..models.data_query_settings import DataQuerySettings
+
         ds_id = self.ds_id
 
         api_key = self.api_key
@@ -107,7 +95,6 @@ class DataQuery:
         elif isinstance(self.ds_accounts, list):
             ds_accounts = self.ds_accounts
 
-
         elif isinstance(self.ds_accounts, DataQueryDsAccountsType2):
             ds_accounts = self.ds_accounts.to_dict()
         else:
@@ -119,7 +106,6 @@ class DataQuery:
         elif isinstance(self.ds_segments, list):
             ds_segments = self.ds_segments
 
-
         else:
             ds_segments = self.ds_segments
 
@@ -130,7 +116,6 @@ class DataQuery:
             ds_users = UNSET
         elif isinstance(self.ds_users, list):
             ds_users = self.ds_users
-
 
         else:
             ds_users = self.ds_users
@@ -155,13 +140,11 @@ class DataQuery:
         elif isinstance(self.fields, list):
             fields = self.fields
 
-
         elif isinstance(self.fields, list):
             fields = []
             for fields_type_2_item_data in self.fields:
                 fields_type_2_item = fields_type_2_item_data.to_dict()
                 fields.append(fields_type_2_item)
-
 
         else:
             fields = self.fields
@@ -180,7 +163,6 @@ class DataQuery:
         elif isinstance(self.order_rows, list):
             order_rows = self.order_rows
 
-
         else:
             order_rows = self.order_rows
 
@@ -196,12 +178,13 @@ class DataQuery:
 
         sync_timeout = self.sync_timeout
 
-
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({
-            "ds_id": ds_id,
-        })
+        field_dict.update(
+            {
+                "ds_id": ds_id,
+            }
+        )
         if api_key is not UNSET:
             field_dict["api_key"] = api_key
         if schedule_id is not UNSET:
@@ -253,13 +236,12 @@ class DataQuery:
 
         return field_dict
 
-
-
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.data_query_ds_accounts_type_2 import DataQueryDsAccountsType2
         from ..models.data_query_fields_type_2_item import DataQueryFieldsType2Item
         from ..models.data_query_settings import DataQuerySettings
+
         d = dict(src_dict)
         ds_id = d.pop("ds_id")
 
@@ -283,15 +265,12 @@ class DataQuery:
                     raise TypeError()
                 ds_accounts_type_2 = DataQueryDsAccountsType2.from_dict(data)
 
-
-
                 return ds_accounts_type_2
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(DataQueryDsAccountsType2 | list[str] | str | Unset, data)
 
         ds_accounts = _parse_ds_accounts(d.pop("ds_accounts", UNSET))
-
 
         def _parse_ds_segments(data: object) -> list[str] | str | Unset:
             if isinstance(data, Unset):
@@ -307,7 +286,6 @@ class DataQuery:
             return cast(list[str] | str | Unset, data)
 
         ds_segments = _parse_ds_segments(d.pop("ds_segments", UNSET))
-
 
         ds_user = d.pop("ds_user", UNSET)
 
@@ -325,7 +303,6 @@ class DataQuery:
             return cast(list[str] | str | Unset, data)
 
         ds_users = _parse_ds_users(d.pop("ds_users", UNSET))
-
 
         date_range_type = d.pop("date_range_type", UNSET)
 
@@ -357,10 +334,8 @@ class DataQuery:
                     raise TypeError()
                 fields_type_2 = []
                 _fields_type_2 = data
-                for fields_type_2_item_data in (_fields_type_2):
+                for fields_type_2_item_data in _fields_type_2:
                     fields_type_2_item = DataQueryFieldsType2Item.from_dict(fields_type_2_item_data)
-
-
 
                     fields_type_2.append(fields_type_2_item)
 
@@ -371,16 +346,12 @@ class DataQuery:
 
         fields = _parse_fields(d.pop("fields", UNSET))
 
-
         _settings = d.pop("settings", UNSET)
         settings: DataQuerySettings | Unset
-        if isinstance(_settings,  Unset):
+        if isinstance(_settings, Unset):
             settings = UNSET
         else:
             settings = DataQuerySettings.from_dict(_settings)
-
-
-
 
         filter_ = d.pop("filter", UNSET)
 
@@ -400,7 +371,6 @@ class DataQuery:
             return cast(list[str] | str | Unset, data)
 
         order_rows = _parse_order_rows(d.pop("order_rows", UNSET))
-
 
         max_columns = d.pop("max_columns", UNSET)
 
@@ -441,7 +411,6 @@ class DataQuery:
             cache_minutes=cache_minutes,
             sync_timeout=sync_timeout,
         )
-
 
         data_query.additional_properties = d
         return data_query

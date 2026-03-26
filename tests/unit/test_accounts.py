@@ -172,9 +172,7 @@ class TestAccountsResource:
         accounts_module.get_accounts.sync = mock_sync
 
         # Act
-        accounts = accounts_resource.list(
-            ds_id="GAWA", login_usernames=["user1@example.com", "user2@example.com"]
-        )
+        accounts = accounts_resource.list(ds_id="GAWA", login_usernames=["user1@example.com", "user2@example.com"])
 
         # Assert
         assert len(accounts) == 2
@@ -218,9 +216,7 @@ class TestAccountsResource:
         # Cleanup
         accounts_module.get_accounts.sync = original_get_accounts
 
-    def test_list_with_empty_response(
-        self, accounts_resource: AccountsResource, mock_client: MagicMock
-    ) -> None:
+    def test_list_with_empty_response(self, accounts_resource: AccountsResource, mock_client: MagicMock) -> None:
         """Test list() with empty response returns empty list."""
         # Arrange
         mock_response = GetAccountsResponse200(data=[], meta=UNSET)
@@ -268,9 +264,7 @@ class TestAccountsResource:
         # Cleanup
         accounts_module.get_accounts.sync = original_get_accounts
 
-    def test_list_with_none_response(
-        self, accounts_resource: AccountsResource, mock_client: MagicMock
-    ) -> None:
+    def test_list_with_none_response(self, accounts_resource: AccountsResource, mock_client: MagicMock) -> None:
         """Test list() with None response returns empty list."""
         # Arrange
         import supermetrics.resources.accounts as accounts_module
@@ -297,11 +291,7 @@ class TestAccountsResource:
         mock_request = Mock()
         mock_request.url = "https://api.supermetrics.com/test"
 
-        error = httpx.HTTPStatusError(
-            "401 Unauthorized",
-            request=mock_request,
-            response=mock_response
-        )
+        error = httpx.HTTPStatusError("401 Unauthorized", request=mock_request, response=mock_response)
 
         # Mock the API method to raise the error
         import supermetrics.resources.accounts as accounts_module
@@ -329,11 +319,7 @@ class TestAccountsResource:
         mock_request = Mock()
         mock_request.url = "https://api.supermetrics.com/test"
 
-        error = httpx.HTTPStatusError(
-            "400 Bad Request",
-            request=mock_request,
-            response=mock_response
-        )
+        error = httpx.HTTPStatusError("400 Bad Request", request=mock_request, response=mock_response)
 
         # Mock the API method to raise the error
         import supermetrics.resources.accounts as accounts_module
@@ -361,11 +347,7 @@ class TestAccountsResource:
         mock_request = Mock()
         mock_request.url = "https://api.supermetrics.com/test"
 
-        error = httpx.HTTPStatusError(
-            "404 Not Found",
-            request=mock_request,
-            response=mock_response
-        )
+        error = httpx.HTTPStatusError("404 Not Found", request=mock_request, response=mock_response)
 
         # Mock the API method to raise the error
         import supermetrics.resources.accounts as accounts_module
@@ -393,11 +375,7 @@ class TestAccountsResource:
         mock_request = Mock()
         mock_request.url = "https://api.supermetrics.com/test"
 
-        error = httpx.HTTPStatusError(
-            "500 Internal Server Error",
-            request=mock_request,
-            response=mock_response
-        )
+        error = httpx.HTTPStatusError("500 Internal Server Error", request=mock_request, response=mock_response)
 
         # Mock the API method to raise the error
         import supermetrics.resources.accounts as accounts_module

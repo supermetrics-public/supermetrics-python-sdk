@@ -1,40 +1,33 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar, BinaryIO, TextIO, TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
 
-from ..types import UNSET, Unset
-from typing import cast
-
 if TYPE_CHECKING:
-  from ..models.data_response_meta_query import DataResponseMetaQuery
-  from ..models.data_response_meta_result import DataResponseMetaResult
-  from ..models.data_response_meta_paginate import DataResponseMetaPaginate
-
-
-
+    from ..models.data_response_meta_paginate import DataResponseMetaPaginate
+    from ..models.data_response_meta_query import DataResponseMetaQuery
+    from ..models.data_response_meta_result import DataResponseMetaResult
 
 
 T = TypeVar("T", bound="DataResponseMeta")
 
 
-
 @_attrs_define
 class DataResponseMeta:
-    """ 
-        Attributes:
-            request_id (str | Unset): API request ID
-            schedule_id (str | Unset): Custom or generated schedule ID for the query
-            status_code (str | Unset): Status code for the query
-            query (DataResponseMetaQuery | Unset):
-            result (DataResponseMetaResult | Unset):
-            paginate (DataResponseMetaPaginate | Unset):
-     """
+    """
+    Attributes:
+        request_id (str | Unset): API request ID
+        schedule_id (str | Unset): Custom or generated schedule ID for the query
+        status_code (str | Unset): Status code for the query
+        query (DataResponseMetaQuery | Unset):
+        result (DataResponseMetaResult | Unset):
+        paginate (DataResponseMetaPaginate | Unset):
+    """
 
     request_id: str | Unset = UNSET
     schedule_id: str | Unset = UNSET
@@ -44,14 +37,7 @@ class DataResponseMeta:
     paginate: DataResponseMetaPaginate | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-
-
-
-
     def to_dict(self) -> dict[str, Any]:
-        from ..models.data_response_meta_query import DataResponseMetaQuery
-        from ..models.data_response_meta_result import DataResponseMetaResult
-        from ..models.data_response_meta_paginate import DataResponseMetaPaginate
         request_id = self.request_id
 
         schedule_id = self.schedule_id
@@ -70,11 +56,9 @@ class DataResponseMeta:
         if not isinstance(self.paginate, Unset):
             paginate = self.paginate.to_dict()
 
-
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({
-        })
+        field_dict.update({})
         if request_id is not UNSET:
             field_dict["request_id"] = request_id
         if schedule_id is not UNSET:
@@ -90,13 +74,12 @@ class DataResponseMeta:
 
         return field_dict
 
-
-
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.data_response_meta_paginate import DataResponseMetaPaginate
         from ..models.data_response_meta_query import DataResponseMetaQuery
         from ..models.data_response_meta_result import DataResponseMetaResult
-        from ..models.data_response_meta_paginate import DataResponseMetaPaginate
+
         d = dict(src_dict)
         request_id = d.pop("request_id", UNSET)
 
@@ -106,33 +89,24 @@ class DataResponseMeta:
 
         _query = d.pop("query", UNSET)
         query: DataResponseMetaQuery | Unset
-        if isinstance(_query,  Unset):
+        if isinstance(_query, Unset):
             query = UNSET
         else:
             query = DataResponseMetaQuery.from_dict(_query)
 
-
-
-
         _result = d.pop("result", UNSET)
         result: DataResponseMetaResult | Unset
-        if isinstance(_result,  Unset):
+        if isinstance(_result, Unset):
             result = UNSET
         else:
             result = DataResponseMetaResult.from_dict(_result)
 
-
-
-
         _paginate = d.pop("paginate", UNSET)
         paginate: DataResponseMetaPaginate | Unset
-        if isinstance(_paginate,  Unset):
+        if isinstance(_paginate, Unset):
             paginate = UNSET
         else:
             paginate = DataResponseMetaPaginate.from_dict(_paginate)
-
-
-
 
         data_response_meta = cls(
             request_id=request_id,
@@ -142,7 +116,6 @@ class DataResponseMeta:
             result=result,
             paginate=paginate,
         )
-
 
         data_response_meta.additional_properties = d
         return data_response_meta

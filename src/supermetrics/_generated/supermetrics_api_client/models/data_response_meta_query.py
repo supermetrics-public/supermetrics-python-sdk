@@ -1,44 +1,37 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar, BinaryIO, TextIO, TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
 
-from ..types import UNSET, Unset
-from typing import cast
-
 if TYPE_CHECKING:
-  from ..models.data_response_meta_query_settings import DataResponseMetaQuerySettings
-  from ..models.data_response_meta_query_fields_item import DataResponseMetaQueryFieldsItem
-
-
-
+    from ..models.data_response_meta_query_fields_item import DataResponseMetaQueryFieldsItem
+    from ..models.data_response_meta_query_settings import DataResponseMetaQuerySettings
 
 
 T = TypeVar("T", bound="DataResponseMetaQuery")
 
 
-
 @_attrs_define
 class DataResponseMetaQuery:
-    """ 
-        Attributes:
-            start_date (str | Unset): Query start date in YYYY-MM-DD format
-            end_date (str | Unset): Query end date in YYYY-MM-DD format
-            ds_accounts (list[str] | Unset): Data source account IDs used in the query
-            ds_segments (list[str] | Unset): Data source segment IDs used in the query
-            fields (list[DataResponseMetaQueryFieldsItem] | Unset):
-            compare_type (str | Unset): Date range comparison type used
-            compare_show (str | Unset): Display type for comparison values
-            compare_start_date (str | Unset): Start date for comparison date range
-            compare_end_date (str | Unset): End date for comparison date range
-            settings (DataResponseMetaQuerySettings | Unset): Settings used in query
-            cache_minutes (int | Unset): Requested maximum age of cache in minutes
-     """
+    """
+    Attributes:
+        start_date (str | Unset): Query start date in YYYY-MM-DD format
+        end_date (str | Unset): Query end date in YYYY-MM-DD format
+        ds_accounts (list[str] | Unset): Data source account IDs used in the query
+        ds_segments (list[str] | Unset): Data source segment IDs used in the query
+        fields (list[DataResponseMetaQueryFieldsItem] | Unset):
+        compare_type (str | Unset): Date range comparison type used
+        compare_show (str | Unset): Display type for comparison values
+        compare_start_date (str | Unset): Start date for comparison date range
+        compare_end_date (str | Unset): End date for comparison date range
+        settings (DataResponseMetaQuerySettings | Unset): Settings used in query
+        cache_minutes (int | Unset): Requested maximum age of cache in minutes
+    """
 
     start_date: str | Unset = UNSET
     end_date: str | Unset = UNSET
@@ -53,13 +46,7 @@ class DataResponseMetaQuery:
     cache_minutes: int | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
-
-
-
-
     def to_dict(self) -> dict[str, Any]:
-        from ..models.data_response_meta_query_settings import DataResponseMetaQuerySettings
-        from ..models.data_response_meta_query_fields_item import DataResponseMetaQueryFieldsItem
         start_date = self.start_date
 
         end_date = self.end_date
@@ -68,13 +55,9 @@ class DataResponseMetaQuery:
         if not isinstance(self.ds_accounts, Unset):
             ds_accounts = self.ds_accounts
 
-
-
         ds_segments: list[str] | Unset = UNSET
         if not isinstance(self.ds_segments, Unset):
             ds_segments = self.ds_segments
-
-
 
         fields: list[dict[str, Any]] | Unset = UNSET
         if not isinstance(self.fields, Unset):
@@ -82,8 +65,6 @@ class DataResponseMetaQuery:
             for fields_item_data in self.fields:
                 fields_item = fields_item_data.to_dict()
                 fields.append(fields_item)
-
-
 
         compare_type = self.compare_type
 
@@ -99,11 +80,9 @@ class DataResponseMetaQuery:
 
         cache_minutes = self.cache_minutes
 
-
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update({
-        })
+        field_dict.update({})
         if start_date is not UNSET:
             field_dict["start_date"] = start_date
         if end_date is not UNSET:
@@ -129,12 +108,11 @@ class DataResponseMetaQuery:
 
         return field_dict
 
-
-
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.data_response_meta_query_settings import DataResponseMetaQuerySettings
         from ..models.data_response_meta_query_fields_item import DataResponseMetaQueryFieldsItem
+        from ..models.data_response_meta_query_settings import DataResponseMetaQuerySettings
+
         d = dict(src_dict)
         start_date = d.pop("start_date", UNSET)
 
@@ -142,9 +120,7 @@ class DataResponseMetaQuery:
 
         ds_accounts = cast(list[str], d.pop("ds_accounts", UNSET))
 
-
         ds_segments = cast(list[str], d.pop("ds_segments", UNSET))
-
 
         _fields = d.pop("fields", UNSET)
         fields: list[DataResponseMetaQueryFieldsItem] | Unset = UNSET
@@ -153,10 +129,7 @@ class DataResponseMetaQuery:
             for fields_item_data in _fields:
                 fields_item = DataResponseMetaQueryFieldsItem.from_dict(fields_item_data)
 
-
-
                 fields.append(fields_item)
-
 
         compare_type = d.pop("compare_type", UNSET)
 
@@ -168,13 +141,10 @@ class DataResponseMetaQuery:
 
         _settings = d.pop("settings", UNSET)
         settings: DataResponseMetaQuerySettings | Unset
-        if isinstance(_settings,  Unset):
+        if isinstance(_settings, Unset):
             settings = UNSET
         else:
             settings = DataResponseMetaQuerySettings.from_dict(_settings)
-
-
-
 
         cache_minutes = d.pop("cache_minutes", UNSET)
 
@@ -191,7 +161,6 @@ class DataResponseMetaQuery:
             settings=settings,
             cache_minutes=cache_minutes,
         )
-
 
         data_response_meta_query.additional_properties = d
         return data_response_meta_query

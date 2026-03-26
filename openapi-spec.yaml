@@ -22,7 +22,560 @@ servers:
 - url: https://api.supermetrics.com/enterprise/v2
   description: Global production public Supermetrics Management API base path.
   x-internal: false
+- url: https://dts-api.supermetrics.com/v1
+  description: Global production public Supermetrics Data Warehouse Backfills API
+    base path.
+  x-internal: false
 paths:
+  /teams/{team_id}/transfers/{transfer_id}/backfills:
+    post:
+      summary: Create a backfill
+      description: 'Schedule a new backfill for a specific transfer. A backfill re-processes
+
+        historical data for a specified date range.
+
+
+        **Returns:** The created backfill object with its ID, status, and progress
+        information.
+
+
+        **Important Notes:**
+
+        - The transfer must exist and belong to your team
+
+        - You must have `dwh.transfer.edit` permission
+
+        - The date range cannot overlap with an existing active backfill
+
+        - Backfills are processed asynchronously
+
+        - The returned backfill object will have status "CREATED" initially
+
+        '
+      operationId: createBackfill
+      tags:
+      - DWH backfills
+      parameters:
+      - $ref: '#/components/parameters/TeamIdPathParam'
+      - $ref: '#/components/parameters/TransferIdPathParam'
+      requestBody:
+        required: true
+        description: Backfill creation parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBackfillRequest'
+            example:
+              range_start: '2024-01-01'
+              range_end: '2024-01-31'
+      responses:
+        '200':
+          description: Backfill successfully scheduled
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateBackfillResponse'
+              example:
+                meta:
+                  request_id: 01892A4D-7586-7000-8000-000000000000
+                data:
+                  transfer_backfill_id: 12345
+                  transfer_id: 456789
+                  range_start_date: '2024-01-01'
+                  range_end_date: '2024-01-31'
+                  created_time: '2024-02-01T09:00:00Z'
+                  created_user_id: 789
+                  start_time: null
+                  end_time: null
+                  status: CREATED
+                  transfer_runs_total: 31
+                  transfer_runs_created: 0
+                  transfer_runs_completed: 0
+                  transfer_runs_failed: 0
+                  error_report: []
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: Unprocessable Entity - The request was well-formed but contains
+            semantic errors.
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                meta:
+                  request_id: 01892A4D-7586-7000-8000-000000000000
+                error:
+                  code: VALIDATION_FAILED
+                  message: Validation Failed
+                  description: The start date must be before the end date.
+        '404':
+          description: Transfer not found
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                meta:
+                  request_id: 01892A4D-7586-7000-8000-000000000000
+                error:
+                  code: NOT_FOUND
+                  message: Not Found
+                  description: The requested transfer could not be found or you do
+                    not have access to it.
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
+  /teams/{team_id}/transfers/{transfer_id}/backfills/latest:
+    get:
+      summary: Get latest backfill for a transfer
+      description: 'Retrieve information about the most recent backfill for a specific
+        transfer.
+
+        This endpoint returns the latest backfill regardless of its status (pending,
+        running, completed, failed, or cancelled).
+
+
+        **Returns:** The latest backfill object with its ID, status, progress information,
+        and error details if any.
+
+
+        **Important Notes:**
+
+        - The transfer must exist and belong to your team
+
+        - You must have `dwh.transfer.view` permission
+
+        - Returns 404 if no backfill has ever been created for this transfer
+
+        - The backfill object includes real-time progress tracking for running backfills
+
+        '
+      operationId: getLatestBackfill
+      tags:
+      - DWH backfills
+      parameters:
+      - $ref: '#/components/parameters/TeamIdPathParam'
+      - $ref: '#/components/parameters/TransferIdPathParam'
+      responses:
+        '200':
+          description: Latest backfill retrieved successfully
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetBackfillResponse'
+              examples:
+                runningBackfill:
+                  summary: Backfill currently in progress
+                  value:
+                    meta:
+                      request_id: 01892A4D-7586-7000-8000-000000000000
+                    data:
+                      transfer_backfill_id: 12345
+                      transfer_id: 456789
+                      range_start_date: '2024-01-01'
+                      range_end_date: '2024-01-31'
+                      created_time: '2024-02-01T09:00:00Z'
+                      created_user_id: 789
+                      start_time: '2024-02-01T10:00:00Z'
+                      end_time: null
+                      status: RUNNING
+                      transfer_runs_total: 31
+                      transfer_runs_created: 31
+                      transfer_runs_completed: 15
+                      transfer_runs_failed: 0
+                      error_report: []
+                completedBackfill:
+                  summary: Completed backfill
+                  value:
+                    meta:
+                      request_id: 01892A4D-7586-7000-8000-000000000000
+                    data:
+                      transfer_backfill_id: 12344
+                      transfer_id: 456789
+                      range_start_date: '2023-12-01'
+                      range_end_date: '2023-12-31'
+                      created_time: '2024-01-15T07:00:00Z'
+                      created_user_id: 789
+                      start_time: '2024-01-15T08:00:00Z'
+                      end_time: '2024-01-15T10:30:00Z'
+                      status: COMPLETED
+                      transfer_runs_total: 31
+                      transfer_runs_created: 31
+                      transfer_runs_completed: 31
+                      transfer_runs_failed: 0
+                      error_report: []
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Transfer or backfill not found
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                meta:
+                  request_id: 01892A4D-7586-7000-8000-000000000000
+                error:
+                  code: NOT_FOUND
+                  message: Not Found
+                  description: No backfill has been created for this transfer yet,
+                    or the transfer does not exist or belong to your team.
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
+  /teams/{team_id}/backfills:
+    get:
+      summary: List incomplete backfills for team
+      description: 'Retrieve a list of all incomplete backfills for your team.
+
+        This endpoint returns only backfills that are not yet finished.
+
+
+        **What are "incomplete" backfills?**
+
+        - **Included:** Backfills with status `CREATED`, `SCHEDULED`, `RUNNING`, or
+        `FAILED`
+
+        - **Excluded:** Backfills with status `COMPLETED` or `CANCELLED`
+
+
+        **Returns:** Array of backfill objects sorted by creation time (newest first).
+
+
+        **Important Notes:**
+
+        - You must have `dwh.transfer.view` permission
+
+        - Only backfills belonging to your team are returned
+
+        - The list includes backfills for all transfers in your team
+
+        - Each backfill includes real-time progress tracking for running backfills
+
+        '
+      operationId: listIncompleteBackfills
+      tags:
+      - DWH backfills
+      parameters:
+      - $ref: '#/components/parameters/TeamIdPathParam'
+      responses:
+        '200':
+          description: List of incomplete backfills retrieved successfully
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - meta
+                - data
+                properties:
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  data:
+                    type: array
+                    maxItems: 100
+                    items:
+                      $ref: '#/components/schemas/Backfill'
+                    description: Array of incomplete backfill objects
+              examples:
+                multipleBackfills:
+                  summary: Multiple incomplete backfills
+                  value:
+                    meta:
+                      request_id: 01892A4D-7586-7000-8000-000000000000
+                    data:
+                    - transfer_backfill_id: 12347
+                      transfer_id: 456790
+                      range_start_date: '2024-02-01'
+                      range_end_date: '2024-02-28'
+                      created_time: '2024-03-01T14:00:00Z'
+                      created_user_id: 789
+                      start_time: '2024-03-01T14:30:00Z'
+                      end_time: null
+                      status: RUNNING
+                      transfer_runs_total: 28
+                      transfer_runs_created: 28
+                      transfer_runs_completed: 15
+                      transfer_runs_failed: 0
+                      error_report: []
+                    - transfer_backfill_id: 12346
+                      transfer_id: 456789
+                      range_start_date: '2024-01-15'
+                      range_end_date: '2024-01-31'
+                      created_time: '2024-02-15T09:30:00Z'
+                      created_user_id: 790
+                      start_time: '2024-02-15T10:00:00Z'
+                      end_time: null
+                      status: RUNNING
+                      transfer_runs_total: 17
+                      transfer_runs_created: 17
+                      transfer_runs_completed: 10
+                      transfer_runs_failed: 0
+                      error_report: []
+                    - transfer_backfill_id: 12345
+                      transfer_id: 456788
+                      range_start_date: '2024-01-01'
+                      range_end_date: '2024-01-14'
+                      created_time: '2024-02-01T08:00:00Z'
+                      created_user_id: 789
+                      start_time: null
+                      end_time: null
+                      status: SCHEDULED
+                      transfer_runs_total: 14
+                      transfer_runs_created: 14
+                      transfer_runs_completed: 0
+                      transfer_runs_failed: 0
+                      error_report: []
+                emptyList:
+                  summary: No incomplete backfills
+                  value:
+                    meta:
+                      request_id: 01892A4D-7586-7000-8000-000000000000
+                    data: []
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
+  /teams/{team_id}/backfills/{backfill_id}:
+    get:
+      summary: Get backfill by ID
+      description: 'Retrieve detailed information about a specific backfill using
+        its unique identifier.
+
+        This endpoint returns the complete backfill object with current status, progress
+        tracking, and error details.
+
+
+        **Returns:** The backfill object with its ID, status, progress information,
+        and error details if any.
+
+
+        **Important Notes:**
+
+        - The backfill must exist and belong to your team
+
+        - You must have `dwh.transfer.view` permission
+
+        - Returns 404 if the backfill does not exist or does not belong to your team
+
+        - The backfill object includes real-time progress tracking for running backfills
+
+        '
+      operationId: getBackfillById
+      tags:
+      - DWH backfills
+      parameters:
+      - $ref: '#/components/parameters/TeamIdPathParam'
+      - $ref: '#/components/parameters/BackfillIdPathParam'
+      responses:
+        '200':
+          description: Backfill retrieved successfully
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetBackfillResponse'
+              example:
+                meta:
+                  request_id: 01892A4D-7586-7000-8000-000000000000
+                data:
+                  transfer_backfill_id: 12345
+                  transfer_id: 456789
+                  range_start_date: '2024-01-01'
+                  range_end_date: '2024-01-31'
+                  created_time: '2024-02-01T09:00:00Z'
+                  created_user_id: 789
+                  start_time: '2024-02-01T10:00:00Z'
+                  end_time: null
+                  status: RUNNING
+                  transfer_runs_total: 31
+                  transfer_runs_created: 31
+                  transfer_runs_completed: 25
+                  transfer_runs_failed: 2
+                  error_report: []
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/BackfillNotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
+    patch:
+      summary: Update backfill status
+      description: 'Update the status of a backfill. Currently, the only supported
+        operation is
+
+        cancelling a backfill by setting status to "CANCELLED".
+
+
+        **What happens when you cancel:**
+
+        - Backfill status is changed to "CANCELLED"
+
+        - All pending/queued transfer runs associated with this backfill are cancelled
+
+        - Transfer runs that are already running will complete
+
+        - The backfill''s `end_time` is set to the cancellation time
+
+        - The `removed_time` and `removed_user_id` fields are set
+
+
+        **Important: This endpoint does NOT delete the backfill.**
+
+        - The backfill record remains in the system with status "CANCELLED"
+
+        - You can still retrieve the backfill information using GET /v1/teams/{team_id}/backfills/{backfill_id}
+
+
+        **Returns:** The updated backfill object with the new status and updated timestamps.
+
+
+        **Important Notes:**
+
+        - The backfill must exist and belong to your team
+
+        - You must have `dwh.transfer.edit` permission
+
+        - Only backfills with incomplete status (CREATED, SCHEDULED, RUNNING, FAILED)
+        can be cancelled
+
+        - Returns 404 if the backfill does not exist or does not belong to your team
+
+        - Returns 422 if the backfill cannot be updated (e.g., already in a final
+        state)
+
+        '
+      operationId: updateBackfillStatus
+      tags:
+      - DWH backfills
+      parameters:
+      - $ref: '#/components/parameters/TeamIdPathParam'
+      - $ref: '#/components/parameters/BackfillIdPathParam'
+      requestBody:
+        required: true
+        description: Status update parameters
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - status
+              properties:
+                status:
+                  type: string
+                  description: New status for the backfill. Currently only "CANCELLED"
+                    is supported.
+                  enum:
+                  - CANCELLED
+                  example: CANCELLED
+            example:
+              status: CANCELLED
+      responses:
+        '200':
+          description: Backfill status successfully updated
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetBackfillResponse'
+              example:
+                meta:
+                  request_id: 01892A4D-7586-7000-8000-000000000000
+                data:
+                  transfer_backfill_id: 12345
+                  transfer_id: 456789
+                  range_start_date: '2024-01-01'
+                  range_end_date: '2024-01-31'
+                  created_time: '2024-02-01T09:00:00Z'
+                  created_user_id: 789
+                  removed_time: '2024-02-01T15:30:00Z'
+                  removed_user_id: 790
+                  start_time: '2024-02-01T10:00:00Z'
+                  end_time: '2024-02-01T15:30:00Z'
+                  status: CANCELLED
+                  transfer_runs_total: 31
+                  transfer_runs_created: 31
+                  transfer_runs_completed: 25
+                  transfer_runs_failed: 2
+                  error_report: []
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/BackfillNotFound'
+        '422':
+          description: Unprocessable Entity - Backfill cannot be cancelled
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                meta:
+                  request_id: 01892A4D-7586-7000-8000-000000000000
+                error:
+                  code: CANNOT_CANCEL_BACKFILL
+                  message: Cannot Cancel Backfill
+                  description: The backfill cannot be cancelled because it is already
+                    in a final state.
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
   /query/data/json:
     get:
       summary: Query data
@@ -510,6 +1063,167 @@ paths:
       description: Supermetrics login link ID
 components:
   schemas:
+    Backfill:
+      type: object
+      required:
+      - transfer_backfill_id
+      - transfer_id
+      - range_start_date
+      - range_end_date
+      - status
+      - created_time
+      - created_user_id
+      - transfer_runs_total
+      - transfer_runs_created
+      - transfer_runs_completed
+      - transfer_runs_failed
+      properties:
+        transfer_backfill_id:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854775807
+          description: Unique identifier of the backfill
+          example: 12345
+        transfer_id:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854775807
+          description: ID of the transfer this backfill belongs to
+          example: 456789
+        range_start_date:
+          type: string
+          format: date
+          maxLength: 10
+          description: Start date of the backfill range
+          example: '2024-01-01'
+        range_end_date:
+          type: string
+          format: date
+          maxLength: 10
+          description: End date of the backfill range
+          example: '2024-01-31'
+        created_time:
+          type: string
+          format: date-time
+          maxLength: 30
+          description: Timestamp when the backfill was created (ISO 8601 format)
+          example: '2024-02-01T09:00:00Z'
+        created_user_id:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854775807
+          description: ID of the user who created the backfill
+          example: 789
+        removed_time:
+          type: string
+          format: date-time
+          maxLength: 30
+          description: Timestamp when the backfill was cancelled/removed (ISO 8601
+            format)
+          example: '2024-02-01T15:00:00Z'
+          nullable: true
+        removed_user_id:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854775807
+          description: ID of the user who cancelled/removed the backfill
+          example: 790
+          nullable: true
+        start_time:
+          type: string
+          format: date-time
+          maxLength: 30
+          description: Timestamp when the backfill processing started (ISO 8601 format)
+          example: '2024-02-01T10:00:00Z'
+          nullable: true
+        end_time:
+          type: string
+          format: date-time
+          maxLength: 30
+          description: Timestamp when the backfill processing completed (ISO 8601
+            format)
+          example: '2024-02-01T12:30:00Z'
+          nullable: true
+        status:
+          type: string
+          description: Current status of the backfill
+          enum:
+          - CREATED
+          - SCHEDULED
+          - RUNNING
+          - FAILED
+          - COMPLETED
+          - CANCELLED
+          example: RUNNING
+        transfer_runs_total:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 2147483647
+          description: Total number of transfer runs created for this backfill
+          example: 31
+        transfer_runs_created:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 2147483647
+          description: Number of transfer runs that have been created
+          example: 31
+        transfer_runs_completed:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 2147483647
+          description: Number of transfer runs that have completed successfully
+          example: 25
+        transfer_runs_failed:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 2147483647
+          description: Number of transfer runs that have failed
+          example: 2
+        error_report:
+          type: array
+          description: List of errors that occurred during backfill processing (empty
+            array if no errors)
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/TransferBackfillRunError'
+    CreateBackfillRequest:
+      type: object
+      required:
+      - range_start
+      - range_end
+      properties:
+        range_start:
+          type: string
+          format: date
+          maxLength: 10
+          description: Start date of the backfill range (inclusive)
+          example: '2024-01-01'
+          pattern: ^\d{4}-\d{2}-\d{2}$
+        range_end:
+          type: string
+          format: date
+          maxLength: 10
+          description: End date of the backfill range (inclusive)
+          example: '2024-01-31'
+          pattern: ^\d{4}-\d{2}-\d{2}$
+    CreateBackfillResponse:
+      type: object
+      required:
+      - meta
+      - data
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+        data:
+          $ref: '#/components/schemas/Backfill'
     DataQuery:
       type: object
       properties:
@@ -960,6 +1674,48 @@ components:
           maxLength: 255
           description: Error description
           example: Provided access token is either missing, invalid or expired.
+    ErrorResponse:
+      type: object
+      required:
+      - meta
+      - error
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+        error:
+          type: object
+          required:
+          - code
+          - message
+          properties:
+            code:
+              type: string
+              maxLength: 100
+              pattern: ^[A-Z0-9_]+$
+              description: Machine-readable error code
+              example: INVALID_ACCESS_TOKEN
+            message:
+              type: string
+              maxLength: 255
+              pattern: ^[\s\S]+$
+              description: Human-readable error message
+              example: Invalid Access Token
+            description:
+              type: string
+              maxLength: 255
+              pattern: ^[\s\S]+$
+              description: Detailed error description
+              example: Provided access token is either missing, invalid or expired.
+    GetBackfillResponse:
+      type: object
+      required:
+      - meta
+      - data
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+        data:
+          $ref: '#/components/schemas/Backfill'
     LoginLink:
       type: object
       properties:
@@ -1048,6 +1804,17 @@ components:
           $ref: '#/components/schemas/ResponseMeta'
         data:
           $ref: '#/components/schemas/LoginLink'
+    Meta:
+      type: object
+      required:
+      - request_id
+      properties:
+        request_id:
+          type: string
+          maxLength: 36
+          description: Unique identifier for the request (UUIDv7), used for tracking
+            and debugging
+          pattern: ^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$
     ResponseMeta:
       type: object
       properties:
@@ -1056,6 +1823,23 @@ components:
           maxLength: 50
           pattern: ^[A-Za-z0-9_-]+$
           description: API request ID
+    TransferBackfillRunError:
+      type: object
+      required:
+      - transfer_run_date
+      - error
+      properties:
+        transfer_run_date:
+          type: string
+          format: date
+          maxLength: 10
+          description: The date of the transfer run that failed
+          example: '2024-01-15'
+        error:
+          type: string
+          maxLength: 1000
+          description: Error message describing what went wrong
+          example: Connection timeout to data source
     User:
       type: object
       properties:
@@ -1074,164 +1858,73 @@ components:
           maxLength: 255
           description: Supermetrics user email
   responses:
-    BadRequest:
-      description: Bad request - invalid parameters
+    BackfillNotFound:
+      description: Backfill not found
       headers:
-        X-RateLimit-Limit:
-          description: Request limit per hour
-          schema:
-            type: integer
-            format: int32
-            minimum: 1
-            maximum: 10000
-            example: 5000
-        X-RateLimit-Remaining:
-          description: Remaining requests in current window
-          schema:
-            type: integer
-            format: int32
-            minimum: 0
-            maximum: 10000
-            example: 4999
-        Access-Control-Allow-Origin:
-          description: CORS header
-          schema:
-            type: string
-            maxLength: 255
-            enum:
-            - '*'
-            example: '*'
-      content:
-        application/problem+json:
-          schema:
-            type: object
-            description: RFC 9457 Problem Details for HTTP APIs
-            properties:
-              type:
-                type: string
-                format: uri
-                maxLength: 255
-                description: A URI reference that identifies the problem type
-                example: https://supermetrics.com/problems/unauthorized
-              title:
-                type: string
-                maxLength: 255
-                pattern: ^[A-Za-z0-9\s]+$
-                description: A short, human-readable summary of the problem type
-                example: Unauthorized
-              status:
-                type: integer
-                format: int32
-                minimum: 100
-                maximum: 599
-                description: The HTTP status code
-                example: 401
-              detail:
-                type: string
-                maxLength: 1000
-                pattern: ^[A-Za-z0-9\s.,\-]+$
-                description: A human-readable explanation specific to this occurrence
-                example: Authentication required
-              instance:
-                type: string
-                format: uri
-                maxLength: 255
-                description: A URI reference that identifies the specific occurrence
-                example: https://api.supermetrics.com/v2/api-keys
-            required:
-            - type
-            - title
-            - status
-            additionalProperties: false
-    Forbidden:
-      description: Access forbidden
-      headers:
-        X-RateLimit-Limit:
-          description: Request limit per hour
-          schema:
-            type: integer
-            format: int32
-            minimum: 1
-            maximum: 10000
-            example: 5000
-        X-RateLimit-Remaining:
-          description: Remaining requests in current window
-          schema:
-            type: integer
-            format: int32
-            minimum: 0
-            maximum: 10000
-            example: 4999
-        Access-Control-Allow-Origin:
-          description: CORS header
-          schema:
-            type: string
-            maxLength: 255
-            enum:
-            - '*'
-            example: '*'
-      content:
-        application/problem+json:
-          schema:
-            type: object
-            description: RFC 9457 Problem Details for HTTP APIs
-            properties:
-              type:
-                type: string
-                format: uri
-                maxLength: 255
-                description: A URI reference that identifies the problem type
-                example: https://supermetrics.com/problems/unauthorized
-              title:
-                type: string
-                maxLength: 255
-                pattern: ^[A-Za-z0-9\s]+$
-                description: A short, human-readable summary of the problem type
-                example: Unauthorized
-              status:
-                type: integer
-                format: int32
-                minimum: 100
-                maximum: 599
-                description: The HTTP status code
-                example: 401
-              detail:
-                type: string
-                maxLength: 1000
-                pattern: ^[A-Za-z0-9\s.,\-]+$
-                description: A human-readable explanation specific to this occurrence
-                example: Authentication required
-              instance:
-                type: string
-                format: uri
-                maxLength: 255
-                description: A URI reference that identifies the specific occurrence
-                example: https://api.supermetrics.com/v2/api-keys
-            required:
-            - type
-            - title
-            - status
-            additionalProperties: false
-    InternalServerError:
-      description: Internal Server Error - unexpected server error
-      headers:
-        Content-Type:
-          $ref: '#/components/headers/Content-Type'
-        X-RateLimit-Limit:
-          $ref: '#/components/headers/X-RateLimit-Limit'
-        X-RateLimit-Remaining:
-          $ref: '#/components/headers/X-RateLimit-Remaining'
         Access-Control-Allow-Origin:
           $ref: '#/components/headers/Access-Control-Allow-Origin'
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              meta:
-                $ref: '#/components/schemas/ResponseMeta'
-              error:
-                $ref: '#/components/schemas/Error'
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            meta:
+              request_id: 01892A4D-7586-7000-8000-000000000000
+            error:
+              code: NOT_FOUND
+              message: Not Found
+              description: The requested backfill could not be found or you do not
+                have access to it.
+    BadRequest:
+      description: Bad Request - The request was invalid or cannot be served.
+      headers:
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            meta:
+              request_id: 01892A4D-7586-7000-8000-000000000000
+            error:
+              code: INVALID_PARAMETER
+              message: Invalid Parameter
+              description: The request contains invalid or malformed parameters.
+    Forbidden:
+      description: Forbidden - The request is understood, but it has been refused
+        or access is not allowed.
+      headers:
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            meta:
+              request_id: 01892A4D-7586-7000-8000-000000000000
+            error:
+              code: ACCESS_DENIED
+              message: Access Denied
+              description: You do not have permission to perform this operation.
+    InternalServerError:
+      description: Internal Server Error - An error occurred on the server.
+      headers:
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            meta:
+              request_id: 01892A4D-7586-7000-8000-000000000000
+            error:
+              code: INTERNAL_SERVER_ERROR
+              message: Internal Server Error
+              description: An unexpected error occurred. Please try again later or
+                contact support.
     LinkLimitExceeded:
       description: Link Limit Exceeded
       headers:
@@ -1353,52 +2046,40 @@ components:
                 type: string
                 maxLength: 255
     TooManyRequests:
-      description: Too Many Requests - rate limit exceeded
+      description: Too Many Requests - Rate limit exceeded.
       headers:
-        Content-Type:
-          $ref: '#/components/headers/Content-Type'
-        X-RateLimit-Limit:
-          $ref: '#/components/headers/X-RateLimit-Limit'
-        X-RateLimit-Remaining:
-          $ref: '#/components/headers/X-RateLimit-Remaining'
         Retry-After:
-          schema:
-            type: integer
-            format: int32
-            minimum: 1
-            maximum: 3600
-          description: Number of seconds to wait before making another request
+          $ref: '#/components/headers/Retry-After'
         Access-Control-Allow-Origin:
           $ref: '#/components/headers/Access-Control-Allow-Origin'
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              meta:
-                $ref: '#/components/schemas/ResponseMeta'
-              error:
-                $ref: '#/components/schemas/Error'
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            meta:
+              request_id: 01892A4D-7586-7000-8000-000000000000
+            error:
+              code: RATE_LIMIT_EXCEEDED
+              message: Rate Limit Exceeded
+              description: You have exceeded the rate limit. Please try again later.
     Unauthorized:
-      description: Unauthorized - invalid or missing authentication
+      description: Unauthorized - Authentication is required and has failed or has
+        not been provided.
       headers:
-        Content-Type:
-          $ref: '#/components/headers/Content-Type'
-        X-RateLimit-Limit:
-          $ref: '#/components/headers/X-RateLimit-Limit'
-        X-RateLimit-Remaining:
-          $ref: '#/components/headers/X-RateLimit-Remaining'
         Access-Control-Allow-Origin:
           $ref: '#/components/headers/Access-Control-Allow-Origin'
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              meta:
-                $ref: '#/components/schemas/ResponseMeta'
-              error:
-                $ref: '#/components/schemas/Error'
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            meta:
+              request_id: 01892A4D-7586-7000-8000-000000000000
+            error:
+              code: INVALID_ACCESS_TOKEN
+              message: Invalid Access Token
+              description: Provided access token is either missing, invalid or expired.
     UnprocessableEntity:
       description: Unprocessable Entity - request validation failed
       headers:
@@ -1419,7 +2100,40 @@ components:
                 $ref: '#/components/schemas/ResponseMeta'
               error:
                 $ref: '#/components/schemas/Error'
-  parameters: {}
+  parameters:
+    BackfillIdPathParam:
+      name: backfill_id
+      in: path
+      required: true
+      description: Unique identifier of the backfill
+      example: 12345
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+        maximum: 9223372036854775807
+    TeamIdPathParam:
+      name: team_id
+      in: path
+      required: true
+      description: Unique identifier of the team
+      example: 12345
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+        maximum: 9223372036854775807
+    TransferIdPathParam:
+      name: transfer_id
+      in: path
+      required: true
+      description: Unique identifier of the transfer
+      example: 456789
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+        maximum: 9223372036854775807
   headers:
     Access-Control-Allow-Origin:
       description: CORS header
@@ -1443,6 +2157,14 @@ components:
         type: string
         maxLength: 255
         example: items/{id}
+    Retry-After:
+      description: Seconds until rate limit resets
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 86400
+        example: 3600
     X-RateLimit-Limit:
       description: Request limit per hour
       schema:
@@ -1460,6 +2182,8 @@ components:
         maximum: 10000
         example: 49
   securitySchemes:
+    ApiKeyAuth:
+      $ref: '#/components/securitySchemes/ApiKeyAuth'
     BearerAuth:
       type: http
       scheme: bearer

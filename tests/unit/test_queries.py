@@ -9,8 +9,6 @@ from supermetrics._generated.supermetrics_api_client.client import Client as Gen
 from supermetrics._generated.supermetrics_api_client.models.data_response import DataResponse
 from supermetrics._generated.supermetrics_api_client.models.data_response_meta import DataResponseMeta
 from supermetrics._generated.supermetrics_api_client.models.get_data_response_400 import GetDataResponse400
-from supermetrics._generated.supermetrics_api_client.models.get_data_response_401 import GetDataResponse401
-from supermetrics._generated.supermetrics_api_client.models.get_data_response_403 import GetDataResponse403
 from supermetrics._generated.supermetrics_api_client.types import UNSET
 from supermetrics.exceptions import APIError, AuthenticationError, NetworkError, ValidationError
 from supermetrics.resources.queries import QueriesAsyncResource, QueriesResource
@@ -235,9 +233,7 @@ class TestQueriesResource:
         # Cleanup
         queries_module.get_data.sync = original_get_data
 
-    def test_execute_query_with_none_response(
-        self, queries_resource: QueriesResource, mock_client: MagicMock
-    ) -> None:
+    def test_execute_query_with_none_response(self, queries_resource: QueriesResource, mock_client: MagicMock) -> None:
         """Test execute() with None response returns None."""
         # Arrange
         import supermetrics.resources.queries as queries_module
@@ -260,9 +256,7 @@ class TestQueriesResource:
         # Cleanup
         queries_module.get_data.sync = original_get_data
 
-    def test_execute_query_with_unset_response(
-        self, queries_resource: QueriesResource, mock_client: MagicMock
-    ) -> None:
+    def test_execute_query_with_unset_response(self, queries_resource: QueriesResource, mock_client: MagicMock) -> None:
         """Test execute() with UNSET response returns None."""
         # Arrange
         import supermetrics.resources.queries as queries_module
@@ -285,9 +279,7 @@ class TestQueriesResource:
         # Cleanup
         queries_module.get_data.sync = original_get_data
 
-    def test_get_results_with_none_response(
-        self, queries_resource: QueriesResource, mock_client: MagicMock
-    ) -> None:
+    def test_get_results_with_none_response(self, queries_resource: QueriesResource, mock_client: MagicMock) -> None:
         """Test get_results() with None response returns None."""
         # Arrange
         import supermetrics.resources.queries as queries_module
@@ -357,11 +349,7 @@ class TestQueriesResource:
         mock_request = Mock()
         mock_request.url = "https://api.supermetrics.com/test"
 
-        error = httpx.HTTPStatusError(
-            "401 Unauthorized",
-            request=mock_request,
-            response=mock_response
-        )
+        error = httpx.HTTPStatusError("401 Unauthorized", request=mock_request, response=mock_response)
 
         # Mock the API method to raise the error
         import supermetrics.resources.queries as queries_module
@@ -393,11 +381,7 @@ class TestQueriesResource:
         original_get_data = queries_module.get_data.sync
 
         # Create a GetDataResponse400 instance with required fields
-        error_response = GetDataResponse400(
-            type_="about:blank",
-            title="Bad Request",
-            status=400
-        )
+        error_response = GetDataResponse400(type_="about:blank", title="Bad Request", status=400)
         queries_module.get_data.sync = MagicMock(return_value=error_response)
 
         # Verify ValidationError is raised
@@ -426,11 +410,7 @@ class TestQueriesResource:
         mock_request = Mock()
         mock_request.url = "https://api.supermetrics.com/test"
 
-        error = httpx.HTTPStatusError(
-            "404 Not Found",
-            request=mock_request,
-            response=mock_response
-        )
+        error = httpx.HTTPStatusError("404 Not Found", request=mock_request, response=mock_response)
 
         # Mock the API method to raise the error
         import supermetrics.resources.queries as queries_module
@@ -464,11 +444,7 @@ class TestQueriesResource:
         mock_request = Mock()
         mock_request.url = "https://api.supermetrics.com/test"
 
-        error = httpx.HTTPStatusError(
-            "500 Internal Server Error",
-            request=mock_request,
-            response=mock_response
-        )
+        error = httpx.HTTPStatusError("500 Internal Server Error", request=mock_request, response=mock_response)
 
         # Mock the API method to raise the error
         import supermetrics.resources.queries as queries_module
