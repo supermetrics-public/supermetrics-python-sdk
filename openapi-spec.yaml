@@ -12,14 +12,14 @@ info:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
 servers:
-- url: https://api.supermetrics.com/enterprise/v2
+- url: https://api.supermetrics.com/v2
   description: Global production public Supermetrics Data API base path.
   x-internal: false
 - url: https://api.supermetrics.com
   description: Global production public Supermetrics API base path for datasource
     search.
   x-internal: false
-- url: https://api.supermetrics.com/enterprise/v2
+- url: https://api.supermetrics.com/v2
   description: Global production public Supermetrics Management API base path.
   x-internal: false
 - url: https://dts-api.supermetrics.com/v1
