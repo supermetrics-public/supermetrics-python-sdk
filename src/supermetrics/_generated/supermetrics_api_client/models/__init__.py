@@ -38,6 +38,15 @@ from .data_source import DataSource
 from .data_source_login import DataSourceLogin
 from .data_source_login_type import DataSourceLoginType
 from .data_source_type import DataSourceType
+from .datasource_details import DatasourceDetails
+from .datasource_details_account_labels_type_0 import DatasourceDetailsAccountLabelsType0
+from .datasource_details_categories_item import DatasourceDetailsCategoriesItem
+from .datasource_details_status import DatasourceDetailsStatus
+from .datasource_option import DatasourceOption
+from .datasource_report_type import DatasourceReportType
+from .datasource_setting import DatasourceSetting
+from .datasource_setting_context import DatasourceSettingContext
+from .datasource_setting_type import DatasourceSettingType
 from .error import Error
 from .error_response import ErrorResponse
 from .error_response_error import ErrorResponseError
@@ -150,8 +159,17 @@ __all__ = (
     "DataResponseMetaQuerySettings",
     "DataResponseMetaResult",
     "DataSource",
+    "DatasourceDetails",
+    "DatasourceDetailsAccountLabelsType0",
+    "DatasourceDetailsCategoriesItem",
+    "DatasourceDetailsStatus",
     "DataSourceLogin",
     "DataSourceLoginType",
+    "DatasourceOption",
+    "DatasourceReportType",
+    "DatasourceSetting",
+    "DatasourceSettingContext",
+    "DatasourceSettingType",
     "DataSourceType",
     "Error",
     "ErrorResponse",

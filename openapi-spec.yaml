@@ -27,6 +27,59 @@ servers:
     base path.
   x-internal: false
 paths:
+  /teams/{team_id}/datasource/{data_source_id}:
+    get:
+      summary: Get datasource configuration details
+      description: Retrieve complete configuration details for a data source including
+        report types, settings, and authentication requirements
+      parameters:
+      - name: team_id
+        in: path
+        required: true
+        description: Team ID
+        schema:
+          type: integer
+          format: int32
+          minimum: 1
+      - name: data_source_id
+        in: path
+        required: true
+        description: Data source identifier
+        schema:
+          type: string
+          maxLength: 100
+      - name: Sm-App-Id
+        in: header
+        required: false
+        description: Application identifier
+        schema:
+          type: string
+          maxLength: 100
+        example: XPLD
+      responses:
+        '200':
+          description: Successfully retrieved datasource details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasourceDetails'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/DatasourceNotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth:
+        - default
+      - BearerAuth:
+        - default
+      tags:
+      - Datasource
   /teams/{team_id}/transfers/{transfer_id}/backfills:
     post:
       summary: Create a backfill
@@ -1656,6 +1709,288 @@ components:
         is_shared:
           type: boolean
           description: Whether login is shared with all team users
+    DatasourceDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 100
+          description: Unique identifier of the datasource (e.g., "GAWA", "AW", "SA360")
+          example: GAWA
+        name:
+          type: string
+          maxLength: 100
+          description: Human-readable name of the datasource
+          example: Google Analytics 4
+        description:
+          type: string
+          maxLength: 2000
+          description: Detailed description of the datasource and its capabilities
+          example: A web analytics service for tracking website traffic and user behavior,
+            with a focus on AI and machine learning.
+        marketing_name:
+          type: string
+          maxLength: 100
+          nullable: true
+          description: Connector marketing name
+          example: Google Analytics
+        logo_url:
+          type: string
+          maxLength: 500
+          description: Connector logo URL
+          example: https://assets.supermetrics.com/images/dsLogos/GAWA.png
+        categories:
+          type: array
+          maxItems: 50
+          description: Categories that this datasource belongs to
+          items:
+            type: string
+            enum:
+            - AD_VERIFICATION
+            - AFFILIATE
+            - ANALYTICS
+            - BRAND_REPUTATION
+            - CRM_SALES
+            - DATA_WAREHOUSES
+            - DSP
+            - ECOMMERCE
+            - FILES
+            - MARKETING_ATTRIBUTION
+            - MARKETING_AUTOMATION
+            - MOBILE
+            - OTHER
+            - PAID_MEDIA
+            - PAYMENTS
+            - RETAIL_MEDIA
+            - SEARCH
+            - SEO
+            - SOCIAL_MEDIA
+          example:
+          - ANALYTICS
+        products:
+          type: array
+          maxItems: 50
+          description: List of products where this datasource is available
+          items:
+            type: string
+            maxLength: 100
+          example:
+          - API
+          - DS
+          - SHEETS
+          - EXCEL
+          - DWH
+        status:
+          type: string
+          description: Connector release status
+          enum:
+          - Early access
+          - Released
+          example: Released
+        is_premium:
+          type: boolean
+          description: Is connector premium
+          example: false
+        tags:
+          type: array
+          maxItems: 50
+          description: Tags associated with this datasource (e.g., "popular")
+          items:
+            type: string
+            maxLength: 100
+          example:
+          - popular
+        is_authentication_required:
+          type: boolean
+          description: Whether this datasource requires authentication to use
+          example: true
+        has_account_list:
+          type: boolean
+          description: Whether this datasource has account-level resources that can
+            be selected
+          example: true
+        has_fields:
+          type: boolean
+          description: Whether this datasource has field selection capabilities
+          example: true
+        has_segments:
+          type: boolean
+          description: Indicates if the data source supports segments
+          example: false
+        has_report_type_selection:
+          type: boolean
+          description: Whether the report type selection UI should be shown to users
+          example: false
+        is_date_range_required:
+          type: boolean
+          description: Whether date range selection is applicable at the datasource
+            level (can be overridden by report types)
+          example: true
+        is_custom_data_import:
+          type: boolean
+          description: Indicates if the data source supports custom data import
+          example: false
+        min_metrics:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 100
+          nullable: true
+          description: Minimum number of metrics required for the data source query
+          example: 1
+        max_metrics:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 100
+          nullable: true
+          description: Maximum number of metrics allowed for the data source query
+          example: 10
+        min_dimensions:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 100
+          nullable: true
+          description: Minimum number of dimensions required for the data source query
+          example: 0
+        max_dimensions:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 100
+          nullable: true
+          description: Maximum number of dimensions allowed for the data source query
+          example: 9
+        report_type_header_label:
+          type: string
+          maxLength: 100
+          description: Dynamic label used for UI to show what the report type header
+            should be called
+          example: Report Type
+        account_labels:
+          type: object
+          nullable: true
+          description: Labels for the accounts
+          properties:
+            plural:
+              type: string
+              maxLength: 100
+              description: Plural form of the account label
+              example: Accounts
+            singular:
+              type: string
+              maxLength: 100
+              description: Singular form of the account label
+              example: Account
+        report_types:
+          type: array
+          maxItems: 100
+          description: Available report types for this datasource
+          items:
+            $ref: '#/components/schemas/DatasourceReportType'
+        common_settings:
+          type: array
+          maxItems: 100
+          description: General settings not tied to a specific report type
+          items:
+            $ref: '#/components/schemas/DatasourceSetting'
+    DatasourceOption:
+      type: object
+      properties:
+        option_id:
+          type: string
+          maxLength: 100
+          description: Unique identifier for the option
+          example: default_attribution
+        label:
+          type: string
+          maxLength: 100
+          description: Human-readable label for the option
+          example: Default attribution
+    DatasourceReportType:
+      type: object
+      properties:
+        label:
+          type: string
+          maxLength: 100
+          description: Human-readable report type name
+          example: Cohort Daily
+        id:
+          type: string
+          maxLength: 100
+          description: Unique identifier for the report type
+          example: CohortDaily
+        is_date_range_required:
+          type: boolean
+          description: Whether date range selection is required for this specific
+            report type
+          example: false
+        is_free_text_account_required:
+          type: boolean
+          description: Whether this report type requires free-text account input (e.g.,
+            page aliases, URLs)
+          example: true
+        settings:
+          type: array
+          maxItems: 100
+          description: List of settings applicable to this report type
+          items:
+            $ref: '#/components/schemas/DatasourceSetting'
+    DatasourceSetting:
+      type: object
+      properties:
+        setting_id:
+          type: string
+          maxLength: 100
+          description: Unique identifier for the setting, using the v2 API key format
+          example: blanks_to_zero
+        context:
+          type: string
+          description: The context in which the setting is applied.
+          enum:
+          - options
+          - reportConfiguration
+          example: options
+        type:
+          type: string
+          description: UI component type
+          enum:
+          - checkbox
+          - combobox
+          - none
+          - select
+          - text
+          - textarea
+          - radio
+          example: checkbox
+        label:
+          type: string
+          maxLength: 100
+          description: Human-readable label for the setting
+          example: Replace blank metric values with zeros
+        help_text:
+          type: string
+          maxLength: 2000
+          nullable: true
+          description: Optional helper text shown to users
+          example: When you're splitting the data by a time dimension, using this
+            setting ensures all time values (dates / weeks / months / years) will
+            be returned, even if there's no data for some of them.
+        default_value:
+          description: Optional default value; type depends on the setting type
+          nullable: true
+          example: null
+        options:
+          type: array
+          maxItems: 100
+          description: Zero or more selectable options, applicable when type is select/multiselect
+          items:
+            $ref: '#/components/schemas/DatasourceOption'
+        is_value_required:
+          type: boolean
+          description: Whether a value is mandatory for this setting
+          example: false
     Error:
       type: object
       properties:
@@ -1858,6 +2193,22 @@ components:
           maxLength: 255
           description: Supermetrics user email
   responses:
+    DatasourceNotFound:
+      description: Datasource not found
+      headers:
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            meta:
+              request_id: 01892A4D-7586-7000-8000-000000000000
+            error:
+              code: DATA_SOURCE_NOT_FOUND
+              message: DATA_SOURCE_NOT_FOUND
+              description: DATA_SOURCE_NOT_FOUND
     BackfillNotFound:
       description: Backfill not found
       headers:
