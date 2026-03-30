@@ -10,6 +10,7 @@ from supermetrics.__version__ import __version__
 from supermetrics._generated.supermetrics_api_client.client import Client as GeneratedClient
 from supermetrics.resources.accounts import AccountsResource
 from supermetrics.resources.backfills import BackfillsResource
+from supermetrics.resources.datasource_details import DatasourceDetailsResource
 from supermetrics.resources.login_links import LoginLinksResource
 from supermetrics.resources.logins import LoginsResource
 from supermetrics.resources.queries import QueriesResource
@@ -95,6 +96,7 @@ class SupermetricsClient:
         self.accounts = AccountsResource(self._client)
         self.queries = QueriesResource(self._client)
         self.backfills = BackfillsResource(self._client)
+        self.datasource_details = DatasourceDetailsResource(self._client)
 
         logger.info("SupermetricsClient initialized successfully")
 

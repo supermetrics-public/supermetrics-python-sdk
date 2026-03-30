@@ -62,7 +62,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DatasourceDetails'
+                $ref: '#/components/schemas/DatasourceDetailsResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1746,27 +1746,27 @@ components:
           items:
             type: string
             enum:
-            - AD_VERIFICATION
-            - AFFILIATE
-            - ANALYTICS
-            - BRAND_REPUTATION
-            - CRM_SALES
-            - DATA_WAREHOUSES
+            - Ad Verification
+            - Affiliate
+            - Analytics
+            - Brand Reputation
+            - CRM/Sales
+            - Data Warehouses
             - DSP
-            - ECOMMERCE
-            - FILES
-            - MARKETING_ATTRIBUTION
-            - MARKETING_AUTOMATION
-            - MOBILE
-            - OTHER
-            - PAID_MEDIA
-            - PAYMENTS
-            - RETAIL_MEDIA
-            - SEARCH
+            - Ecommerce
+            - Files
+            - Marketing Attribution
+            - Marketing Automation
+            - Mobile
+            - Other
+            - Paid Media
+            - Payments
+            - Retail Media
+            - Search
             - SEO
-            - SOCIAL_MEDIA
+            - Social Media
           example:
-          - ANALYTICS
+          - Analytics
         products:
           type: array
           maxItems: 50
@@ -2132,6 +2132,13 @@ components:
           nullable: true
           maxLength: 255
           description: Username used to authenticate to data source
+    DatasourceDetailsResponse:
+      type: object
+      properties:
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+        data:
+          $ref: '#/components/schemas/DatasourceDetails'
     LoginLinkResponse:
       type: object
       properties:

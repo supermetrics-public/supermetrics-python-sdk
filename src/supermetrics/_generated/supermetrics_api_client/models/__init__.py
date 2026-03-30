@@ -41,6 +41,7 @@ from .data_source_type import DataSourceType
 from .datasource_details import DatasourceDetails
 from .datasource_details_account_labels_type_0 import DatasourceDetailsAccountLabelsType0
 from .datasource_details_categories_item import DatasourceDetailsCategoriesItem
+from .datasource_details_response import DatasourceDetailsResponse
 from .datasource_details_status import DatasourceDetailsStatus
 from .datasource_option import DatasourceOption
 from .datasource_report_type import DatasourceReportType
@@ -162,6 +163,7 @@ __all__ = (
     "DatasourceDetails",
     "DatasourceDetailsAccountLabelsType0",
     "DatasourceDetailsCategoriesItem",
+    "DatasourceDetailsResponse",
     "DatasourceDetailsStatus",
     "DataSourceLogin",
     "DataSourceLoginType",
