@@ -259,6 +259,8 @@ python scripts/filter_openapi_spec.py
 
 Contributions are welcome! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines on how to contribute, run tests, and deploy releases.
 
+> **Note:** Every pull request must include an update to [HISTORY.md](./HISTORY.md) describing the change under the relevant version section.
+
 ## Credits
 
 This package was created with [Cookiecutter](https://github.com/audreyfeldroy/cookiecutter) and the [audreyfeldroy/cookiecutter-pypackage](https://github.com/audreyfeldroy/cookiecutter-pypackage) project template.
