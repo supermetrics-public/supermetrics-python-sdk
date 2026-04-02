@@ -11,6 +11,7 @@ auto-generated code in _generated/ to provide:
 """
 
 from supermetrics.resources.backfills import BackfillsAsyncResource, BackfillsResource
+from supermetrics.resources.datasource_details import DatasourceDetailsAsyncResource, DatasourceDetailsResource
 from supermetrics.resources.login_links import LoginLinksAsyncResource, LoginLinksResource
 
 __all__ = [
@@ -18,4 +19,6 @@ __all__ = [
     "LoginLinksAsyncResource",
     "BackfillsResource",
     "BackfillsAsyncResource",
+    "DatasourceDetailsResource",
+    "DatasourceDetailsAsyncResource",
 ]

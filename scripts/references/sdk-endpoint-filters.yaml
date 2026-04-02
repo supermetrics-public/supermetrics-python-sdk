@@ -62,6 +62,10 @@ endpoints:
   - method: PATCH
     path: /teams/{team_id}/backfills/{backfill_id}
 
+  # Datasource
+  - method: GET
+    path: /teams/{team_id}/datasource/{data_source_id}
+
   # ==========================================
   # EXAMPLE: Endpoint with comprehensive patches
   # ==========================================

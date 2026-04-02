@@ -35,6 +35,7 @@ client = SupermetricsClient(
 - `accounts`: Access to AccountsResource
 - `queries`: Access to QueriesResource
 - `backfills`: Access to BackfillsResource
+- `datasource_details`: Access to DatasourceDetailsResource
 
 **Methods:**
 
@@ -84,6 +85,7 @@ client = SupermetricsAsyncClient(
 - `accounts`: Access to AccountsAsyncResource
 - `queries`: Access to QueriesAsyncResource
 - `backfills`: Access to BackfillsAsyncResource
+- `datasource_details`: Access to DatasourceDetailsAsyncResource
 
 **Methods:**
 
@@ -671,6 +673,68 @@ asyncio.run(main())
 
 ---
 
+### DatasourceDetailsResource
+
+Retrieve complete configuration details for a Supermetrics data source.
+
+#### get()
+
+Fetch metadata for a data source including report types, settings, and authentication requirements.
+
+```python
+details = client.datasource_details.get(
+    team_id=12345,
+    data_source_id="GAWA",
+    sm_app_id=None   # optional
+)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `data_source_id` (str, required): Data source ID (e.g., `"GAWA"`, `"AW"`, `"SA360"`)
+- `sm_app_id` (str, optional): Value forwarded as the `Sm-App-Id` request header
+
+**Returns:** `DatasourceDetails` object
+
+**Raises:** `AuthenticationError`, `ValidationError`, `APIError`, `NetworkError`
+
+**Example:**
+
+```python
+from supermetrics import SupermetricsClient, APIError
+
+with SupermetricsClient(api_key="your_key") as client:
+    details = client.datasource_details.get(team_id=12345, data_source_id="GAWA")
+
+    print(f"Name:    {details.name}")
+    print(f"Status:  {details.status}")
+    print(f"Premium: {details.is_premium}")
+
+    if details.report_types:
+        for rt in details.report_types:
+            print(f"  Report type: {rt.id} — {rt.name}")
+```
+
+**Async usage:**
+
+```python
+import asyncio
+from supermetrics import SupermetricsAsyncClient
+
+async def main():
+    async with SupermetricsAsyncClient(api_key="your_key") as client:
+        details = await client.datasource_details.get(
+            team_id=12345,
+            data_source_id="GAWA"
+        )
+        print(f"Datasource: {details.name} ({details.status})")
+
+asyncio.run(main())
+```
+
+---
+
 ## Models
 
 ### Backfill
@@ -732,6 +796,53 @@ Represents an error that occurred during a single transfer run within a backfill
 backfill = client.backfills.get(team_id=12345, backfill_id=67890)
 for err in backfill.error_report:
     print(f"Run on {err.transfer_run_date} failed: {err.error}")
+```
+
+---
+
+### DatasourceDetails
+
+Represents complete configuration metadata for a Supermetrics data source.
+
+**Key Attributes:**
+
+- `id` (str): Unique data source identifier (e.g., `"GAWA"`, `"AW"`)
+- `name` (str): Human-readable name (e.g., `"Google Analytics 4"`)
+- `description` (str): Detailed description of the data source
+- `marketing_name` (str | None): Connector marketing name
+- `logo_url` (str): URL to the connector logo image
+- `categories` (list[DatasourceDetailsCategoriesItem]): Category tags (e.g., `["ANALYTICS"]`)
+- `products` (list[str]): Products where this datasource is available (e.g., `["API", "DS", "DWH"]`)
+- `status` (DatasourceDetailsStatus): Release status — `Released`, `Beta`, `Deprecated`, etc.
+- `is_premium` (bool): Whether this is a premium connector
+- `tags` (list[str]): Tags such as `["popular"]`
+- `is_authentication_required` (bool): Whether the datasource requires OAuth/credentials
+- `has_account_list` (bool): Whether account-level selection is supported
+- `has_fields` (bool): Whether field selection is supported
+- `has_segments` (bool): Whether segments are supported
+- `has_report_type_selection` (bool): Whether report type selection UI should be shown
+- `is_date_range_required` (bool): Whether a date range is required
+- `min_metrics` (int | None): Minimum metrics required per query
+- `max_metrics` (int | None): Maximum metrics allowed per query
+- `min_dimensions` (int | None): Minimum dimensions required per query
+- `max_dimensions` (int | None): Maximum dimensions allowed per query
+- `report_type_header_label` (str): UI label for the report type selector
+- `report_types` (list[DatasourceReportType]): Available report types
+- `common_settings` (list[DatasourceSetting]): Settings shared across all report types
+
+**Example:**
+
+```python
+details = client.datasource_details.get(team_id=12345, data_source_id="GAWA")
+
+print(f"ID:      {details.id}")
+print(f"Name:    {details.name}")
+print(f"Status:  {details.status}")
+print(f"Premium: {details.is_premium}")
+print(f"Auth required: {details.is_authentication_required}")
+
+for rt in (details.report_types or []):
+    print(f"  Report type: {rt.id} — {rt.name}")
 ```
 
 ---
