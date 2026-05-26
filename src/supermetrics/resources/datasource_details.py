@@ -1,7 +1,7 @@
 """DatasourceDetails resource adapter for Supermetrics API."""
 
 import logging
-from typing import cast
+from typing import NoReturn, cast
 
 import httpx
 
@@ -12,14 +12,14 @@ from supermetrics._generated.supermetrics_api_client.api.datasource import (
 )
 from supermetrics._generated.supermetrics_api_client.models.datasource_details import DatasourceDetails
 from supermetrics._generated.supermetrics_api_client.models.datasource_details_response import DatasourceDetailsResponse
-from supermetrics._generated.supermetrics_api_client.types import UNSET
-from supermetrics.exceptions import APIError, AuthenticationError, NetworkError, ValidationError
+from supermetrics._generated.supermetrics_api_client.types import UNSET, Unset
+from supermetrics.exceptions import APIError, AuthenticationError, ValidationError
 from supermetrics.resources._error_handlers import _handle_http_error, _handle_request_error
 
 logger = logging.getLogger(__name__)
 
 
-def _raise_for_error_status(status_code: int, endpoint: str, response_body: str) -> None:
+def _raise_for_error_status(status_code: int, endpoint: str, response_body: str) -> NoReturn:
     """Translate HTTP error status codes into SDK exceptions."""
     if status_code == 401:
         raise AuthenticationError("Invalid or expired API key", status_code=401, endpoint=endpoint)
@@ -98,7 +98,14 @@ class DatasourceDetailsAsyncResource:
                 sm_app_id=sm_app_id if sm_app_id is not None else UNSET,
             )
             if response.status_code == 200:
-                return cast(DatasourceDetailsResponse, response.parsed).data
+                data = cast(DatasourceDetailsResponse, response.parsed).data
+                if isinstance(data, Unset):
+                    raise APIError(
+                        "Response missing datasource details data",
+                        status_code=200,
+                        endpoint=endpoint,
+                    )
+                return data
             _raise_for_error_status(
                 status_code=int(response.status_code),
                 endpoint=endpoint,
@@ -180,7 +187,14 @@ class DatasourceDetailsResource:
                 sm_app_id=sm_app_id if sm_app_id is not None else UNSET,
             )
             if response.status_code == 200:
-                return cast(DatasourceDetailsResponse, response.parsed).data
+                data = cast(DatasourceDetailsResponse, response.parsed).data
+                if isinstance(data, Unset):
+                    raise APIError(
+                        "Response missing datasource details data",
+                        status_code=200,
+                        endpoint=endpoint,
+                    )
+                return data
             _raise_for_error_status(
                 status_code=int(response.status_code),
                 endpoint=endpoint,

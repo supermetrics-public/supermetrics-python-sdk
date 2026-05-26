@@ -130,14 +130,9 @@ class AccountsResource:
             # Handle error responses by checking type before casting
             if isinstance(response, GetAccountsResponse400):
                 error_msg: str = (
-                    response.error.message
-                    if (
-                        response.error
-                        and not isinstance(response.error, Unset)
-                        and response.error.message
-                        and not isinstance(response.error.message, Unset)
-                    )
-                    else "Invalid request parameters"
+                    response.detail
+                    if (not isinstance(response.detail, Unset) and response.detail)
+                    else (response.title if response.title else "Invalid request parameters")
                 )
                 raise ValidationError(
                     error_msg,
@@ -162,14 +157,9 @@ class AccountsResource:
                 )
             elif isinstance(response, GetAccountsResponse403):
                 error_msg = (
-                    response.error.message
-                    if (
-                        response.error
-                        and not isinstance(response.error, Unset)
-                        and response.error.message
-                        and not isinstance(response.error.message, Unset)
-                    )
-                    else "Forbidden - insufficient permissions"
+                    response.detail
+                    if (not isinstance(response.detail, Unset) and response.detail)
+                    else (response.title if response.title else "Forbidden - insufficient permissions")
                 )
                 raise APIError(
                     error_msg,
@@ -348,14 +338,9 @@ class AccountsAsyncResource:
             # Handle error responses by checking type before casting
             if isinstance(response, GetAccountsResponse400):
                 error_msg: str = (
-                    response.error.message
-                    if (
-                        response.error
-                        and not isinstance(response.error, Unset)
-                        and response.error.message
-                        and not isinstance(response.error.message, Unset)
-                    )
-                    else "Invalid request parameters"
+                    response.detail
+                    if (not isinstance(response.detail, Unset) and response.detail)
+                    else (response.title if response.title else "Invalid request parameters")
                 )
                 raise ValidationError(
                     error_msg,
@@ -380,14 +365,9 @@ class AccountsAsyncResource:
                 )
             elif isinstance(response, GetAccountsResponse403):
                 error_msg = (
-                    response.error.message
-                    if (
-                        response.error
-                        and not isinstance(response.error, Unset)
-                        and response.error.message
-                        and not isinstance(response.error.message, Unset)
-                    )
-                    else "Forbidden - insufficient permissions"
+                    response.detail
+                    if (not isinstance(response.detail, Unset) and response.detail)
+                    else (response.title if response.title else "Forbidden - insufficient permissions")
                 )
                 raise APIError(
                     error_msg,

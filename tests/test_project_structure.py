@@ -103,8 +103,7 @@ class TestAcceptanceCriteria2:
             "attrs": ">=23.0.0",
         }
 
-        for dep_name, min_version in required_deps.items():
-            # Find dependency in list (format: "package>=version")
+        for dep_name, _min_version in required_deps.items():
             found = False
             for dep in dependencies:
                 if dep_name in dep.lower():

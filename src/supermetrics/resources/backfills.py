@@ -18,20 +18,46 @@ from supermetrics._generated.supermetrics_api_client.api.dwh import (
 from supermetrics._generated.supermetrics_api_client.models.backfill import Backfill
 from supermetrics._generated.supermetrics_api_client.models.create_backfill_request import CreateBackfillRequest
 from supermetrics._generated.supermetrics_api_client.models.create_backfill_response import CreateBackfillResponse
-from supermetrics._generated.supermetrics_api_client.models.create_backfill_response_400 import CreateBackfillResponse400
-from supermetrics._generated.supermetrics_api_client.models.create_backfill_response_401 import CreateBackfillResponse401
-from supermetrics._generated.supermetrics_api_client.models.create_backfill_response_403 import CreateBackfillResponse403
-from supermetrics._generated.supermetrics_api_client.models.create_backfill_response_429 import CreateBackfillResponse429
-from supermetrics._generated.supermetrics_api_client.models.create_backfill_response_500 import CreateBackfillResponse500
-from supermetrics._generated.supermetrics_api_client.models.get_backfill_by_id_response_401 import GetBackfillByIdResponse401
-from supermetrics._generated.supermetrics_api_client.models.get_backfill_by_id_response_403 import GetBackfillByIdResponse403
-from supermetrics._generated.supermetrics_api_client.models.get_backfill_by_id_response_429 import GetBackfillByIdResponse429
-from supermetrics._generated.supermetrics_api_client.models.get_backfill_by_id_response_500 import GetBackfillByIdResponse500
+from supermetrics._generated.supermetrics_api_client.models.create_backfill_response_400 import (
+    CreateBackfillResponse400,
+)
+from supermetrics._generated.supermetrics_api_client.models.create_backfill_response_401 import (
+    CreateBackfillResponse401,
+)
+from supermetrics._generated.supermetrics_api_client.models.create_backfill_response_403 import (
+    CreateBackfillResponse403,
+)
+from supermetrics._generated.supermetrics_api_client.models.create_backfill_response_429 import (
+    CreateBackfillResponse429,
+)
+from supermetrics._generated.supermetrics_api_client.models.create_backfill_response_500 import (
+    CreateBackfillResponse500,
+)
+from supermetrics._generated.supermetrics_api_client.models.get_backfill_by_id_response_401 import (
+    GetBackfillByIdResponse401,
+)
+from supermetrics._generated.supermetrics_api_client.models.get_backfill_by_id_response_403 import (
+    GetBackfillByIdResponse403,
+)
+from supermetrics._generated.supermetrics_api_client.models.get_backfill_by_id_response_429 import (
+    GetBackfillByIdResponse429,
+)
+from supermetrics._generated.supermetrics_api_client.models.get_backfill_by_id_response_500 import (
+    GetBackfillByIdResponse500,
+)
 from supermetrics._generated.supermetrics_api_client.models.get_backfill_response import GetBackfillResponse
-from supermetrics._generated.supermetrics_api_client.models.get_latest_backfill_response_401 import GetLatestBackfillResponse401
-from supermetrics._generated.supermetrics_api_client.models.get_latest_backfill_response_403 import GetLatestBackfillResponse403
-from supermetrics._generated.supermetrics_api_client.models.get_latest_backfill_response_429 import GetLatestBackfillResponse429
-from supermetrics._generated.supermetrics_api_client.models.get_latest_backfill_response_500 import GetLatestBackfillResponse500
+from supermetrics._generated.supermetrics_api_client.models.get_latest_backfill_response_401 import (
+    GetLatestBackfillResponse401,
+)
+from supermetrics._generated.supermetrics_api_client.models.get_latest_backfill_response_403 import (
+    GetLatestBackfillResponse403,
+)
+from supermetrics._generated.supermetrics_api_client.models.get_latest_backfill_response_429 import (
+    GetLatestBackfillResponse429,
+)
+from supermetrics._generated.supermetrics_api_client.models.get_latest_backfill_response_500 import (
+    GetLatestBackfillResponse500,
+)
 from supermetrics._generated.supermetrics_api_client.models.list_incomplete_backfills_response_200 import (
     ListIncompleteBackfillsResponse200,
 )
@@ -66,7 +92,7 @@ from supermetrics._generated.supermetrics_api_client.models.update_backfill_stat
 from supermetrics._generated.supermetrics_api_client.models.update_backfill_status_response_500 import (
     UpdateBackfillStatusResponse500,
 )
-from supermetrics.exceptions import APIError, AuthenticationError, NetworkError, ValidationError
+from supermetrics.exceptions import APIError, AuthenticationError, ValidationError
 from supermetrics.resources._error_handlers import _handle_http_error, _handle_request_error, _raise_for_response
 
 logger = logging.getLogger(__name__)
@@ -115,7 +141,8 @@ class BackfillsAsyncResource:
             if isinstance(response, CreateBackfillResponse):
                 return response.data
             _raise_for_response(
-                response, endpoint,
+                response,
+                endpoint,
                 type_401=CreateBackfillResponse401,
                 type_400=CreateBackfillResponse400,
                 type_403=CreateBackfillResponse403,
@@ -151,7 +178,8 @@ class BackfillsAsyncResource:
             if isinstance(response, GetBackfillResponse):
                 return response.data
             _raise_for_response(
-                response, endpoint,
+                response,
+                endpoint,
                 type_401=GetBackfillByIdResponse401,
                 type_403=GetBackfillByIdResponse403,
                 type_429=GetBackfillByIdResponse429,
@@ -185,7 +213,8 @@ class BackfillsAsyncResource:
             if isinstance(response, GetBackfillResponse):
                 return response.data
             _raise_for_response(
-                response, endpoint,
+                response,
+                endpoint,
                 type_401=GetLatestBackfillResponse401,
                 type_403=GetLatestBackfillResponse403,
                 type_429=GetLatestBackfillResponse429,
@@ -218,7 +247,8 @@ class BackfillsAsyncResource:
             if isinstance(response, ListIncompleteBackfillsResponse200):
                 return response.data
             _raise_for_response(
-                response, endpoint,
+                response,
+                endpoint,
                 type_401=ListIncompleteBackfillsResponse401,
                 type_403=ListIncompleteBackfillsResponse403,
                 type_429=ListIncompleteBackfillsResponse429,
@@ -255,7 +285,8 @@ class BackfillsAsyncResource:
             if isinstance(response, GetBackfillResponse):
                 return response.data
             _raise_for_response(
-                response, endpoint,
+                response,
+                endpoint,
                 type_401=UpdateBackfillStatusResponse401,
                 type_400=UpdateBackfillStatusResponse400,
                 type_403=UpdateBackfillStatusResponse403,
@@ -352,7 +383,8 @@ class BackfillsResource:
             if isinstance(response, CreateBackfillResponse):
                 return response.data
             _raise_for_response(
-                response, endpoint,
+                response,
+                endpoint,
                 type_401=CreateBackfillResponse401,
                 type_400=CreateBackfillResponse400,
                 type_403=CreateBackfillResponse403,
@@ -402,7 +434,8 @@ class BackfillsResource:
             if isinstance(response, GetBackfillResponse):
                 return response.data
             _raise_for_response(
-                response, endpoint,
+                response,
+                endpoint,
                 type_401=GetBackfillByIdResponse401,
                 type_403=GetBackfillByIdResponse403,
                 type_429=GetBackfillByIdResponse429,
@@ -448,7 +481,8 @@ class BackfillsResource:
             if isinstance(response, GetBackfillResponse):
                 return response.data
             _raise_for_response(
-                response, endpoint,
+                response,
+                endpoint,
                 type_401=GetLatestBackfillResponse401,
                 type_403=GetLatestBackfillResponse403,
                 type_429=GetLatestBackfillResponse429,
@@ -493,7 +527,8 @@ class BackfillsResource:
             if isinstance(response, ListIncompleteBackfillsResponse200):
                 return response.data
             _raise_for_response(
-                response, endpoint,
+                response,
+                endpoint,
                 type_401=ListIncompleteBackfillsResponse401,
                 type_403=ListIncompleteBackfillsResponse403,
                 type_429=ListIncompleteBackfillsResponse429,
@@ -542,7 +577,8 @@ class BackfillsResource:
             if isinstance(response, GetBackfillResponse):
                 return response.data
             _raise_for_response(
-                response, endpoint,
+                response,
+                endpoint,
                 type_401=UpdateBackfillStatusResponse401,
                 type_400=UpdateBackfillStatusResponse400,
                 type_403=UpdateBackfillStatusResponse403,

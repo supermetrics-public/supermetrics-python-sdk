@@ -10,22 +10,48 @@ from supermetrics._generated.supermetrics_api_client.client import Client as Gen
 from supermetrics._generated.supermetrics_api_client.models.backfill import Backfill
 from supermetrics._generated.supermetrics_api_client.models.backfill_status import BackfillStatus
 from supermetrics._generated.supermetrics_api_client.models.create_backfill_response import CreateBackfillResponse
-from supermetrics._generated.supermetrics_api_client.models.create_backfill_response_400 import CreateBackfillResponse400
-from supermetrics._generated.supermetrics_api_client.models.create_backfill_response_401 import CreateBackfillResponse401
-from supermetrics._generated.supermetrics_api_client.models.create_backfill_response_403 import CreateBackfillResponse403
-from supermetrics._generated.supermetrics_api_client.models.create_backfill_response_429 import CreateBackfillResponse429
-from supermetrics._generated.supermetrics_api_client.models.create_backfill_response_500 import CreateBackfillResponse500
+from supermetrics._generated.supermetrics_api_client.models.create_backfill_response_400 import (
+    CreateBackfillResponse400,
+)
+from supermetrics._generated.supermetrics_api_client.models.create_backfill_response_401 import (
+    CreateBackfillResponse401,
+)
+from supermetrics._generated.supermetrics_api_client.models.create_backfill_response_403 import (
+    CreateBackfillResponse403,
+)
+from supermetrics._generated.supermetrics_api_client.models.create_backfill_response_429 import (
+    CreateBackfillResponse429,
+)
+from supermetrics._generated.supermetrics_api_client.models.create_backfill_response_500 import (
+    CreateBackfillResponse500,
+)
 from supermetrics._generated.supermetrics_api_client.models.error_response import ErrorResponse
 from supermetrics._generated.supermetrics_api_client.models.error_response_error import ErrorResponseError
-from supermetrics._generated.supermetrics_api_client.models.get_backfill_by_id_response_401 import GetBackfillByIdResponse401
-from supermetrics._generated.supermetrics_api_client.models.get_backfill_by_id_response_403 import GetBackfillByIdResponse403
-from supermetrics._generated.supermetrics_api_client.models.get_backfill_by_id_response_429 import GetBackfillByIdResponse429
-from supermetrics._generated.supermetrics_api_client.models.get_backfill_by_id_response_500 import GetBackfillByIdResponse500
+from supermetrics._generated.supermetrics_api_client.models.get_backfill_by_id_response_401 import (
+    GetBackfillByIdResponse401,
+)
+from supermetrics._generated.supermetrics_api_client.models.get_backfill_by_id_response_403 import (
+    GetBackfillByIdResponse403,
+)
+from supermetrics._generated.supermetrics_api_client.models.get_backfill_by_id_response_429 import (
+    GetBackfillByIdResponse429,
+)
+from supermetrics._generated.supermetrics_api_client.models.get_backfill_by_id_response_500 import (
+    GetBackfillByIdResponse500,
+)
 from supermetrics._generated.supermetrics_api_client.models.get_backfill_response import GetBackfillResponse
-from supermetrics._generated.supermetrics_api_client.models.get_latest_backfill_response_401 import GetLatestBackfillResponse401
-from supermetrics._generated.supermetrics_api_client.models.get_latest_backfill_response_403 import GetLatestBackfillResponse403
-from supermetrics._generated.supermetrics_api_client.models.get_latest_backfill_response_429 import GetLatestBackfillResponse429
-from supermetrics._generated.supermetrics_api_client.models.get_latest_backfill_response_500 import GetLatestBackfillResponse500
+from supermetrics._generated.supermetrics_api_client.models.get_latest_backfill_response_401 import (
+    GetLatestBackfillResponse401,
+)
+from supermetrics._generated.supermetrics_api_client.models.get_latest_backfill_response_403 import (
+    GetLatestBackfillResponse403,
+)
+from supermetrics._generated.supermetrics_api_client.models.get_latest_backfill_response_429 import (
+    GetLatestBackfillResponse429,
+)
+from supermetrics._generated.supermetrics_api_client.models.get_latest_backfill_response_500 import (
+    GetLatestBackfillResponse500,
+)
 from supermetrics._generated.supermetrics_api_client.models.list_incomplete_backfills_response_200 import (
     ListIncompleteBackfillsResponse200,
 )
@@ -87,7 +113,7 @@ class TestBackfillsResource:
             transfer_id=456789,
             range_start_date=datetime.date(2024, 1, 1),
             range_end_date=datetime.date(2024, 1, 31),
-            created_time=datetime.datetime(2024, 2, 1, 9, 0, 0, tzinfo=datetime.timezone.utc),
+            created_time=datetime.datetime(2024, 2, 1, 9, 0, 0, tzinfo=datetime.UTC),
             created_user_id=789,
             status=BackfillStatus.CREATED,
             transfer_runs_total=31,
@@ -104,7 +130,7 @@ class TestBackfillsResource:
             transfer_id=456789,
             range_start_date=datetime.date(2024, 2, 1),
             range_end_date=datetime.date(2024, 2, 29),
-            created_time=datetime.datetime(2024, 3, 1, 9, 0, 0, tzinfo=datetime.timezone.utc),
+            created_time=datetime.datetime(2024, 3, 1, 9, 0, 0, tzinfo=datetime.UTC),
             created_user_id=789,
             status=BackfillStatus.RUNNING,
             transfer_runs_total=29,
@@ -184,13 +210,14 @@ class TestBackfillsResource:
         original = backfills_module.create_backfill.sync
         backfills_module.create_backfill.sync = MagicMock(
             return_value=CreateBackfillResponse401(
-                meta=Meta(request_id="req-id"),
-                error=ErrorResponseError(code="UNAUTHORIZED", message="Invalid API key")
+                meta=Meta(request_id="req-id"), error=ErrorResponseError(code="UNAUTHORIZED", message="Invalid API key")
             )
         )
 
         with pytest.raises(AuthenticationError) as exc_info:
-            backfills_resource.create(team_id=12345, transfer_id=456789, range_start="2024-01-01", range_end="2024-01-31")
+            backfills_resource.create(
+                team_id=12345, transfer_id=456789, range_start="2024-01-01", range_end="2024-01-31"
+            )
 
         assert "Invalid or expired API key" in str(exc_info.value)
 
@@ -208,7 +235,7 @@ class TestBackfillsResource:
         backfills_module.create_backfill.sync = MagicMock(
             return_value=CreateBackfillResponse400(
                 meta=Meta(request_id="req-id"),
-                error=ErrorResponseError(code="BAD_REQUEST", message="Invalid request parameters")
+                error=ErrorResponseError(code="BAD_REQUEST", message="Invalid request parameters"),
             )
         )
 
@@ -235,7 +262,9 @@ class TestBackfillsResource:
         backfills_module.create_backfill.sync = MagicMock(return_value=error_response)
 
         with pytest.raises(APIError) as exc_info:
-            backfills_resource.create(team_id=12345, transfer_id=999999, range_start="2024-01-01", range_end="2024-01-31")
+            backfills_resource.create(
+                team_id=12345, transfer_id=999999, range_start="2024-01-01", range_end="2024-01-31"
+            )
 
         assert exc_info.value.status_code == 404
         assert "not found" in str(exc_info.value).lower()
@@ -254,12 +283,14 @@ class TestBackfillsResource:
         backfills_module.create_backfill.sync = MagicMock(
             return_value=CreateBackfillResponse500(
                 meta=Meta(request_id="req-id"),
-                error=ErrorResponseError(code="INTERNAL_ERROR", message="Internal server error")
+                error=ErrorResponseError(code="INTERNAL_ERROR", message="Internal server error"),
             )
         )
 
         with pytest.raises(APIError) as exc_info:
-            backfills_resource.create(team_id=12345, transfer_id=456789, range_start="2024-01-01", range_end="2024-01-31")
+            backfills_resource.create(
+                team_id=12345, transfer_id=456789, range_start="2024-01-01", range_end="2024-01-31"
+            )
 
         assert exc_info.value.status_code == 500
 
@@ -276,13 +307,14 @@ class TestBackfillsResource:
         original = backfills_module.create_backfill.sync
         backfills_module.create_backfill.sync = MagicMock(
             return_value=CreateBackfillResponse403(
-                meta=Meta(request_id="req-id"),
-                error=ErrorResponseError(code="FORBIDDEN", message="Forbidden")
+                meta=Meta(request_id="req-id"), error=ErrorResponseError(code="FORBIDDEN", message="Forbidden")
             )
         )
 
         with pytest.raises(APIError) as exc_info:
-            backfills_resource.create(team_id=12345, transfer_id=456789, range_start="2024-01-01", range_end="2024-01-31")
+            backfills_resource.create(
+                team_id=12345, transfer_id=456789, range_start="2024-01-01", range_end="2024-01-31"
+            )
 
         assert exc_info.value.status_code == 403
         assert "Forbidden" in str(exc_info.value)
@@ -301,12 +333,14 @@ class TestBackfillsResource:
         backfills_module.create_backfill.sync = MagicMock(
             return_value=CreateBackfillResponse429(
                 meta=Meta(request_id="req-id"),
-                error=ErrorResponseError(code="RATE_LIMIT", message="Rate limit exceeded")
+                error=ErrorResponseError(code="RATE_LIMIT", message="Rate limit exceeded"),
             )
         )
 
         with pytest.raises(APIError) as exc_info:
-            backfills_resource.create(team_id=12345, transfer_id=456789, range_start="2024-01-01", range_end="2024-01-31")
+            backfills_resource.create(
+                team_id=12345, transfer_id=456789, range_start="2024-01-01", range_end="2024-01-31"
+            )
 
         assert exc_info.value.status_code == 429
 
@@ -328,7 +362,9 @@ class TestBackfillsResource:
         backfills_module.create_backfill.sync = MagicMock(side_effect=error)
 
         with pytest.raises(NetworkError) as exc_info:
-            backfills_resource.create(team_id=12345, transfer_id=456789, range_start="2024-01-01", range_end="2024-01-31")
+            backfills_resource.create(
+                team_id=12345, transfer_id=456789, range_start="2024-01-01", range_end="2024-01-31"
+            )
 
         assert "Network error" in str(exc_info.value)
         assert exc_info.value.status_code is None
@@ -428,7 +464,9 @@ class TestBackfillsResource:
         import supermetrics.resources.backfills as backfills_module
 
         original = backfills_module.get_backfill_by_id.sync
-        backfills_module.get_backfill_by_id.sync = MagicMock(return_value=GetBackfillByIdResponse403(type_="about:blank", title="Forbidden", status=403))
+        backfills_module.get_backfill_by_id.sync = MagicMock(
+            return_value=GetBackfillByIdResponse403(type_="about:blank", title="Forbidden", status=403)
+        )
 
         with pytest.raises(APIError) as exc_info:
             backfills_resource.get(team_id=12345, backfill_id=67890)
@@ -571,7 +609,9 @@ class TestBackfillsResource:
         import supermetrics.resources.backfills as backfills_module
 
         original = backfills_module.get_latest_backfill.sync
-        backfills_module.get_latest_backfill.sync = MagicMock(return_value=GetLatestBackfillResponse403(type_="about:blank", title="Forbidden", status=403))
+        backfills_module.get_latest_backfill.sync = MagicMock(
+            return_value=GetLatestBackfillResponse403(type_="about:blank", title="Forbidden", status=403)
+        )
 
         with pytest.raises(APIError) as exc_info:
             backfills_resource.get_latest(team_id=12345, transfer_id=456789)
@@ -637,9 +677,7 @@ class TestBackfillsResource:
 
         original = backfills_module.list_incomplete_backfills.sync
         backfills_module.list_incomplete_backfills.sync = MagicMock(
-            return_value=ListIncompleteBackfillsResponse200(
-                meta=meta, data=[sample_backfill, sample_running_backfill]
-            )
+            return_value=ListIncompleteBackfillsResponse200(meta=meta, data=[sample_backfill, sample_running_backfill])
         )
 
         backfills = backfills_resource.list_incomplete(team_id=12345)
@@ -736,7 +774,9 @@ class TestBackfillsResource:
         import supermetrics.resources.backfills as backfills_module
 
         original = backfills_module.list_incomplete_backfills.sync
-        backfills_module.list_incomplete_backfills.sync = MagicMock(return_value=ListIncompleteBackfillsResponse403(type_="about:blank", title="Forbidden", status=403))
+        backfills_module.list_incomplete_backfills.sync = MagicMock(
+            return_value=ListIncompleteBackfillsResponse403(type_="about:blank", title="Forbidden", status=403)
+        )
 
         with pytest.raises(APIError) as exc_info:
             backfills_resource.list_incomplete(team_id=12345)
@@ -834,11 +874,10 @@ class TestBackfillsResource:
         meta: Meta,
     ) -> None:
         """Test that cancel() sends CANCELLED status in the request body."""
+        import supermetrics.resources.backfills as backfills_module
         from supermetrics._generated.supermetrics_api_client.models.update_backfill_status_body_status import (
             UpdateBackfillStatusBodyStatus,
         )
-
-        import supermetrics.resources.backfills as backfills_module
 
         original = backfills_module.update_backfill_status.sync
         mock_sync = MagicMock(return_value=GetBackfillResponse(meta=meta, data=sample_backfill))
@@ -941,7 +980,9 @@ class TestBackfillsResource:
         import supermetrics.resources.backfills as backfills_module
 
         original = backfills_module.update_backfill_status.sync
-        backfills_module.update_backfill_status.sync = MagicMock(return_value=UpdateBackfillStatusResponse403(type_="about:blank", title="Forbidden", status=403))
+        backfills_module.update_backfill_status.sync = MagicMock(
+            return_value=UpdateBackfillStatusResponse403(type_="about:blank", title="Forbidden", status=403)
+        )
 
         with pytest.raises(APIError) as exc_info:
             backfills_resource.cancel(team_id=12345, backfill_id=67890)
@@ -1015,7 +1056,7 @@ class TestBackfillsAsyncResource:
             transfer_id=456789,
             range_start_date=datetime.date(2024, 1, 1),
             range_end_date=datetime.date(2024, 1, 31),
-            created_time=datetime.datetime(2024, 2, 1, 9, 0, 0, tzinfo=datetime.timezone.utc),
+            created_time=datetime.datetime(2024, 2, 1, 9, 0, 0, tzinfo=datetime.UTC),
             created_user_id=789,
             status=BackfillStatus.CREATED,
             transfer_runs_total=31,
@@ -1062,8 +1103,7 @@ class TestBackfillsAsyncResource:
         original = backfills_module.create_backfill.asyncio
         backfills_module.create_backfill.asyncio = AsyncMock(
             return_value=CreateBackfillResponse401(
-                meta=Meta(request_id="req-id"),
-                error=ErrorResponseError(code="UNAUTHORIZED", message="Invalid API key")
+                meta=Meta(request_id="req-id"), error=ErrorResponseError(code="UNAUTHORIZED", message="Invalid API key")
             )
         )
 
@@ -1086,7 +1126,7 @@ class TestBackfillsAsyncResource:
         backfills_module.create_backfill.asyncio = AsyncMock(
             return_value=CreateBackfillResponse429(
                 meta=Meta(request_id="req-id"),
-                error=ErrorResponseError(code="RATE_LIMIT", message="Rate limit exceeded")
+                error=ErrorResponseError(code="RATE_LIMIT", message="Rate limit exceeded"),
             )
         )
 

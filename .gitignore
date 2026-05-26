@@ -199,3 +199,5 @@ openapi-specs/*
 
 .idea
 *.DS_Store
+artifacts
+.claude

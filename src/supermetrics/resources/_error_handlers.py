@@ -133,7 +133,9 @@ def _handle_http_error(
     status = e.response.status_code
     text = e.response.text
     if status == 401:
-        raise AuthenticationError("Invalid or expired API key", status_code=401, endpoint=url, response_body=text) from e
+        raise AuthenticationError(
+            "Invalid or expired API key", status_code=401, endpoint=url, response_body=text
+        ) from e
     if status == 400 and context_400 is not None:
         raise ValidationError(f"{context_400}: {text}", status_code=400, endpoint=url, response_body=text) from e
     if status == 404 and context_404 is not None:
