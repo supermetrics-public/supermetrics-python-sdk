@@ -1,6 +1,5 @@
 """Contains all the data models used in inputs/outputs"""
 
-from .api_error import ApiError
 from .backfill import Backfill
 from .backfill_response import BackfillResponse
 from .backfill_status import BackfillStatus
@@ -52,6 +51,11 @@ from .get_data_source_login_response_404 import GetDataSourceLoginResponse404
 from .get_data_source_login_response_404_error import GetDataSourceLoginResponse404Error
 from .get_data_source_login_response_500 import GetDataSourceLoginResponse500
 from .get_data_source_login_response_500_error import GetDataSourceLoginResponse500Error
+from .get_datasource_details_response_400 import GetDatasourceDetailsResponse400
+from .get_datasource_details_response_401 import GetDatasourceDetailsResponse401
+from .get_datasource_details_response_404 import GetDatasourceDetailsResponse404
+from .get_datasource_details_response_429 import GetDatasourceDetailsResponse429
+from .get_datasource_details_response_500 import GetDatasourceDetailsResponse500
 from .get_login_link_response_404 import GetLoginLinkResponse404
 from .get_login_link_response_404_error import GetLoginLinkResponse404Error
 from .list_data_source_logins_response_200 import ListDataSourceLoginsResponse200
@@ -70,7 +74,6 @@ from .user import User
 from .user_type import UserType
 
 __all__ = (
-    "ApiError",
     "Backfill",
     "BackfillResponse",
     "BackfillStatus",
@@ -117,6 +120,11 @@ __all__ = (
     "GetAccountsResponse200MetaQuery",
     "GetAccountsResponse400",
     "GetDataResponse400",
+    "GetDatasourceDetailsResponse400",
+    "GetDatasourceDetailsResponse401",
+    "GetDatasourceDetailsResponse404",
+    "GetDatasourceDetailsResponse429",
+    "GetDatasourceDetailsResponse500",
     "GetDataSourceLoginResponse200",
     "GetDataSourceLoginResponse404",
     "GetDataSourceLoginResponse404Error",
