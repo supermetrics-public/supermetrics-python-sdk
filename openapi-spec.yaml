@@ -1095,26 +1095,156 @@ paths:
               schema:
                 $ref: '#/components/schemas/DatasourceDetailsResponse'
         '400':
-          description: Invalid or missing parameters.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-        '401':
-          description: Authentication required or token not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-        '404':
-          description: Data source not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-        '429':
-          description: Too many requests - rate limit exceeded.
+          description: Bad request - invalid parameters
           headers:
+            X-RateLimit-Limit:
+              description: Request limit per hour
+              schema:
+                type: integer
+                format: int32
+                minimum: 1
+                maximum: 10000
+                example: 5000
+            X-RateLimit-Remaining:
+              description: Remaining requests in current window
+              schema:
+                type: integer
+                format: int32
+                minimum: 0
+                maximum: 10000
+                example: 4999
+            Access-Control-Allow-Origin:
+              description: CORS header
+              schema:
+                type: string
+                maxLength: 255
+                enum:
+                - '*'
+                example: '*'
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                description: RFC 9457 Problem Details for HTTP APIs
+                properties:
+                  type:
+                    type: string
+                    format: uri
+                    maxLength: 255
+                    description: A URI reference that identifies the problem type
+                    example: https://supermetrics.com/problems/unauthorized
+                  title:
+                    type: string
+                    maxLength: 255
+                    pattern: ^[A-Za-z0-9\s]+$
+                    description: A short, human-readable summary of the problem type
+                    example: Unauthorized
+                  status:
+                    type: integer
+                    format: int32
+                    minimum: 100
+                    maximum: 599
+                    description: The HTTP status code
+                    example: 401
+                  detail:
+                    type: string
+                    maxLength: 1000
+                    pattern: ^[A-Za-z0-9\s.,\-]+$
+                    description: A human-readable explanation specific to this occurrence
+                    example: Authentication required
+                  instance:
+                    type: string
+                    format: uri
+                    maxLength: 255
+                    description: A URI reference that identifies the specific occurrence
+                    example: https://api.supermetrics.com/v2/api-keys
+                required:
+                - type
+                - title
+                - status
+                additionalProperties: false
+        '401':
+          description: Unauthorized
+          headers:
+            WWW-Authenticate:
+              description: Bearer token required
+              schema:
+                type: string
+                maxLength: 255
+                pattern: ^Bearer.*
+            X-RateLimit-Limit: &id001
+              description: Request limit per hour
+              schema:
+                type: integer
+                format: int32
+                minimum: 1
+                maximum: 10000
+                example: 5000
+            X-RateLimit-Remaining: &id002
+              description: Remaining requests in current window
+              schema:
+                type: integer
+                format: int32
+                minimum: 0
+                maximum: 10000
+                example: 4999
+            Access-Control-Allow-Origin: &id003
+              description: CORS header
+              schema:
+                type: string
+                maxLength: 255
+                enum:
+                - '*'
+                example: '*'
+          content:
+            application/problem+json:
+              schema: &id004
+                type: object
+                description: RFC 9457 Problem Details for HTTP APIs
+                properties:
+                  type:
+                    type: string
+                    format: uri
+                    maxLength: 255
+                    description: A URI reference that identifies the problem type
+                    example: https://supermetrics.com/problems/unauthorized
+                  title:
+                    type: string
+                    maxLength: 255
+                    pattern: ^[A-Za-z0-9\s]+$
+                    description: A short, human-readable summary of the problem type
+                    example: Unauthorized
+                  status:
+                    type: integer
+                    format: int32
+                    minimum: 100
+                    maximum: 599
+                    description: The HTTP status code
+                    example: 401
+                  detail:
+                    type: string
+                    maxLength: 1000
+                    pattern: ^[A-Za-z0-9\s.,\-]+$
+                    description: A human-readable explanation specific to this occurrence
+                    example: Authentication required
+                  instance:
+                    type: string
+                    format: uri
+                    maxLength: 255
+                    description: A URI reference that identifies the specific occurrence
+                    example: https://api.supermetrics.com/v2/api-keys
+                required:
+                - type
+                - title
+                - status
+                additionalProperties: false
+        '404':
+          $ref: '#/components/responses/DatasourceNotFound'
+        '429':
+          description: Too Many Requests
+          headers:
+            X-RateLimit-Limit: *id001
+            X-RateLimit-Remaining: *id002
             Retry-After:
               description: Seconds until rate limit resets
               schema:
@@ -1123,16 +1253,17 @@ paths:
                 minimum: 1
                 maximum: 86400
                 example: 3600
+            Access-Control-Allow-Origin: *id003
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
+            application/problem+json:
+              schema: *id004
         '500':
-          description: Internal server error.
+          description: Internal server error
+          headers:
+            Access-Control-Allow-Origin: *id003
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
+            application/problem+json:
+              schema: *id004
       security:
       - ApiKeyAuth:
         - default
@@ -1140,21 +1271,6 @@ paths:
         - default
 components:
   schemas:
-    ApiError:
-      type: object
-      properties:
-        code:
-          type: string
-          maxLength: 100
-          description: Short error code identifier
-        message:
-          type: string
-          maxLength: 255
-          description: Error message
-        description:
-          type: string
-          maxLength: 2048
-          description: Detailed description of the error
     Backfill:
       type: object
       required:
@@ -2191,6 +2307,75 @@ components:
   responses:
     BadRequest:
       description: Bad request - invalid parameters
+      headers:
+        X-RateLimit-Limit:
+          description: Request limit per hour
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 10000
+            example: 5000
+        X-RateLimit-Remaining:
+          description: Remaining requests in current window
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 10000
+            example: 4999
+        Access-Control-Allow-Origin:
+          description: CORS header
+          schema:
+            type: string
+            maxLength: 255
+            enum:
+            - '*'
+            example: '*'
+      content:
+        application/problem+json:
+          schema:
+            type: object
+            description: RFC 9457 Problem Details for HTTP APIs
+            properties:
+              type:
+                type: string
+                format: uri
+                maxLength: 255
+                description: A URI reference that identifies the problem type
+                example: https://supermetrics.com/problems/unauthorized
+              title:
+                type: string
+                maxLength: 255
+                pattern: ^[A-Za-z0-9\s]+$
+                description: A short, human-readable summary of the problem type
+                example: Unauthorized
+              status:
+                type: integer
+                format: int32
+                minimum: 100
+                maximum: 599
+                description: The HTTP status code
+                example: 401
+              detail:
+                type: string
+                maxLength: 1000
+                pattern: ^[A-Za-z0-9\s.,\-]+$
+                description: A human-readable explanation specific to this occurrence
+                example: Authentication required
+              instance:
+                type: string
+                format: uri
+                maxLength: 255
+                description: A URI reference that identifies the specific occurrence
+                example: https://api.supermetrics.com/v2/api-keys
+            required:
+            - type
+            - title
+            - status
+            additionalProperties: false
+    DatasourceNotFound:
+      description: Data source not found
       headers:
         X-RateLimit-Limit:
           description: Request limit per hour
