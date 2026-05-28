@@ -5,14 +5,10 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.error_response import ErrorResponse
 from ...models.get_accounts_json import GetAccountsJson
 from ...models.get_accounts_response_200 import GetAccountsResponse200
 from ...models.get_accounts_response_400 import GetAccountsResponse400
-from ...models.get_accounts_response_401 import GetAccountsResponse401
-from ...models.get_accounts_response_403 import GetAccountsResponse403
-from ...models.get_accounts_response_422 import GetAccountsResponse422
-from ...models.get_accounts_response_429 import GetAccountsResponse429
-from ...models.get_accounts_response_500 import GetAccountsResponse500
 from ...types import UNSET, Response
 
 
@@ -20,7 +16,6 @@ def _get_kwargs(
     *,
     json: GetAccountsJson,
 ) -> dict[str, Any]:
-
     params: dict[str, Any] = {}
 
     json_json = json.to_dict()
@@ -39,16 +34,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> (
-    GetAccountsResponse200
-    | GetAccountsResponse400
-    | GetAccountsResponse401
-    | GetAccountsResponse403
-    | GetAccountsResponse422
-    | GetAccountsResponse429
-    | GetAccountsResponse500
-    | None
-):
+) -> ErrorResponse | GetAccountsResponse200 | GetAccountsResponse400 | None:
     if response.status_code == 200:
         response_200 = GetAccountsResponse200.from_dict(response.json())
 
@@ -60,27 +46,27 @@ def _parse_response(
         return response_400
 
     if response.status_code == 401:
-        response_401 = GetAccountsResponse401.from_dict(response.json())
+        response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
 
     if response.status_code == 403:
-        response_403 = GetAccountsResponse403.from_dict(response.json())
+        response_403 = ErrorResponse.from_dict(response.json())
 
         return response_403
 
     if response.status_code == 422:
-        response_422 = GetAccountsResponse422.from_dict(response.json())
+        response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
 
     if response.status_code == 429:
-        response_429 = GetAccountsResponse429.from_dict(response.json())
+        response_429 = ErrorResponse.from_dict(response.json())
 
         return response_429
 
     if response.status_code == 500:
-        response_500 = GetAccountsResponse500.from_dict(response.json())
+        response_500 = ErrorResponse.from_dict(response.json())
 
         return response_500
 
@@ -92,15 +78,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[
-    GetAccountsResponse200
-    | GetAccountsResponse400
-    | GetAccountsResponse401
-    | GetAccountsResponse403
-    | GetAccountsResponse422
-    | GetAccountsResponse429
-    | GetAccountsResponse500
-]:
+) -> Response[ErrorResponse | GetAccountsResponse200 | GetAccountsResponse400]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -113,15 +91,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     json: GetAccountsJson,
-) -> Response[
-    GetAccountsResponse200
-    | GetAccountsResponse400
-    | GetAccountsResponse401
-    | GetAccountsResponse403
-    | GetAccountsResponse422
-    | GetAccountsResponse429
-    | GetAccountsResponse500
-]:
+) -> Response[ErrorResponse | GetAccountsResponse200 | GetAccountsResponse400]:
     """Get accounts
 
      Retrieve a list of available data source logins (authentications) and their accounts
@@ -134,7 +104,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[GetAccountsResponse200 | GetAccountsResponse400 | GetAccountsResponse401 | GetAccountsResponse403 | GetAccountsResponse422 | GetAccountsResponse429 | GetAccountsResponse500]
+        Response[ErrorResponse | GetAccountsResponse200 | GetAccountsResponse400]
     """
 
     kwargs = _get_kwargs(
@@ -152,16 +122,7 @@ def sync(
     *,
     client: AuthenticatedClient,
     json: GetAccountsJson,
-) -> (
-    GetAccountsResponse200
-    | GetAccountsResponse400
-    | GetAccountsResponse401
-    | GetAccountsResponse403
-    | GetAccountsResponse422
-    | GetAccountsResponse429
-    | GetAccountsResponse500
-    | None
-):
+) -> ErrorResponse | GetAccountsResponse200 | GetAccountsResponse400 | None:
     """Get accounts
 
      Retrieve a list of available data source logins (authentications) and their accounts
@@ -174,7 +135,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        GetAccountsResponse200 | GetAccountsResponse400 | GetAccountsResponse401 | GetAccountsResponse403 | GetAccountsResponse422 | GetAccountsResponse429 | GetAccountsResponse500
+        ErrorResponse | GetAccountsResponse200 | GetAccountsResponse400
     """
 
     return sync_detailed(
@@ -187,15 +148,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     json: GetAccountsJson,
-) -> Response[
-    GetAccountsResponse200
-    | GetAccountsResponse400
-    | GetAccountsResponse401
-    | GetAccountsResponse403
-    | GetAccountsResponse422
-    | GetAccountsResponse429
-    | GetAccountsResponse500
-]:
+) -> Response[ErrorResponse | GetAccountsResponse200 | GetAccountsResponse400]:
     """Get accounts
 
      Retrieve a list of available data source logins (authentications) and their accounts
@@ -208,7 +161,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[GetAccountsResponse200 | GetAccountsResponse400 | GetAccountsResponse401 | GetAccountsResponse403 | GetAccountsResponse422 | GetAccountsResponse429 | GetAccountsResponse500]
+        Response[ErrorResponse | GetAccountsResponse200 | GetAccountsResponse400]
     """
 
     kwargs = _get_kwargs(
@@ -224,16 +177,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     json: GetAccountsJson,
-) -> (
-    GetAccountsResponse200
-    | GetAccountsResponse400
-    | GetAccountsResponse401
-    | GetAccountsResponse403
-    | GetAccountsResponse422
-    | GetAccountsResponse429
-    | GetAccountsResponse500
-    | None
-):
+) -> ErrorResponse | GetAccountsResponse200 | GetAccountsResponse400 | None:
     """Get accounts
 
      Retrieve a list of available data source logins (authentications) and their accounts
@@ -246,7 +190,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        GetAccountsResponse200 | GetAccountsResponse400 | GetAccountsResponse401 | GetAccountsResponse403 | GetAccountsResponse422 | GetAccountsResponse429 | GetAccountsResponse500
+        ErrorResponse | GetAccountsResponse200 | GetAccountsResponse400
     """
 
     return (

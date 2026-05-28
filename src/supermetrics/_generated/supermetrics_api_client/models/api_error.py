@@ -1,64 +1,66 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-if TYPE_CHECKING:
-    from ..models.error_response_error import ErrorResponseError
-    from ..models.meta import Meta
+from ..types import UNSET, Unset
 
-
-T = TypeVar("T", bound="CreateBackfillResponse403")
+T = TypeVar("T", bound="ApiError")
 
 
 @_attrs_define
-class CreateBackfillResponse403:
+class ApiError:
     """
     Attributes:
-        meta (Meta):
-        error (ErrorResponseError):
+        code (str | Unset): Short error code identifier
+        message (str | Unset): Error message
+        description (str | Unset): Detailed description of the error
     """
 
-    meta: Meta
-    error: ErrorResponseError
+    code: str | Unset = UNSET
+    message: str | Unset = UNSET
+    description: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        meta = self.meta.to_dict()
+        code = self.code
 
-        error = self.error.to_dict()
+        message = self.message
+
+        description = self.description
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update(
-            {
-                "meta": meta,
-                "error": error,
-            }
-        )
+        field_dict.update({})
+        if code is not UNSET:
+            field_dict["code"] = code
+        if message is not UNSET:
+            field_dict["message"] = message
+        if description is not UNSET:
+            field_dict["description"] = description
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.error_response_error import ErrorResponseError
-        from ..models.meta import Meta
-
         d = dict(src_dict)
-        meta = Meta.from_dict(d.pop("meta"))
+        code = d.pop("code", UNSET)
 
-        error = ErrorResponseError.from_dict(d.pop("error"))
+        message = d.pop("message", UNSET)
 
-        create_backfill_response_403 = cls(
-            meta=meta,
-            error=error,
+        description = d.pop("description", UNSET)
+
+        api_error = cls(
+            code=code,
+            message=message,
+            description=description,
         )
 
-        create_backfill_response_403.additional_properties = d
-        return create_backfill_response_403
+        api_error.additional_properties = d
+        return api_error
 
     @property
     def additional_keys(self) -> list[str]:

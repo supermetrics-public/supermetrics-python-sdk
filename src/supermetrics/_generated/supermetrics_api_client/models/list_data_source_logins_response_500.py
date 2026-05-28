@@ -6,7 +6,10 @@ from typing import Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..models.list_data_source_logins_response_500_error import ListDataSourceLoginsResponse500Error
+from ..models.list_data_source_logins_response_500_error import (
+    ListDataSourceLoginsResponse500Error,
+    check_list_data_source_logins_response_500_error,
+)
 from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="ListDataSourceLoginsResponse500")
@@ -27,7 +30,7 @@ class ListDataSourceLoginsResponse500:
     def to_dict(self) -> dict[str, Any]:
         error: str | Unset = UNSET
         if not isinstance(self.error, Unset):
-            error = self.error.value
+            error = self.error
 
         message = self.message
 
@@ -49,7 +52,7 @@ class ListDataSourceLoginsResponse500:
         if isinstance(_error, Unset):
             error = UNSET
         else:
-            error = ListDataSourceLoginsResponse500Error(_error)
+            error = check_list_data_source_logins_response_500_error(_error)
 
         message = d.pop("message", UNSET)
 

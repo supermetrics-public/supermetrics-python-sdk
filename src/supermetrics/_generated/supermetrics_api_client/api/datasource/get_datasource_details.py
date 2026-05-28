@@ -1,13 +1,12 @@
 from http import HTTPStatus
 from typing import Any
-from urllib.parse import quote
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.api_error import ApiError
 from ...models.datasource_details_response import DatasourceDetailsResponse
-from ...models.error_response import ErrorResponse
 from ...types import UNSET, Response, Unset
 
 
@@ -23,10 +22,7 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": "/teams/{team_id}/datasource/{data_source_id}".format(
-            team_id=quote(str(team_id), safe=""),
-            data_source_id=quote(str(data_source_id), safe=""),
-        ),
+        "url": f"/teams/{team_id}/datasource/{data_source_id}",
     }
 
     _kwargs["headers"] = headers
@@ -35,34 +31,34 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> DatasourceDetailsResponse | ErrorResponse | None:
+) -> ApiError | DatasourceDetailsResponse | None:
     if response.status_code == 200:
         response_200 = DatasourceDetailsResponse.from_dict(response.json())
 
         return response_200
 
     if response.status_code == 400:
-        response_400 = ErrorResponse.from_dict(response.json())
+        response_400 = ApiError.from_dict(response.json())
 
         return response_400
 
     if response.status_code == 401:
-        response_401 = ErrorResponse.from_dict(response.json())
+        response_401 = ApiError.from_dict(response.json())
 
         return response_401
 
     if response.status_code == 404:
-        response_404 = ErrorResponse.from_dict(response.json())
+        response_404 = ApiError.from_dict(response.json())
 
         return response_404
 
     if response.status_code == 429:
-        response_429 = ErrorResponse.from_dict(response.json())
+        response_429 = ApiError.from_dict(response.json())
 
         return response_429
 
     if response.status_code == 500:
-        response_500 = ErrorResponse.from_dict(response.json())
+        response_500 = ApiError.from_dict(response.json())
 
         return response_500
 
@@ -74,7 +70,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[DatasourceDetailsResponse | ErrorResponse]:
+) -> Response[ApiError | DatasourceDetailsResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -89,11 +85,11 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     sm_app_id: str | Unset = UNSET,
-) -> Response[DatasourceDetailsResponse | ErrorResponse]:
+) -> Response[ApiError | DatasourceDetailsResponse]:
     """Get datasource configuration details
 
      Retrieve complete configuration details for a data source including report types, settings, and
-    authentication requirements
+    authentication requirements.
 
     Args:
         team_id (int):
@@ -105,7 +101,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[DatasourceDetailsResponse | ErrorResponse]
+        Response[ApiError | DatasourceDetailsResponse]
     """
 
     kwargs = _get_kwargs(
@@ -127,11 +123,11 @@ def sync(
     *,
     client: AuthenticatedClient,
     sm_app_id: str | Unset = UNSET,
-) -> DatasourceDetailsResponse | ErrorResponse | None:
+) -> ApiError | DatasourceDetailsResponse | None:
     """Get datasource configuration details
 
      Retrieve complete configuration details for a data source including report types, settings, and
-    authentication requirements
+    authentication requirements.
 
     Args:
         team_id (int):
@@ -143,7 +139,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        DatasourceDetailsResponse | ErrorResponse
+        ApiError | DatasourceDetailsResponse
     """
 
     return sync_detailed(
@@ -160,11 +156,11 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     sm_app_id: str | Unset = UNSET,
-) -> Response[DatasourceDetailsResponse | ErrorResponse]:
+) -> Response[ApiError | DatasourceDetailsResponse]:
     """Get datasource configuration details
 
      Retrieve complete configuration details for a data source including report types, settings, and
-    authentication requirements
+    authentication requirements.
 
     Args:
         team_id (int):
@@ -176,7 +172,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[DatasourceDetailsResponse | ErrorResponse]
+        Response[ApiError | DatasourceDetailsResponse]
     """
 
     kwargs = _get_kwargs(
@@ -196,11 +192,11 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     sm_app_id: str | Unset = UNSET,
-) -> DatasourceDetailsResponse | ErrorResponse | None:
+) -> ApiError | DatasourceDetailsResponse | None:
     """Get datasource configuration details
 
      Retrieve complete configuration details for a data source including report types, settings, and
-    authentication requirements
+    authentication requirements.
 
     Args:
         team_id (int):
@@ -212,7 +208,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        DatasourceDetailsResponse | ErrorResponse
+        ApiError | DatasourceDetailsResponse
     """
 
     return (

@@ -6,7 +6,10 @@ from typing import Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..models.update_backfill_status_body_status import UpdateBackfillStatusBodyStatus
+from ..models.update_backfill_status_body_status import (
+    UpdateBackfillStatusBodyStatus,
+    check_update_backfill_status_body_status,
+)
 
 T = TypeVar("T", bound="UpdateBackfillStatusBody")
 
@@ -23,7 +26,7 @@ class UpdateBackfillStatusBody:
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        status = self.status.value
+        status: str = self.status
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -38,7 +41,7 @@ class UpdateBackfillStatusBody:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        status = UpdateBackfillStatusBodyStatus(d.pop("status"))
+        status = check_update_backfill_status_body_status(d.pop("status"))
 
         update_backfill_status_body = cls(
             status=status,

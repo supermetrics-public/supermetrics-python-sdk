@@ -1,9 +1,14 @@
-from enum import Enum
+from typing import Literal, cast
+
+DatasourceSettingContext = Literal["options", "reportConfiguration"]
+
+DATASOURCE_SETTING_CONTEXT_VALUES: set[DatasourceSettingContext] = {
+    "options",
+    "reportConfiguration",
+}
 
 
-class DatasourceSettingContext(str, Enum):
-    OPTIONS = "options"
-    REPORTCONFIGURATION = "reportConfiguration"
-
-    def __str__(self) -> str:
-        return str(self.value)
+def check_datasource_setting_context(value: str) -> DatasourceSettingContext:
+    if value in DATASOURCE_SETTING_CONTEXT_VALUES:
+        return cast(DatasourceSettingContext, value)
+    raise TypeError(f"Unexpected value {value!r}. Expected one of {DATASOURCE_SETTING_CONTEXT_VALUES!r}")

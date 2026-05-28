@@ -1,9 +1,14 @@
-from enum import Enum
+from typing import Literal, cast
+
+DatasourceDetailsStatus = Literal["Early access", "Released"]
+
+DATASOURCE_DETAILS_STATUS_VALUES: set[DatasourceDetailsStatus] = {
+    "Early access",
+    "Released",
+}
 
 
-class DatasourceDetailsStatus(str, Enum):
-    EARLY_ACCESS = "Early access"
-    RELEASED = "Released"
-
-    def __str__(self) -> str:
-        return str(self.value)
+def check_datasource_details_status(value: str) -> DatasourceDetailsStatus:
+    if value in DATASOURCE_DETAILS_STATUS_VALUES:
+        return cast(DatasourceDetailsStatus, value)
+    raise TypeError(f"Unexpected value {value!r}. Expected one of {DATASOURCE_DETAILS_STATUS_VALUES!r}")

@@ -1,26 +1,51 @@
-from enum import Enum
+from typing import Literal, cast
+
+DatasourceDetailsCategoriesItem = Literal[
+    "Ad Verification",
+    "Affiliate",
+    "Analytics",
+    "Brand Reputation",
+    "CRM/Sales",
+    "Data Warehouses",
+    "DSP",
+    "Ecommerce",
+    "Files",
+    "Marketing Attribution",
+    "Marketing Automation",
+    "Mobile",
+    "Other",
+    "Paid Media",
+    "Payments",
+    "Retail Media",
+    "Search",
+    "SEO",
+    "Social Media",
+]
+
+DATASOURCE_DETAILS_CATEGORIES_ITEM_VALUES: set[DatasourceDetailsCategoriesItem] = {
+    "Ad Verification",
+    "Affiliate",
+    "Analytics",
+    "Brand Reputation",
+    "CRM/Sales",
+    "Data Warehouses",
+    "DSP",
+    "Ecommerce",
+    "Files",
+    "Marketing Attribution",
+    "Marketing Automation",
+    "Mobile",
+    "Other",
+    "Paid Media",
+    "Payments",
+    "Retail Media",
+    "Search",
+    "SEO",
+    "Social Media",
+}
 
 
-class DatasourceDetailsCategoriesItem(str, Enum):
-    AD_VERIFICATION = "Ad Verification"
-    AFFILIATE = "Affiliate"
-    ANALYTICS = "Analytics"
-    BRAND_REPUTATION = "Brand Reputation"
-    CRM_SALES = "CRM/Sales"
-    DATA_WAREHOUSES = "Data Warehouses"
-    DSP = "DSP"
-    ECOMMERCE = "Ecommerce"
-    FILES = "Files"
-    MARKETING_ATTRIBUTION = "Marketing Attribution"
-    MARKETING_AUTOMATION = "Marketing Automation"
-    MOBILE = "Mobile"
-    OTHER = "Other"
-    PAID_MEDIA = "Paid Media"
-    PAYMENTS = "Payments"
-    RETAIL_MEDIA = "Retail Media"
-    SEARCH = "Search"
-    SEO = "SEO"
-    SOCIAL_MEDIA = "Social Media"
-
-    def __str__(self) -> str:
-        return str(self.value)
+def check_datasource_details_categories_item(value: str) -> DatasourceDetailsCategoriesItem:
+    if value in DATASOURCE_DETAILS_CATEGORIES_ITEM_VALUES:
+        return cast(DatasourceDetailsCategoriesItem, value)
+    raise TypeError(f"Unexpected value {value!r}. Expected one of {DATASOURCE_DETAILS_CATEGORIES_ITEM_VALUES!r}")

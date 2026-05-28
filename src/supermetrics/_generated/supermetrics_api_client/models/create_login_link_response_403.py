@@ -6,7 +6,10 @@ from typing import Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..models.create_login_link_response_403_error import CreateLoginLinkResponse403Error
+from ..models.create_login_link_response_403_error import (
+    CreateLoginLinkResponse403Error,
+    check_create_login_link_response_403_error,
+)
 from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="CreateLoginLinkResponse403")
@@ -27,7 +30,7 @@ class CreateLoginLinkResponse403:
     def to_dict(self) -> dict[str, Any]:
         error: str | Unset = UNSET
         if not isinstance(self.error, Unset):
-            error = self.error.value
+            error = self.error
 
         message = self.message
 
@@ -49,7 +52,7 @@ class CreateLoginLinkResponse403:
         if isinstance(_error, Unset):
             error = UNSET
         else:
-            error = CreateLoginLinkResponse403Error(_error)
+            error = check_create_login_link_response_403_error(_error)
 
         message = d.pop("message", UNSET)
 

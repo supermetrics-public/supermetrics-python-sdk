@@ -6,7 +6,10 @@ from typing import Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..models.close_login_link_response_404_error import CloseLoginLinkResponse404Error
+from ..models.close_login_link_response_404_error import (
+    CloseLoginLinkResponse404Error,
+    check_close_login_link_response_404_error,
+)
 from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="CloseLoginLinkResponse404")
@@ -27,7 +30,7 @@ class CloseLoginLinkResponse404:
     def to_dict(self) -> dict[str, Any]:
         error: str | Unset = UNSET
         if not isinstance(self.error, Unset):
-            error = self.error.value
+            error = self.error
 
         message = self.message
 
@@ -49,7 +52,7 @@ class CloseLoginLinkResponse404:
         if isinstance(_error, Unset):
             error = UNSET
         else:
-            error = CloseLoginLinkResponse404Error(_error)
+            error = check_close_login_link_response_404_error(_error)
 
         message = d.pop("message", UNSET)
 

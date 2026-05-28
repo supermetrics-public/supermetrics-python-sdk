@@ -7,36 +7,36 @@ from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
 if TYPE_CHECKING:
-    from ..models.error_response_error import ErrorResponseError
-    from ..models.meta import Meta
+    from ..models.backfill import Backfill
+    from ..models.response_meta import ResponseMeta
 
 
-T = TypeVar("T", bound="CreateBackfillResponse400")
+T = TypeVar("T", bound="BackfillResponse")
 
 
 @_attrs_define
-class CreateBackfillResponse400:
+class BackfillResponse:
     """
     Attributes:
-        meta (Meta):
-        error (ErrorResponseError):
+        meta (ResponseMeta):
+        data (Backfill):
     """
 
-    meta: Meta
-    error: ErrorResponseError
+    meta: ResponseMeta
+    data: Backfill
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         meta = self.meta.to_dict()
 
-        error = self.error.to_dict()
+        data = self.data.to_dict()
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "meta": meta,
-                "error": error,
+                "data": data,
             }
         )
 
@@ -44,21 +44,21 @@ class CreateBackfillResponse400:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.error_response_error import ErrorResponseError
-        from ..models.meta import Meta
+        from ..models.backfill import Backfill
+        from ..models.response_meta import ResponseMeta
 
         d = dict(src_dict)
-        meta = Meta.from_dict(d.pop("meta"))
+        meta = ResponseMeta.from_dict(d.pop("meta"))
 
-        error = ErrorResponseError.from_dict(d.pop("error"))
+        data = Backfill.from_dict(d.pop("data"))
 
-        create_backfill_response_400 = cls(
+        backfill_response = cls(
             meta=meta,
-            error=error,
+            data=data,
         )
 
-        create_backfill_response_400.additional_properties = d
-        return create_backfill_response_400
+        backfill_response.additional_properties = d
+        return backfill_response
 
     @property
     def additional_keys(self) -> list[str]:
