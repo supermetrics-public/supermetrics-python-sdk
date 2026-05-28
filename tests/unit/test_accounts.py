@@ -1,5 +1,6 @@
 """Unit tests for AccountsResource and AccountsAsyncResource."""
 
+from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock, Mock
 
 import httpx
@@ -13,9 +14,17 @@ from supermetrics._generated.supermetrics_api_client.models.get_accounts_respons
 from supermetrics._generated.supermetrics_api_client.models.get_accounts_response_200_data_item_accounts_item import (
     GetAccountsResponse200DataItemAccountsItem,
 )
-from supermetrics._generated.supermetrics_api_client.types import UNSET
+from supermetrics._generated.supermetrics_api_client.types import UNSET, Response
 from supermetrics.exceptions import APIError, AuthenticationError, NetworkError, ValidationError
 from supermetrics.resources.accounts import AccountsAsyncResource, AccountsResource
+
+
+def _make_success_response(parsed: object) -> Response:
+    return Response(status_code=HTTPStatus.OK, content=b"", headers={}, parsed=parsed)
+
+
+def _make_error_response(status_code: HTTPStatus, parsed: object = None) -> Response:
+    return Response(status_code=status_code, content=b"", headers={}, parsed=parsed)
 
 
 class TestAccountsResource:
@@ -92,8 +101,8 @@ class TestAccountsResource:
 
         import supermetrics.resources.accounts as accounts_module
 
-        original_get_accounts = accounts_module.get_accounts.sync
-        accounts_module.get_accounts.sync = MagicMock(return_value=mock_response)
+        original_get_accounts = accounts_module.get_accounts.sync_detailed
+        accounts_module.get_accounts.sync_detailed = MagicMock(return_value=_make_success_response(mock_response))
 
         # Act
         accounts = accounts_resource.list(ds_id="GAWA")
@@ -104,10 +113,10 @@ class TestAccountsResource:
         assert accounts[1].account_id == "acc_456"
         assert accounts[2].account_id == "acc_789"
         assert accounts[3].account_id == "acc_999"
-        assert accounts_module.get_accounts.sync.called
+        assert accounts_module.get_accounts.sync_detailed.called
 
         # Cleanup
-        accounts_module.get_accounts.sync = original_get_accounts
+        accounts_module.get_accounts.sync_detailed = original_get_accounts
 
     def test_list_with_single_login_username_filter(
         self,
@@ -126,9 +135,9 @@ class TestAccountsResource:
 
         import supermetrics.resources.accounts as accounts_module
 
-        original_get_accounts = accounts_module.get_accounts.sync
-        mock_sync = MagicMock(return_value=mock_response)
-        accounts_module.get_accounts.sync = mock_sync
+        original_get_accounts = accounts_module.get_accounts.sync_detailed
+        mock_sync = MagicMock(return_value=_make_success_response(mock_response))
+        accounts_module.get_accounts.sync_detailed = mock_sync
 
         # Act
         accounts = accounts_resource.list(ds_id="GAWA", login_usernames="user1@example.com")
@@ -144,7 +153,7 @@ class TestAccountsResource:
         assert json_param.ds_users == "user1@example.com"
 
         # Cleanup
-        accounts_module.get_accounts.sync = original_get_accounts
+        accounts_module.get_accounts.sync_detailed = original_get_accounts
 
     def test_list_with_multiple_login_usernames(
         self,
@@ -167,9 +176,9 @@ class TestAccountsResource:
 
         import supermetrics.resources.accounts as accounts_module
 
-        original_get_accounts = accounts_module.get_accounts.sync
-        mock_sync = MagicMock(return_value=mock_response)
-        accounts_module.get_accounts.sync = mock_sync
+        original_get_accounts = accounts_module.get_accounts.sync_detailed
+        mock_sync = MagicMock(return_value=_make_success_response(mock_response))
+        accounts_module.get_accounts.sync_detailed = mock_sync
 
         # Act
         accounts = accounts_resource.list(ds_id="GAWA", login_usernames=["user1@example.com", "user2@example.com"])
@@ -183,7 +192,7 @@ class TestAccountsResource:
         assert json_param.ds_users == ["user1@example.com", "user2@example.com"]
 
         # Cleanup
-        accounts_module.get_accounts.sync = original_get_accounts
+        accounts_module.get_accounts.sync_detailed = original_get_accounts
 
     def test_list_with_cache_minutes(
         self,
@@ -198,9 +207,9 @@ class TestAccountsResource:
 
         import supermetrics.resources.accounts as accounts_module
 
-        original_get_accounts = accounts_module.get_accounts.sync
-        mock_sync = MagicMock(return_value=mock_response)
-        accounts_module.get_accounts.sync = mock_sync
+        original_get_accounts = accounts_module.get_accounts.sync_detailed
+        mock_sync = MagicMock(return_value=_make_success_response(mock_response))
+        accounts_module.get_accounts.sync_detailed = mock_sync
 
         # Act
         accounts = accounts_resource.list(ds_id="GAWA", cache_minutes=30)
@@ -214,7 +223,7 @@ class TestAccountsResource:
         assert json_param.cache_minutes == 30
 
         # Cleanup
-        accounts_module.get_accounts.sync = original_get_accounts
+        accounts_module.get_accounts.sync_detailed = original_get_accounts
 
     def test_list_with_empty_response(self, accounts_resource: AccountsResource, mock_client: MagicMock) -> None:
         """Test list() with empty response returns empty list."""
@@ -223,8 +232,8 @@ class TestAccountsResource:
 
         import supermetrics.resources.accounts as accounts_module
 
-        original_get_accounts = accounts_module.get_accounts.sync
-        accounts_module.get_accounts.sync = MagicMock(return_value=mock_response)
+        original_get_accounts = accounts_module.get_accounts.sync_detailed
+        accounts_module.get_accounts.sync_detailed = MagicMock(return_value=_make_success_response(mock_response))
 
         # Act
         accounts = accounts_resource.list(ds_id="GAWA")
@@ -233,7 +242,7 @@ class TestAccountsResource:
         assert accounts == []
 
         # Cleanup
-        accounts_module.get_accounts.sync = original_get_accounts
+        accounts_module.get_accounts.sync_detailed = original_get_accounts
 
     def test_list_with_data_items_but_empty_accounts(
         self, accounts_resource: AccountsResource, mock_client: MagicMock
@@ -252,8 +261,8 @@ class TestAccountsResource:
 
         import supermetrics.resources.accounts as accounts_module
 
-        original_get_accounts = accounts_module.get_accounts.sync
-        accounts_module.get_accounts.sync = MagicMock(return_value=mock_response)
+        original_get_accounts = accounts_module.get_accounts.sync_detailed
+        accounts_module.get_accounts.sync_detailed = MagicMock(return_value=_make_success_response(mock_response))
 
         # Act
         accounts = accounts_resource.list(ds_id="GAWA")
@@ -262,15 +271,17 @@ class TestAccountsResource:
         assert accounts == []
 
         # Cleanup
-        accounts_module.get_accounts.sync = original_get_accounts
+        accounts_module.get_accounts.sync_detailed = original_get_accounts
 
     def test_list_with_none_response(self, accounts_resource: AccountsResource, mock_client: MagicMock) -> None:
-        """Test list() with None response returns empty list."""
+        """Test list() with None parsed response returns empty list."""
         # Arrange
         import supermetrics.resources.accounts as accounts_module
 
-        original_get_accounts = accounts_module.get_accounts.sync
-        accounts_module.get_accounts.sync = MagicMock(return_value=None)
+        original_get_accounts = accounts_module.get_accounts.sync_detailed
+        accounts_module.get_accounts.sync_detailed = MagicMock(
+            return_value=_make_success_response(GetAccountsResponse200(data=None, meta=UNSET))
+        )
 
         # Act
         accounts = accounts_resource.list(ds_id="GAWA")
@@ -279,7 +290,7 @@ class TestAccountsResource:
         assert accounts == []
 
         # Cleanup
-        accounts_module.get_accounts.sync = original_get_accounts
+        accounts_module.get_accounts.sync_detailed = original_get_accounts
 
     def test_authentication_error_on_401(self, accounts_resource: AccountsResource, mock_client: MagicMock) -> None:
         """Test 401 response raises AuthenticationError."""
@@ -296,8 +307,8 @@ class TestAccountsResource:
         # Mock the API method to raise the error
         import supermetrics.resources.accounts as accounts_module
 
-        original_get_accounts = accounts_module.get_accounts.sync
-        accounts_module.get_accounts.sync = MagicMock(side_effect=error)
+        original_get_accounts = accounts_module.get_accounts.sync_detailed
+        accounts_module.get_accounts.sync_detailed = MagicMock(side_effect=error)
 
         # Verify AuthenticationError is raised
         with pytest.raises(AuthenticationError) as exc_info:
@@ -307,7 +318,7 @@ class TestAccountsResource:
         assert "Invalid or expired API key" in str(exc_info.value)
 
         # Cleanup
-        accounts_module.get_accounts.sync = original_get_accounts
+        accounts_module.get_accounts.sync_detailed = original_get_accounts
 
     def test_validation_error_on_400(self, accounts_resource: AccountsResource, mock_client: MagicMock) -> None:
         """Test 400 response raises ValidationError."""
@@ -324,8 +335,8 @@ class TestAccountsResource:
         # Mock the API method to raise the error
         import supermetrics.resources.accounts as accounts_module
 
-        original_get_accounts = accounts_module.get_accounts.sync
-        accounts_module.get_accounts.sync = MagicMock(side_effect=error)
+        original_get_accounts = accounts_module.get_accounts.sync_detailed
+        accounts_module.get_accounts.sync_detailed = MagicMock(side_effect=error)
 
         # Verify ValidationError is raised
         with pytest.raises(ValidationError) as exc_info:
@@ -335,7 +346,7 @@ class TestAccountsResource:
         assert "Invalid parameter" in str(exc_info.value)
 
         # Cleanup
-        accounts_module.get_accounts.sync = original_get_accounts
+        accounts_module.get_accounts.sync_detailed = original_get_accounts
 
     def test_api_error_on_404(self, accounts_resource: AccountsResource, mock_client: MagicMock) -> None:
         """Test 404 response raises APIError."""
@@ -352,8 +363,8 @@ class TestAccountsResource:
         # Mock the API method to raise the error
         import supermetrics.resources.accounts as accounts_module
 
-        original_get_accounts = accounts_module.get_accounts.sync
-        accounts_module.get_accounts.sync = MagicMock(side_effect=error)
+        original_get_accounts = accounts_module.get_accounts.sync_detailed
+        accounts_module.get_accounts.sync_detailed = MagicMock(side_effect=error)
 
         # Verify APIError is raised
         with pytest.raises(APIError) as exc_info:
@@ -363,7 +374,7 @@ class TestAccountsResource:
         assert "not found" in str(exc_info.value).lower()
 
         # Cleanup
-        accounts_module.get_accounts.sync = original_get_accounts
+        accounts_module.get_accounts.sync_detailed = original_get_accounts
 
     def test_api_error_on_500(self, accounts_resource: AccountsResource, mock_client: MagicMock) -> None:
         """Test 500 response raises APIError."""
@@ -380,8 +391,8 @@ class TestAccountsResource:
         # Mock the API method to raise the error
         import supermetrics.resources.accounts as accounts_module
 
-        original_get_accounts = accounts_module.get_accounts.sync
-        accounts_module.get_accounts.sync = MagicMock(side_effect=error)
+        original_get_accounts = accounts_module.get_accounts.sync_detailed
+        accounts_module.get_accounts.sync_detailed = MagicMock(side_effect=error)
 
         # Verify APIError is raised
         with pytest.raises(APIError) as exc_info:
@@ -391,7 +402,7 @@ class TestAccountsResource:
         assert "Supermetrics API error" in str(exc_info.value)
 
         # Cleanup
-        accounts_module.get_accounts.sync = original_get_accounts
+        accounts_module.get_accounts.sync_detailed = original_get_accounts
 
     def test_network_error_on_timeout(self, accounts_resource: AccountsResource, mock_client: MagicMock) -> None:
         """Test network timeout raises NetworkError."""
@@ -404,8 +415,8 @@ class TestAccountsResource:
         # Mock the API method to raise the error
         import supermetrics.resources.accounts as accounts_module
 
-        original_get_accounts = accounts_module.get_accounts.sync
-        accounts_module.get_accounts.sync = MagicMock(side_effect=error)
+        original_get_accounts = accounts_module.get_accounts.sync_detailed
+        accounts_module.get_accounts.sync_detailed = MagicMock(side_effect=error)
 
         # Verify NetworkError is raised
         with pytest.raises(NetworkError) as exc_info:
@@ -415,7 +426,7 @@ class TestAccountsResource:
         assert exc_info.value.status_code is None  # Network errors have no HTTP status
 
         # Cleanup
-        accounts_module.get_accounts.sync = original_get_accounts
+        accounts_module.get_accounts.sync_detailed = original_get_accounts
 
 
 class TestAccountsAsyncResource:
@@ -467,8 +478,8 @@ class TestAccountsAsyncResource:
 
         import supermetrics.resources.accounts as accounts_module
 
-        original_get_accounts = accounts_module.get_accounts.asyncio
-        accounts_module.get_accounts.asyncio = AsyncMock(return_value=mock_response)
+        original_get_accounts = accounts_module.get_accounts.asyncio_detailed
+        accounts_module.get_accounts.asyncio_detailed = AsyncMock(return_value=_make_success_response(mock_response))
 
         # Act
         accounts = await accounts_async_resource.list(ds_id="GAWA")
@@ -477,10 +488,10 @@ class TestAccountsAsyncResource:
         assert len(accounts) == 2
         assert accounts[0].account_id == "acc_123"
         assert accounts[1].account_id == "acc_456"
-        assert accounts_module.get_accounts.asyncio.called
+        assert accounts_module.get_accounts.asyncio_detailed.called
 
         # Cleanup
-        accounts_module.get_accounts.asyncio = original_get_accounts
+        accounts_module.get_accounts.asyncio_detailed = original_get_accounts
 
     @pytest.mark.asyncio
     async def test_list_async_with_filters(
@@ -499,9 +510,9 @@ class TestAccountsAsyncResource:
 
         import supermetrics.resources.accounts as accounts_module
 
-        original_get_accounts = accounts_module.get_accounts.asyncio
-        mock_asyncio = AsyncMock(return_value=mock_response)
-        accounts_module.get_accounts.asyncio = mock_asyncio
+        original_get_accounts = accounts_module.get_accounts.asyncio_detailed
+        mock_asyncio = AsyncMock(return_value=_make_success_response(mock_response))
+        accounts_module.get_accounts.asyncio_detailed = mock_asyncio
 
         # Act
         accounts = await accounts_async_resource.list(
@@ -519,7 +530,7 @@ class TestAccountsAsyncResource:
         assert json_param.cache_minutes == 60
 
         # Cleanup
-        accounts_module.get_accounts.asyncio = original_get_accounts
+        accounts_module.get_accounts.asyncio_detailed = original_get_accounts
 
     @pytest.mark.asyncio
     async def test_list_async_with_empty_response(
@@ -531,8 +542,8 @@ class TestAccountsAsyncResource:
 
         import supermetrics.resources.accounts as accounts_module
 
-        original_get_accounts = accounts_module.get_accounts.asyncio
-        accounts_module.get_accounts.asyncio = AsyncMock(return_value=mock_response)
+        original_get_accounts = accounts_module.get_accounts.asyncio_detailed
+        accounts_module.get_accounts.asyncio_detailed = AsyncMock(return_value=_make_success_response(mock_response))
 
         # Act
         accounts = await accounts_async_resource.list(ds_id="GAWA")
@@ -541,4 +552,4 @@ class TestAccountsAsyncResource:
         assert accounts == []
 
         # Cleanup
-        accounts_module.get_accounts.asyncio = original_get_accounts
+        accounts_module.get_accounts.asyncio_detailed = original_get_accounts

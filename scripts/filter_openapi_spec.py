@@ -525,9 +525,15 @@ def main():
 
                     merged_spec['paths'][path][method] = operation
 
-                    # Also copy path-level parameters if present
+                    # Also copy path-level parameters and servers if present
                     if 'parameters' in path_item and 'parameters' not in merged_spec['paths'][path]:
                         merged_spec['paths'][path]['parameters'] = path_item['parameters']
+                    if 'servers' in path_item and 'servers' not in merged_spec['paths'][path]:
+                        merged_spec['paths'][path]['servers'] = deepcopy(path_item['servers'])
+                        # Also promote path-level servers to top-level list
+                        for server in path_item['servers']:
+                            if server not in all_servers:
+                                all_servers.append(deepcopy(server))
 
         print(f"   Matched {matched_count} endpoint(s) from {spec_file.name}")
 

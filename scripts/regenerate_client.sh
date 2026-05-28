@@ -9,9 +9,10 @@ rm -rf src/supermetrics/_generated
 
 # Generate new code
 echo "⚙️  Generating new SDK code..."
-openapi-python-client generate \
+uv run openapi-python-client generate \
   --path openapi-spec.yaml \
-  --output-path src/supermetrics/_generated
+  --output-path src/supermetrics/_generated \
+  --config openapi-python-client-config.yaml
 
 # Verify generation succeeded
 if [ ! -d "src/supermetrics/_generated/supermetrics_api_client" ]; then

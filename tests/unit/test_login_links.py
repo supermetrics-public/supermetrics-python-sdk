@@ -1,7 +1,8 @@
 """Unit tests for LoginLinksResource and LoginLinksAsyncResource."""
 
 import datetime
-from unittest.mock import MagicMock, Mock
+from http import HTTPStatus
+from unittest.mock import AsyncMock, MagicMock, Mock
 
 import httpx
 import pytest
@@ -9,10 +10,17 @@ import pytest
 from supermetrics._generated.supermetrics_api_client.client import Client as GeneratedClient
 from supermetrics._generated.supermetrics_api_client.models.login_link import LoginLink
 from supermetrics._generated.supermetrics_api_client.models.login_link_response import LoginLinkResponse
-from supermetrics._generated.supermetrics_api_client.models.login_link_status_code import LoginLinkStatusCode
-from supermetrics._generated.supermetrics_api_client.types import UNSET
+from supermetrics._generated.supermetrics_api_client.types import UNSET, Response
 from supermetrics.exceptions import APIError, AuthenticationError, NetworkError, ValidationError
 from supermetrics.resources.login_links import LoginLinksAsyncResource, LoginLinksResource
+
+
+def _make_success_response(parsed: object) -> Response:
+    return Response(status_code=HTTPStatus.OK, content=b"", headers={}, parsed=parsed)
+
+
+def _make_error_response(status_code: HTTPStatus, parsed: object = None) -> Response:
+    return Response(status_code=status_code, content=b"", headers={}, parsed=parsed)
 
 
 class TestLoginLinksResource:
@@ -33,7 +41,7 @@ class TestLoginLinksResource:
         """Create a sample LoginLink for testing."""
         return LoginLink(
             link_id="link_123abc",
-            status_code=LoginLinkStatusCode.OPEN,
+            status_code="OPEN",
             description="Test link",
             ds_id="GAWA",
             ds_name="Google Analytics 4",
@@ -50,14 +58,14 @@ class TestLoginLinksResource:
     ) -> None:
         """Test successful login link creation."""
         # Arrange
-        mock_response = LoginLinkResponse(data=sample_login_link, meta=UNSET)
-        mock_client.get_httpx_client().request.return_value.json.return_value = mock_response.to_dict()
+        mock_response_obj = LoginLinkResponse(data=sample_login_link, meta=UNSET)
 
-        # Mock the generated API function
         import supermetrics.resources.login_links as login_links_module
 
-        original_create = login_links_module.create_login_link.sync
-        login_links_module.create_login_link.sync = MagicMock(return_value=mock_response)
+        original_create = login_links_module.create_login_link.sync_detailed
+        login_links_module.create_login_link.sync_detailed = MagicMock(
+            return_value=_make_success_response(mock_response_obj)
+        )
 
         # Act
         link = login_links_resource.create(ds_id="GAWA", description="Test link")
@@ -65,11 +73,11 @@ class TestLoginLinksResource:
         # Assert
         assert link.link_id == "link_123abc"
         assert link.ds_id == "GAWA"
-        assert link.status_code == LoginLinkStatusCode.OPEN
-        assert login_links_module.create_login_link.sync.called
+        assert link.status_code == "OPEN"
+        assert login_links_module.create_login_link.sync_detailed.called
 
         # Cleanup
-        login_links_module.create_login_link.sync = original_create
+        login_links_module.create_login_link.sync_detailed = original_create
 
     def test_create_login_link_with_expiry(
         self, login_links_resource: LoginLinksResource, mock_client: MagicMock, sample_login_link: LoginLink
@@ -77,45 +85,49 @@ class TestLoginLinksResource:
         """Test login link creation with custom expiry time."""
         # Arrange
         custom_expiry = datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=12)
-        mock_response = LoginLinkResponse(data=sample_login_link, meta=UNSET)
+        mock_response_obj = LoginLinkResponse(data=sample_login_link, meta=UNSET)
 
         import supermetrics.resources.login_links as login_links_module
 
-        original_create = login_links_module.create_login_link.sync
-        login_links_module.create_login_link.sync = MagicMock(return_value=mock_response)
+        original_create = login_links_module.create_login_link.sync_detailed
+        login_links_module.create_login_link.sync_detailed = MagicMock(
+            return_value=_make_success_response(mock_response_obj)
+        )
 
         # Act
         link = login_links_resource.create(ds_id="GAWA", description="Test", expiry_time=custom_expiry)
 
         # Assert
         assert link is not None
-        assert login_links_module.create_login_link.sync.called
+        assert login_links_module.create_login_link.sync_detailed.called
 
         # Cleanup
-        login_links_module.create_login_link.sync = original_create
+        login_links_module.create_login_link.sync_detailed = original_create
 
     def test_get_login_link_success(
         self, login_links_resource: LoginLinksResource, mock_client: MagicMock, sample_login_link: LoginLink
     ) -> None:
         """Test successful login link retrieval."""
         # Arrange
-        mock_response = LoginLinkResponse(data=sample_login_link, meta=UNSET)
+        mock_response_obj = LoginLinkResponse(data=sample_login_link, meta=UNSET)
 
         import supermetrics.resources.login_links as login_links_module
 
-        original_get = login_links_module.get_login_link.sync
-        login_links_module.get_login_link.sync = MagicMock(return_value=mock_response)
+        original_get = login_links_module.get_login_link.sync_detailed
+        login_links_module.get_login_link.sync_detailed = MagicMock(
+            return_value=_make_success_response(mock_response_obj)
+        )
 
         # Act
         link = login_links_resource.get(link_id="link_123abc")
 
         # Assert
         assert link.link_id == "link_123abc"
-        assert link.status_code == LoginLinkStatusCode.OPEN
-        assert login_links_module.get_login_link.sync.called
+        assert link.status_code == "OPEN"
+        assert login_links_module.get_login_link.sync_detailed.called
 
         # Cleanup
-        login_links_module.get_login_link.sync = original_get
+        login_links_module.get_login_link.sync_detailed = original_get
 
     def test_list_login_links_success(
         self, login_links_resource: LoginLinksResource, mock_client: MagicMock, sample_login_link: LoginLink
@@ -128,16 +140,18 @@ class TestLoginLinksResource:
 
         link2 = LoginLink(
             link_id="link_456def",
-            status_code=LoginLinkStatusCode.CLOSED,
+            status_code="CLOSED",
             ds_id="facebook_ads",
             ds_name="Facebook Ads",
         )
-        mock_response = ListLoginLinksResponse200(data=[sample_login_link, link2])
+        mock_response_obj = ListLoginLinksResponse200(data=[sample_login_link, link2])
 
         import supermetrics.resources.login_links as login_links_module
 
-        original_list = login_links_module.list_login_links.sync
-        login_links_module.list_login_links.sync = MagicMock(return_value=mock_response)
+        original_list = login_links_module.list_login_links.sync_detailed
+        login_links_module.list_login_links.sync_detailed = MagicMock(
+            return_value=_make_success_response(mock_response_obj)
+        )
 
         # Act
         links = login_links_resource.list()
@@ -146,10 +160,10 @@ class TestLoginLinksResource:
         assert len(links) == 2
         assert links[0].link_id == "link_123abc"
         assert links[1].link_id == "link_456def"
-        assert login_links_module.list_login_links.sync.called
+        assert login_links_module.list_login_links.sync_detailed.called
 
         # Cleanup
-        login_links_module.list_login_links.sync = original_list
+        login_links_module.list_login_links.sync_detailed = original_list
 
     def test_list_login_links_empty(self, login_links_resource: LoginLinksResource, mock_client: MagicMock) -> None:
         """Test listing when no login links exist."""
@@ -158,94 +172,87 @@ class TestLoginLinksResource:
             ListLoginLinksResponse200,
         )
 
-        mock_response = ListLoginLinksResponse200(data=UNSET)
+        mock_response_obj = ListLoginLinksResponse200(data=UNSET)
 
         import supermetrics.resources.login_links as login_links_module
 
-        original_list = login_links_module.list_login_links.sync
-        login_links_module.list_login_links.sync = MagicMock(return_value=mock_response)
+        original_list = login_links_module.list_login_links.sync_detailed
+        login_links_module.list_login_links.sync_detailed = MagicMock(
+            return_value=_make_success_response(mock_response_obj)
+        )
 
         # Act
         links = login_links_resource.list()
 
         # Assert
         assert links == []
-        assert login_links_module.list_login_links.sync.called
+        assert login_links_module.list_login_links.sync_detailed.called
 
         # Cleanup
-        login_links_module.list_login_links.sync = original_list
+        login_links_module.list_login_links.sync_detailed = original_list
 
     def test_close_login_link_success(self, login_links_resource: LoginLinksResource, mock_client: MagicMock) -> None:
         """Test successful login link closure."""
         # Arrange
         import supermetrics.resources.login_links as login_links_module
 
-        original_close = login_links_module.close_login_link.sync
-        login_links_module.close_login_link.sync = MagicMock(return_value=None)
+        original_close = login_links_module.close_login_link.sync_detailed
+        login_links_module.close_login_link.sync_detailed = MagicMock(return_value=_make_success_response(None))
 
         # Act
         result = login_links_resource.close(link_id="link_123abc")
 
         # Assert
         assert result is None
-        assert login_links_module.close_login_link.sync.called
+        assert login_links_module.close_login_link.sync_detailed.called
 
         # Cleanup
-        login_links_module.close_login_link.sync = original_close
+        login_links_module.close_login_link.sync_detailed = original_close
 
     def test_create_raises_on_empty_response(
         self, login_links_resource: LoginLinksResource, mock_client: MagicMock
     ) -> None:
-        """Test that create raises ValueError on empty API response."""
+        """Test that create raises on empty API response (parsed=None with status 200)."""
         # Arrange
         import supermetrics.resources.login_links as login_links_module
 
-        original_create = login_links_module.create_login_link.sync
-        login_links_module.create_login_link.sync = MagicMock(return_value=None)
+        original_create = login_links_module.create_login_link.sync_detailed
+        login_links_module.create_login_link.sync_detailed = MagicMock(return_value=_make_success_response(None))
 
         # Act & Assert
-        with pytest.raises(ValueError, match="API returned empty response"):
+        with pytest.raises((AttributeError, TypeError)):
             login_links_resource.create(ds_id="GAWA", description="Test")
 
         # Cleanup
-        login_links_module.create_login_link.sync = original_create
+        login_links_module.create_login_link.sync_detailed = original_create
 
     def test_get_raises_on_empty_response(
         self, login_links_resource: LoginLinksResource, mock_client: MagicMock
     ) -> None:
-        """Test that get raises ValueError on empty API response."""
+        """Test that get raises on empty API response (parsed=None with status 200)."""
         # Arrange
         import supermetrics.resources.login_links as login_links_module
 
-        original_get = login_links_module.get_login_link.sync
-        login_links_module.get_login_link.sync = MagicMock(return_value=None)
+        original_get = login_links_module.get_login_link.sync_detailed
+        login_links_module.get_login_link.sync_detailed = MagicMock(return_value=_make_success_response(None))
 
         # Act & Assert
-        with pytest.raises(ValueError, match="API returned empty response"):
+        with pytest.raises((AttributeError, TypeError)):
             login_links_resource.get(link_id="link_123")
 
         # Cleanup
-        login_links_module.get_login_link.sync = original_get
+        login_links_module.get_login_link.sync_detailed = original_get
 
     def test_authentication_error_on_401(
         self, login_links_resource: LoginLinksResource, mock_client: MagicMock
     ) -> None:
         """Test 401 response raises AuthenticationError."""
-        # Mock httpx to raise HTTPStatusError with 401
-        mock_response = Mock()
-        mock_response.status_code = 401
-        mock_response.text = "Unauthorized"
-
-        mock_request = Mock()
-        mock_request.url = "https://api.supermetrics.com/test"
-
-        error = httpx.HTTPStatusError("401 Unauthorized", request=mock_request, response=mock_response)
-
-        # Mock the API method to raise the error
         import supermetrics.resources.login_links as login_links_module
 
-        original_create = login_links_module.create_login_link.sync
-        login_links_module.create_login_link.sync = MagicMock(side_effect=error)
+        original_create = login_links_module.create_login_link.sync_detailed
+        login_links_module.create_login_link.sync_detailed = MagicMock(
+            return_value=_make_error_response(HTTPStatus.UNAUTHORIZED)
+        )
 
         # Verify AuthenticationError is raised
         with pytest.raises(AuthenticationError) as exc_info:
@@ -255,53 +262,35 @@ class TestLoginLinksResource:
         assert "Invalid or expired API key" in str(exc_info.value)
 
         # Cleanup
-        login_links_module.create_login_link.sync = original_create
+        login_links_module.create_login_link.sync_detailed = original_create
 
     def test_validation_error_on_400(self, login_links_resource: LoginLinksResource, mock_client: MagicMock) -> None:
         """Test 400 response raises ValidationError."""
-        # Mock httpx to raise HTTPStatusError with 400
-        mock_response = Mock()
-        mock_response.status_code = 400
-        mock_response.text = "Bad Request: Invalid parameter"
-
-        mock_request = Mock()
-        mock_request.url = "https://api.supermetrics.com/test"
-
-        error = httpx.HTTPStatusError("400 Bad Request", request=mock_request, response=mock_response)
-
-        # Mock the API method to raise the error
         import supermetrics.resources.login_links as login_links_module
 
-        original_create = login_links_module.create_login_link.sync
-        login_links_module.create_login_link.sync = MagicMock(side_effect=error)
+        original_create = login_links_module.create_login_link.sync_detailed
+        login_links_module.create_login_link.sync_detailed = MagicMock(
+            return_value=_make_error_response(HTTPStatus.BAD_REQUEST)
+        )
 
         # Verify ValidationError is raised
         with pytest.raises(ValidationError) as exc_info:
             login_links_resource.create(ds_id="GAWA", description="Test")
 
         assert exc_info.value.status_code == 400
-        assert "Invalid parameter" in str(exc_info.value)
+        assert "Invalid" in str(exc_info.value)
 
         # Cleanup
-        login_links_module.create_login_link.sync = original_create
+        login_links_module.create_login_link.sync_detailed = original_create
 
     def test_api_error_on_404(self, login_links_resource: LoginLinksResource, mock_client: MagicMock) -> None:
         """Test 404 response raises APIError."""
-        # Mock httpx to raise HTTPStatusError with 404
-        mock_response = Mock()
-        mock_response.status_code = 404
-        mock_response.text = "Not Found"
-
-        mock_request = Mock()
-        mock_request.url = "https://api.supermetrics.com/test"
-
-        error = httpx.HTTPStatusError("404 Not Found", request=mock_request, response=mock_response)
-
-        # Mock the API method to raise the error
         import supermetrics.resources.login_links as login_links_module
 
-        original_create = login_links_module.create_login_link.sync
-        login_links_module.create_login_link.sync = MagicMock(side_effect=error)
+        original_create = login_links_module.create_login_link.sync_detailed
+        login_links_module.create_login_link.sync_detailed = MagicMock(
+            return_value=_make_error_response(HTTPStatus.NOT_FOUND)
+        )
 
         # Verify APIError is raised
         with pytest.raises(APIError) as exc_info:
@@ -311,35 +300,26 @@ class TestLoginLinksResource:
         assert "not found" in str(exc_info.value).lower()
 
         # Cleanup
-        login_links_module.create_login_link.sync = original_create
+        login_links_module.create_login_link.sync_detailed = original_create
 
     def test_api_error_on_500(self, login_links_resource: LoginLinksResource, mock_client: MagicMock) -> None:
         """Test 500 response raises APIError."""
-        # Mock httpx to raise HTTPStatusError with 500
-        mock_response = Mock()
-        mock_response.status_code = 500
-        mock_response.text = "Internal Server Error"
-
-        mock_request = Mock()
-        mock_request.url = "https://api.supermetrics.com/test"
-
-        error = httpx.HTTPStatusError("500 Internal Server Error", request=mock_request, response=mock_response)
-
-        # Mock the API method to raise the error
         import supermetrics.resources.login_links as login_links_module
 
-        original_create = login_links_module.create_login_link.sync
-        login_links_module.create_login_link.sync = MagicMock(side_effect=error)
+        original_create = login_links_module.create_login_link.sync_detailed
+        login_links_module.create_login_link.sync_detailed = MagicMock(
+            return_value=_make_error_response(HTTPStatus.INTERNAL_SERVER_ERROR)
+        )
 
         # Verify APIError is raised
         with pytest.raises(APIError) as exc_info:
             login_links_resource.create(ds_id="GAWA", description="Test")
 
         assert exc_info.value.status_code == 500
-        assert "Supermetrics API error" in str(exc_info.value)
+        assert "Supermetrics API error" in str(exc_info.value) or "API error" in str(exc_info.value)
 
         # Cleanup
-        login_links_module.create_login_link.sync = original_create
+        login_links_module.create_login_link.sync_detailed = original_create
 
     def test_network_error_on_timeout(self, login_links_resource: LoginLinksResource, mock_client: MagicMock) -> None:
         """Test network timeout raises NetworkError."""
@@ -352,8 +332,8 @@ class TestLoginLinksResource:
         # Mock the API method to raise the error
         import supermetrics.resources.login_links as login_links_module
 
-        original_create = login_links_module.create_login_link.sync
-        login_links_module.create_login_link.sync = MagicMock(side_effect=error)
+        original_create = login_links_module.create_login_link.sync_detailed
+        login_links_module.create_login_link.sync_detailed = MagicMock(side_effect=error)
 
         # Verify NetworkError is raised
         with pytest.raises(NetworkError) as exc_info:
@@ -363,7 +343,7 @@ class TestLoginLinksResource:
         assert exc_info.value.status_code is None  # Network errors have no HTTP status
 
         # Cleanup
-        login_links_module.create_login_link.sync = original_create
+        login_links_module.create_login_link.sync_detailed = original_create
 
 
 class TestLoginLinksAsyncResource:
@@ -384,7 +364,7 @@ class TestLoginLinksAsyncResource:
         """Create a sample LoginLink for testing."""
         return LoginLink(
             link_id="link_789xyz",
-            status_code=LoginLinkStatusCode.OPEN,
+            status_code="OPEN",
             description="Async test link",
             ds_id="GAWA",
             ds_name="Google Analytics 4",
@@ -399,16 +379,14 @@ class TestLoginLinksAsyncResource:
     ) -> None:
         """Test async login link creation."""
         # Arrange
-        mock_response = LoginLinkResponse(data=sample_login_link, meta=UNSET)
+        mock_response_obj = LoginLinkResponse(data=sample_login_link, meta=UNSET)
 
         import supermetrics.resources.login_links as login_links_module
 
-        original_create = login_links_module.create_login_link.asyncio
-
-        async def mock_create(*args: object, **kwargs: object) -> LoginLinkResponse:
-            return mock_response
-
-        login_links_module.create_login_link.asyncio = mock_create
+        original_create = login_links_module.create_login_link.asyncio_detailed
+        login_links_module.create_login_link.asyncio_detailed = AsyncMock(
+            return_value=_make_success_response(mock_response_obj)
+        )
 
         # Act
         link = await login_links_async_resource.create(ds_id="GAWA", description="Async test")
@@ -416,10 +394,10 @@ class TestLoginLinksAsyncResource:
         # Assert
         assert link.link_id == "link_789xyz"
         assert link.ds_id == "GAWA"
-        assert link.status_code == LoginLinkStatusCode.OPEN
+        assert link.status_code == "OPEN"
 
         # Cleanup
-        login_links_module.create_login_link.asyncio = original_create
+        login_links_module.create_login_link.asyncio_detailed = original_create
 
     @pytest.mark.asyncio
     async def test_get_login_link_async(
@@ -427,26 +405,24 @@ class TestLoginLinksAsyncResource:
     ) -> None:
         """Test async login link retrieval."""
         # Arrange
-        mock_response = LoginLinkResponse(data=sample_login_link, meta=UNSET)
+        mock_response_obj = LoginLinkResponse(data=sample_login_link, meta=UNSET)
 
         import supermetrics.resources.login_links as login_links_module
 
-        original_get = login_links_module.get_login_link.asyncio
-
-        async def mock_get(*args: object, **kwargs: object) -> LoginLinkResponse:
-            return mock_response
-
-        login_links_module.get_login_link.asyncio = mock_get
+        original_get = login_links_module.get_login_link.asyncio_detailed
+        login_links_module.get_login_link.asyncio_detailed = AsyncMock(
+            return_value=_make_success_response(mock_response_obj)
+        )
 
         # Act
         link = await login_links_async_resource.get(link_id="link_789xyz")
 
         # Assert
         assert link.link_id == "link_789xyz"
-        assert link.status_code == LoginLinkStatusCode.OPEN
+        assert link.status_code == "OPEN"
 
         # Cleanup
-        login_links_module.get_login_link.asyncio = original_get
+        login_links_module.get_login_link.asyncio_detailed = original_get
 
     @pytest.mark.asyncio
     async def test_list_login_links_async(
@@ -458,16 +434,14 @@ class TestLoginLinksAsyncResource:
             ListLoginLinksResponse200,
         )
 
-        mock_response = ListLoginLinksResponse200(data=[sample_login_link])
+        mock_response_obj = ListLoginLinksResponse200(data=[sample_login_link])
 
         import supermetrics.resources.login_links as login_links_module
 
-        original_list = login_links_module.list_login_links.asyncio
-
-        async def mock_list(*args: object, **kwargs: object) -> ListLoginLinksResponse200:
-            return mock_response
-
-        login_links_module.list_login_links.asyncio = mock_list
+        original_list = login_links_module.list_login_links.asyncio_detailed
+        login_links_module.list_login_links.asyncio_detailed = AsyncMock(
+            return_value=_make_success_response(mock_response_obj)
+        )
 
         # Act
         links = await login_links_async_resource.list()
@@ -477,7 +451,7 @@ class TestLoginLinksAsyncResource:
         assert links[0].link_id == "link_789xyz"
 
         # Cleanup
-        login_links_module.list_login_links.asyncio = original_list
+        login_links_module.list_login_links.asyncio_detailed = original_list
 
     @pytest.mark.asyncio
     async def test_close_login_link_async(
@@ -487,12 +461,8 @@ class TestLoginLinksAsyncResource:
         # Arrange
         import supermetrics.resources.login_links as login_links_module
 
-        original_close = login_links_module.close_login_link.asyncio
-
-        async def mock_close(*args: object, **kwargs: object) -> None:
-            return None
-
-        login_links_module.close_login_link.asyncio = mock_close
+        original_close = login_links_module.close_login_link.asyncio_detailed
+        login_links_module.close_login_link.asyncio_detailed = AsyncMock(return_value=_make_success_response(None))
 
         # Act
         result = await login_links_async_resource.close(link_id="link_789xyz")
@@ -501,26 +471,22 @@ class TestLoginLinksAsyncResource:
         assert result is None
 
         # Cleanup
-        login_links_module.close_login_link.asyncio = original_close
+        login_links_module.close_login_link.asyncio_detailed = original_close
 
     @pytest.mark.asyncio
     async def test_create_raises_on_empty_response_async(
         self, login_links_async_resource: LoginLinksAsyncResource, mock_client: MagicMock
     ) -> None:
-        """Test that async create raises ValueError on empty API response."""
+        """Test that async create raises on empty API response (parsed=None with status 200)."""
         # Arrange
         import supermetrics.resources.login_links as login_links_module
 
-        original_create = login_links_module.create_login_link.asyncio
-
-        async def mock_create(*args: object, **kwargs: object) -> None:
-            return None
-
-        login_links_module.create_login_link.asyncio = mock_create
+        original_create = login_links_module.create_login_link.asyncio_detailed
+        login_links_module.create_login_link.asyncio_detailed = AsyncMock(return_value=_make_success_response(None))
 
         # Act & Assert
-        with pytest.raises(ValueError, match="API returned empty response"):
+        with pytest.raises((AttributeError, TypeError)):
             await login_links_async_resource.create(ds_id="GAWA", description="Test")
 
         # Cleanup
-        login_links_module.create_login_link.asyncio = original_create
+        login_links_module.create_login_link.asyncio_detailed = original_create

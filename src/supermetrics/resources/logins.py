@@ -3,8 +3,6 @@
 import logging
 from typing import cast
 
-import httpx
-
 from supermetrics._generated.supermetrics_api_client import AuthenticatedClient
 from supermetrics._generated.supermetrics_api_client import Client as GeneratedClient
 from supermetrics._generated.supermetrics_api_client.api.data_source_logins import (
@@ -15,38 +13,11 @@ from supermetrics._generated.supermetrics_api_client.models.data_source_login im
 from supermetrics._generated.supermetrics_api_client.models.get_data_source_login_response_200 import (
     GetDataSourceLoginResponse200,
 )
-from supermetrics._generated.supermetrics_api_client.models.get_data_source_login_response_401 import (
-    GetDataSourceLoginResponse401,
-)
-from supermetrics._generated.supermetrics_api_client.models.get_data_source_login_response_404 import (
-    GetDataSourceLoginResponse404,
-)
-from supermetrics._generated.supermetrics_api_client.models.get_data_source_login_response_422 import (
-    GetDataSourceLoginResponse422,
-)
-from supermetrics._generated.supermetrics_api_client.models.get_data_source_login_response_429 import (
-    GetDataSourceLoginResponse429,
-)
-from supermetrics._generated.supermetrics_api_client.models.get_data_source_login_response_500 import (
-    GetDataSourceLoginResponse500,
-)
 from supermetrics._generated.supermetrics_api_client.models.list_data_source_logins_response_200 import (
     ListDataSourceLoginsResponse200,
 )
-from supermetrics._generated.supermetrics_api_client.models.list_data_source_logins_response_401 import (
-    ListDataSourceLoginsResponse401,
-)
-from supermetrics._generated.supermetrics_api_client.models.list_data_source_logins_response_422 import (
-    ListDataSourceLoginsResponse422,
-)
-from supermetrics._generated.supermetrics_api_client.models.list_data_source_logins_response_429 import (
-    ListDataSourceLoginsResponse429,
-)
-from supermetrics._generated.supermetrics_api_client.models.list_data_source_logins_response_500 import (
-    ListDataSourceLoginsResponse500,
-)
 from supermetrics._generated.supermetrics_api_client.types import Unset
-from supermetrics.exceptions import APIError, AuthenticationError, NetworkError, ValidationError
+from supermetrics.resources._error_handlers import _raise_for_status, api_error_handler
 
 logger = logging.getLogger(__name__)
 
@@ -108,144 +79,19 @@ class LoginsResource:
         """
         logger.debug(f"Retrieving login: login_id={login_id}")
 
-        try:
-            response = get_data_source_login.sync(login_id=login_id, client=cast(AuthenticatedClient, self._client))
-
-            if response is None or isinstance(response, Unset):
-                raise ValueError("API returned empty response")
-
-            # Handle error responses by checking type before casting
-            if isinstance(response, GetDataSourceLoginResponse401):
-                error_msg: str = (
-                    response.error.message
-                    if (
-                        response.error
-                        and not isinstance(response.error, Unset)
-                        and response.error.message
-                        and not isinstance(response.error.message, Unset)
-                    )
-                    else "Invalid or expired API key"
-                )
-                raise AuthenticationError(
-                    error_msg,
-                    status_code=401,
-                    endpoint="/ds/logins/{login_id}",
-                )
-            elif isinstance(response, GetDataSourceLoginResponse404):
-                error_msg = (
-                    response.error.message
-                    if (
-                        response.error
-                        and not isinstance(response.error, Unset)
-                        and hasattr(response.error, 'message')
-                        and response.error.message
-                        and not isinstance(response.error.message, Unset)
-                    )
-                    else "Login not found"
-                )
-                raise APIError(
-                    error_msg,
-                    status_code=404,
-                    endpoint="/ds/logins/{login_id}",
-                )
-            elif isinstance(response, GetDataSourceLoginResponse422):
-                error_msg = (
-                    response.error.message
-                    if (
-                        response.error
-                        and not isinstance(response.error, Unset)
-                        and response.error.message
-                        and not isinstance(response.error.message, Unset)
-                    )
-                    else "Invalid request parameters"
-                )
-                raise ValidationError(
-                    error_msg,
-                    status_code=422,
-                    endpoint="/ds/logins/{login_id}",
-                )
-            elif isinstance(response, (GetDataSourceLoginResponse429, GetDataSourceLoginResponse500)):
-                status = 429 if isinstance(response, GetDataSourceLoginResponse429) else 500
-                error_msg = (
-                    response.error.message
-                    if (
-                        response.error
-                        and not isinstance(response.error, Unset)
-                        and hasattr(response.error, 'message')
-                        and response.error.message
-                        and not isinstance(response.error.message, Unset)
-                    )
-                    else "Supermetrics API error"
-                )
-                raise APIError(
-                    error_msg,
-                    status_code=status,
-                    endpoint="/ds/logins/{login_id}",
-                )
-
-            # Defensive validation: ensure response is the expected success type
-            if not isinstance(response, GetDataSourceLoginResponse200):
-                raise APIError(
-                    f"Unexpected response type: {type(response).__name__}",
-                    status_code=500,
-                    endpoint="/ds/logins/{login_id}",
-                    response_body=str(response),
-                )
-
-            # After isinstance check, mypy knows response is GetDataSourceLoginResponse200
-            if response.data is None or isinstance(response.data, Unset):
-                raise ValueError("API returned empty response")
-
-            login = response.data
-            logger.info(f"Retrieved login: id={login.login_id}, username={login.username}")
-
-            return login
-
-        except (AuthenticationError, ValidationError, APIError):
-            # Re-raise SDK exceptions
-            raise
-        except httpx.HTTPStatusError as e:
-            # Map HTTP status codes to SDK exceptions
-            if e.response.status_code == 401:
-                raise AuthenticationError(
-                    "Invalid or expired API key",
-                    status_code=401,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code == 400:
-                raise ValidationError(
-                    f"Invalid request parameters: {e.response.text}",
-                    status_code=400,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code == 404:
-                raise APIError(
-                    f"Login not found: {e.response.text}",
-                    status_code=404,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code >= 500:
-                raise APIError(
-                    f"Supermetrics API error: {e.response.text}",
-                    status_code=e.response.status_code,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            else:
-                raise APIError(
-                    f"API error ({e.response.status_code}): {e.response.text}",
-                    status_code=e.response.status_code,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-        except httpx.RequestError as e:
-            raise NetworkError(
-                f"Network error: {str(e)}",
-                endpoint=str(e.request.url) if e.request else None,
-            ) from e
+        endpoint = f"/ds/login/{login_id}"
+        with api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Login not found"):
+            response = get_data_source_login.sync_detailed(
+                login_id=login_id, client=cast(AuthenticatedClient, self._client)
+            )
+            if response.status_code == 200:
+                parsed = cast(GetDataSourceLoginResponse200, response.parsed)
+                if parsed.data is None or isinstance(parsed.data, Unset):
+                    raise ValueError("API returned empty response")
+                login = parsed.data
+                logger.info(f"Retrieved login: id={login.login_id}, username={login.username}")
+                return login
+            _raise_for_status(response.status_code, response.parsed, endpoint)
 
     def list(self) -> list[DataSourceLogin]:
         """List all logins for the authenticated user.
@@ -269,127 +115,17 @@ class LoginsResource:
         """
         logger.debug("Listing all logins")
 
-        try:
-            response = list_data_source_logins.sync(client=cast(AuthenticatedClient, self._client))
-
-            if response is None or isinstance(response, Unset):
-                return []
-
-            # Handle error responses by checking type before casting
-            if isinstance(response, ListDataSourceLoginsResponse401):
-                error_msg: str = (
-                    response.error.message
-                    if (
-                        response.error
-                        and not isinstance(response.error, Unset)
-                        and response.error.message
-                        and not isinstance(response.error.message, Unset)
-                    )
-                    else "Invalid or expired API key"
-                )
-                raise AuthenticationError(
-                    error_msg,
-                    status_code=401,
-                    endpoint="/ds/logins",
-                )
-            elif isinstance(response, ListDataSourceLoginsResponse422):
-                error_msg = (
-                    response.error.message
-                    if (
-                        response.error
-                        and not isinstance(response.error, Unset)
-                        and response.error.message
-                        and not isinstance(response.error.message, Unset)
-                    )
-                    else "Invalid request parameters"
-                )
-                raise ValidationError(
-                    error_msg,
-                    status_code=422,
-                    endpoint="/ds/logins",
-                )
-            elif isinstance(response, (ListDataSourceLoginsResponse429, ListDataSourceLoginsResponse500)):
-                status = 429 if isinstance(response, ListDataSourceLoginsResponse429) else 500
-                error_msg = (
-                    response.error.message
-                    if (
-                        response.error
-                        and not isinstance(response.error, Unset)
-                        and hasattr(response.error, 'message')
-                        and response.error.message
-                        and not isinstance(response.error.message, Unset)
-                    )
-                    else "Supermetrics API error"
-                )
-                raise APIError(
-                    error_msg,
-                    status_code=status,
-                    endpoint="/ds/logins",
-                )
-
-            # Defensive validation: ensure response is the expected success type
-            if not isinstance(response, ListDataSourceLoginsResponse200):
-                raise APIError(
-                    f"Unexpected response type: {type(response).__name__}",
-                    status_code=500,
-                    endpoint="/ds/logins",
-                    response_body=str(response),
-                )
-
-            # After isinstance check, mypy knows response is ListDataSourceLoginsResponse200
-            if response.data is None or isinstance(response.data, Unset):
-                return []
-
-            logins = response.data
-            logger.info(f"Retrieved {len(logins)} logins")
-
-            return logins
-
-        except (AuthenticationError, ValidationError, APIError):
-            # Re-raise SDK exceptions
-            raise
-        except httpx.HTTPStatusError as e:
-            # Map HTTP status codes to SDK exceptions
-            if e.response.status_code == 401:
-                raise AuthenticationError(
-                    "Invalid or expired API key",
-                    status_code=401,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code == 400:
-                raise ValidationError(
-                    f"Invalid request parameters: {e.response.text}",
-                    status_code=400,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code == 404:
-                raise APIError(
-                    f"Login not found: {e.response.text}",
-                    status_code=404,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code >= 500:
-                raise APIError(
-                    f"Supermetrics API error: {e.response.text}",
-                    status_code=e.response.status_code,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            else:
-                raise APIError(
-                    f"API error ({e.response.status_code}): {e.response.text}",
-                    status_code=e.response.status_code,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-        except httpx.RequestError as e:
-            raise NetworkError(
-                f"Network error: {str(e)}",
-                endpoint=str(e.request.url) if e.request else None,
-            ) from e
+        endpoint = "/ds/logins"
+        with api_error_handler(endpoint):
+            response = list_data_source_logins.sync_detailed(client=cast(AuthenticatedClient, self._client))
+            if response.status_code == 200:
+                parsed = cast(ListDataSourceLoginsResponse200, response.parsed)
+                if parsed.data is None or isinstance(parsed.data, Unset):
+                    return []
+                logins = parsed.data
+                logger.info(f"Retrieved {len(logins)} logins")
+                return logins
+            _raise_for_status(response.status_code, response.parsed, endpoint)
 
     def get_by_username(self, login_username: str) -> DataSourceLogin:
         """Retrieve a login by username.
@@ -467,146 +203,19 @@ class LoginsAsyncResource:
         """
         logger.debug(f"Retrieving login (async): login_id={login_id}")
 
-        try:
-            response = await get_data_source_login.asyncio(
+        endpoint = f"/ds/login/{login_id}"
+        with api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Login not found"):
+            response = await get_data_source_login.asyncio_detailed(
                 login_id=login_id, client=cast(AuthenticatedClient, self._client)
             )
-
-            if response is None or isinstance(response, Unset):
-                raise ValueError("API returned empty response")
-
-            # Handle error responses by checking type before casting
-            if isinstance(response, GetDataSourceLoginResponse401):
-                error_msg: str = (
-                    response.error.message
-                    if (
-                        response.error
-                        and not isinstance(response.error, Unset)
-                        and response.error.message
-                        and not isinstance(response.error.message, Unset)
-                    )
-                    else "Invalid or expired API key"
-                )
-                raise AuthenticationError(
-                    error_msg,
-                    status_code=401,
-                    endpoint="/ds/logins/{login_id}",
-                )
-            elif isinstance(response, GetDataSourceLoginResponse404):
-                error_msg = (
-                    response.error.message
-                    if (
-                        response.error
-                        and not isinstance(response.error, Unset)
-                        and hasattr(response.error, 'message')
-                        and response.error.message
-                        and not isinstance(response.error.message, Unset)
-                    )
-                    else "Login not found"
-                )
-                raise APIError(
-                    error_msg,
-                    status_code=404,
-                    endpoint="/ds/logins/{login_id}",
-                )
-            elif isinstance(response, GetDataSourceLoginResponse422):
-                error_msg = (
-                    response.error.message
-                    if (
-                        response.error
-                        and not isinstance(response.error, Unset)
-                        and response.error.message
-                        and not isinstance(response.error.message, Unset)
-                    )
-                    else "Invalid request parameters"
-                )
-                raise ValidationError(
-                    error_msg,
-                    status_code=422,
-                    endpoint="/ds/logins/{login_id}",
-                )
-            elif isinstance(response, (GetDataSourceLoginResponse429, GetDataSourceLoginResponse500)):
-                status = 429 if isinstance(response, GetDataSourceLoginResponse429) else 500
-                error_msg = (
-                    response.error.message
-                    if (
-                        response.error
-                        and not isinstance(response.error, Unset)
-                        and hasattr(response.error, 'message')
-                        and response.error.message
-                        and not isinstance(response.error.message, Unset)
-                    )
-                    else "Supermetrics API error"
-                )
-                raise APIError(
-                    error_msg,
-                    status_code=status,
-                    endpoint="/ds/logins/{login_id}",
-                )
-
-            # Defensive validation: ensure response is the expected success type
-            if not isinstance(response, GetDataSourceLoginResponse200):
-                raise APIError(
-                    f"Unexpected response type: {type(response).__name__}",
-                    status_code=500,
-                    endpoint="/ds/logins/{login_id}",
-                    response_body=str(response),
-                )
-
-            # After isinstance check, mypy knows response is GetDataSourceLoginResponse200
-            if response.data is None or isinstance(response.data, Unset):
-                raise ValueError("API returned empty response")
-
-            login = response.data
-            logger.info(f"Retrieved login (async): id={login.login_id}, username={login.username}")
-
-            return login
-
-        except (AuthenticationError, ValidationError, APIError):
-            # Re-raise SDK exceptions
-            raise
-        except httpx.HTTPStatusError as e:
-            # Map HTTP status codes to SDK exceptions
-            if e.response.status_code == 401:
-                raise AuthenticationError(
-                    "Invalid or expired API key",
-                    status_code=401,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code == 400:
-                raise ValidationError(
-                    f"Invalid request parameters: {e.response.text}",
-                    status_code=400,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code == 404:
-                raise APIError(
-                    f"Login not found: {e.response.text}",
-                    status_code=404,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code >= 500:
-                raise APIError(
-                    f"Supermetrics API error: {e.response.text}",
-                    status_code=e.response.status_code,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            else:
-                raise APIError(
-                    f"API error ({e.response.status_code}): {e.response.text}",
-                    status_code=e.response.status_code,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-        except httpx.RequestError as e:
-            raise NetworkError(
-                f"Network error: {str(e)}",
-                endpoint=str(e.request.url) if e.request else None,
-            ) from e
+            if response.status_code == 200:
+                parsed = cast(GetDataSourceLoginResponse200, response.parsed)
+                if parsed.data is None or isinstance(parsed.data, Unset):
+                    raise ValueError("API returned empty response")
+                login = parsed.data
+                logger.info(f"Retrieved login (async): id={login.login_id}, username={login.username}")
+                return login
+            _raise_for_status(response.status_code, response.parsed, endpoint)
 
     async def list(self) -> list[DataSourceLogin]:
         """List all logins for the authenticated user.
@@ -624,127 +233,17 @@ class LoginsAsyncResource:
         """
         logger.debug("Listing all logins (async)")
 
-        try:
-            response = await list_data_source_logins.asyncio(client=cast(AuthenticatedClient, self._client))
-
-            if response is None or isinstance(response, Unset):
-                return []
-
-            # Handle error responses by checking type before casting
-            if isinstance(response, ListDataSourceLoginsResponse401):
-                error_msg: str = (
-                    response.error.message
-                    if (
-                        response.error
-                        and not isinstance(response.error, Unset)
-                        and response.error.message
-                        and not isinstance(response.error.message, Unset)
-                    )
-                    else "Invalid or expired API key"
-                )
-                raise AuthenticationError(
-                    error_msg,
-                    status_code=401,
-                    endpoint="/ds/logins",
-                )
-            elif isinstance(response, ListDataSourceLoginsResponse422):
-                error_msg = (
-                    response.error.message
-                    if (
-                        response.error
-                        and not isinstance(response.error, Unset)
-                        and response.error.message
-                        and not isinstance(response.error.message, Unset)
-                    )
-                    else "Invalid request parameters"
-                )
-                raise ValidationError(
-                    error_msg,
-                    status_code=422,
-                    endpoint="/ds/logins",
-                )
-            elif isinstance(response, (ListDataSourceLoginsResponse429, ListDataSourceLoginsResponse500)):
-                status = 429 if isinstance(response, ListDataSourceLoginsResponse429) else 500
-                error_msg = (
-                    response.error.message
-                    if (
-                        response.error
-                        and not isinstance(response.error, Unset)
-                        and hasattr(response.error, 'message')
-                        and response.error.message
-                        and not isinstance(response.error.message, Unset)
-                    )
-                    else "Supermetrics API error"
-                )
-                raise APIError(
-                    error_msg,
-                    status_code=status,
-                    endpoint="/ds/logins",
-                )
-
-            # Defensive validation: ensure response is the expected success type
-            if not isinstance(response, ListDataSourceLoginsResponse200):
-                raise APIError(
-                    f"Unexpected response type: {type(response).__name__}",
-                    status_code=500,
-                    endpoint="/ds/logins",
-                    response_body=str(response),
-                )
-
-            # After isinstance check, mypy knows response is ListDataSourceLoginsResponse200
-            if response.data is None or isinstance(response.data, Unset):
-                return []
-
-            logins = response.data
-            logger.info(f"Retrieved {len(logins)} logins (async)")
-
-            return logins
-
-        except (AuthenticationError, ValidationError, APIError):
-            # Re-raise SDK exceptions
-            raise
-        except httpx.HTTPStatusError as e:
-            # Map HTTP status codes to SDK exceptions
-            if e.response.status_code == 401:
-                raise AuthenticationError(
-                    "Invalid or expired API key",
-                    status_code=401,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code == 400:
-                raise ValidationError(
-                    f"Invalid request parameters: {e.response.text}",
-                    status_code=400,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code == 404:
-                raise APIError(
-                    f"Login not found: {e.response.text}",
-                    status_code=404,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code >= 500:
-                raise APIError(
-                    f"Supermetrics API error: {e.response.text}",
-                    status_code=e.response.status_code,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            else:
-                raise APIError(
-                    f"API error ({e.response.status_code}): {e.response.text}",
-                    status_code=e.response.status_code,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-        except httpx.RequestError as e:
-            raise NetworkError(
-                f"Network error: {str(e)}",
-                endpoint=str(e.request.url) if e.request else None,
-            ) from e
+        endpoint = "/ds/logins"
+        with api_error_handler(endpoint):
+            response = await list_data_source_logins.asyncio_detailed(client=cast(AuthenticatedClient, self._client))
+            if response.status_code == 200:
+                parsed = cast(ListDataSourceLoginsResponse200, response.parsed)
+                if parsed.data is None or isinstance(parsed.data, Unset):
+                    return []
+                logins = parsed.data
+                logger.info(f"Retrieved {len(logins)} logins (async)")
+                return logins
+            _raise_for_status(response.status_code, response.parsed, endpoint)
 
     async def get_by_username(self, login_username: str) -> DataSourceLogin:
         """Retrieve a login by username.

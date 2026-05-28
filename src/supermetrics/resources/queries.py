@@ -3,23 +3,17 @@
 import logging
 from typing import Any, cast
 
-import httpx
-
 from supermetrics._generated.supermetrics_api_client import AuthenticatedClient
 from supermetrics._generated.supermetrics_api_client import Client as GeneratedClient
 from supermetrics._generated.supermetrics_api_client.api.get_data import get_data
 from supermetrics._generated.supermetrics_api_client.models.data_query import DataQuery
 from supermetrics._generated.supermetrics_api_client.models.data_response import DataResponse
-from supermetrics._generated.supermetrics_api_client.models.get_data_response_400 import GetDataResponse400
-from supermetrics._generated.supermetrics_api_client.models.get_data_response_401 import GetDataResponse401
-from supermetrics._generated.supermetrics_api_client.models.get_data_response_403 import GetDataResponse403
-from supermetrics._generated.supermetrics_api_client.models.get_data_response_422 import GetDataResponse422
-from supermetrics._generated.supermetrics_api_client.models.get_data_response_429 import GetDataResponse429
-from supermetrics._generated.supermetrics_api_client.models.get_data_response_500 import GetDataResponse500
 from supermetrics._generated.supermetrics_api_client.types import UNSET, Unset
-from supermetrics.exceptions import APIError, AuthenticationError, NetworkError, ValidationError
+from supermetrics.resources._error_handlers import _raise_for_status, api_error_handler
 
 logger = logging.getLogger(__name__)
+
+_ENDPOINT = "/query/data/json"
 
 
 class QueriesResource:
@@ -150,7 +144,7 @@ class QueriesResource:
             f"fields={fields}, start_date={start_date}, end_date={end_date}, kwargs={kwargs}"
         )
 
-        try:
+        with api_error_handler(_ENDPOINT, context_400="Invalid request parameters"):
             # Build request parameters
             request_params = DataQuery(
                 ds_id=ds_id,
@@ -162,119 +156,23 @@ class QueriesResource:
             )
 
             # Call generated API - cast client to AuthenticatedClient (compatible at runtime)
-            response = get_data.sync(client=cast(AuthenticatedClient, self._client), json=request_params)
+            response = get_data.sync_detailed(client=cast(AuthenticatedClient, self._client), json=request_params)
 
-            # Handle response
-            if response is None or isinstance(response, Unset):
-                logger.info("Query executed but returned no response (empty)")
-                return None
+            if response.status_code == 200:
+                parsed = cast(DataResponse, response.parsed)
+                if parsed is None or isinstance(parsed, Unset):
+                    logger.info("Query executed but returned no response (empty)")
+                    return None
+                if hasattr(parsed, "meta") and parsed.meta and hasattr(parsed.meta, "status_code"):
+                    status = parsed.meta.status_code if parsed.meta.status_code is not UNSET else "unknown"
+                    logger.info(
+                        f"Query executed: status={status}, request_id={getattr(parsed.meta, 'request_id', 'N/A')}"
+                    )
+                else:
+                    logger.info("Query executed successfully")
+                return parsed
 
-            # Check for error responses and raise appropriate exceptions
-            if isinstance(response, GetDataResponse400):
-                raise ValidationError(
-                    f"Invalid request parameters: {response}",
-                    status_code=400,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-            elif isinstance(response, GetDataResponse401):
-                raise AuthenticationError(
-                    "Invalid or expired API key",
-                    status_code=401,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-            elif isinstance(response, GetDataResponse403):
-                raise APIError(
-                    "Forbidden - insufficient permissions",
-                    status_code=403,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-            elif isinstance(response, GetDataResponse422):
-                raise ValidationError(
-                    f"Unprocessable entity - validation failed: {response}",
-                    status_code=422,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-            elif isinstance(response, GetDataResponse429):
-                raise APIError(
-                    "Rate limit exceeded - too many requests",
-                    status_code=429,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-            elif isinstance(response, GetDataResponse500):
-                raise APIError(
-                    "Supermetrics API internal server error",
-                    status_code=500,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-
-            # Defensive validation: ensure response is the expected success type
-            if not isinstance(response, DataResponse):
-                raise APIError(
-                    f"Unexpected response type: {type(response).__name__}",
-                    status_code=500,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-
-            # After isinstance check, mypy knows response is DataResponse
-            if hasattr(response, "meta") and response.meta and hasattr(response.meta, "status_code"):
-                status = response.meta.status_code if response.meta.status_code is not UNSET else "unknown"
-                logger.info(
-                    f"Query executed: status={status}, request_id={getattr(response.meta, 'request_id', 'N/A')}"
-                )
-            else:
-                logger.info("Query executed successfully")
-
-            return response
-
-        except httpx.HTTPStatusError as e:
-            # Map HTTP status codes to SDK exceptions
-            if e.response.status_code == 401:
-                raise AuthenticationError(
-                    "Invalid or expired API key",
-                    status_code=401,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code == 400:
-                raise ValidationError(
-                    f"Invalid request parameters: {e.response.text}",
-                    status_code=400,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code == 404:
-                raise APIError(
-                    f"Resource not found: {e.response.text}",
-                    status_code=404,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code >= 500:
-                raise APIError(
-                    f"Supermetrics API error: {e.response.text}",
-                    status_code=e.response.status_code,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            else:
-                raise APIError(
-                    f"API error ({e.response.status_code}): {e.response.text}",
-                    status_code=e.response.status_code,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-        except httpx.RequestError as e:
-            raise NetworkError(
-                f"Network error: {str(e)}",
-                endpoint=str(e.request.url) if e.request else None,
-            ) from e
+            _raise_for_status(response.status_code, response.parsed, _ENDPOINT)
 
     def get_results(self, query_id: str) -> DataResponse | None:
         """Retrieve results for a previously executed query.
@@ -327,7 +225,7 @@ class QueriesResource:
         """
         logger.debug(f"Retrieving query results: query_id={query_id}")
 
-        try:
+        with api_error_handler(_ENDPOINT, context_400="Invalid request parameters"):
             # Build request parameters with schedule_id set to the query_id
             # This tells the API to return results for this specific query
             request_params = DataQuery(
@@ -336,117 +234,21 @@ class QueriesResource:
             )
 
             # Call generated API - cast client to AuthenticatedClient (compatible at runtime)
-            response = get_data.sync(client=cast(AuthenticatedClient, self._client), json=request_params)
+            response = get_data.sync_detailed(client=cast(AuthenticatedClient, self._client), json=request_params)
 
-            # Handle response
-            if response is None or isinstance(response, Unset):
-                logger.info(f"Query results retrieved but returned no response: query_id={query_id}")
-                return None
+            if response.status_code == 200:
+                parsed = cast(DataResponse, response.parsed)
+                if parsed is None or isinstance(parsed, Unset):
+                    logger.info(f"Query results retrieved but returned no response: query_id={query_id}")
+                    return None
+                if hasattr(parsed, "meta") and parsed.meta and hasattr(parsed.meta, "status_code"):
+                    status = parsed.meta.status_code if parsed.meta.status_code is not UNSET else "unknown"
+                    logger.info(f"Query results retrieved: query_id={query_id}, status={status}")
+                else:
+                    logger.info(f"Query results retrieved: query_id={query_id}")
+                return parsed
 
-            # Check for error responses and raise appropriate exceptions
-            if isinstance(response, GetDataResponse400):
-                raise ValidationError(
-                    f"Invalid request parameters: {response}",
-                    status_code=400,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-            elif isinstance(response, GetDataResponse401):
-                raise AuthenticationError(
-                    "Invalid or expired API key",
-                    status_code=401,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-            elif isinstance(response, GetDataResponse403):
-                raise APIError(
-                    "Forbidden - insufficient permissions",
-                    status_code=403,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-            elif isinstance(response, GetDataResponse422):
-                raise ValidationError(
-                    f"Unprocessable entity - validation failed: {response}",
-                    status_code=422,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-            elif isinstance(response, GetDataResponse429):
-                raise APIError(
-                    "Rate limit exceeded - too many requests",
-                    status_code=429,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-            elif isinstance(response, GetDataResponse500):
-                raise APIError(
-                    "Supermetrics API internal server error",
-                    status_code=500,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-
-            # Defensive validation: ensure response is the expected success type
-            if not isinstance(response, DataResponse):
-                raise APIError(
-                    f"Unexpected response type: {type(response).__name__}",
-                    status_code=500,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-
-            # After isinstance check, mypy knows response is DataResponse
-            if hasattr(response, "meta") and response.meta and hasattr(response.meta, "status_code"):
-                status = response.meta.status_code if response.meta.status_code is not UNSET else "unknown"
-                logger.info(f"Query results retrieved: query_id={query_id}, status={status}")
-            else:
-                logger.info(f"Query results retrieved: query_id={query_id}")
-
-            return response
-
-        except httpx.HTTPStatusError as e:
-            # Map HTTP status codes to SDK exceptions
-            if e.response.status_code == 401:
-                raise AuthenticationError(
-                    "Invalid or expired API key",
-                    status_code=401,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code == 400:
-                raise ValidationError(
-                    f"Invalid request parameters: {e.response.text}",
-                    status_code=400,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code == 404:
-                raise APIError(
-                    f"Resource not found: {e.response.text}",
-                    status_code=404,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code >= 500:
-                raise APIError(
-                    f"Supermetrics API error: {e.response.text}",
-                    status_code=e.response.status_code,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            else:
-                raise APIError(
-                    f"API error ({e.response.status_code}): {e.response.text}",
-                    status_code=e.response.status_code,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-        except httpx.RequestError as e:
-            raise NetworkError(
-                f"Network error: {str(e)}",
-                endpoint=str(e.request.url) if e.request else None,
-            ) from e
+            _raise_for_status(response.status_code, response.parsed, _ENDPOINT)
 
 
 class QueriesAsyncResource:
@@ -511,7 +313,7 @@ class QueriesAsyncResource:
             f"fields={fields}, start_date={start_date}, end_date={end_date}, kwargs={kwargs}"
         )
 
-        try:
+        with api_error_handler(_ENDPOINT, context_400="Invalid request parameters"):
             # Build request parameters
             request_params = DataQuery(
                 ds_id=ds_id,
@@ -523,118 +325,24 @@ class QueriesAsyncResource:
             )
 
             # Call generated API - cast client to AuthenticatedClient (compatible at runtime)
-            response = await get_data.asyncio(client=cast(AuthenticatedClient, self._client), json=request_params)
+            response = await get_data.asyncio_detailed(
+                client=cast(AuthenticatedClient, self._client), json=request_params
+            )
 
-            # Handle response
-            if response is None or isinstance(response, Unset):
-                logger.info("Query executed (async) but returned no response (empty)")
-                return None
+            if response.status_code == 200:
+                parsed = cast(DataResponse, response.parsed)
+                if parsed is None or isinstance(parsed, Unset):
+                    logger.info("Query executed (async) but returned no response (empty)")
+                    return None
+                if hasattr(parsed, "meta") and parsed.meta and hasattr(parsed.meta, "status_code"):
+                    status = parsed.meta.status_code if parsed.meta.status_code is not UNSET else "unknown"
+                    request_id = getattr(parsed.meta, "request_id", "N/A")
+                    logger.info(f"Query executed (async): status={status}, request_id={request_id}")
+                else:
+                    logger.info("Query executed (async) successfully")
+                return parsed
 
-            # Check for error responses and raise appropriate exceptions
-            if isinstance(response, GetDataResponse400):
-                raise ValidationError(
-                    f"Invalid request parameters: {response}",
-                    status_code=400,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-            elif isinstance(response, GetDataResponse401):
-                raise AuthenticationError(
-                    "Invalid or expired API key",
-                    status_code=401,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-            elif isinstance(response, GetDataResponse403):
-                raise APIError(
-                    "Forbidden - insufficient permissions",
-                    status_code=403,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-            elif isinstance(response, GetDataResponse422):
-                raise ValidationError(
-                    f"Unprocessable entity - validation failed: {response}",
-                    status_code=422,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-            elif isinstance(response, GetDataResponse429):
-                raise APIError(
-                    "Rate limit exceeded - too many requests",
-                    status_code=429,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-            elif isinstance(response, GetDataResponse500):
-                raise APIError(
-                    "Supermetrics API internal server error",
-                    status_code=500,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-
-            # Defensive validation: ensure response is the expected success type
-            if not isinstance(response, DataResponse):
-                raise APIError(
-                    f"Unexpected response type: {type(response).__name__}",
-                    status_code=500,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-
-            # After isinstance check, mypy knows response is DataResponse
-            if hasattr(response, "meta") and response.meta and hasattr(response.meta, "status_code"):
-                status = response.meta.status_code if response.meta.status_code is not UNSET else "unknown"
-                request_id = getattr(response.meta, "request_id", "N/A")
-                logger.info(f"Query executed (async): status={status}, request_id={request_id}")
-            else:
-                logger.info("Query executed (async) successfully")
-
-            return response
-
-        except httpx.HTTPStatusError as e:
-            # Map HTTP status codes to SDK exceptions
-            if e.response.status_code == 401:
-                raise AuthenticationError(
-                    "Invalid or expired API key",
-                    status_code=401,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code == 400:
-                raise ValidationError(
-                    f"Invalid request parameters: {e.response.text}",
-                    status_code=400,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code == 404:
-                raise APIError(
-                    f"Resource not found: {e.response.text}",
-                    status_code=404,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code >= 500:
-                raise APIError(
-                    f"Supermetrics API error: {e.response.text}",
-                    status_code=e.response.status_code,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            else:
-                raise APIError(
-                    f"API error ({e.response.status_code}): {e.response.text}",
-                    status_code=e.response.status_code,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-        except httpx.RequestError as e:
-            raise NetworkError(
-                f"Network error: {str(e)}",
-                endpoint=str(e.request.url) if e.request else None,
-            ) from e
+            _raise_for_status(response.status_code, response.parsed, _ENDPOINT)
 
     async def get_results(self, query_id: str) -> DataResponse | None:
         """Retrieve results for a previously executed query.
@@ -655,7 +363,7 @@ class QueriesAsyncResource:
         """
         logger.debug(f"Retrieving query results (async): query_id={query_id}")
 
-        try:
+        with api_error_handler(_ENDPOINT, context_400="Invalid request parameters"):
             # Build request parameters with schedule_id set to the query_id
             request_params = DataQuery(
                 ds_id="",  # Required field but not used for result retrieval
@@ -663,114 +371,20 @@ class QueriesAsyncResource:
             )
 
             # Call generated API - cast client to AuthenticatedClient (compatible at runtime)
-            response = await get_data.asyncio(client=cast(AuthenticatedClient, self._client), json=request_params)
+            response = await get_data.asyncio_detailed(
+                client=cast(AuthenticatedClient, self._client), json=request_params
+            )
 
-            # Handle response
-            if response is None or isinstance(response, Unset):
-                logger.info(f"Query results retrieved (async) but returned no response: query_id={query_id}")
-                return None
+            if response.status_code == 200:
+                parsed = cast(DataResponse, response.parsed)
+                if parsed is None or isinstance(parsed, Unset):
+                    logger.info(f"Query results retrieved (async) but returned no response: query_id={query_id}")
+                    return None
+                if hasattr(parsed, "meta") and parsed.meta and hasattr(parsed.meta, "status_code"):
+                    status = parsed.meta.status_code if parsed.meta.status_code is not UNSET else "unknown"
+                    logger.info(f"Query results retrieved (async): query_id={query_id}, status={status}")
+                else:
+                    logger.info(f"Query results retrieved (async): query_id={query_id}")
+                return parsed
 
-            # Check for error responses and raise appropriate exceptions
-            if isinstance(response, GetDataResponse400):
-                raise ValidationError(
-                    f"Invalid request parameters: {response}",
-                    status_code=400,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-            elif isinstance(response, GetDataResponse401):
-                raise AuthenticationError(
-                    "Invalid or expired API key",
-                    status_code=401,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-            elif isinstance(response, GetDataResponse403):
-                raise APIError(
-                    "Forbidden - insufficient permissions",
-                    status_code=403,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-            elif isinstance(response, GetDataResponse422):
-                raise ValidationError(
-                    f"Unprocessable entity - validation failed: {response}",
-                    status_code=422,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-            elif isinstance(response, GetDataResponse429):
-                raise APIError(
-                    "Rate limit exceeded - too many requests",
-                    status_code=429,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-            elif isinstance(response, GetDataResponse500):
-                raise APIError(
-                    "Supermetrics API internal server error",
-                    status_code=500,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-
-            # Defensive validation: ensure response is the expected success type
-            if not isinstance(response, DataResponse):
-                raise APIError(
-                    f"Unexpected response type: {type(response).__name__}",
-                    status_code=500,
-                    endpoint="/query/data/json",
-                    response_body=str(response),
-                )
-
-            # After isinstance check, mypy knows response is DataResponse
-            if hasattr(response, "meta") and response.meta and hasattr(response.meta, "status_code"):
-                status = response.meta.status_code if response.meta.status_code is not UNSET else "unknown"
-                logger.info(f"Query results retrieved (async): query_id={query_id}, status={status}")
-            else:
-                logger.info(f"Query results retrieved (async): query_id={query_id}")
-
-            return response
-
-        except httpx.HTTPStatusError as e:
-            # Map HTTP status codes to SDK exceptions
-            if e.response.status_code == 401:
-                raise AuthenticationError(
-                    "Invalid or expired API key",
-                    status_code=401,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code == 400:
-                raise ValidationError(
-                    f"Invalid request parameters: {e.response.text}",
-                    status_code=400,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code == 404:
-                raise APIError(
-                    f"Resource not found: {e.response.text}",
-                    status_code=404,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code >= 500:
-                raise APIError(
-                    f"Supermetrics API error: {e.response.text}",
-                    status_code=e.response.status_code,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            else:
-                raise APIError(
-                    f"API error ({e.response.status_code}): {e.response.text}",
-                    status_code=e.response.status_code,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-        except httpx.RequestError as e:
-            raise NetworkError(
-                f"Network error: {str(e)}",
-                endpoint=str(e.request.url) if e.request else None,
-            ) from e
+            _raise_for_status(response.status_code, response.parsed, _ENDPOINT)
