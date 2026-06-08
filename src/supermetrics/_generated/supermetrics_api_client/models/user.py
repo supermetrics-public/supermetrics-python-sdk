@@ -6,7 +6,7 @@ from typing import Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..models.user_type import UserType
+from ..models.user_type import UserType, check_user_type
 from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="User")
@@ -29,7 +29,7 @@ class User:
     def to_dict(self) -> dict[str, Any]:
         type_: str | Unset = UNSET
         if not isinstance(self.type_, Unset):
-            type_ = self.type_.value
+            type_ = self.type_
 
         user_id = self.user_id
 
@@ -55,7 +55,7 @@ class User:
         if isinstance(_type_, Unset):
             type_ = UNSET
         else:
-            type_ = UserType(_type_)
+            type_ = check_user_type(_type_)
 
         user_id = d.pop("user_id", UNSET)
 

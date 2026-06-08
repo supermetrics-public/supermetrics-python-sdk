@@ -6,8 +6,11 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..models.datasource_details_categories_item import DatasourceDetailsCategoriesItem
-from ..models.datasource_details_status import DatasourceDetailsStatus
+from ..models.datasource_details_categories_item import (
+    DatasourceDetailsCategoriesItem,
+    check_datasource_details_categories_item,
+)
+from ..models.datasource_details_status import DatasourceDetailsStatus, check_datasource_details_status
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
@@ -30,7 +33,7 @@ class DatasourceDetails:
         marketing_name (None | str | Unset): Connector marketing name Example: Google Analytics.
         logo_url (str | Unset): Connector logo URL Example: https://assets.supermetrics.com/images/dsLogos/GAWA.png.
         categories (list[DatasourceDetailsCategoriesItem] | Unset): Categories that this datasource belongs to Example:
-            ['ANALYTICS'].
+            ['Analytics'].
         products (list[str] | Unset): List of products where this datasource is available Example: ['API', 'DS',
             'SHEETS', 'EXCEL', 'DWH'].
         status (DatasourceDetailsStatus | Unset): Connector release status Example: Released.
@@ -104,7 +107,7 @@ class DatasourceDetails:
         if not isinstance(self.categories, Unset):
             categories = []
             for categories_item_data in self.categories:
-                categories_item = categories_item_data.value
+                categories_item: str = categories_item_data
                 categories.append(categories_item)
 
         products: list[str] | Unset = UNSET
@@ -113,7 +116,7 @@ class DatasourceDetails:
 
         status: str | Unset = UNSET
         if not isinstance(self.status, Unset):
-            status = self.status.value
+            status = self.status
 
         is_premium = self.is_premium
 
@@ -268,7 +271,7 @@ class DatasourceDetails:
         if _categories is not UNSET:
             categories = []
             for categories_item_data in _categories:
-                categories_item = DatasourceDetailsCategoriesItem(categories_item_data)
+                categories_item = check_datasource_details_categories_item(categories_item_data)
 
                 categories.append(categories_item)
 
@@ -279,7 +282,7 @@ class DatasourceDetails:
         if isinstance(_status, Unset):
             status = UNSET
         else:
-            status = DatasourceDetailsStatus(_status)
+            status = check_datasource_details_status(_status)
 
         is_premium = d.pop("is_premium", UNSET)
 

@@ -6,11 +6,8 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.create_login_link_body import CreateLoginLinkBody
-from ...models.create_login_link_response_401 import CreateLoginLinkResponse401
 from ...models.create_login_link_response_403 import CreateLoginLinkResponse403
-from ...models.create_login_link_response_422 import CreateLoginLinkResponse422
-from ...models.create_login_link_response_429 import CreateLoginLinkResponse429
-from ...models.create_login_link_response_500 import CreateLoginLinkResponse500
+from ...models.error_response import ErrorResponse
 from ...models.login_link_response import LoginLinkResponse
 from ...types import Response
 
@@ -36,22 +33,14 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> (
-    CreateLoginLinkResponse401
-    | CreateLoginLinkResponse403
-    | CreateLoginLinkResponse422
-    | CreateLoginLinkResponse429
-    | CreateLoginLinkResponse500
-    | LoginLinkResponse
-    | None
-):
+) -> CreateLoginLinkResponse403 | ErrorResponse | LoginLinkResponse | None:
     if response.status_code == 201:
         response_201 = LoginLinkResponse.from_dict(response.json())
 
         return response_201
 
     if response.status_code == 401:
-        response_401 = CreateLoginLinkResponse401.from_dict(response.json())
+        response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
 
@@ -61,17 +50,17 @@ def _parse_response(
         return response_403
 
     if response.status_code == 422:
-        response_422 = CreateLoginLinkResponse422.from_dict(response.json())
+        response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
 
     if response.status_code == 429:
-        response_429 = CreateLoginLinkResponse429.from_dict(response.json())
+        response_429 = ErrorResponse.from_dict(response.json())
 
         return response_429
 
     if response.status_code == 500:
-        response_500 = CreateLoginLinkResponse500.from_dict(response.json())
+        response_500 = ErrorResponse.from_dict(response.json())
 
         return response_500
 
@@ -83,14 +72,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[
-    CreateLoginLinkResponse401
-    | CreateLoginLinkResponse403
-    | CreateLoginLinkResponse422
-    | CreateLoginLinkResponse429
-    | CreateLoginLinkResponse500
-    | LoginLinkResponse
-]:
+) -> Response[CreateLoginLinkResponse403 | ErrorResponse | LoginLinkResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -103,14 +85,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     body: CreateLoginLinkBody,
-) -> Response[
-    CreateLoginLinkResponse401
-    | CreateLoginLinkResponse403
-    | CreateLoginLinkResponse422
-    | CreateLoginLinkResponse429
-    | CreateLoginLinkResponse500
-    | LoginLinkResponse
-]:
+) -> Response[CreateLoginLinkResponse403 | ErrorResponse | LoginLinkResponse]:
     """Create login link
 
      Create a new data source login link
@@ -123,7 +98,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[CreateLoginLinkResponse401 | CreateLoginLinkResponse403 | CreateLoginLinkResponse422 | CreateLoginLinkResponse429 | CreateLoginLinkResponse500 | LoginLinkResponse]
+        Response[CreateLoginLinkResponse403 | ErrorResponse | LoginLinkResponse]
     """
 
     kwargs = _get_kwargs(
@@ -141,15 +116,7 @@ def sync(
     *,
     client: AuthenticatedClient,
     body: CreateLoginLinkBody,
-) -> (
-    CreateLoginLinkResponse401
-    | CreateLoginLinkResponse403
-    | CreateLoginLinkResponse422
-    | CreateLoginLinkResponse429
-    | CreateLoginLinkResponse500
-    | LoginLinkResponse
-    | None
-):
+) -> CreateLoginLinkResponse403 | ErrorResponse | LoginLinkResponse | None:
     """Create login link
 
      Create a new data source login link
@@ -162,7 +129,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        CreateLoginLinkResponse401 | CreateLoginLinkResponse403 | CreateLoginLinkResponse422 | CreateLoginLinkResponse429 | CreateLoginLinkResponse500 | LoginLinkResponse
+        CreateLoginLinkResponse403 | ErrorResponse | LoginLinkResponse
     """
 
     return sync_detailed(
@@ -175,14 +142,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     body: CreateLoginLinkBody,
-) -> Response[
-    CreateLoginLinkResponse401
-    | CreateLoginLinkResponse403
-    | CreateLoginLinkResponse422
-    | CreateLoginLinkResponse429
-    | CreateLoginLinkResponse500
-    | LoginLinkResponse
-]:
+) -> Response[CreateLoginLinkResponse403 | ErrorResponse | LoginLinkResponse]:
     """Create login link
 
      Create a new data source login link
@@ -195,7 +155,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[CreateLoginLinkResponse401 | CreateLoginLinkResponse403 | CreateLoginLinkResponse422 | CreateLoginLinkResponse429 | CreateLoginLinkResponse500 | LoginLinkResponse]
+        Response[CreateLoginLinkResponse403 | ErrorResponse | LoginLinkResponse]
     """
 
     kwargs = _get_kwargs(
@@ -211,15 +171,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     body: CreateLoginLinkBody,
-) -> (
-    CreateLoginLinkResponse401
-    | CreateLoginLinkResponse403
-    | CreateLoginLinkResponse422
-    | CreateLoginLinkResponse429
-    | CreateLoginLinkResponse500
-    | LoginLinkResponse
-    | None
-):
+) -> CreateLoginLinkResponse403 | ErrorResponse | LoginLinkResponse | None:
     """Create login link
 
      Create a new data source login link
@@ -232,7 +184,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        CreateLoginLinkResponse401 | CreateLoginLinkResponse403 | CreateLoginLinkResponse422 | CreateLoginLinkResponse429 | CreateLoginLinkResponse500 | LoginLinkResponse
+        CreateLoginLinkResponse403 | ErrorResponse | LoginLinkResponse
     """
 
     return (

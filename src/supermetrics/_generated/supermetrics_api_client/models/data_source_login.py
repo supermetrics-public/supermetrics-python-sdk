@@ -8,7 +8,7 @@ from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 from dateutil.parser import isoparse
 
-from ..models.data_source_login_type import DataSourceLoginType
+from ..models.data_source_login_type import DataSourceLoginType, check_data_source_login_type
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
@@ -60,7 +60,7 @@ class DataSourceLogin:
     def to_dict(self) -> dict[str, Any]:
         type_: str | Unset = UNSET
         if not isinstance(self.type_, Unset):
-            type_ = self.type_.value
+            type_ = self.type_
 
         login_id = self.login_id
 
@@ -155,7 +155,7 @@ class DataSourceLogin:
         if isinstance(_type_, Unset):
             type_ = UNSET
         else:
-            type_ = DataSourceLoginType(_type_)
+            type_ = check_data_source_login_type(_type_)
 
         login_id = d.pop("login_id", UNSET)
 
