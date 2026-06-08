@@ -1,18 +1,12 @@
 from http import HTTPStatus
 from typing import Any
-from urllib.parse import quote
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.backfill_response import BackfillResponse
 from ...models.create_backfill_request import CreateBackfillRequest
-from ...models.create_backfill_response import CreateBackfillResponse
-from ...models.create_backfill_response_400 import CreateBackfillResponse400
-from ...models.create_backfill_response_401 import CreateBackfillResponse401
-from ...models.create_backfill_response_403 import CreateBackfillResponse403
-from ...models.create_backfill_response_429 import CreateBackfillResponse429
-from ...models.create_backfill_response_500 import CreateBackfillResponse500
 from ...models.error_response import ErrorResponse
 from ...types import Response
 
@@ -27,10 +21,7 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": "/teams/{team_id}/transfers/{transfer_id}/backfills".format(
-            team_id=quote(str(team_id), safe=""),
-            transfer_id=quote(str(transfer_id), safe=""),
-        ),
+        "url": f"/teams/{team_id}/transfers/{transfer_id}/backfills",
     }
 
     _kwargs["json"] = body.to_dict()
@@ -43,33 +34,24 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> (
-    CreateBackfillResponse
-    | CreateBackfillResponse400
-    | CreateBackfillResponse401
-    | CreateBackfillResponse403
-    | CreateBackfillResponse429
-    | CreateBackfillResponse500
-    | ErrorResponse
-    | None
-):
+) -> BackfillResponse | ErrorResponse | None:
     if response.status_code == 200:
-        response_200 = CreateBackfillResponse.from_dict(response.json())
+        response_200 = BackfillResponse.from_dict(response.json())
 
         return response_200
 
     if response.status_code == 400:
-        response_400 = CreateBackfillResponse400.from_dict(response.json())
+        response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
 
     if response.status_code == 401:
-        response_401 = CreateBackfillResponse401.from_dict(response.json())
+        response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
 
     if response.status_code == 403:
-        response_403 = CreateBackfillResponse403.from_dict(response.json())
+        response_403 = ErrorResponse.from_dict(response.json())
 
         return response_403
 
@@ -84,12 +66,12 @@ def _parse_response(
         return response_422
 
     if response.status_code == 429:
-        response_429 = CreateBackfillResponse429.from_dict(response.json())
+        response_429 = ErrorResponse.from_dict(response.json())
 
         return response_429
 
     if response.status_code == 500:
-        response_500 = CreateBackfillResponse500.from_dict(response.json())
+        response_500 = ErrorResponse.from_dict(response.json())
 
         return response_500
 
@@ -101,15 +83,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[
-    CreateBackfillResponse
-    | CreateBackfillResponse400
-    | CreateBackfillResponse401
-    | CreateBackfillResponse403
-    | CreateBackfillResponse429
-    | CreateBackfillResponse500
-    | ErrorResponse
-]:
+) -> Response[BackfillResponse | ErrorResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -124,15 +98,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     body: CreateBackfillRequest,
-) -> Response[
-    CreateBackfillResponse
-    | CreateBackfillResponse400
-    | CreateBackfillResponse401
-    | CreateBackfillResponse403
-    | CreateBackfillResponse429
-    | CreateBackfillResponse500
-    | ErrorResponse
-]:
+) -> Response[BackfillResponse | ErrorResponse]:
     r"""Create a backfill
 
      Schedule a new backfill for a specific transfer. A backfill re-processes
@@ -142,7 +108,9 @@ def sync_detailed(
 
     **Important Notes:**
     - The transfer must exist and belong to your team
-    - You must have `dwh.transfer.edit` permission
+    - Requires scope `dwh_transfers_write`
+    - Your account must have `dwh.transfer.edit` permission. See [roles and
+    permissions](https://docs.supermetrics.com/docs/about-supermetrics-teams-and-user-roles#user-roles).
     - The date range cannot overlap with an existing active backfill
     - Backfills are processed asynchronously
     - The returned backfill object will have status \"CREATED\" initially
@@ -157,7 +125,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[CreateBackfillResponse | CreateBackfillResponse400 | CreateBackfillResponse401 | CreateBackfillResponse403 | CreateBackfillResponse429 | CreateBackfillResponse500 | ErrorResponse]
+        Response[BackfillResponse | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
@@ -179,16 +147,7 @@ def sync(
     *,
     client: AuthenticatedClient,
     body: CreateBackfillRequest,
-) -> (
-    CreateBackfillResponse
-    | CreateBackfillResponse400
-    | CreateBackfillResponse401
-    | CreateBackfillResponse403
-    | CreateBackfillResponse429
-    | CreateBackfillResponse500
-    | ErrorResponse
-    | None
-):
+) -> BackfillResponse | ErrorResponse | None:
     r"""Create a backfill
 
      Schedule a new backfill for a specific transfer. A backfill re-processes
@@ -198,7 +157,9 @@ def sync(
 
     **Important Notes:**
     - The transfer must exist and belong to your team
-    - You must have `dwh.transfer.edit` permission
+    - Requires scope `dwh_transfers_write`
+    - Your account must have `dwh.transfer.edit` permission. See [roles and
+    permissions](https://docs.supermetrics.com/docs/about-supermetrics-teams-and-user-roles#user-roles).
     - The date range cannot overlap with an existing active backfill
     - Backfills are processed asynchronously
     - The returned backfill object will have status \"CREATED\" initially
@@ -213,7 +174,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        CreateBackfillResponse | CreateBackfillResponse400 | CreateBackfillResponse401 | CreateBackfillResponse403 | CreateBackfillResponse429 | CreateBackfillResponse500 | ErrorResponse
+        BackfillResponse | ErrorResponse
     """
 
     return sync_detailed(
@@ -230,15 +191,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     body: CreateBackfillRequest,
-) -> Response[
-    CreateBackfillResponse
-    | CreateBackfillResponse400
-    | CreateBackfillResponse401
-    | CreateBackfillResponse403
-    | CreateBackfillResponse429
-    | CreateBackfillResponse500
-    | ErrorResponse
-]:
+) -> Response[BackfillResponse | ErrorResponse]:
     r"""Create a backfill
 
      Schedule a new backfill for a specific transfer. A backfill re-processes
@@ -248,7 +201,9 @@ async def asyncio_detailed(
 
     **Important Notes:**
     - The transfer must exist and belong to your team
-    - You must have `dwh.transfer.edit` permission
+    - Requires scope `dwh_transfers_write`
+    - Your account must have `dwh.transfer.edit` permission. See [roles and
+    permissions](https://docs.supermetrics.com/docs/about-supermetrics-teams-and-user-roles#user-roles).
     - The date range cannot overlap with an existing active backfill
     - Backfills are processed asynchronously
     - The returned backfill object will have status \"CREATED\" initially
@@ -263,7 +218,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[CreateBackfillResponse | CreateBackfillResponse400 | CreateBackfillResponse401 | CreateBackfillResponse403 | CreateBackfillResponse429 | CreateBackfillResponse500 | ErrorResponse]
+        Response[BackfillResponse | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
@@ -283,16 +238,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     body: CreateBackfillRequest,
-) -> (
-    CreateBackfillResponse
-    | CreateBackfillResponse400
-    | CreateBackfillResponse401
-    | CreateBackfillResponse403
-    | CreateBackfillResponse429
-    | CreateBackfillResponse500
-    | ErrorResponse
-    | None
-):
+) -> BackfillResponse | ErrorResponse | None:
     r"""Create a backfill
 
      Schedule a new backfill for a specific transfer. A backfill re-processes
@@ -302,7 +248,9 @@ async def asyncio(
 
     **Important Notes:**
     - The transfer must exist and belong to your team
-    - You must have `dwh.transfer.edit` permission
+    - Requires scope `dwh_transfers_write`
+    - Your account must have `dwh.transfer.edit` permission. See [roles and
+    permissions](https://docs.supermetrics.com/docs/about-supermetrics-teams-and-user-roles#user-roles).
     - The date range cannot overlap with an existing active backfill
     - Backfills are processed asynchronously
     - The returned backfill object will have status \"CREATED\" initially
@@ -317,7 +265,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        CreateBackfillResponse | CreateBackfillResponse400 | CreateBackfillResponse401 | CreateBackfillResponse403 | CreateBackfillResponse429 | CreateBackfillResponse500 | ErrorResponse
+        BackfillResponse | ErrorResponse
     """
 
     return (

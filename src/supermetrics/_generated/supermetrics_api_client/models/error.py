@@ -15,10 +15,9 @@ T = TypeVar("T", bound="Error")
 class Error:
     """
     Attributes:
-        code (str | Unset): Error code Example: ACCESS_TOKEN_INVALID.
-        message (str | Unset): Error message Example: Invalid Access Token.
-        description (str | Unset): Error description Example: Provided access token is either missing, invalid or
-            expired..
+        code (str | Unset): Error code
+        message (str | Unset): Error message
+        description (str | Unset): Error description
     """
 
     code: str | Unset = UNSET

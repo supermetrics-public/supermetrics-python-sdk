@@ -3,8 +3,6 @@
 import logging
 from typing import cast
 
-import httpx
-
 from supermetrics._generated.supermetrics_api_client import AuthenticatedClient
 from supermetrics._generated.supermetrics_api_client import Client as GeneratedClient
 from supermetrics._generated.supermetrics_api_client.api.data_source import get_accounts
@@ -13,14 +11,8 @@ from supermetrics._generated.supermetrics_api_client.models.get_accounts_respons
 from supermetrics._generated.supermetrics_api_client.models.get_accounts_response_200_data_item_accounts_item import (
     GetAccountsResponse200DataItemAccountsItem,
 )
-from supermetrics._generated.supermetrics_api_client.models.get_accounts_response_400 import GetAccountsResponse400
-from supermetrics._generated.supermetrics_api_client.models.get_accounts_response_401 import GetAccountsResponse401
-from supermetrics._generated.supermetrics_api_client.models.get_accounts_response_403 import GetAccountsResponse403
-from supermetrics._generated.supermetrics_api_client.models.get_accounts_response_422 import GetAccountsResponse422
-from supermetrics._generated.supermetrics_api_client.models.get_accounts_response_429 import GetAccountsResponse429
-from supermetrics._generated.supermetrics_api_client.models.get_accounts_response_500 import GetAccountsResponse500
 from supermetrics._generated.supermetrics_api_client.types import UNSET, Unset
-from supermetrics.exceptions import APIError, AuthenticationError, NetworkError, ValidationError
+from supermetrics.resources._error_handlers import _raise_for_status, api_error_handler
 
 logger = logging.getLogger(__name__)
 
@@ -111,163 +103,26 @@ class AccountsResource:
             f"Listing accounts: ds_id={ds_id}, login_usernames={login_usernames}, cache_minutes={cache_minutes}"
         )
 
-        try:
-            # Build request parameters
+        endpoint = "/query/accounts"
+        with api_error_handler(endpoint, context_400="Invalid request parameters"):
             request_params = GetAccountsJson(
                 ds_id=ds_id,
                 ds_users=login_usernames if login_usernames is not None else UNSET,
                 cache_minutes=cache_minutes if cache_minutes is not None else UNSET,
             )
-
-            # Call generated API
-            response = get_accounts.sync(client=cast(AuthenticatedClient, self._client), json=request_params)
-
-            # Handle empty or error responses
-            if response is None or isinstance(response, Unset):
-                logger.info("No accounts found (empty response)")
-                return []
-
-            # Handle error responses by checking type before casting
-            if isinstance(response, GetAccountsResponse400):
-                error_msg: str = (
-                    response.detail
-                    if (not isinstance(response.detail, Unset) and response.detail)
-                    else (response.title if response.title else "Invalid request parameters")
-                )
-                raise ValidationError(
-                    error_msg,
-                    status_code=400,
-                    endpoint="/ds/accounts",
-                )
-            elif isinstance(response, GetAccountsResponse401):
-                error_msg = (
-                    response.error.message
-                    if (
-                        response.error
-                        and not isinstance(response.error, Unset)
-                        and response.error.message
-                        and not isinstance(response.error.message, Unset)
-                    )
-                    else "Invalid or expired API key"
-                )
-                raise AuthenticationError(
-                    error_msg,
-                    status_code=401,
-                    endpoint="/ds/accounts",
-                )
-            elif isinstance(response, GetAccountsResponse403):
-                error_msg = (
-                    response.detail
-                    if (not isinstance(response.detail, Unset) and response.detail)
-                    else (response.title if response.title else "Forbidden - insufficient permissions")
-                )
-                raise APIError(
-                    error_msg,
-                    status_code=403,
-                    endpoint="/ds/accounts",
-                )
-            elif isinstance(response, GetAccountsResponse422):
-                error_msg = (
-                    response.error.message
-                    if (
-                        response.error
-                        and not isinstance(response.error, Unset)
-                        and response.error.message
-                        and not isinstance(response.error.message, Unset)
-                    )
-                    else "Invalid request parameters"
-                )
-                raise ValidationError(
-                    error_msg,
-                    status_code=422,
-                    endpoint="/ds/accounts",
-                )
-            elif isinstance(response, (GetAccountsResponse429, GetAccountsResponse500)):
-                status = 429 if isinstance(response, GetAccountsResponse429) else 500
-                error_msg = (
-                    response.error.message
-                    if (
-                        response.error
-                        and not isinstance(response.error, Unset)
-                        and response.error.message
-                        and not isinstance(response.error.message, Unset)
-                    )
-                    else "Supermetrics API error"
-                )
-                raise APIError(
-                    error_msg,
-                    status_code=status,
-                    endpoint="/ds/accounts",
-                )
-
-            # Defensive validation: ensure response is the expected success type
-            if not isinstance(response, GetAccountsResponse200):
-                raise APIError(
-                    f"Unexpected response type: {type(response).__name__}",
-                    status_code=500,
-                    endpoint="/ds/accounts",
-                    response_body=str(response),
-                )
-
-            # After isinstance check, mypy knows response is GetAccountsResponse200
-            if response.data is None or isinstance(response.data, Unset):
-                logger.info("No accounts found (empty response)")
-                return []
-
-            # Flatten nested structure: response.data[].accounts[] -> single list
-            all_accounts: list[GetAccountsResponse200DataItemAccountsItem] = []
-            for data_item in response.data:
-                if data_item.accounts is not None and not isinstance(data_item.accounts, Unset):
-                    all_accounts.extend(data_item.accounts)
-
-            logger.info(f"Retrieved {len(all_accounts)} accounts for ds_id={ds_id}")
-            return all_accounts
-
-        except (AuthenticationError, ValidationError, APIError):
-            # Re-raise SDK exceptions
-            raise
-        except httpx.HTTPStatusError as e:
-            # Map HTTP status codes to SDK exceptions
-            if e.response.status_code == 401:
-                raise AuthenticationError(
-                    "Invalid or expired API key",
-                    status_code=401,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code == 400:
-                raise ValidationError(
-                    f"Invalid request parameters: {e.response.text}",
-                    status_code=400,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code == 404:
-                raise APIError(
-                    f"Account not found: {e.response.text}",
-                    status_code=404,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code >= 500:
-                raise APIError(
-                    f"Supermetrics API error: {e.response.text}",
-                    status_code=e.response.status_code,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            else:
-                raise APIError(
-                    f"API error ({e.response.status_code}): {e.response.text}",
-                    status_code=e.response.status_code,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-        except httpx.RequestError as e:
-            raise NetworkError(
-                f"Network error: {str(e)}",
-                endpoint=str(e.request.url) if e.request else None,
-            ) from e
+            response = get_accounts.sync_detailed(client=cast(AuthenticatedClient, self._client), json=request_params)
+            if response.status_code == 200:
+                parsed = cast(GetAccountsResponse200, response.parsed)
+                if parsed.data is None or isinstance(parsed.data, Unset):
+                    logger.info("No accounts found (empty response)")
+                    return []
+                all_accounts: list[GetAccountsResponse200DataItemAccountsItem] = []
+                for data_item in parsed.data:
+                    if data_item.accounts is not None and not isinstance(data_item.accounts, Unset):
+                        all_accounts.extend(data_item.accounts)
+                logger.info(f"Retrieved {len(all_accounts)} accounts for ds_id={ds_id}")
+                return all_accounts
+            _raise_for_status(response.status_code, response.parsed, endpoint)
 
 
 class AccountsAsyncResource:
@@ -319,160 +174,25 @@ class AccountsAsyncResource:
             f"Listing accounts (async): ds_id={ds_id}, login_usernames={login_usernames}, cache_minutes={cache_minutes}"
         )
 
-        try:
-            # Build request parameters
+        endpoint = "/query/accounts"
+        with api_error_handler(endpoint, context_400="Invalid request parameters"):
             request_params = GetAccountsJson(
                 ds_id=ds_id,
                 ds_users=login_usernames if login_usernames is not None else UNSET,
                 cache_minutes=cache_minutes if cache_minutes is not None else UNSET,
             )
-
-            # Call generated API
-            response = await get_accounts.asyncio(client=cast(AuthenticatedClient, self._client), json=request_params)
-
-            # Handle empty or error responses
-            if response is None or isinstance(response, Unset):
-                logger.info("No accounts found (async - empty response)")
-                return []
-
-            # Handle error responses by checking type before casting
-            if isinstance(response, GetAccountsResponse400):
-                error_msg: str = (
-                    response.detail
-                    if (not isinstance(response.detail, Unset) and response.detail)
-                    else (response.title if response.title else "Invalid request parameters")
-                )
-                raise ValidationError(
-                    error_msg,
-                    status_code=400,
-                    endpoint="/ds/accounts",
-                )
-            elif isinstance(response, GetAccountsResponse401):
-                error_msg = (
-                    response.error.message
-                    if (
-                        response.error
-                        and not isinstance(response.error, Unset)
-                        and response.error.message
-                        and not isinstance(response.error.message, Unset)
-                    )
-                    else "Invalid or expired API key"
-                )
-                raise AuthenticationError(
-                    error_msg,
-                    status_code=401,
-                    endpoint="/ds/accounts",
-                )
-            elif isinstance(response, GetAccountsResponse403):
-                error_msg = (
-                    response.detail
-                    if (not isinstance(response.detail, Unset) and response.detail)
-                    else (response.title if response.title else "Forbidden - insufficient permissions")
-                )
-                raise APIError(
-                    error_msg,
-                    status_code=403,
-                    endpoint="/ds/accounts",
-                )
-            elif isinstance(response, GetAccountsResponse422):
-                error_msg = (
-                    response.error.message
-                    if (
-                        response.error
-                        and not isinstance(response.error, Unset)
-                        and response.error.message
-                        and not isinstance(response.error.message, Unset)
-                    )
-                    else "Invalid request parameters"
-                )
-                raise ValidationError(
-                    error_msg,
-                    status_code=422,
-                    endpoint="/ds/accounts",
-                )
-            elif isinstance(response, (GetAccountsResponse429, GetAccountsResponse500)):
-                status = 429 if isinstance(response, GetAccountsResponse429) else 500
-                error_msg = (
-                    response.error.message
-                    if (
-                        response.error
-                        and not isinstance(response.error, Unset)
-                        and response.error.message
-                        and not isinstance(response.error.message, Unset)
-                    )
-                    else "Supermetrics API error"
-                )
-                raise APIError(
-                    error_msg,
-                    status_code=status,
-                    endpoint="/ds/accounts",
-                )
-
-            # Defensive validation: ensure response is the expected success type
-            if not isinstance(response, GetAccountsResponse200):
-                raise APIError(
-                    f"Unexpected response type: {type(response).__name__}",
-                    status_code=500,
-                    endpoint="/ds/accounts",
-                    response_body=str(response),
-                )
-
-            # After isinstance check, mypy knows response is GetAccountsResponse200
-            if response.data is None or isinstance(response.data, Unset):
-                logger.info("No accounts found (async - empty response)")
-                return []
-
-            # Flatten nested structure: response.data[].accounts[] -> single list
-            all_accounts: list[GetAccountsResponse200DataItemAccountsItem] = []
-            for data_item in response.data:
-                if data_item.accounts is not None and not isinstance(data_item.accounts, Unset):
-                    all_accounts.extend(data_item.accounts)
-
-            logger.info(f"Retrieved {len(all_accounts)} accounts (async) for ds_id={ds_id}")
-            return all_accounts
-
-        except (AuthenticationError, ValidationError, APIError):
-            # Re-raise SDK exceptions
-            raise
-        except httpx.HTTPStatusError as e:
-            # Map HTTP status codes to SDK exceptions
-            if e.response.status_code == 401:
-                raise AuthenticationError(
-                    "Invalid or expired API key",
-                    status_code=401,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code == 400:
-                raise ValidationError(
-                    f"Invalid request parameters: {e.response.text}",
-                    status_code=400,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code == 404:
-                raise APIError(
-                    f"Account not found: {e.response.text}",
-                    status_code=404,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            elif e.response.status_code >= 500:
-                raise APIError(
-                    f"Supermetrics API error: {e.response.text}",
-                    status_code=e.response.status_code,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-            else:
-                raise APIError(
-                    f"API error ({e.response.status_code}): {e.response.text}",
-                    status_code=e.response.status_code,
-                    endpoint=str(e.request.url),
-                    response_body=e.response.text,
-                ) from e
-        except httpx.RequestError as e:
-            raise NetworkError(
-                f"Network error: {str(e)}",
-                endpoint=str(e.request.url) if e.request else None,
-            ) from e
+            response = await get_accounts.asyncio_detailed(
+                client=cast(AuthenticatedClient, self._client), json=request_params
+            )
+            if response.status_code == 200:
+                parsed = cast(GetAccountsResponse200, response.parsed)
+                if parsed.data is None or isinstance(parsed.data, Unset):
+                    logger.info("No accounts found (async - empty response)")
+                    return []
+                all_accounts: list[GetAccountsResponse200DataItemAccountsItem] = []
+                for data_item in parsed.data:
+                    if data_item.accounts is not None and not isinstance(data_item.accounts, Unset):
+                        all_accounts.extend(data_item.accounts)
+                logger.info(f"Retrieved {len(all_accounts)} accounts (async) for ds_id={ds_id}")
+                return all_accounts
+            _raise_for_status(response.status_code, response.parsed, endpoint)

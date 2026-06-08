@@ -1,19 +1,13 @@
 from http import HTTPStatus
 from typing import Any
-from urllib.parse import quote
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.backfill_response import BackfillResponse
 from ...models.error_response import ErrorResponse
-from ...models.get_backfill_response import GetBackfillResponse
 from ...models.update_backfill_status_body import UpdateBackfillStatusBody
-from ...models.update_backfill_status_response_400 import UpdateBackfillStatusResponse400
-from ...models.update_backfill_status_response_401 import UpdateBackfillStatusResponse401
-from ...models.update_backfill_status_response_403 import UpdateBackfillStatusResponse403
-from ...models.update_backfill_status_response_429 import UpdateBackfillStatusResponse429
-from ...models.update_backfill_status_response_500 import UpdateBackfillStatusResponse500
 from ...types import Response
 
 
@@ -27,10 +21,7 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
-        "url": "/teams/{team_id}/backfills/{backfill_id}".format(
-            team_id=quote(str(team_id), safe=""),
-            backfill_id=quote(str(backfill_id), safe=""),
-        ),
+        "url": f"/teams/{team_id}/backfills/{backfill_id}",
     }
 
     _kwargs["json"] = body.to_dict()
@@ -43,33 +34,24 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> (
-    ErrorResponse
-    | GetBackfillResponse
-    | UpdateBackfillStatusResponse400
-    | UpdateBackfillStatusResponse401
-    | UpdateBackfillStatusResponse403
-    | UpdateBackfillStatusResponse429
-    | UpdateBackfillStatusResponse500
-    | None
-):
+) -> BackfillResponse | ErrorResponse | None:
     if response.status_code == 200:
-        response_200 = GetBackfillResponse.from_dict(response.json())
+        response_200 = BackfillResponse.from_dict(response.json())
 
         return response_200
 
     if response.status_code == 400:
-        response_400 = UpdateBackfillStatusResponse400.from_dict(response.json())
+        response_400 = ErrorResponse.from_dict(response.json())
 
         return response_400
 
     if response.status_code == 401:
-        response_401 = UpdateBackfillStatusResponse401.from_dict(response.json())
+        response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
 
     if response.status_code == 403:
-        response_403 = UpdateBackfillStatusResponse403.from_dict(response.json())
+        response_403 = ErrorResponse.from_dict(response.json())
 
         return response_403
 
@@ -84,12 +66,12 @@ def _parse_response(
         return response_422
 
     if response.status_code == 429:
-        response_429 = UpdateBackfillStatusResponse429.from_dict(response.json())
+        response_429 = ErrorResponse.from_dict(response.json())
 
         return response_429
 
     if response.status_code == 500:
-        response_500 = UpdateBackfillStatusResponse500.from_dict(response.json())
+        response_500 = ErrorResponse.from_dict(response.json())
 
         return response_500
 
@@ -101,15 +83,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[
-    ErrorResponse
-    | GetBackfillResponse
-    | UpdateBackfillStatusResponse400
-    | UpdateBackfillStatusResponse401
-    | UpdateBackfillStatusResponse403
-    | UpdateBackfillStatusResponse429
-    | UpdateBackfillStatusResponse500
-]:
+) -> Response[BackfillResponse | ErrorResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -124,15 +98,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     body: UpdateBackfillStatusBody,
-) -> Response[
-    ErrorResponse
-    | GetBackfillResponse
-    | UpdateBackfillStatusResponse400
-    | UpdateBackfillStatusResponse401
-    | UpdateBackfillStatusResponse403
-    | UpdateBackfillStatusResponse429
-    | UpdateBackfillStatusResponse500
-]:
+) -> Response[BackfillResponse | ErrorResponse]:
     r"""Update backfill status
 
      Update the status of a backfill. Currently, the only supported operation is
@@ -154,7 +120,9 @@ def sync_detailed(
 
     **Important Notes:**
     - The backfill must exist and belong to your team
-    - You must have `dwh.transfer.edit` permission
+    - Requires scope `dwh_transfers_write`
+    - Your account must have `dwh.transfer.edit` permission. See [roles and
+    permissions](https://docs.supermetrics.com/docs/about-supermetrics-teams-and-user-roles#user-roles).
     - Only backfills with incomplete status (CREATED, SCHEDULED, RUNNING, FAILED) can be cancelled
     - Returns 404 if the backfill does not exist or does not belong to your team
     - Returns 422 if the backfill cannot be updated (e.g., already in a final state)
@@ -169,7 +137,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | GetBackfillResponse | UpdateBackfillStatusResponse400 | UpdateBackfillStatusResponse401 | UpdateBackfillStatusResponse403 | UpdateBackfillStatusResponse429 | UpdateBackfillStatusResponse500]
+        Response[BackfillResponse | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
@@ -191,16 +159,7 @@ def sync(
     *,
     client: AuthenticatedClient,
     body: UpdateBackfillStatusBody,
-) -> (
-    ErrorResponse
-    | GetBackfillResponse
-    | UpdateBackfillStatusResponse400
-    | UpdateBackfillStatusResponse401
-    | UpdateBackfillStatusResponse403
-    | UpdateBackfillStatusResponse429
-    | UpdateBackfillStatusResponse500
-    | None
-):
+) -> BackfillResponse | ErrorResponse | None:
     r"""Update backfill status
 
      Update the status of a backfill. Currently, the only supported operation is
@@ -222,7 +181,9 @@ def sync(
 
     **Important Notes:**
     - The backfill must exist and belong to your team
-    - You must have `dwh.transfer.edit` permission
+    - Requires scope `dwh_transfers_write`
+    - Your account must have `dwh.transfer.edit` permission. See [roles and
+    permissions](https://docs.supermetrics.com/docs/about-supermetrics-teams-and-user-roles#user-roles).
     - Only backfills with incomplete status (CREATED, SCHEDULED, RUNNING, FAILED) can be cancelled
     - Returns 404 if the backfill does not exist or does not belong to your team
     - Returns 422 if the backfill cannot be updated (e.g., already in a final state)
@@ -237,7 +198,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | GetBackfillResponse | UpdateBackfillStatusResponse400 | UpdateBackfillStatusResponse401 | UpdateBackfillStatusResponse403 | UpdateBackfillStatusResponse429 | UpdateBackfillStatusResponse500
+        BackfillResponse | ErrorResponse
     """
 
     return sync_detailed(
@@ -254,15 +215,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     body: UpdateBackfillStatusBody,
-) -> Response[
-    ErrorResponse
-    | GetBackfillResponse
-    | UpdateBackfillStatusResponse400
-    | UpdateBackfillStatusResponse401
-    | UpdateBackfillStatusResponse403
-    | UpdateBackfillStatusResponse429
-    | UpdateBackfillStatusResponse500
-]:
+) -> Response[BackfillResponse | ErrorResponse]:
     r"""Update backfill status
 
      Update the status of a backfill. Currently, the only supported operation is
@@ -284,7 +237,9 @@ async def asyncio_detailed(
 
     **Important Notes:**
     - The backfill must exist and belong to your team
-    - You must have `dwh.transfer.edit` permission
+    - Requires scope `dwh_transfers_write`
+    - Your account must have `dwh.transfer.edit` permission. See [roles and
+    permissions](https://docs.supermetrics.com/docs/about-supermetrics-teams-and-user-roles#user-roles).
     - Only backfills with incomplete status (CREATED, SCHEDULED, RUNNING, FAILED) can be cancelled
     - Returns 404 if the backfill does not exist or does not belong to your team
     - Returns 422 if the backfill cannot be updated (e.g., already in a final state)
@@ -299,7 +254,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | GetBackfillResponse | UpdateBackfillStatusResponse400 | UpdateBackfillStatusResponse401 | UpdateBackfillStatusResponse403 | UpdateBackfillStatusResponse429 | UpdateBackfillStatusResponse500]
+        Response[BackfillResponse | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
@@ -319,16 +274,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     body: UpdateBackfillStatusBody,
-) -> (
-    ErrorResponse
-    | GetBackfillResponse
-    | UpdateBackfillStatusResponse400
-    | UpdateBackfillStatusResponse401
-    | UpdateBackfillStatusResponse403
-    | UpdateBackfillStatusResponse429
-    | UpdateBackfillStatusResponse500
-    | None
-):
+) -> BackfillResponse | ErrorResponse | None:
     r"""Update backfill status
 
      Update the status of a backfill. Currently, the only supported operation is
@@ -350,7 +296,9 @@ async def asyncio(
 
     **Important Notes:**
     - The backfill must exist and belong to your team
-    - You must have `dwh.transfer.edit` permission
+    - Requires scope `dwh_transfers_write`
+    - Your account must have `dwh.transfer.edit` permission. See [roles and
+    permissions](https://docs.supermetrics.com/docs/about-supermetrics-teams-and-user-roles#user-roles).
     - Only backfills with incomplete status (CREATED, SCHEDULED, RUNNING, FAILED) can be cancelled
     - Returns 404 if the backfill does not exist or does not belong to your team
     - Returns 422 if the backfill cannot be updated (e.g., already in a final state)
@@ -365,7 +313,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | GetBackfillResponse | UpdateBackfillStatusResponse400 | UpdateBackfillStatusResponse401 | UpdateBackfillStatusResponse403 | UpdateBackfillStatusResponse429 | UpdateBackfillStatusResponse500
+        BackfillResponse | ErrorResponse
     """
 
     return (

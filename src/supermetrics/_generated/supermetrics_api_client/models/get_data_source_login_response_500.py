@@ -6,7 +6,10 @@ from typing import Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..models.get_data_source_login_response_500_error import GetDataSourceLoginResponse500Error
+from ..models.get_data_source_login_response_500_error import (
+    GetDataSourceLoginResponse500Error,
+    check_get_data_source_login_response_500_error,
+)
 from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="GetDataSourceLoginResponse500")
@@ -27,7 +30,7 @@ class GetDataSourceLoginResponse500:
     def to_dict(self) -> dict[str, Any]:
         error: str | Unset = UNSET
         if not isinstance(self.error, Unset):
-            error = self.error.value
+            error = self.error
 
         message = self.message
 
@@ -49,7 +52,7 @@ class GetDataSourceLoginResponse500:
         if isinstance(_error, Unset):
             error = UNSET
         else:
-            error = GetDataSourceLoginResponse500Error(_error)
+            error = check_get_data_source_login_response_500_error(_error)
 
         message = d.pop("message", UNSET)
 

@@ -9,10 +9,9 @@ import pytest
 from supermetrics._generated.supermetrics_api_client.client import Client as GeneratedClient
 from supermetrics._generated.supermetrics_api_client.models.datasource_details import DatasourceDetails
 from supermetrics._generated.supermetrics_api_client.models.datasource_details_response import DatasourceDetailsResponse
-from supermetrics._generated.supermetrics_api_client.models.datasource_details_status import DatasourceDetailsStatus
+from supermetrics._generated.supermetrics_api_client.models.error import Error
 from supermetrics._generated.supermetrics_api_client.models.error_response import ErrorResponse
-from supermetrics._generated.supermetrics_api_client.models.error_response_error import ErrorResponseError
-from supermetrics._generated.supermetrics_api_client.models.meta import Meta
+from supermetrics._generated.supermetrics_api_client.models.response_meta import ResponseMeta
 from supermetrics._generated.supermetrics_api_client.types import Response
 from supermetrics.exceptions import APIError, AuthenticationError, NetworkError, ValidationError
 from supermetrics.resources.datasource_details import DatasourceDetailsAsyncResource, DatasourceDetailsResource
@@ -33,8 +32,8 @@ def _make_error_response(status_code: HTTPStatus, code: str, message: str) -> Re
         content=b"",
         headers={},
         parsed=ErrorResponse(
-            meta=Meta(request_id="req-id"),
-            error=ErrorResponseError(code=code, message=message),
+            meta=ResponseMeta(request_id="req-id"),
+            error=Error(code=code, message=message),
         ),
     )
 
@@ -55,7 +54,7 @@ class TestDatasourceDetailsResource:
         return DatasourceDetails(
             id="GAWA",
             name="Google Analytics 4",
-            status=DatasourceDetailsStatus.RELEASED,
+            status="Released",
             is_authentication_required=True,
             has_account_list=True,
             has_fields=True,
@@ -71,18 +70,16 @@ class TestDatasourceDetailsResource:
         """Test successful datasource details retrieval."""
         import supermetrics.resources.datasource_details as module
 
-        original = module.get_teams_team_id_datasource_data_source_id.sync_detailed
-        module.get_teams_team_id_datasource_data_source_id.sync_detailed = MagicMock(
-            return_value=_make_success_response(sample_details)
-        )
+        original = module.get_datasource_details.sync_detailed
+        module.get_datasource_details.sync_detailed = MagicMock(return_value=_make_success_response(sample_details))
 
         result = resource.get(team_id=12345, data_source_id="GAWA")
 
         assert result.id == "GAWA"
         assert result.name == "Google Analytics 4"
-        assert result.status == DatasourceDetailsStatus.RELEASED
+        assert result.status == "Released"
 
-        module.get_teams_team_id_datasource_data_source_id.sync_detailed = original
+        module.get_datasource_details.sync_detailed = original
 
     def test_get_passes_correct_params(
         self,
@@ -92,9 +89,9 @@ class TestDatasourceDetailsResource:
         """Test that get() passes the correct parameters to the generated client."""
         import supermetrics.resources.datasource_details as module
 
-        original = module.get_teams_team_id_datasource_data_source_id.sync_detailed
+        original = module.get_datasource_details.sync_detailed
         mock_sync = MagicMock(return_value=_make_success_response(sample_details))
-        module.get_teams_team_id_datasource_data_source_id.sync_detailed = mock_sync
+        module.get_datasource_details.sync_detailed = mock_sync
 
         resource.get(team_id=12345, data_source_id="GAWA")
 
@@ -102,7 +99,7 @@ class TestDatasourceDetailsResource:
         assert call_kwargs["team_id"] == 12345
         assert call_kwargs["data_source_id"] == "GAWA"
 
-        module.get_teams_team_id_datasource_data_source_id.sync_detailed = original
+        module.get_datasource_details.sync_detailed = original
 
     def test_get_passes_sm_app_id_header(
         self,
@@ -112,16 +109,16 @@ class TestDatasourceDetailsResource:
         """Test that sm_app_id is forwarded when provided."""
         import supermetrics.resources.datasource_details as module
 
-        original = module.get_teams_team_id_datasource_data_source_id.sync_detailed
+        original = module.get_datasource_details.sync_detailed
         mock_sync = MagicMock(return_value=_make_success_response(sample_details))
-        module.get_teams_team_id_datasource_data_source_id.sync_detailed = mock_sync
+        module.get_datasource_details.sync_detailed = mock_sync
 
         resource.get(team_id=12345, data_source_id="GAWA", sm_app_id="my-app")
 
         call_kwargs = mock_sync.call_args.kwargs
         assert call_kwargs["sm_app_id"] == "my-app"
 
-        module.get_teams_team_id_datasource_data_source_id.sync_detailed = original
+        module.get_datasource_details.sync_detailed = original
 
     # --- get() error responses ---
 
@@ -129,8 +126,8 @@ class TestDatasourceDetailsResource:
         """Test that get() raises AuthenticationError on 401."""
         import supermetrics.resources.datasource_details as module
 
-        original = module.get_teams_team_id_datasource_data_source_id.sync_detailed
-        module.get_teams_team_id_datasource_data_source_id.sync_detailed = MagicMock(
+        original = module.get_datasource_details.sync_detailed
+        module.get_datasource_details.sync_detailed = MagicMock(
             return_value=_make_error_response(HTTPStatus.UNAUTHORIZED, "UNAUTHORIZED", "Invalid API key")
         )
 
@@ -140,14 +137,14 @@ class TestDatasourceDetailsResource:
         assert exc_info.value.status_code == 401
         assert "Invalid or expired API key" in str(exc_info.value)
 
-        module.get_teams_team_id_datasource_data_source_id.sync_detailed = original
+        module.get_datasource_details.sync_detailed = original
 
     def test_get_validation_error_on_400(self, resource: DatasourceDetailsResource) -> None:
         """Test that get() raises ValidationError on 400."""
         import supermetrics.resources.datasource_details as module
 
-        original = module.get_teams_team_id_datasource_data_source_id.sync_detailed
-        module.get_teams_team_id_datasource_data_source_id.sync_detailed = MagicMock(
+        original = module.get_datasource_details.sync_detailed
+        module.get_datasource_details.sync_detailed = MagicMock(
             return_value=_make_error_response(HTTPStatus.BAD_REQUEST, "BAD_REQUEST", "Invalid request")
         )
 
@@ -156,14 +153,14 @@ class TestDatasourceDetailsResource:
 
         assert exc_info.value.status_code == 400
 
-        module.get_teams_team_id_datasource_data_source_id.sync_detailed = original
+        module.get_datasource_details.sync_detailed = original
 
     def test_get_api_error_on_403(self, resource: DatasourceDetailsResource) -> None:
         """Test that get() raises APIError on 403."""
         import supermetrics.resources.datasource_details as module
 
-        original = module.get_teams_team_id_datasource_data_source_id.sync_detailed
-        module.get_teams_team_id_datasource_data_source_id.sync_detailed = MagicMock(
+        original = module.get_datasource_details.sync_detailed
+        module.get_datasource_details.sync_detailed = MagicMock(
             return_value=_make_error_response(HTTPStatus.FORBIDDEN, "FORBIDDEN", "Forbidden")
         )
 
@@ -173,14 +170,14 @@ class TestDatasourceDetailsResource:
         assert exc_info.value.status_code == 403
         assert "Forbidden" in str(exc_info.value)
 
-        module.get_teams_team_id_datasource_data_source_id.sync_detailed = original
+        module.get_datasource_details.sync_detailed = original
 
     def test_get_api_error_on_404(self, resource: DatasourceDetailsResource) -> None:
         """Test that get() raises APIError on 404."""
         import supermetrics.resources.datasource_details as module
 
-        original = module.get_teams_team_id_datasource_data_source_id.sync_detailed
-        module.get_teams_team_id_datasource_data_source_id.sync_detailed = MagicMock(
+        original = module.get_datasource_details.sync_detailed
+        module.get_datasource_details.sync_detailed = MagicMock(
             return_value=_make_error_response(HTTPStatus.NOT_FOUND, "NOT_FOUND", "Datasource not found")
         )
 
@@ -190,14 +187,14 @@ class TestDatasourceDetailsResource:
         assert exc_info.value.status_code == 404
         assert "not found" in str(exc_info.value).lower()
 
-        module.get_teams_team_id_datasource_data_source_id.sync_detailed = original
+        module.get_datasource_details.sync_detailed = original
 
     def test_get_api_error_on_429(self, resource: DatasourceDetailsResource) -> None:
         """Test that get() raises APIError on 429 (rate limit)."""
         import supermetrics.resources.datasource_details as module
 
-        original = module.get_teams_team_id_datasource_data_source_id.sync_detailed
-        module.get_teams_team_id_datasource_data_source_id.sync_detailed = MagicMock(
+        original = module.get_datasource_details.sync_detailed
+        module.get_datasource_details.sync_detailed = MagicMock(
             return_value=_make_error_response(HTTPStatus.TOO_MANY_REQUESTS, "RATE_LIMITED", "Too many requests")
         )
 
@@ -207,14 +204,14 @@ class TestDatasourceDetailsResource:
         assert exc_info.value.status_code == 429
         assert "Rate limit" in str(exc_info.value)
 
-        module.get_teams_team_id_datasource_data_source_id.sync_detailed = original
+        module.get_datasource_details.sync_detailed = original
 
     def test_get_api_error_on_500(self, resource: DatasourceDetailsResource) -> None:
         """Test that get() raises APIError on 500."""
         import supermetrics.resources.datasource_details as module
 
-        original = module.get_teams_team_id_datasource_data_source_id.sync_detailed
-        module.get_teams_team_id_datasource_data_source_id.sync_detailed = MagicMock(
+        original = module.get_datasource_details.sync_detailed
+        module.get_datasource_details.sync_detailed = MagicMock(
             return_value=_make_error_response(HTTPStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "Server error")
         )
 
@@ -223,23 +220,23 @@ class TestDatasourceDetailsResource:
 
         assert exc_info.value.status_code == 500
 
-        module.get_teams_team_id_datasource_data_source_id.sync_detailed = original
+        module.get_datasource_details.sync_detailed = original
 
     def test_get_network_error(self, resource: DatasourceDetailsResource) -> None:
         """Test that get() raises NetworkError on httpx.RequestError."""
         import supermetrics.resources.datasource_details as module
 
-        original = module.get_teams_team_id_datasource_data_source_id.sync_detailed
+        original = module.get_datasource_details.sync_detailed
         mock_request = Mock()
         mock_request.url = "https://api.supermetrics.com/teams/12345/datasource/GAWA"
-        module.get_teams_team_id_datasource_data_source_id.sync_detailed = MagicMock(
+        module.get_datasource_details.sync_detailed = MagicMock(
             side_effect=httpx.ConnectError("Connection refused", request=mock_request)
         )
 
         with pytest.raises(NetworkError):
             resource.get(team_id=12345, data_source_id="GAWA")
 
-        module.get_teams_team_id_datasource_data_source_id.sync_detailed = original
+        module.get_datasource_details.sync_detailed = original
 
 
 class TestDatasourceDetailsAsyncResource:
@@ -258,7 +255,7 @@ class TestDatasourceDetailsAsyncResource:
         return DatasourceDetails(
             id="AW",
             name="Google Ads",
-            status=DatasourceDetailsStatus.RELEASED,
+            status="Released",
             is_authentication_required=True,
         )
 
@@ -273,17 +270,15 @@ class TestDatasourceDetailsAsyncResource:
         """Test successful async datasource details retrieval."""
         import supermetrics.resources.datasource_details as module
 
-        original = module.get_teams_team_id_datasource_data_source_id.asyncio_detailed
-        module.get_teams_team_id_datasource_data_source_id.asyncio_detailed = AsyncMock(
-            return_value=_make_success_response(sample_details)
-        )
+        original = module.get_datasource_details.asyncio_detailed
+        module.get_datasource_details.asyncio_detailed = AsyncMock(return_value=_make_success_response(sample_details))
 
         result = await resource.get(team_id=12345, data_source_id="AW")
 
         assert result.id == "AW"
         assert result.name == "Google Ads"
 
-        module.get_teams_team_id_datasource_data_source_id.asyncio_detailed = original
+        module.get_datasource_details.asyncio_detailed = original
 
     @pytest.mark.asyncio
     async def test_get_passes_correct_params(
@@ -294,9 +289,9 @@ class TestDatasourceDetailsAsyncResource:
         """Test that async get() passes correct parameters."""
         import supermetrics.resources.datasource_details as module
 
-        original = module.get_teams_team_id_datasource_data_source_id.asyncio_detailed
+        original = module.get_datasource_details.asyncio_detailed
         mock_asyncio = AsyncMock(return_value=_make_success_response(sample_details))
-        module.get_teams_team_id_datasource_data_source_id.asyncio_detailed = mock_asyncio
+        module.get_datasource_details.asyncio_detailed = mock_asyncio
 
         await resource.get(team_id=99999, data_source_id="SA360")
 
@@ -304,7 +299,7 @@ class TestDatasourceDetailsAsyncResource:
         assert call_kwargs["team_id"] == 99999
         assert call_kwargs["data_source_id"] == "SA360"
 
-        module.get_teams_team_id_datasource_data_source_id.asyncio_detailed = original
+        module.get_datasource_details.asyncio_detailed = original
 
     # --- get() error responses ---
 
@@ -313,8 +308,8 @@ class TestDatasourceDetailsAsyncResource:
         """Test that async get() raises AuthenticationError on 401."""
         import supermetrics.resources.datasource_details as module
 
-        original = module.get_teams_team_id_datasource_data_source_id.asyncio_detailed
-        module.get_teams_team_id_datasource_data_source_id.asyncio_detailed = AsyncMock(
+        original = module.get_datasource_details.asyncio_detailed
+        module.get_datasource_details.asyncio_detailed = AsyncMock(
             return_value=_make_error_response(HTTPStatus.UNAUTHORIZED, "UNAUTHORIZED", "Invalid API key")
         )
 
@@ -323,15 +318,15 @@ class TestDatasourceDetailsAsyncResource:
 
         assert exc_info.value.status_code == 401
 
-        module.get_teams_team_id_datasource_data_source_id.asyncio_detailed = original
+        module.get_datasource_details.asyncio_detailed = original
 
     @pytest.mark.asyncio
     async def test_get_validation_error_on_400(self, resource: DatasourceDetailsAsyncResource) -> None:
         """Test that async get() raises ValidationError on 400."""
         import supermetrics.resources.datasource_details as module
 
-        original = module.get_teams_team_id_datasource_data_source_id.asyncio_detailed
-        module.get_teams_team_id_datasource_data_source_id.asyncio_detailed = AsyncMock(
+        original = module.get_datasource_details.asyncio_detailed
+        module.get_datasource_details.asyncio_detailed = AsyncMock(
             return_value=_make_error_response(HTTPStatus.BAD_REQUEST, "BAD_REQUEST", "Invalid request")
         )
 
@@ -340,15 +335,15 @@ class TestDatasourceDetailsAsyncResource:
 
         assert exc_info.value.status_code == 400
 
-        module.get_teams_team_id_datasource_data_source_id.asyncio_detailed = original
+        module.get_datasource_details.asyncio_detailed = original
 
     @pytest.mark.asyncio
     async def test_get_api_error_on_403(self, resource: DatasourceDetailsAsyncResource) -> None:
         """Test that async get() raises APIError on 403."""
         import supermetrics.resources.datasource_details as module
 
-        original = module.get_teams_team_id_datasource_data_source_id.asyncio_detailed
-        module.get_teams_team_id_datasource_data_source_id.asyncio_detailed = AsyncMock(
+        original = module.get_datasource_details.asyncio_detailed
+        module.get_datasource_details.asyncio_detailed = AsyncMock(
             return_value=_make_error_response(HTTPStatus.FORBIDDEN, "FORBIDDEN", "Forbidden")
         )
 
@@ -357,15 +352,15 @@ class TestDatasourceDetailsAsyncResource:
 
         assert exc_info.value.status_code == 403
 
-        module.get_teams_team_id_datasource_data_source_id.asyncio_detailed = original
+        module.get_datasource_details.asyncio_detailed = original
 
     @pytest.mark.asyncio
     async def test_get_api_error_on_404(self, resource: DatasourceDetailsAsyncResource) -> None:
         """Test that async get() raises APIError on 404."""
         import supermetrics.resources.datasource_details as module
 
-        original = module.get_teams_team_id_datasource_data_source_id.asyncio_detailed
-        module.get_teams_team_id_datasource_data_source_id.asyncio_detailed = AsyncMock(
+        original = module.get_datasource_details.asyncio_detailed
+        module.get_datasource_details.asyncio_detailed = AsyncMock(
             return_value=_make_error_response(HTTPStatus.NOT_FOUND, "NOT_FOUND", "Not found")
         )
 
@@ -374,15 +369,15 @@ class TestDatasourceDetailsAsyncResource:
 
         assert exc_info.value.status_code == 404
 
-        module.get_teams_team_id_datasource_data_source_id.asyncio_detailed = original
+        module.get_datasource_details.asyncio_detailed = original
 
     @pytest.mark.asyncio
     async def test_get_api_error_on_429(self, resource: DatasourceDetailsAsyncResource) -> None:
         """Test that async get() raises APIError on 429."""
         import supermetrics.resources.datasource_details as module
 
-        original = module.get_teams_team_id_datasource_data_source_id.asyncio_detailed
-        module.get_teams_team_id_datasource_data_source_id.asyncio_detailed = AsyncMock(
+        original = module.get_datasource_details.asyncio_detailed
+        module.get_datasource_details.asyncio_detailed = AsyncMock(
             return_value=_make_error_response(HTTPStatus.TOO_MANY_REQUESTS, "RATE_LIMITED", "Too many requests")
         )
 
@@ -391,15 +386,15 @@ class TestDatasourceDetailsAsyncResource:
 
         assert exc_info.value.status_code == 429
 
-        module.get_teams_team_id_datasource_data_source_id.asyncio_detailed = original
+        module.get_datasource_details.asyncio_detailed = original
 
     @pytest.mark.asyncio
     async def test_get_api_error_on_500(self, resource: DatasourceDetailsAsyncResource) -> None:
         """Test that async get() raises APIError on 500."""
         import supermetrics.resources.datasource_details as module
 
-        original = module.get_teams_team_id_datasource_data_source_id.asyncio_detailed
-        module.get_teams_team_id_datasource_data_source_id.asyncio_detailed = AsyncMock(
+        original = module.get_datasource_details.asyncio_detailed
+        module.get_datasource_details.asyncio_detailed = AsyncMock(
             return_value=_make_error_response(HTTPStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "Server error")
         )
 
@@ -408,21 +403,21 @@ class TestDatasourceDetailsAsyncResource:
 
         assert exc_info.value.status_code == 500
 
-        module.get_teams_team_id_datasource_data_source_id.asyncio_detailed = original
+        module.get_datasource_details.asyncio_detailed = original
 
     @pytest.mark.asyncio
     async def test_get_network_error(self, resource: DatasourceDetailsAsyncResource) -> None:
         """Test that async get() raises NetworkError on httpx.RequestError."""
         import supermetrics.resources.datasource_details as module
 
-        original = module.get_teams_team_id_datasource_data_source_id.asyncio_detailed
+        original = module.get_datasource_details.asyncio_detailed
         mock_request = Mock()
         mock_request.url = "https://api.supermetrics.com/teams/12345/datasource/GAWA"
-        module.get_teams_team_id_datasource_data_source_id.asyncio_detailed = AsyncMock(
+        module.get_datasource_details.asyncio_detailed = AsyncMock(
             side_effect=httpx.ConnectError("Connection refused", request=mock_request)
         )
 
         with pytest.raises(NetworkError):
             await resource.get(team_id=12345, data_source_id="GAWA")
 
-        module.get_teams_team_id_datasource_data_source_id.asyncio_detailed = original
+        module.get_datasource_details.asyncio_detailed = original

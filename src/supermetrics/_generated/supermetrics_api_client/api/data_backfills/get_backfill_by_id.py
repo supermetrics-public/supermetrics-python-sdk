@@ -1,17 +1,12 @@
 from http import HTTPStatus
 from typing import Any
-from urllib.parse import quote
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.backfill_response import BackfillResponse
 from ...models.error_response import ErrorResponse
-from ...models.get_backfill_by_id_response_401 import GetBackfillByIdResponse401
-from ...models.get_backfill_by_id_response_403 import GetBackfillByIdResponse403
-from ...models.get_backfill_by_id_response_429 import GetBackfillByIdResponse429
-from ...models.get_backfill_by_id_response_500 import GetBackfillByIdResponse500
-from ...models.get_backfill_response import GetBackfillResponse
 from ...types import Response
 
 
@@ -19,13 +14,9 @@ def _get_kwargs(
     team_id: int,
     backfill_id: int,
 ) -> dict[str, Any]:
-
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": "/teams/{team_id}/backfills/{backfill_id}".format(
-            team_id=quote(str(team_id), safe=""),
-            backfill_id=quote(str(backfill_id), safe=""),
-        ),
+        "url": f"/teams/{team_id}/backfills/{backfill_id}",
     }
 
     return _kwargs
@@ -33,27 +24,19 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> (
-    ErrorResponse
-    | GetBackfillByIdResponse401
-    | GetBackfillByIdResponse403
-    | GetBackfillByIdResponse429
-    | GetBackfillByIdResponse500
-    | GetBackfillResponse
-    | None
-):
+) -> BackfillResponse | ErrorResponse | None:
     if response.status_code == 200:
-        response_200 = GetBackfillResponse.from_dict(response.json())
+        response_200 = BackfillResponse.from_dict(response.json())
 
         return response_200
 
     if response.status_code == 401:
-        response_401 = GetBackfillByIdResponse401.from_dict(response.json())
+        response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
 
     if response.status_code == 403:
-        response_403 = GetBackfillByIdResponse403.from_dict(response.json())
+        response_403 = ErrorResponse.from_dict(response.json())
 
         return response_403
 
@@ -63,12 +46,12 @@ def _parse_response(
         return response_404
 
     if response.status_code == 429:
-        response_429 = GetBackfillByIdResponse429.from_dict(response.json())
+        response_429 = ErrorResponse.from_dict(response.json())
 
         return response_429
 
     if response.status_code == 500:
-        response_500 = GetBackfillByIdResponse500.from_dict(response.json())
+        response_500 = ErrorResponse.from_dict(response.json())
 
         return response_500
 
@@ -80,14 +63,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[
-    ErrorResponse
-    | GetBackfillByIdResponse401
-    | GetBackfillByIdResponse403
-    | GetBackfillByIdResponse429
-    | GetBackfillByIdResponse500
-    | GetBackfillResponse
-]:
+) -> Response[BackfillResponse | ErrorResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -101,14 +77,7 @@ def sync_detailed(
     backfill_id: int,
     *,
     client: AuthenticatedClient,
-) -> Response[
-    ErrorResponse
-    | GetBackfillByIdResponse401
-    | GetBackfillByIdResponse403
-    | GetBackfillByIdResponse429
-    | GetBackfillByIdResponse500
-    | GetBackfillResponse
-]:
+) -> Response[BackfillResponse | ErrorResponse]:
     """Get backfill by ID
 
      Retrieve detailed information about a specific backfill using its unique identifier.
@@ -120,7 +89,9 @@ def sync_detailed(
 
     **Important Notes:**
     - The backfill must exist and belong to your team
-    - You must have `dwh.transfer.view` permission
+    - Requires scope `dwh_transfers_read`
+    - Your account must have `dwh.transfer.view` permission. See [roles and
+    permissions](https://docs.supermetrics.com/docs/about-supermetrics-teams-and-user-roles#user-roles).
     - Returns 404 if the backfill does not exist or does not belong to your team
     - The backfill object includes real-time progress tracking for running backfills
 
@@ -133,7 +104,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | GetBackfillByIdResponse401 | GetBackfillByIdResponse403 | GetBackfillByIdResponse429 | GetBackfillByIdResponse500 | GetBackfillResponse]
+        Response[BackfillResponse | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
@@ -153,15 +124,7 @@ def sync(
     backfill_id: int,
     *,
     client: AuthenticatedClient,
-) -> (
-    ErrorResponse
-    | GetBackfillByIdResponse401
-    | GetBackfillByIdResponse403
-    | GetBackfillByIdResponse429
-    | GetBackfillByIdResponse500
-    | GetBackfillResponse
-    | None
-):
+) -> BackfillResponse | ErrorResponse | None:
     """Get backfill by ID
 
      Retrieve detailed information about a specific backfill using its unique identifier.
@@ -173,7 +136,9 @@ def sync(
 
     **Important Notes:**
     - The backfill must exist and belong to your team
-    - You must have `dwh.transfer.view` permission
+    - Requires scope `dwh_transfers_read`
+    - Your account must have `dwh.transfer.view` permission. See [roles and
+    permissions](https://docs.supermetrics.com/docs/about-supermetrics-teams-and-user-roles#user-roles).
     - Returns 404 if the backfill does not exist or does not belong to your team
     - The backfill object includes real-time progress tracking for running backfills
 
@@ -186,7 +151,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | GetBackfillByIdResponse401 | GetBackfillByIdResponse403 | GetBackfillByIdResponse429 | GetBackfillByIdResponse500 | GetBackfillResponse
+        BackfillResponse | ErrorResponse
     """
 
     return sync_detailed(
@@ -201,14 +166,7 @@ async def asyncio_detailed(
     backfill_id: int,
     *,
     client: AuthenticatedClient,
-) -> Response[
-    ErrorResponse
-    | GetBackfillByIdResponse401
-    | GetBackfillByIdResponse403
-    | GetBackfillByIdResponse429
-    | GetBackfillByIdResponse500
-    | GetBackfillResponse
-]:
+) -> Response[BackfillResponse | ErrorResponse]:
     """Get backfill by ID
 
      Retrieve detailed information about a specific backfill using its unique identifier.
@@ -220,7 +178,9 @@ async def asyncio_detailed(
 
     **Important Notes:**
     - The backfill must exist and belong to your team
-    - You must have `dwh.transfer.view` permission
+    - Requires scope `dwh_transfers_read`
+    - Your account must have `dwh.transfer.view` permission. See [roles and
+    permissions](https://docs.supermetrics.com/docs/about-supermetrics-teams-and-user-roles#user-roles).
     - Returns 404 if the backfill does not exist or does not belong to your team
     - The backfill object includes real-time progress tracking for running backfills
 
@@ -233,7 +193,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | GetBackfillByIdResponse401 | GetBackfillByIdResponse403 | GetBackfillByIdResponse429 | GetBackfillByIdResponse500 | GetBackfillResponse]
+        Response[BackfillResponse | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
@@ -251,15 +211,7 @@ async def asyncio(
     backfill_id: int,
     *,
     client: AuthenticatedClient,
-) -> (
-    ErrorResponse
-    | GetBackfillByIdResponse401
-    | GetBackfillByIdResponse403
-    | GetBackfillByIdResponse429
-    | GetBackfillByIdResponse500
-    | GetBackfillResponse
-    | None
-):
+) -> BackfillResponse | ErrorResponse | None:
     """Get backfill by ID
 
      Retrieve detailed information about a specific backfill using its unique identifier.
@@ -271,7 +223,9 @@ async def asyncio(
 
     **Important Notes:**
     - The backfill must exist and belong to your team
-    - You must have `dwh.transfer.view` permission
+    - Requires scope `dwh_transfers_read`
+    - Your account must have `dwh.transfer.view` permission. See [roles and
+    permissions](https://docs.supermetrics.com/docs/about-supermetrics-teams-and-user-roles#user-roles).
     - Returns 404 if the backfill does not exist or does not belong to your team
     - The backfill object includes real-time progress tracking for running backfills
 
@@ -284,7 +238,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | GetBackfillByIdResponse401 | GetBackfillByIdResponse403 | GetBackfillByIdResponse429 | GetBackfillByIdResponse500 | GetBackfillResponse
+        BackfillResponse | ErrorResponse
     """
 
     return (

@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..models.datasource_setting_context import DatasourceSettingContext
-from ..models.datasource_setting_type import DatasourceSettingType
+from ..models.datasource_setting_context import DatasourceSettingContext, check_datasource_setting_context
+from ..models.datasource_setting_type import DatasourceSettingType, check_datasource_setting_type
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
@@ -50,11 +50,11 @@ class DatasourceSetting:
 
         context: str | Unset = UNSET
         if not isinstance(self.context, Unset):
-            context = self.context.value
+            context = self.context
 
         type_: str | Unset = UNSET
         if not isinstance(self.type_, Unset):
-            type_ = self.type_.value
+            type_ = self.type_
 
         label = self.label
 
@@ -109,14 +109,14 @@ class DatasourceSetting:
         if isinstance(_context, Unset):
             context = UNSET
         else:
-            context = DatasourceSettingContext(_context)
+            context = check_datasource_setting_context(_context)
 
         _type_ = d.pop("type", UNSET)
         type_: DatasourceSettingType | Unset
         if isinstance(_type_, Unset):
             type_ = UNSET
         else:
-            type_ = DatasourceSettingType(_type_)
+            type_ = check_datasource_setting_type(_type_)
 
         label = d.pop("label", UNSET)
 

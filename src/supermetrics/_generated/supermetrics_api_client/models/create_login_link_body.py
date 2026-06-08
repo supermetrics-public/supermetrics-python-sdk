@@ -18,8 +18,8 @@ class CreateLoginLinkBody:
     """
     Attributes:
         ds_id (str): Data source ID
-        expiry_time (datetime.datetime): Link expiry time as date, datetime or relative time string. Value is saved as
-            ISO 8601, defaulting to midnight as time of day.
+        expiry_time (datetime.datetime | Unset): Link expiry time as datetime in ISO 8601 format or relative time string
+            (e.g. "10 hours"). Defaulting to 24 hours from creation time.
         description (str | Unset): Internal description for the link. Not shown during the authentication attempt.
         require_username (str | Unset): Data source username that needs to be used in authentication attempt. Normally
             used when renewing existing credentials.
@@ -27,7 +27,7 @@ class CreateLoginLinkBody:
     """
 
     ds_id: str
-    expiry_time: datetime.datetime
+    expiry_time: datetime.datetime | Unset = UNSET
     description: str | Unset = UNSET
     require_username: str | Unset = UNSET
     redirect_url: str | Unset = UNSET
@@ -36,7 +36,9 @@ class CreateLoginLinkBody:
     def to_dict(self) -> dict[str, Any]:
         ds_id = self.ds_id
 
-        expiry_time = self.expiry_time.isoformat()
+        expiry_time: str | Unset = UNSET
+        if not isinstance(self.expiry_time, Unset):
+            expiry_time = self.expiry_time.isoformat()
 
         description = self.description
 
@@ -49,9 +51,10 @@ class CreateLoginLinkBody:
         field_dict.update(
             {
                 "ds_id": ds_id,
-                "expiry_time": expiry_time,
             }
         )
+        if expiry_time is not UNSET:
+            field_dict["expiry_time"] = expiry_time
         if description is not UNSET:
             field_dict["description"] = description
         if require_username is not UNSET:
@@ -66,7 +69,12 @@ class CreateLoginLinkBody:
         d = dict(src_dict)
         ds_id = d.pop("ds_id")
 
-        expiry_time = isoparse(d.pop("expiry_time"))
+        _expiry_time = d.pop("expiry_time", UNSET)
+        expiry_time: datetime.datetime | Unset
+        if isinstance(_expiry_time, Unset):
+            expiry_time = UNSET
+        else:
+            expiry_time = isoparse(_expiry_time)
 
         description = d.pop("description", UNSET)
 

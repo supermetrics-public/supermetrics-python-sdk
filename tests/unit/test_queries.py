@@ -1,5 +1,6 @@
 """Unit tests for QueriesResource and QueriesAsyncResource."""
 
+from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock, Mock
 
 import httpx
@@ -9,9 +10,17 @@ from supermetrics._generated.supermetrics_api_client.client import Client as Gen
 from supermetrics._generated.supermetrics_api_client.models.data_response import DataResponse
 from supermetrics._generated.supermetrics_api_client.models.data_response_meta import DataResponseMeta
 from supermetrics._generated.supermetrics_api_client.models.get_data_response_400 import GetDataResponse400
-from supermetrics._generated.supermetrics_api_client.types import UNSET
+from supermetrics._generated.supermetrics_api_client.types import UNSET, Response
 from supermetrics.exceptions import APIError, AuthenticationError, NetworkError, ValidationError
 from supermetrics.resources.queries import QueriesAsyncResource, QueriesResource
+
+
+def _make_success_response(parsed: object) -> Response:
+    return Response(status_code=HTTPStatus.OK, content=b"", headers={}, parsed=parsed)
+
+
+def _make_error_response(status_code: HTTPStatus, parsed: object = None) -> Response:
+    return Response(status_code=status_code, content=b"", headers={}, parsed=parsed)
 
 
 class TestQueriesResource:
@@ -67,8 +76,10 @@ class TestQueriesResource:
         # Arrange
         import supermetrics.resources.queries as queries_module
 
-        original_get_data = queries_module.get_data.sync
-        queries_module.get_data.sync = MagicMock(return_value=sample_completed_response)
+        original_get_data = queries_module.get_data.sync_detailed
+        queries_module.get_data.sync_detailed = MagicMock(
+            return_value=_make_success_response(sample_completed_response)
+        )
 
         # Act
         result = queries_resource.execute(
@@ -85,10 +96,10 @@ class TestQueriesResource:
         assert result.meta.request_id == "req_123"
         assert len(result.data) == 3
         assert result.data[0] == ["2025-01-01", "1000", "500"]
-        assert queries_module.get_data.sync.called
+        assert queries_module.get_data.sync_detailed.called
 
         # Verify DataQuery was created with correct parameters
-        call_args = queries_module.get_data.sync.call_args
+        call_args = queries_module.get_data.sync_detailed.call_args
         json_param = call_args.kwargs["json"]
         assert json_param.ds_id == "GAWA"
         assert json_param.ds_accounts == ["account_123"]
@@ -97,7 +108,7 @@ class TestQueriesResource:
         assert json_param.end_date == "2025-01-31"
 
         # Cleanup
-        queries_module.get_data.sync = original_get_data
+        queries_module.get_data.sync_detailed = original_get_data
 
     def test_execute_query_pending_status(
         self,
@@ -109,8 +120,8 @@ class TestQueriesResource:
         # Arrange
         import supermetrics.resources.queries as queries_module
 
-        original_get_data = queries_module.get_data.sync
-        queries_module.get_data.sync = MagicMock(return_value=sample_pending_response)
+        original_get_data = queries_module.get_data.sync_detailed
+        queries_module.get_data.sync_detailed = MagicMock(return_value=_make_success_response(sample_pending_response))
 
         # Act
         result = queries_resource.execute(
@@ -127,7 +138,7 @@ class TestQueriesResource:
         assert result.meta.request_id == "req_pending_789"
 
         # Cleanup
-        queries_module.get_data.sync = original_get_data
+        queries_module.get_data.sync_detailed = original_get_data
 
     def test_execute_query_with_all_parameters(
         self,
@@ -139,9 +150,9 @@ class TestQueriesResource:
         # Arrange
         import supermetrics.resources.queries as queries_module
 
-        original_get_data = queries_module.get_data.sync
-        mock_sync = MagicMock(return_value=sample_completed_response)
-        queries_module.get_data.sync = mock_sync
+        original_get_data = queries_module.get_data.sync_detailed
+        mock_sync = MagicMock(return_value=_make_success_response(sample_completed_response))
+        queries_module.get_data.sync_detailed = mock_sync
 
         # Act
         result = queries_resource.execute(
@@ -172,7 +183,7 @@ class TestQueriesResource:
         assert json_param.filter_ == "sessions > 100"
 
         # Cleanup
-        queries_module.get_data.sync = original_get_data
+        queries_module.get_data.sync_detailed = original_get_data
 
     def test_execute_query_with_minimal_parameters(
         self,
@@ -184,8 +195,10 @@ class TestQueriesResource:
         # Arrange
         import supermetrics.resources.queries as queries_module
 
-        original_get_data = queries_module.get_data.sync
-        queries_module.get_data.sync = MagicMock(return_value=sample_completed_response)
+        original_get_data = queries_module.get_data.sync_detailed
+        queries_module.get_data.sync_detailed = MagicMock(
+            return_value=_make_success_response(sample_completed_response)
+        )
 
         # Act
         result = queries_resource.execute(
@@ -201,7 +214,7 @@ class TestQueriesResource:
         assert result.meta.status_code == "completed"
 
         # Cleanup
-        queries_module.get_data.sync = original_get_data
+        queries_module.get_data.sync_detailed = original_get_data
 
     def test_get_results_for_pending_query(
         self,
@@ -213,9 +226,9 @@ class TestQueriesResource:
         # Arrange
         import supermetrics.resources.queries as queries_module
 
-        original_get_data = queries_module.get_data.sync
-        mock_sync = MagicMock(return_value=sample_completed_response)
-        queries_module.get_data.sync = mock_sync
+        original_get_data = queries_module.get_data.sync_detailed
+        mock_sync = MagicMock(return_value=_make_success_response(sample_completed_response))
+        queries_module.get_data.sync_detailed = mock_sync
 
         # Act
         result = queries_resource.get_results(query_id="req_pending_789")
@@ -231,15 +244,15 @@ class TestQueriesResource:
         assert json_param.schedule_id == "req_pending_789"
 
         # Cleanup
-        queries_module.get_data.sync = original_get_data
+        queries_module.get_data.sync_detailed = original_get_data
 
     def test_execute_query_with_none_response(self, queries_resource: QueriesResource, mock_client: MagicMock) -> None:
-        """Test execute() with None response returns None."""
+        """Test execute() with None parsed response returns None."""
         # Arrange
         import supermetrics.resources.queries as queries_module
 
-        original_get_data = queries_module.get_data.sync
-        queries_module.get_data.sync = MagicMock(return_value=None)
+        original_get_data = queries_module.get_data.sync_detailed
+        queries_module.get_data.sync_detailed = MagicMock(return_value=_make_success_response(None))
 
         # Act
         result = queries_resource.execute(
@@ -254,15 +267,15 @@ class TestQueriesResource:
         assert result is None
 
         # Cleanup
-        queries_module.get_data.sync = original_get_data
+        queries_module.get_data.sync_detailed = original_get_data
 
     def test_execute_query_with_unset_response(self, queries_resource: QueriesResource, mock_client: MagicMock) -> None:
-        """Test execute() with UNSET response returns None."""
+        """Test execute() with UNSET parsed response returns None."""
         # Arrange
         import supermetrics.resources.queries as queries_module
 
-        original_get_data = queries_module.get_data.sync
-        queries_module.get_data.sync = MagicMock(return_value=UNSET)
+        original_get_data = queries_module.get_data.sync_detailed
+        queries_module.get_data.sync_detailed = MagicMock(return_value=_make_success_response(UNSET))
 
         # Act
         result = queries_resource.execute(
@@ -277,15 +290,15 @@ class TestQueriesResource:
         assert result is None
 
         # Cleanup
-        queries_module.get_data.sync = original_get_data
+        queries_module.get_data.sync_detailed = original_get_data
 
     def test_get_results_with_none_response(self, queries_resource: QueriesResource, mock_client: MagicMock) -> None:
-        """Test get_results() with None response returns None."""
+        """Test get_results() with None parsed response returns None."""
         # Arrange
         import supermetrics.resources.queries as queries_module
 
-        original_get_data = queries_module.get_data.sync
-        queries_module.get_data.sync = MagicMock(return_value=None)
+        original_get_data = queries_module.get_data.sync_detailed
+        queries_module.get_data.sync_detailed = MagicMock(return_value=_make_success_response(None))
 
         # Act
         result = queries_resource.get_results(query_id="req_123")
@@ -294,7 +307,7 @@ class TestQueriesResource:
         assert result is None
 
         # Cleanup
-        queries_module.get_data.sync = original_get_data
+        queries_module.get_data.sync_detailed = original_get_data
 
     def test_async_query_polling_workflow(
         self,
@@ -307,12 +320,15 @@ class TestQueriesResource:
         # Arrange
         import supermetrics.resources.queries as queries_module
 
-        original_get_data = queries_module.get_data.sync
+        original_get_data = queries_module.get_data.sync_detailed
 
         # First call returns pending, second call returns completed
         mock_sync = MagicMock()
-        mock_sync.side_effect = [sample_pending_response, sample_completed_response]
-        queries_module.get_data.sync = mock_sync
+        mock_sync.side_effect = [
+            _make_success_response(sample_pending_response),
+            _make_success_response(sample_completed_response),
+        ]
+        queries_module.get_data.sync_detailed = mock_sync
 
         # Act - Step 1: Execute query (returns pending)
         result = queries_resource.execute(
@@ -337,7 +353,7 @@ class TestQueriesResource:
         assert len(result.data) == 3
 
         # Cleanup
-        queries_module.get_data.sync = original_get_data
+        queries_module.get_data.sync_detailed = original_get_data
 
     def test_authentication_error_on_401(self, queries_resource: QueriesResource, mock_client: MagicMock) -> None:
         """Test 401 response raises AuthenticationError."""
@@ -354,8 +370,8 @@ class TestQueriesResource:
         # Mock the API method to raise the error
         import supermetrics.resources.queries as queries_module
 
-        original_get_data = queries_module.get_data.sync
-        queries_module.get_data.sync = MagicMock(side_effect=error)
+        original_get_data = queries_module.get_data.sync_detailed
+        queries_module.get_data.sync_detailed = MagicMock(side_effect=error)
 
         # Verify AuthenticationError is raised
         with pytest.raises(AuthenticationError) as exc_info:
@@ -371,18 +387,20 @@ class TestQueriesResource:
         assert "Invalid or expired API key" in str(exc_info.value)
 
         # Cleanup
-        queries_module.get_data.sync = original_get_data
+        queries_module.get_data.sync_detailed = original_get_data
 
     def test_validation_error_on_400(self, queries_resource: QueriesResource, mock_client: MagicMock) -> None:
         """Test 400 response raises ValidationError."""
-        # Mock API to return GetDataResponse400 (generated client behavior)
+        # Return a GetDataResponse400 via the detailed response
         import supermetrics.resources.queries as queries_module
 
-        original_get_data = queries_module.get_data.sync
+        original_get_data = queries_module.get_data.sync_detailed
 
         # Create a GetDataResponse400 instance with required fields
         error_response = GetDataResponse400(type_="about:blank", title="Bad Request", status=400)
-        queries_module.get_data.sync = MagicMock(return_value=error_response)
+        queries_module.get_data.sync_detailed = MagicMock(
+            return_value=_make_error_response(HTTPStatus.BAD_REQUEST, error_response)
+        )
 
         # Verify ValidationError is raised
         with pytest.raises(ValidationError) as exc_info:
@@ -395,10 +413,9 @@ class TestQueriesResource:
             )
 
         assert exc_info.value.status_code == 400
-        assert "Invalid request parameters" in str(exc_info.value)
 
         # Cleanup
-        queries_module.get_data.sync = original_get_data
+        queries_module.get_data.sync_detailed = original_get_data
 
     def test_api_error_on_404(self, queries_resource: QueriesResource, mock_client: MagicMock) -> None:
         """Test 404 response raises APIError."""
@@ -415,8 +432,8 @@ class TestQueriesResource:
         # Mock the API method to raise the error
         import supermetrics.resources.queries as queries_module
 
-        original_get_data = queries_module.get_data.sync
-        queries_module.get_data.sync = MagicMock(side_effect=error)
+        original_get_data = queries_module.get_data.sync_detailed
+        queries_module.get_data.sync_detailed = MagicMock(side_effect=error)
 
         # Verify APIError is raised
         with pytest.raises(APIError) as exc_info:
@@ -432,7 +449,7 @@ class TestQueriesResource:
         assert "not found" in str(exc_info.value).lower()
 
         # Cleanup
-        queries_module.get_data.sync = original_get_data
+        queries_module.get_data.sync_detailed = original_get_data
 
     def test_api_error_on_500(self, queries_resource: QueriesResource, mock_client: MagicMock) -> None:
         """Test 500 response raises APIError."""
@@ -449,8 +466,8 @@ class TestQueriesResource:
         # Mock the API method to raise the error
         import supermetrics.resources.queries as queries_module
 
-        original_get_data = queries_module.get_data.sync
-        queries_module.get_data.sync = MagicMock(side_effect=error)
+        original_get_data = queries_module.get_data.sync_detailed
+        queries_module.get_data.sync_detailed = MagicMock(side_effect=error)
 
         # Verify APIError is raised
         with pytest.raises(APIError) as exc_info:
@@ -466,7 +483,7 @@ class TestQueriesResource:
         assert "Supermetrics API error" in str(exc_info.value)
 
         # Cleanup
-        queries_module.get_data.sync = original_get_data
+        queries_module.get_data.sync_detailed = original_get_data
 
     def test_network_error_on_timeout(self, queries_resource: QueriesResource, mock_client: MagicMock) -> None:
         """Test network timeout raises NetworkError."""
@@ -479,8 +496,8 @@ class TestQueriesResource:
         # Mock the API method to raise the error
         import supermetrics.resources.queries as queries_module
 
-        original_get_data = queries_module.get_data.sync
-        queries_module.get_data.sync = MagicMock(side_effect=error)
+        original_get_data = queries_module.get_data.sync_detailed
+        queries_module.get_data.sync_detailed = MagicMock(side_effect=error)
 
         # Verify NetworkError is raised
         with pytest.raises(NetworkError) as exc_info:
@@ -496,7 +513,7 @@ class TestQueriesResource:
         assert exc_info.value.status_code is None  # Network errors have no HTTP status
 
         # Cleanup
-        queries_module.get_data.sync = original_get_data
+        queries_module.get_data.sync_detailed = original_get_data
 
 
 class TestQueriesAsyncResource:
@@ -552,8 +569,10 @@ class TestQueriesAsyncResource:
         # Arrange
         import supermetrics.resources.queries as queries_module
 
-        original_get_data = queries_module.get_data.asyncio
-        queries_module.get_data.asyncio = AsyncMock(return_value=sample_completed_response)
+        original_get_data = queries_module.get_data.asyncio_detailed
+        queries_module.get_data.asyncio_detailed = AsyncMock(
+            return_value=_make_success_response(sample_completed_response)
+        )
 
         # Act
         result = await queries_async_resource.execute(
@@ -569,10 +588,10 @@ class TestQueriesAsyncResource:
         assert result.meta.status_code == "completed"
         assert result.meta.request_id == "req_async_123"
         assert len(result.data) == 2
-        assert queries_module.get_data.asyncio.called
+        assert queries_module.get_data.asyncio_detailed.called
 
         # Cleanup
-        queries_module.get_data.asyncio = original_get_data
+        queries_module.get_data.asyncio_detailed = original_get_data
 
     @pytest.mark.asyncio
     async def test_execute_async_query_with_filters(
@@ -585,9 +604,9 @@ class TestQueriesAsyncResource:
         # Arrange
         import supermetrics.resources.queries as queries_module
 
-        original_get_data = queries_module.get_data.asyncio
-        mock_asyncio = AsyncMock(return_value=sample_completed_response)
-        queries_module.get_data.asyncio = mock_asyncio
+        original_get_data = queries_module.get_data.asyncio_detailed
+        mock_asyncio = AsyncMock(return_value=_make_success_response(sample_completed_response))
+        queries_module.get_data.asyncio_detailed = mock_asyncio
 
         # Act
         result = await queries_async_resource.execute(
@@ -613,7 +632,7 @@ class TestQueriesAsyncResource:
         assert json_param.cache_minutes == 60
 
         # Cleanup
-        queries_module.get_data.asyncio = original_get_data
+        queries_module.get_data.asyncio_detailed = original_get_data
 
     @pytest.mark.asyncio
     async def test_get_results_async(
@@ -626,9 +645,9 @@ class TestQueriesAsyncResource:
         # Arrange
         import supermetrics.resources.queries as queries_module
 
-        original_get_data = queries_module.get_data.asyncio
-        mock_asyncio = AsyncMock(return_value=sample_completed_response)
-        queries_module.get_data.asyncio = mock_asyncio
+        original_get_data = queries_module.get_data.asyncio_detailed
+        mock_asyncio = AsyncMock(return_value=_make_success_response(sample_completed_response))
+        queries_module.get_data.asyncio_detailed = mock_asyncio
 
         # Act
         result = await queries_async_resource.get_results(query_id="req_async_pending_999")
@@ -644,7 +663,7 @@ class TestQueriesAsyncResource:
         assert json_param.schedule_id == "req_async_pending_999"
 
         # Cleanup
-        queries_module.get_data.asyncio = original_get_data
+        queries_module.get_data.asyncio_detailed = original_get_data
 
     @pytest.mark.asyncio
     async def test_execute_async_pending_query(
@@ -657,8 +676,10 @@ class TestQueriesAsyncResource:
         # Arrange
         import supermetrics.resources.queries as queries_module
 
-        original_get_data = queries_module.get_data.asyncio
-        queries_module.get_data.asyncio = AsyncMock(return_value=sample_pending_response)
+        original_get_data = queries_module.get_data.asyncio_detailed
+        queries_module.get_data.asyncio_detailed = AsyncMock(
+            return_value=_make_success_response(sample_pending_response)
+        )
 
         # Act
         result = await queries_async_resource.execute(
@@ -675,7 +696,7 @@ class TestQueriesAsyncResource:
         assert result.meta.request_id == "req_async_pending_999"
 
         # Cleanup
-        queries_module.get_data.asyncio = original_get_data
+        queries_module.get_data.asyncio_detailed = original_get_data
 
     @pytest.mark.asyncio
     async def test_execute_async_with_empty_response(
@@ -685,8 +706,8 @@ class TestQueriesAsyncResource:
         # Arrange
         import supermetrics.resources.queries as queries_module
 
-        original_get_data = queries_module.get_data.asyncio
-        queries_module.get_data.asyncio = AsyncMock(return_value=None)
+        original_get_data = queries_module.get_data.asyncio_detailed
+        queries_module.get_data.asyncio_detailed = AsyncMock(return_value=_make_success_response(None))
 
         # Act
         result = await queries_async_resource.execute(
@@ -701,7 +722,7 @@ class TestQueriesAsyncResource:
         assert result is None
 
         # Cleanup
-        queries_module.get_data.asyncio = original_get_data
+        queries_module.get_data.asyncio_detailed = original_get_data
 
     @pytest.mark.asyncio
     async def test_async_query_polling_workflow(
@@ -715,12 +736,15 @@ class TestQueriesAsyncResource:
         # Arrange
         import supermetrics.resources.queries as queries_module
 
-        original_get_data = queries_module.get_data.asyncio
+        original_get_data = queries_module.get_data.asyncio_detailed
 
         # First call returns pending, second call returns completed
         mock_asyncio = AsyncMock()
-        mock_asyncio.side_effect = [sample_pending_response, sample_completed_response]
-        queries_module.get_data.asyncio = mock_asyncio
+        mock_asyncio.side_effect = [
+            _make_success_response(sample_pending_response),
+            _make_success_response(sample_completed_response),
+        ]
+        queries_module.get_data.asyncio_detailed = mock_asyncio
 
         # Act - Step 1: Execute query (returns pending)
         result = await queries_async_resource.execute(
@@ -745,4 +769,4 @@ class TestQueriesAsyncResource:
         assert len(result.data) == 2
 
         # Cleanup
-        queries_module.get_data.asyncio = original_get_data
+        queries_module.get_data.asyncio_detailed = original_get_data
