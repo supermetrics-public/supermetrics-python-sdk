@@ -5,16 +5,13 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.error_response import ErrorResponse
 from ...models.list_data_source_logins_response_200 import ListDataSourceLoginsResponse200
-from ...models.list_data_source_logins_response_401 import ListDataSourceLoginsResponse401
-from ...models.list_data_source_logins_response_422 import ListDataSourceLoginsResponse422
-from ...models.list_data_source_logins_response_429 import ListDataSourceLoginsResponse429
 from ...models.list_data_source_logins_response_500 import ListDataSourceLoginsResponse500
 from ...types import Response
 
 
 def _get_kwargs() -> dict[str, Any]:
-
     _kwargs: dict[str, Any] = {
         "method": "get",
         "url": "/ds/logins",
@@ -25,31 +22,24 @@ def _get_kwargs() -> dict[str, Any]:
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> (
-    ListDataSourceLoginsResponse200
-    | ListDataSourceLoginsResponse401
-    | ListDataSourceLoginsResponse422
-    | ListDataSourceLoginsResponse429
-    | ListDataSourceLoginsResponse500
-    | None
-):
+) -> ErrorResponse | ListDataSourceLoginsResponse200 | ListDataSourceLoginsResponse500 | None:
     if response.status_code == 200:
         response_200 = ListDataSourceLoginsResponse200.from_dict(response.json())
 
         return response_200
 
     if response.status_code == 401:
-        response_401 = ListDataSourceLoginsResponse401.from_dict(response.json())
+        response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
 
     if response.status_code == 422:
-        response_422 = ListDataSourceLoginsResponse422.from_dict(response.json())
+        response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
 
     if response.status_code == 429:
-        response_429 = ListDataSourceLoginsResponse429.from_dict(response.json())
+        response_429 = ErrorResponse.from_dict(response.json())
 
         return response_429
 
@@ -66,13 +56,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[
-    ListDataSourceLoginsResponse200
-    | ListDataSourceLoginsResponse401
-    | ListDataSourceLoginsResponse422
-    | ListDataSourceLoginsResponse429
-    | ListDataSourceLoginsResponse500
-]:
+) -> Response[ErrorResponse | ListDataSourceLoginsResponse200 | ListDataSourceLoginsResponse500]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -84,13 +68,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-) -> Response[
-    ListDataSourceLoginsResponse200
-    | ListDataSourceLoginsResponse401
-    | ListDataSourceLoginsResponse422
-    | ListDataSourceLoginsResponse429
-    | ListDataSourceLoginsResponse500
-]:
+) -> Response[ErrorResponse | ListDataSourceLoginsResponse200 | ListDataSourceLoginsResponse500]:
     """List logins
 
      Retrieve a list of all data source logins
@@ -100,7 +78,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ListDataSourceLoginsResponse200 | ListDataSourceLoginsResponse401 | ListDataSourceLoginsResponse422 | ListDataSourceLoginsResponse429 | ListDataSourceLoginsResponse500]
+        Response[ErrorResponse | ListDataSourceLoginsResponse200 | ListDataSourceLoginsResponse500]
     """
 
     kwargs = _get_kwargs()
@@ -115,14 +93,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-) -> (
-    ListDataSourceLoginsResponse200
-    | ListDataSourceLoginsResponse401
-    | ListDataSourceLoginsResponse422
-    | ListDataSourceLoginsResponse429
-    | ListDataSourceLoginsResponse500
-    | None
-):
+) -> ErrorResponse | ListDataSourceLoginsResponse200 | ListDataSourceLoginsResponse500 | None:
     """List logins
 
      Retrieve a list of all data source logins
@@ -132,7 +103,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ListDataSourceLoginsResponse200 | ListDataSourceLoginsResponse401 | ListDataSourceLoginsResponse422 | ListDataSourceLoginsResponse429 | ListDataSourceLoginsResponse500
+        ErrorResponse | ListDataSourceLoginsResponse200 | ListDataSourceLoginsResponse500
     """
 
     return sync_detailed(
@@ -143,13 +114,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-) -> Response[
-    ListDataSourceLoginsResponse200
-    | ListDataSourceLoginsResponse401
-    | ListDataSourceLoginsResponse422
-    | ListDataSourceLoginsResponse429
-    | ListDataSourceLoginsResponse500
-]:
+) -> Response[ErrorResponse | ListDataSourceLoginsResponse200 | ListDataSourceLoginsResponse500]:
     """List logins
 
      Retrieve a list of all data source logins
@@ -159,7 +124,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ListDataSourceLoginsResponse200 | ListDataSourceLoginsResponse401 | ListDataSourceLoginsResponse422 | ListDataSourceLoginsResponse429 | ListDataSourceLoginsResponse500]
+        Response[ErrorResponse | ListDataSourceLoginsResponse200 | ListDataSourceLoginsResponse500]
     """
 
     kwargs = _get_kwargs()
@@ -172,14 +137,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-) -> (
-    ListDataSourceLoginsResponse200
-    | ListDataSourceLoginsResponse401
-    | ListDataSourceLoginsResponse422
-    | ListDataSourceLoginsResponse429
-    | ListDataSourceLoginsResponse500
-    | None
-):
+) -> ErrorResponse | ListDataSourceLoginsResponse200 | ListDataSourceLoginsResponse500 | None:
     """List logins
 
      Retrieve a list of all data source logins
@@ -189,7 +147,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ListDataSourceLoginsResponse200 | ListDataSourceLoginsResponse401 | ListDataSourceLoginsResponse422 | ListDataSourceLoginsResponse429 | ListDataSourceLoginsResponse500
+        ErrorResponse | ListDataSourceLoginsResponse200 | ListDataSourceLoginsResponse500
     """
 
     return (

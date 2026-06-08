@@ -8,7 +8,7 @@ from attrs import field as _attrs_field
 
 if TYPE_CHECKING:
     from ..models.backfill import Backfill
-    from ..models.meta import Meta
+    from ..models.response_meta import ResponseMeta
 
 
 T = TypeVar("T", bound="ListIncompleteBackfillsResponse200")
@@ -18,11 +18,11 @@ T = TypeVar("T", bound="ListIncompleteBackfillsResponse200")
 class ListIncompleteBackfillsResponse200:
     """
     Attributes:
-        meta (Meta):
+        meta (ResponseMeta):
         data (list[Backfill]): Array of incomplete backfill objects
     """
 
-    meta: Meta
+    meta: ResponseMeta
     data: list[Backfill]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -48,10 +48,10 @@ class ListIncompleteBackfillsResponse200:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.backfill import Backfill
-        from ..models.meta import Meta
+        from ..models.response_meta import ResponseMeta
 
         d = dict(src_dict)
-        meta = Meta.from_dict(d.pop("meta"))
+        meta = ResponseMeta.from_dict(d.pop("meta"))
 
         data = []
         _data = d.pop("data")

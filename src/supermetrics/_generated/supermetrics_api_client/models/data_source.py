@@ -6,7 +6,7 @@ from typing import Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..models.data_source_type import DataSourceType
+from ..models.data_source_type import DataSourceType, check_data_source_type
 from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="DataSource")
@@ -29,7 +29,7 @@ class DataSource:
     def to_dict(self) -> dict[str, Any]:
         type_: str | Unset = UNSET
         if not isinstance(self.type_, Unset):
-            type_ = self.type_.value
+            type_ = self.type_
 
         ds_id = self.ds_id
 
@@ -55,7 +55,7 @@ class DataSource:
         if isinstance(_type_, Unset):
             type_ = UNSET
         else:
-            type_ = DataSourceType(_type_)
+            type_ = check_data_source_type(_type_)
 
         ds_id = d.pop("ds_id", UNSET)
 

@@ -10,15 +10,24 @@ auto-generated code in _generated/ to provide:
 - Complete type safety with IDE autocomplete support
 """
 
+from supermetrics.resources.accounts import AccountsAsyncResource, AccountsResource
 from supermetrics.resources.backfills import BackfillsAsyncResource, BackfillsResource
 from supermetrics.resources.datasource_details import DatasourceDetailsAsyncResource, DatasourceDetailsResource
 from supermetrics.resources.login_links import LoginLinksAsyncResource, LoginLinksResource
+from supermetrics.resources.logins import LoginsAsyncResource, LoginsResource
+from supermetrics.resources.queries import QueriesAsyncResource, QueriesResource
 
 __all__ = [
-    "LoginLinksResource",
-    "LoginLinksAsyncResource",
+    "AccountsResource",
+    "AccountsAsyncResource",
     "BackfillsResource",
     "BackfillsAsyncResource",
     "DatasourceDetailsResource",
     "DatasourceDetailsAsyncResource",
+    "LoginLinksResource",
+    "LoginLinksAsyncResource",
+    "LoginsResource",
+    "LoginsAsyncResource",
+    "QueriesResource",
+    "QueriesAsyncResource",
 ]

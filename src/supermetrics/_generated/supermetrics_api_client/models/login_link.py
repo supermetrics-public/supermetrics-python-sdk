@@ -8,7 +8,7 @@ from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 from dateutil.parser import isoparse
 
-from ..models.login_link_status_code import LoginLinkStatusCode
+from ..models.login_link_status_code import LoginLinkStatusCode, check_login_link_status_code
 from ..types import UNSET, Unset
 
 T = TypeVar("T", bound="LoginLink")
@@ -61,7 +61,7 @@ class LoginLink:
 
         status_code: str | Unset = UNSET
         if not isinstance(self.status_code, Unset):
-            status_code = self.status_code.value
+            status_code = self.status_code
 
         description = self.description
 
@@ -157,7 +157,7 @@ class LoginLink:
         if isinstance(_status_code, Unset):
             status_code = UNSET
         else:
-            status_code = LoginLinkStatusCode(_status_code)
+            status_code = check_login_link_status_code(_status_code)
 
         description = d.pop("description", UNSET)
 

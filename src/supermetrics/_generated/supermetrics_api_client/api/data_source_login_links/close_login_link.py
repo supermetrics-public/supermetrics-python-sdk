@@ -1,16 +1,13 @@
 from http import HTTPStatus
 from typing import Any
-from urllib.parse import quote
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.close_login_link_response_401 import CloseLoginLinkResponse401
 from ...models.close_login_link_response_404 import CloseLoginLinkResponse404
-from ...models.close_login_link_response_422 import CloseLoginLinkResponse422
-from ...models.close_login_link_response_429 import CloseLoginLinkResponse429
 from ...models.close_login_link_response_500 import CloseLoginLinkResponse500
+from ...models.error_response import ErrorResponse
 from ...models.login_link_response import LoginLinkResponse
 from ...types import Response
 
@@ -18,12 +15,9 @@ from ...types import Response
 def _get_kwargs(
     link_id: str,
 ) -> dict[str, Any]:
-
     _kwargs: dict[str, Any] = {
         "method": "put",
-        "url": "/ds/login/link/{link_id}/close".format(
-            link_id=quote(str(link_id), safe=""),
-        ),
+        "url": f"/ds/login/link/{link_id}/close",
     }
 
     return _kwargs
@@ -31,22 +25,14 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> (
-    CloseLoginLinkResponse401
-    | CloseLoginLinkResponse404
-    | CloseLoginLinkResponse422
-    | CloseLoginLinkResponse429
-    | CloseLoginLinkResponse500
-    | LoginLinkResponse
-    | None
-):
+) -> CloseLoginLinkResponse404 | CloseLoginLinkResponse500 | ErrorResponse | LoginLinkResponse | None:
     if response.status_code == 200:
         response_200 = LoginLinkResponse.from_dict(response.json())
 
         return response_200
 
     if response.status_code == 401:
-        response_401 = CloseLoginLinkResponse401.from_dict(response.json())
+        response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
 
@@ -56,12 +42,12 @@ def _parse_response(
         return response_404
 
     if response.status_code == 422:
-        response_422 = CloseLoginLinkResponse422.from_dict(response.json())
+        response_422 = ErrorResponse.from_dict(response.json())
 
         return response_422
 
     if response.status_code == 429:
-        response_429 = CloseLoginLinkResponse429.from_dict(response.json())
+        response_429 = ErrorResponse.from_dict(response.json())
 
         return response_429
 
@@ -78,14 +64,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[
-    CloseLoginLinkResponse401
-    | CloseLoginLinkResponse404
-    | CloseLoginLinkResponse422
-    | CloseLoginLinkResponse429
-    | CloseLoginLinkResponse500
-    | LoginLinkResponse
-]:
+) -> Response[CloseLoginLinkResponse404 | CloseLoginLinkResponse500 | ErrorResponse | LoginLinkResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -98,14 +77,7 @@ def sync_detailed(
     link_id: str,
     *,
     client: AuthenticatedClient,
-) -> Response[
-    CloseLoginLinkResponse401
-    | CloseLoginLinkResponse404
-    | CloseLoginLinkResponse422
-    | CloseLoginLinkResponse429
-    | CloseLoginLinkResponse500
-    | LoginLinkResponse
-]:
+) -> Response[CloseLoginLinkResponse404 | CloseLoginLinkResponse500 | ErrorResponse | LoginLinkResponse]:
     """Close login link
 
      Close a login link. Link will stop accepting new requests once closed, but closing will not affect
@@ -119,7 +91,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[CloseLoginLinkResponse401 | CloseLoginLinkResponse404 | CloseLoginLinkResponse422 | CloseLoginLinkResponse429 | CloseLoginLinkResponse500 | LoginLinkResponse]
+        Response[CloseLoginLinkResponse404 | CloseLoginLinkResponse500 | ErrorResponse | LoginLinkResponse]
     """
 
     kwargs = _get_kwargs(
@@ -137,15 +109,7 @@ def sync(
     link_id: str,
     *,
     client: AuthenticatedClient,
-) -> (
-    CloseLoginLinkResponse401
-    | CloseLoginLinkResponse404
-    | CloseLoginLinkResponse422
-    | CloseLoginLinkResponse429
-    | CloseLoginLinkResponse500
-    | LoginLinkResponse
-    | None
-):
+) -> CloseLoginLinkResponse404 | CloseLoginLinkResponse500 | ErrorResponse | LoginLinkResponse | None:
     """Close login link
 
      Close a login link. Link will stop accepting new requests once closed, but closing will not affect
@@ -159,7 +123,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        CloseLoginLinkResponse401 | CloseLoginLinkResponse404 | CloseLoginLinkResponse422 | CloseLoginLinkResponse429 | CloseLoginLinkResponse500 | LoginLinkResponse
+        CloseLoginLinkResponse404 | CloseLoginLinkResponse500 | ErrorResponse | LoginLinkResponse
     """
 
     return sync_detailed(
@@ -172,14 +136,7 @@ async def asyncio_detailed(
     link_id: str,
     *,
     client: AuthenticatedClient,
-) -> Response[
-    CloseLoginLinkResponse401
-    | CloseLoginLinkResponse404
-    | CloseLoginLinkResponse422
-    | CloseLoginLinkResponse429
-    | CloseLoginLinkResponse500
-    | LoginLinkResponse
-]:
+) -> Response[CloseLoginLinkResponse404 | CloseLoginLinkResponse500 | ErrorResponse | LoginLinkResponse]:
     """Close login link
 
      Close a login link. Link will stop accepting new requests once closed, but closing will not affect
@@ -193,7 +150,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[CloseLoginLinkResponse401 | CloseLoginLinkResponse404 | CloseLoginLinkResponse422 | CloseLoginLinkResponse429 | CloseLoginLinkResponse500 | LoginLinkResponse]
+        Response[CloseLoginLinkResponse404 | CloseLoginLinkResponse500 | ErrorResponse | LoginLinkResponse]
     """
 
     kwargs = _get_kwargs(
@@ -209,15 +166,7 @@ async def asyncio(
     link_id: str,
     *,
     client: AuthenticatedClient,
-) -> (
-    CloseLoginLinkResponse401
-    | CloseLoginLinkResponse404
-    | CloseLoginLinkResponse422
-    | CloseLoginLinkResponse429
-    | CloseLoginLinkResponse500
-    | LoginLinkResponse
-    | None
-):
+) -> CloseLoginLinkResponse404 | CloseLoginLinkResponse500 | ErrorResponse | LoginLinkResponse | None:
     """Close login link
 
      Close a login link. Link will stop accepting new requests once closed, but closing will not affect
@@ -231,7 +180,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        CloseLoginLinkResponse401 | CloseLoginLinkResponse404 | CloseLoginLinkResponse422 | CloseLoginLinkResponse429 | CloseLoginLinkResponse500 | LoginLinkResponse
+        CloseLoginLinkResponse404 | CloseLoginLinkResponse500 | ErrorResponse | LoginLinkResponse
     """
 
     return (

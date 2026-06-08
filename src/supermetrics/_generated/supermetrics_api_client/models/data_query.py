@@ -21,7 +21,7 @@ T = TypeVar("T", bound="DataQuery")
 class DataQuery:
     """
     Attributes:
-        ds_id (str): Target data source ID Example: GA.
+        ds_id (str): Target data source ID Example: GAWA.
         api_key (str | Unset): API key when not using an authorization header Example: abc123def456.
         schedule_id (str | Unset): Schedule ID for this query request. If not provided, one will be generated from other
             query parameters Example: my_query_123.

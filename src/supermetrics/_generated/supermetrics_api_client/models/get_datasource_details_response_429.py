@@ -7,11 +7,11 @@ from attrs import define as _attrs_define
 
 from ..types import UNSET, Unset
 
-T = TypeVar("T", bound="GetDataResponse403")
+T = TypeVar("T", bound="GetDatasourceDetailsResponse429")
 
 
 @_attrs_define
-class GetDataResponse403:
+class GetDatasourceDetailsResponse429:
     """RFC 9457 Problem Details for HTTP APIs
 
     Attributes:
@@ -70,7 +70,7 @@ class GetDataResponse403:
 
         instance = d.pop("instance", UNSET)
 
-        get_data_response_403 = cls(
+        get_datasource_details_response_429 = cls(
             type_=type_,
             title=title,
             status=status,
@@ -78,4 +78,4 @@ class GetDataResponse403:
             instance=instance,
         )
 
-        return get_data_response_403
+        return get_datasource_details_response_429

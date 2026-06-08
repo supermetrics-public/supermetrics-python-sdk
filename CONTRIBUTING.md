@@ -49,13 +49,11 @@ Ready to contribute? Here's how to set up `supermetrics-python-sdk` for local de
    git clone git@github.com:your_name_here/supermetrics-python-sdk.git
    ```
 
-3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development:
+3. Install dependencies (requires [uv](https://docs.astral.sh/uv/getting-started/installation/)):
 
    ```sh
    cd supermetrics-python-sdk
-   uv venv
-   source .venv/bin/activate
-   uv pip install -e ".[dev]
+   uv sync --extra dev
    ```
 
 4. Create a branch for local development:
@@ -66,14 +64,11 @@ Ready to contribute? Here's how to set up `supermetrics-python-sdk` for local de
 
    Now you can make your changes locally.
 
-5. When you're done making changes, check that your changes pass flake8 and the tests, including testing other Python versions with tox:
+5. When you're done making changes, check that your changes pass formatting, linting, and tests:
 
    ```sh
-   uv qa # Run all the formatting, linting, and testing commands
-   uv testall # to run tests
+   just qa
    ```
-
-   To get ruff and pytest, just pip install them into your virtualenv.
 
 6. Commit your changes and push your branch to GitHub:
 
@@ -84,6 +79,54 @@ Ready to contribute? Here's how to set up `supermetrics-python-sdk` for local de
    ```
 
 7. Submit a pull request through the GitHub website.
+
+## Development Commands
+
+This project uses [just](https://github.com/casey/just) as a command runner. Install it with:
+
+```sh
+# macOS
+brew install just
+
+# or via cargo
+cargo install just
+```
+
+Available commands:
+
+| Command | Description |
+|---------|-------------|
+| `just format` | Format code with ruff |
+| `just lint` | Lint code with ruff (auto-fixes safe issues) |
+| `just typecheck` | Run mypy type checking |
+| `just test` | Run tests with pytest |
+| `just qa` | Run all of the above (format + lint + typecheck + test) |
+| `just testall` | Run tests across Python 3.11, 3.12, 3.13, and 3.14 |
+| `just coverage` | Run tests with coverage and generate HTML report |
+| `just build` | Build the package |
+| `just clean` | Remove all build, test, and Python artifacts |
+
+## OpenAPI Spec Workflow
+
+The SDK wraps auto-generated API client code. The generated code lives in `src/supermetrics/_generated/`
+and is committed to version control. Here is how the regeneration pipeline works:
+
+1. **Source specs** (not in repo): Place the raw Supermetrics OpenAPI YAML files in `openapi-specs/`
+   (this directory is gitignored — the source specs are internal to Supermetrics).
+
+2. **Filter and merge**: Run `python scripts/filter_openapi_spec.py` to filter the source specs
+   using `scripts/references/sdk-endpoint-filters.yaml` and produce a merged `openapi-spec.yaml`.
+
+3. **Regenerate client**: Run `./scripts/regenerate_client.sh` to regenerate
+   `src/supermetrics/_generated/` from `openapi-spec.yaml`.
+
+4. **Review and test**: Review the generated diff and run `just qa` to verify nothing broke.
+
+> **Note for external contributors:** You do not need the source specs to contribute.
+> The generated code and `openapi-spec.yaml` are committed. Only Supermetrics maintainers
+> run the regeneration pipeline when the upstream API changes.
+
+For detailed documentation on the filter script and patch system, see `scripts/README.md`.
 
 ## Pull Request Guidelines
 

@@ -1,14 +1,11 @@
 """Backfills resource adapter for Supermetrics Data Warehouse API."""
 
-import logging
 from datetime import date
 from typing import cast
 
-import httpx
-
 from supermetrics._generated.supermetrics_api_client import AuthenticatedClient
 from supermetrics._generated.supermetrics_api_client import Client as GeneratedClient
-from supermetrics._generated.supermetrics_api_client.api.dwh import (
+from supermetrics._generated.supermetrics_api_client.api.data_backfills import (
     create_backfill,
     get_backfill_by_id,
     get_latest_backfill,
@@ -16,60 +13,13 @@ from supermetrics._generated.supermetrics_api_client.api.dwh import (
     update_backfill_status,
 )
 from supermetrics._generated.supermetrics_api_client.models.backfill import Backfill
+from supermetrics._generated.supermetrics_api_client.models.backfill_response import BackfillResponse
 from supermetrics._generated.supermetrics_api_client.models.create_backfill_request import CreateBackfillRequest
-from supermetrics._generated.supermetrics_api_client.models.create_backfill_response import CreateBackfillResponse
-from supermetrics._generated.supermetrics_api_client.models.create_backfill_response_400 import CreateBackfillResponse400
-from supermetrics._generated.supermetrics_api_client.models.create_backfill_response_401 import CreateBackfillResponse401
-from supermetrics._generated.supermetrics_api_client.models.create_backfill_response_403 import CreateBackfillResponse403
-from supermetrics._generated.supermetrics_api_client.models.create_backfill_response_429 import CreateBackfillResponse429
-from supermetrics._generated.supermetrics_api_client.models.create_backfill_response_500 import CreateBackfillResponse500
-from supermetrics._generated.supermetrics_api_client.models.get_backfill_by_id_response_401 import GetBackfillByIdResponse401
-from supermetrics._generated.supermetrics_api_client.models.get_backfill_by_id_response_403 import GetBackfillByIdResponse403
-from supermetrics._generated.supermetrics_api_client.models.get_backfill_by_id_response_429 import GetBackfillByIdResponse429
-from supermetrics._generated.supermetrics_api_client.models.get_backfill_by_id_response_500 import GetBackfillByIdResponse500
-from supermetrics._generated.supermetrics_api_client.models.get_backfill_response import GetBackfillResponse
-from supermetrics._generated.supermetrics_api_client.models.get_latest_backfill_response_401 import GetLatestBackfillResponse401
-from supermetrics._generated.supermetrics_api_client.models.get_latest_backfill_response_403 import GetLatestBackfillResponse403
-from supermetrics._generated.supermetrics_api_client.models.get_latest_backfill_response_429 import GetLatestBackfillResponse429
-from supermetrics._generated.supermetrics_api_client.models.get_latest_backfill_response_500 import GetLatestBackfillResponse500
 from supermetrics._generated.supermetrics_api_client.models.list_incomplete_backfills_response_200 import (
     ListIncompleteBackfillsResponse200,
 )
-from supermetrics._generated.supermetrics_api_client.models.list_incomplete_backfills_response_401 import (
-    ListIncompleteBackfillsResponse401,
-)
-from supermetrics._generated.supermetrics_api_client.models.list_incomplete_backfills_response_403 import (
-    ListIncompleteBackfillsResponse403,
-)
-from supermetrics._generated.supermetrics_api_client.models.list_incomplete_backfills_response_429 import (
-    ListIncompleteBackfillsResponse429,
-)
-from supermetrics._generated.supermetrics_api_client.models.list_incomplete_backfills_response_500 import (
-    ListIncompleteBackfillsResponse500,
-)
 from supermetrics._generated.supermetrics_api_client.models.update_backfill_status_body import UpdateBackfillStatusBody
-from supermetrics._generated.supermetrics_api_client.models.update_backfill_status_body_status import (
-    UpdateBackfillStatusBodyStatus,
-)
-from supermetrics._generated.supermetrics_api_client.models.update_backfill_status_response_400 import (
-    UpdateBackfillStatusResponse400,
-)
-from supermetrics._generated.supermetrics_api_client.models.update_backfill_status_response_401 import (
-    UpdateBackfillStatusResponse401,
-)
-from supermetrics._generated.supermetrics_api_client.models.update_backfill_status_response_403 import (
-    UpdateBackfillStatusResponse403,
-)
-from supermetrics._generated.supermetrics_api_client.models.update_backfill_status_response_429 import (
-    UpdateBackfillStatusResponse429,
-)
-from supermetrics._generated.supermetrics_api_client.models.update_backfill_status_response_500 import (
-    UpdateBackfillStatusResponse500,
-)
-from supermetrics.exceptions import APIError, AuthenticationError, NetworkError, ValidationError
-from supermetrics.resources._error_handlers import _handle_http_error, _handle_request_error, _raise_for_response
-
-logger = logging.getLogger(__name__)
+from supermetrics.resources._error_handlers import _raise_for_status, api_error_handler
 
 
 class BackfillsAsyncResource:
@@ -104,32 +54,23 @@ class BackfillsAsyncResource:
             NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/transfers/{transfer_id}/backfills"
-        try:
+        with api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Transfer not found"):
             request = CreateBackfillRequest(range_start=range_start, range_end=range_end)
-            response = await create_backfill.asyncio(
+            response = await create_backfill.asyncio_detailed(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
                 transfer_id=transfer_id,
                 body=request,
             )
-            if isinstance(response, CreateBackfillResponse):
-                return response.data
-            _raise_for_response(
-                response, endpoint,
-                type_401=CreateBackfillResponse401,
-                type_400=CreateBackfillResponse400,
-                type_403=CreateBackfillResponse403,
-                type_429=CreateBackfillResponse429,
-                type_500=CreateBackfillResponse500,
+            if response.status_code == 200:
+                return cast(BackfillResponse, response.parsed).data
+            _raise_for_status(
+                response.status_code,
+                response.parsed,
+                endpoint,
                 not_found_msg="Transfer not found or you do not have access to it",
-                bad_request_msg=f"Invalid request parameters: {response}",
+                bad_request_msg=f"Invalid request parameters: {response.parsed}",
             )
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_400="Invalid request parameters", context_404="Transfer not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
 
     async def get(self, team_id: int, backfill_id: int) -> Backfill:
         """Retrieve a backfill by ID.
@@ -142,28 +83,20 @@ class BackfillsAsyncResource:
             NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/backfills/{backfill_id}"
-        try:
-            response = await get_backfill_by_id.asyncio(
+        with api_error_handler(endpoint, context_404="Backfill not found"):
+            response = await get_backfill_by_id.asyncio_detailed(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
                 backfill_id=backfill_id,
             )
-            if isinstance(response, GetBackfillResponse):
-                return response.data
-            _raise_for_response(
-                response, endpoint,
-                type_401=GetBackfillByIdResponse401,
-                type_403=GetBackfillByIdResponse403,
-                type_429=GetBackfillByIdResponse429,
-                type_500=GetBackfillByIdResponse500,
+            if response.status_code == 200:
+                return cast(BackfillResponse, response.parsed).data
+            _raise_for_status(
+                response.status_code,
+                response.parsed,
+                endpoint,
                 not_found_msg="Backfill not found or you do not have access to it",
             )
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_404="Backfill not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
 
     async def get_latest(self, team_id: int, transfer_id: int) -> Backfill:
         """Get the latest backfill for a transfer.
@@ -176,28 +109,20 @@ class BackfillsAsyncResource:
             NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/transfers/{transfer_id}/backfills/latest"
-        try:
-            response = await get_latest_backfill.asyncio(
+        with api_error_handler(endpoint, context_404="Backfill not found"):
+            response = await get_latest_backfill.asyncio_detailed(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
                 transfer_id=transfer_id,
             )
-            if isinstance(response, GetBackfillResponse):
-                return response.data
-            _raise_for_response(
-                response, endpoint,
-                type_401=GetLatestBackfillResponse401,
-                type_403=GetLatestBackfillResponse403,
-                type_429=GetLatestBackfillResponse429,
-                type_500=GetLatestBackfillResponse500,
+            if response.status_code == 200:
+                return cast(BackfillResponse, response.parsed).data
+            _raise_for_status(
+                response.status_code,
+                response.parsed,
+                endpoint,
                 not_found_msg="No backfill found for this transfer",
             )
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_404="Backfill not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
 
     async def list_incomplete(self, team_id: int) -> list[Backfill]:
         """List all incomplete backfills for a team.
@@ -210,27 +135,19 @@ class BackfillsAsyncResource:
             NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/backfills"
-        try:
-            response = await list_incomplete_backfills.asyncio(
+        with api_error_handler(endpoint):
+            response = await list_incomplete_backfills.asyncio_detailed(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
             )
-            if isinstance(response, ListIncompleteBackfillsResponse200):
-                return response.data
-            _raise_for_response(
-                response, endpoint,
-                type_401=ListIncompleteBackfillsResponse401,
-                type_403=ListIncompleteBackfillsResponse403,
-                type_429=ListIncompleteBackfillsResponse429,
-                type_500=ListIncompleteBackfillsResponse500,
+            if response.status_code == 200:
+                return cast(ListIncompleteBackfillsResponse200, response.parsed).data
+            _raise_for_status(
+                response.status_code,
+                response.parsed,
+                endpoint,
                 not_found_msg="No backfills found for this team",
             )
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e)
-        except httpx.RequestError as e:
-            _handle_request_error(e)
 
     async def cancel(self, team_id: int, backfill_id: int) -> Backfill:
         """Cancel a backfill.
@@ -244,32 +161,23 @@ class BackfillsAsyncResource:
             NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/backfills/{backfill_id}"
-        try:
-            body = UpdateBackfillStatusBody(status=UpdateBackfillStatusBodyStatus.CANCELLED)
-            response = await update_backfill_status.asyncio(
+        with api_error_handler(endpoint, context_400="Cannot cancel backfill", context_404="Backfill not found"):
+            body = UpdateBackfillStatusBody(status="CANCELLED")
+            response = await update_backfill_status.asyncio_detailed(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
                 backfill_id=backfill_id,
                 body=body,
             )
-            if isinstance(response, GetBackfillResponse):
-                return response.data
-            _raise_for_response(
-                response, endpoint,
-                type_401=UpdateBackfillStatusResponse401,
-                type_400=UpdateBackfillStatusResponse400,
-                type_403=UpdateBackfillStatusResponse403,
-                type_429=UpdateBackfillStatusResponse429,
-                type_500=UpdateBackfillStatusResponse500,
+            if response.status_code == 200:
+                return cast(BackfillResponse, response.parsed).data
+            _raise_for_status(
+                response.status_code,
+                response.parsed,
+                endpoint,
                 not_found_msg="Backfill not found or you do not have access to it",
-                bad_request_msg=f"Cannot cancel backfill - it may already be in a final state: {response}",
+                bad_request_msg=f"Cannot cancel backfill - it may already be in a final state: {response.parsed}",
             )
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_400="Cannot cancel backfill", context_404="Backfill not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
 
 
 class BackfillsResource:
@@ -341,32 +249,23 @@ class BackfillsResource:
             ... )
         """
         endpoint = f"/teams/{team_id}/transfers/{transfer_id}/backfills"
-        try:
+        with api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Transfer not found"):
             request = CreateBackfillRequest(range_start=range_start, range_end=range_end)
-            response = create_backfill.sync(
+            response = create_backfill.sync_detailed(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
                 transfer_id=transfer_id,
                 body=request,
             )
-            if isinstance(response, CreateBackfillResponse):
-                return response.data
-            _raise_for_response(
-                response, endpoint,
-                type_401=CreateBackfillResponse401,
-                type_400=CreateBackfillResponse400,
-                type_403=CreateBackfillResponse403,
-                type_429=CreateBackfillResponse429,
-                type_500=CreateBackfillResponse500,
+            if response.status_code == 200:
+                return cast(BackfillResponse, response.parsed).data
+            _raise_for_status(
+                response.status_code,
+                response.parsed,
+                endpoint,
                 not_found_msg="Transfer not found or you do not have access to it",
-                bad_request_msg=f"Invalid request parameters: {response}",
+                bad_request_msg=f"Invalid request parameters: {response.parsed}",
             )
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_400="Invalid request parameters", context_404="Transfer not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
 
     def get(self, team_id: int, backfill_id: int) -> Backfill:
         """Retrieve a backfill by ID.
@@ -393,28 +292,20 @@ class BackfillsResource:
             >>> print(f"Progress: {backfill.transfer_runs_completed}/{backfill.transfer_runs_total}")
         """
         endpoint = f"/teams/{team_id}/backfills/{backfill_id}"
-        try:
-            response = get_backfill_by_id.sync(
+        with api_error_handler(endpoint, context_404="Backfill not found"):
+            response = get_backfill_by_id.sync_detailed(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
                 backfill_id=backfill_id,
             )
-            if isinstance(response, GetBackfillResponse):
-                return response.data
-            _raise_for_response(
-                response, endpoint,
-                type_401=GetBackfillByIdResponse401,
-                type_403=GetBackfillByIdResponse403,
-                type_429=GetBackfillByIdResponse429,
-                type_500=GetBackfillByIdResponse500,
+            if response.status_code == 200:
+                return cast(BackfillResponse, response.parsed).data
+            _raise_for_status(
+                response.status_code,
+                response.parsed,
+                endpoint,
                 not_found_msg="Backfill not found or you do not have access to it",
             )
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_404="Backfill not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
 
     def get_latest(self, team_id: int, transfer_id: int) -> Backfill:
         """Get the latest backfill for a transfer.
@@ -439,28 +330,20 @@ class BackfillsResource:
             >>> print(f"Latest backfill status: {latest.status}")
         """
         endpoint = f"/teams/{team_id}/transfers/{transfer_id}/backfills/latest"
-        try:
-            response = get_latest_backfill.sync(
+        with api_error_handler(endpoint, context_404="Backfill not found"):
+            response = get_latest_backfill.sync_detailed(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
                 transfer_id=transfer_id,
             )
-            if isinstance(response, GetBackfillResponse):
-                return response.data
-            _raise_for_response(
-                response, endpoint,
-                type_401=GetLatestBackfillResponse401,
-                type_403=GetLatestBackfillResponse403,
-                type_429=GetLatestBackfillResponse429,
-                type_500=GetLatestBackfillResponse500,
+            if response.status_code == 200:
+                return cast(BackfillResponse, response.parsed).data
+            _raise_for_status(
+                response.status_code,
+                response.parsed,
+                endpoint,
                 not_found_msg="No backfill found for this transfer",
             )
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_404="Backfill not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
 
     def list_incomplete(self, team_id: int) -> list[Backfill]:
         """List all incomplete backfills for a team.
@@ -485,27 +368,19 @@ class BackfillsResource:
             ...     print(f"Backfill {backfill.transfer_backfill_id}: {backfill.status}")
         """
         endpoint = f"/teams/{team_id}/backfills"
-        try:
-            response = list_incomplete_backfills.sync(
+        with api_error_handler(endpoint):
+            response = list_incomplete_backfills.sync_detailed(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
             )
-            if isinstance(response, ListIncompleteBackfillsResponse200):
-                return response.data
-            _raise_for_response(
-                response, endpoint,
-                type_401=ListIncompleteBackfillsResponse401,
-                type_403=ListIncompleteBackfillsResponse403,
-                type_429=ListIncompleteBackfillsResponse429,
-                type_500=ListIncompleteBackfillsResponse500,
+            if response.status_code == 200:
+                return cast(ListIncompleteBackfillsResponse200, response.parsed).data
+            _raise_for_status(
+                response.status_code,
+                response.parsed,
+                endpoint,
                 not_found_msg="No backfills found for this team",
             )
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e)
-        except httpx.RequestError as e:
-            _handle_request_error(e)
 
     def cancel(self, team_id: int, backfill_id: int) -> Backfill:
         """Cancel a backfill.
@@ -531,29 +406,20 @@ class BackfillsResource:
             >>> print(f"Backfill cancelled: {cancelled.status}")
         """
         endpoint = f"/teams/{team_id}/backfills/{backfill_id}"
-        try:
-            body = UpdateBackfillStatusBody(status=UpdateBackfillStatusBodyStatus.CANCELLED)
-            response = update_backfill_status.sync(
+        with api_error_handler(endpoint, context_400="Cannot cancel backfill", context_404="Backfill not found"):
+            body = UpdateBackfillStatusBody(status="CANCELLED")
+            response = update_backfill_status.sync_detailed(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
                 backfill_id=backfill_id,
                 body=body,
             )
-            if isinstance(response, GetBackfillResponse):
-                return response.data
-            _raise_for_response(
-                response, endpoint,
-                type_401=UpdateBackfillStatusResponse401,
-                type_400=UpdateBackfillStatusResponse400,
-                type_403=UpdateBackfillStatusResponse403,
-                type_429=UpdateBackfillStatusResponse429,
-                type_500=UpdateBackfillStatusResponse500,
+            if response.status_code == 200:
+                return cast(BackfillResponse, response.parsed).data
+            _raise_for_status(
+                response.status_code,
+                response.parsed,
+                endpoint,
                 not_found_msg="Backfill not found or you do not have access to it",
-                bad_request_msg=f"Cannot cancel backfill - it may already be in a final state: {response}",
+                bad_request_msg=f"Cannot cancel backfill - it may already be in a final state: {response.parsed}",
             )
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_400="Cannot cancel backfill", context_404="Backfill not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)

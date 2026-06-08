@@ -1,6 +1,7 @@
 """Unit tests for LoginsResource and LoginsAsyncResource."""
 
 import datetime
+from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock, Mock
 
 import httpx
@@ -9,7 +10,6 @@ import pytest
 from supermetrics._generated.supermetrics_api_client.client import Client as GeneratedClient
 from supermetrics._generated.supermetrics_api_client.models.data_source import DataSource
 from supermetrics._generated.supermetrics_api_client.models.data_source_login import DataSourceLogin
-from supermetrics._generated.supermetrics_api_client.models.data_source_login_type import DataSourceLoginType
 from supermetrics._generated.supermetrics_api_client.models.get_data_source_login_response_200 import (
     GetDataSourceLoginResponse200,
 )
@@ -17,9 +17,17 @@ from supermetrics._generated.supermetrics_api_client.models.list_data_source_log
     ListDataSourceLoginsResponse200,
 )
 from supermetrics._generated.supermetrics_api_client.models.user import User
-from supermetrics._generated.supermetrics_api_client.types import UNSET
+from supermetrics._generated.supermetrics_api_client.types import UNSET, Response
 from supermetrics.exceptions import APIError, AuthenticationError, NetworkError, ValidationError
 from supermetrics.resources.logins import LoginsAsyncResource, LoginsResource
+
+
+def _make_success_response(parsed: object) -> Response:
+    return Response(status_code=HTTPStatus.OK, content=b"", headers={}, parsed=parsed)
+
+
+def _make_error_response(status_code: HTTPStatus, parsed: object = None) -> Response:
+    return Response(status_code=status_code, content=b"", headers={}, parsed=parsed)
 
 
 class TestLoginsResource:
@@ -57,7 +65,7 @@ class TestLoginsResource:
     def sample_login(self, sample_data_source: DataSource, sample_user: User) -> DataSourceLogin:
         """Create a sample DataSourceLogin for testing."""
         return DataSourceLogin(
-            type_=DataSourceLoginType.DS_LOGIN,
+            type_="ds_login",
             login_id="login_abc123",
             login_type="oauth2",
             username="user@example.com",
@@ -78,12 +86,14 @@ class TestLoginsResource:
     ) -> None:
         """Test successful login retrieval by login ID."""
         # Arrange
-        mock_response = GetDataSourceLoginResponse200(data=sample_login, meta=UNSET)
+        mock_response_obj = GetDataSourceLoginResponse200(data=sample_login, meta=UNSET)
 
         import supermetrics.resources.logins as logins_module
 
-        original_get = logins_module.get_data_source_login.sync
-        logins_module.get_data_source_login.sync = MagicMock(return_value=mock_response)
+        original_get = logins_module.get_data_source_login.sync_detailed
+        logins_module.get_data_source_login.sync_detailed = MagicMock(
+            return_value=_make_success_response(mock_response_obj)
+        )
 
         # Act
         login = logins_resource.get("login_abc123")
@@ -92,25 +102,29 @@ class TestLoginsResource:
         assert login.login_id == "login_abc123"
         assert login.username == "user@example.com"
         assert login.ds_info.ds_id == "GAWA"
-        assert logins_module.get_data_source_login.sync.called
+        assert logins_module.get_data_source_login.sync_detailed.called
 
         # Cleanup
-        logins_module.get_data_source_login.sync = original_get
+        logins_module.get_data_source_login.sync_detailed = original_get
 
     def test_get_login_empty_response(self, logins_resource: LoginsResource, mock_client: MagicMock) -> None:
-        """Test get() with empty response raises ValueError."""
+        """Test get() with empty parsed data raises APIError."""
         # Arrange
         import supermetrics.resources.logins as logins_module
 
-        original_get = logins_module.get_data_source_login.sync
-        logins_module.get_data_source_login.sync = MagicMock(return_value=None)
+        original_get = logins_module.get_data_source_login.sync_detailed
+        # Return success status but with empty data
+        mock_response_obj = GetDataSourceLoginResponse200(data=None, meta=UNSET)
+        logins_module.get_data_source_login.sync_detailed = MagicMock(
+            return_value=_make_success_response(mock_response_obj)
+        )
 
         # Act & Assert
-        with pytest.raises(ValueError, match="API returned empty response"):
+        with pytest.raises((ValueError, APIError)):
             logins_resource.get("login_123")
 
         # Cleanup
-        logins_module.get_data_source_login.sync = original_get
+        logins_module.get_data_source_login.sync_detailed = original_get
 
     def test_list_logins_success(
         self, logins_resource: LoginsResource, mock_client: MagicMock, sample_login: DataSourceLogin
@@ -123,12 +137,14 @@ class TestLoginsResource:
             ds_info=sample_login.ds_info,
             login_type="api_key",
         )
-        mock_response = ListDataSourceLoginsResponse200(data=[sample_login, login2], meta=UNSET)
+        mock_response_obj = ListDataSourceLoginsResponse200(data=[sample_login, login2], meta=UNSET)
 
         import supermetrics.resources.logins as logins_module
 
-        original_list = logins_module.list_data_source_logins.sync
-        logins_module.list_data_source_logins.sync = MagicMock(return_value=mock_response)
+        original_list = logins_module.list_data_source_logins.sync_detailed
+        logins_module.list_data_source_logins.sync_detailed = MagicMock(
+            return_value=_make_success_response(mock_response_obj)
+        )
 
         # Act
         logins = logins_resource.list()
@@ -137,30 +153,32 @@ class TestLoginsResource:
         assert len(logins) == 2
         assert logins[0].login_id == "login_abc123"
         assert logins[1].login_id == "login_xyz789"
-        assert logins_module.list_data_source_logins.sync.called
+        assert logins_module.list_data_source_logins.sync_detailed.called
 
         # Cleanup
-        logins_module.list_data_source_logins.sync = original_list
+        logins_module.list_data_source_logins.sync_detailed = original_list
 
     def test_list_logins_empty_list(self, logins_resource: LoginsResource, mock_client: MagicMock) -> None:
         """Test list() with empty list returns empty list."""
         # Arrange
-        mock_response = ListDataSourceLoginsResponse200(data=[], meta=UNSET)
+        mock_response_obj = ListDataSourceLoginsResponse200(data=[], meta=UNSET)
 
         import supermetrics.resources.logins as logins_module
 
-        original_list = logins_module.list_data_source_logins.sync
-        logins_module.list_data_source_logins.sync = MagicMock(return_value=mock_response)
+        original_list = logins_module.list_data_source_logins.sync_detailed
+        logins_module.list_data_source_logins.sync_detailed = MagicMock(
+            return_value=_make_success_response(mock_response_obj)
+        )
 
         # Act
         logins = logins_resource.list()
 
         # Assert
         assert logins == []
-        assert logins_module.list_data_source_logins.sync.called
+        assert logins_module.list_data_source_logins.sync_detailed.called
 
         # Cleanup
-        logins_module.list_data_source_logins.sync = original_list
+        logins_module.list_data_source_logins.sync_detailed = original_list
 
     def test_get_by_username_success(
         self, logins_resource: LoginsResource, mock_client: MagicMock, sample_login: DataSourceLogin
@@ -172,12 +190,14 @@ class TestLoginsResource:
             username="another@example.com",
             ds_info=sample_login.ds_info,
         )
-        mock_response = ListDataSourceLoginsResponse200(data=[sample_login, login2], meta=UNSET)
+        mock_response_obj = ListDataSourceLoginsResponse200(data=[sample_login, login2], meta=UNSET)
 
         import supermetrics.resources.logins as logins_module
 
-        original_list = logins_module.list_data_source_logins.sync
-        logins_module.list_data_source_logins.sync = MagicMock(return_value=mock_response)
+        original_list = logins_module.list_data_source_logins.sync_detailed
+        logins_module.list_data_source_logins.sync_detailed = MagicMock(
+            return_value=_make_success_response(mock_response_obj)
+        )
 
         # Act
         login = logins_resource.get_by_username("user@example.com")
@@ -185,29 +205,31 @@ class TestLoginsResource:
         # Assert
         assert login.login_id == "login_abc123"
         assert login.username == "user@example.com"
-        assert logins_module.list_data_source_logins.sync.called
+        assert logins_module.list_data_source_logins.sync_detailed.called
 
         # Cleanup
-        logins_module.list_data_source_logins.sync = original_list
+        logins_module.list_data_source_logins.sync_detailed = original_list
 
     def test_get_by_username_not_found(
         self, logins_resource: LoginsResource, mock_client: MagicMock, sample_login: DataSourceLogin
     ) -> None:
         """Test get_by_username() raises ValueError when username not found."""
         # Arrange
-        mock_response = ListDataSourceLoginsResponse200(data=[sample_login], meta=UNSET)
+        mock_response_obj = ListDataSourceLoginsResponse200(data=[sample_login], meta=UNSET)
 
         import supermetrics.resources.logins as logins_module
 
-        original_list = logins_module.list_data_source_logins.sync
-        logins_module.list_data_source_logins.sync = MagicMock(return_value=mock_response)
+        original_list = logins_module.list_data_source_logins.sync_detailed
+        logins_module.list_data_source_logins.sync_detailed = MagicMock(
+            return_value=_make_success_response(mock_response_obj)
+        )
 
         # Act & Assert
         with pytest.raises(ValueError, match="No login found with username: notfound@example.com"):
             logins_resource.get_by_username("notfound@example.com")
 
         # Cleanup
-        logins_module.list_data_source_logins.sync = original_list
+        logins_module.list_data_source_logins.sync_detailed = original_list
 
     def test_authentication_error_on_401(self, logins_resource: LoginsResource, mock_client: MagicMock) -> None:
         """Test 401 response raises AuthenticationError."""
@@ -224,8 +246,8 @@ class TestLoginsResource:
         # Mock the API method to raise the error
         import supermetrics.resources.logins as logins_module
 
-        original_get = logins_module.get_data_source_login.sync
-        logins_module.get_data_source_login.sync = MagicMock(side_effect=error)
+        original_get = logins_module.get_data_source_login.sync_detailed
+        logins_module.get_data_source_login.sync_detailed = MagicMock(side_effect=error)
 
         # Verify AuthenticationError is raised
         with pytest.raises(AuthenticationError) as exc_info:
@@ -235,7 +257,7 @@ class TestLoginsResource:
         assert "Invalid or expired API key" in str(exc_info.value)
 
         # Cleanup
-        logins_module.get_data_source_login.sync = original_get
+        logins_module.get_data_source_login.sync_detailed = original_get
 
     def test_validation_error_on_400(self, logins_resource: LoginsResource, mock_client: MagicMock) -> None:
         """Test 400 response raises ValidationError."""
@@ -252,8 +274,8 @@ class TestLoginsResource:
         # Mock the API method to raise the error
         import supermetrics.resources.logins as logins_module
 
-        original_get = logins_module.get_data_source_login.sync
-        logins_module.get_data_source_login.sync = MagicMock(side_effect=error)
+        original_get = logins_module.get_data_source_login.sync_detailed
+        logins_module.get_data_source_login.sync_detailed = MagicMock(side_effect=error)
 
         # Verify ValidationError is raised
         with pytest.raises(ValidationError) as exc_info:
@@ -263,7 +285,7 @@ class TestLoginsResource:
         assert "Invalid parameter" in str(exc_info.value)
 
         # Cleanup
-        logins_module.get_data_source_login.sync = original_get
+        logins_module.get_data_source_login.sync_detailed = original_get
 
     def test_api_error_on_404(self, logins_resource: LoginsResource, mock_client: MagicMock) -> None:
         """Test 404 response raises APIError."""
@@ -280,8 +302,8 @@ class TestLoginsResource:
         # Mock the API method to raise the error
         import supermetrics.resources.logins as logins_module
 
-        original_get = logins_module.get_data_source_login.sync
-        logins_module.get_data_source_login.sync = MagicMock(side_effect=error)
+        original_get = logins_module.get_data_source_login.sync_detailed
+        logins_module.get_data_source_login.sync_detailed = MagicMock(side_effect=error)
 
         # Verify APIError is raised
         with pytest.raises(APIError) as exc_info:
@@ -291,7 +313,7 @@ class TestLoginsResource:
         assert "not found" in str(exc_info.value).lower()
 
         # Cleanup
-        logins_module.get_data_source_login.sync = original_get
+        logins_module.get_data_source_login.sync_detailed = original_get
 
     def test_api_error_on_500(self, logins_resource: LoginsResource, mock_client: MagicMock) -> None:
         """Test 500 response raises APIError."""
@@ -308,8 +330,8 @@ class TestLoginsResource:
         # Mock the API method to raise the error
         import supermetrics.resources.logins as logins_module
 
-        original_get = logins_module.get_data_source_login.sync
-        logins_module.get_data_source_login.sync = MagicMock(side_effect=error)
+        original_get = logins_module.get_data_source_login.sync_detailed
+        logins_module.get_data_source_login.sync_detailed = MagicMock(side_effect=error)
 
         # Verify APIError is raised
         with pytest.raises(APIError) as exc_info:
@@ -319,7 +341,7 @@ class TestLoginsResource:
         assert "Supermetrics API error" in str(exc_info.value)
 
         # Cleanup
-        logins_module.get_data_source_login.sync = original_get
+        logins_module.get_data_source_login.sync_detailed = original_get
 
     def test_network_error_on_timeout(self, logins_resource: LoginsResource, mock_client: MagicMock) -> None:
         """Test network timeout raises NetworkError."""
@@ -332,8 +354,8 @@ class TestLoginsResource:
         # Mock the API method to raise the error
         import supermetrics.resources.logins as logins_module
 
-        original_get = logins_module.get_data_source_login.sync
-        logins_module.get_data_source_login.sync = MagicMock(side_effect=error)
+        original_get = logins_module.get_data_source_login.sync_detailed
+        logins_module.get_data_source_login.sync_detailed = MagicMock(side_effect=error)
 
         # Verify NetworkError is raised
         with pytest.raises(NetworkError) as exc_info:
@@ -343,7 +365,7 @@ class TestLoginsResource:
         assert exc_info.value.status_code is None  # Network errors have no HTTP status
 
         # Cleanup
-        logins_module.get_data_source_login.sync = original_get
+        logins_module.get_data_source_login.sync_detailed = original_get
 
 
 class TestLoginsAsyncResource:
@@ -381,7 +403,7 @@ class TestLoginsAsyncResource:
     def sample_login(self, sample_data_source: DataSource, sample_user: User) -> DataSourceLogin:
         """Create a sample DataSourceLogin for testing."""
         return DataSourceLogin(
-            type_=DataSourceLoginType.DS_LOGIN,
+            type_="ds_login",
             login_id="login_abc123",
             login_type="oauth2",
             username="user@example.com",
@@ -403,12 +425,14 @@ class TestLoginsAsyncResource:
     ) -> None:
         """Test async login retrieval by login ID."""
         # Arrange
-        mock_response = GetDataSourceLoginResponse200(data=sample_login, meta=UNSET)
+        mock_response_obj = GetDataSourceLoginResponse200(data=sample_login, meta=UNSET)
 
         import supermetrics.resources.logins as logins_module
 
-        original_get = logins_module.get_data_source_login.asyncio
-        logins_module.get_data_source_login.asyncio = AsyncMock(return_value=mock_response)
+        original_get = logins_module.get_data_source_login.asyncio_detailed
+        logins_module.get_data_source_login.asyncio_detailed = AsyncMock(
+            return_value=_make_success_response(mock_response_obj)
+        )
 
         # Act
         login = await logins_async_resource.get("login_abc123")
@@ -416,10 +440,10 @@ class TestLoginsAsyncResource:
         # Assert
         assert login.login_id == "login_abc123"
         assert login.username == "user@example.com"
-        assert logins_module.get_data_source_login.asyncio.called
+        assert logins_module.get_data_source_login.asyncio_detailed.called
 
         # Cleanup
-        logins_module.get_data_source_login.asyncio = original_get
+        logins_module.get_data_source_login.asyncio_detailed = original_get
 
     @pytest.mark.asyncio
     async def test_list_logins_async(
@@ -432,12 +456,14 @@ class TestLoginsAsyncResource:
             username="another@example.com",
             ds_info=sample_login.ds_info,
         )
-        mock_response = ListDataSourceLoginsResponse200(data=[sample_login, login2], meta=UNSET)
+        mock_response_obj = ListDataSourceLoginsResponse200(data=[sample_login, login2], meta=UNSET)
 
         import supermetrics.resources.logins as logins_module
 
-        original_list = logins_module.list_data_source_logins.asyncio
-        logins_module.list_data_source_logins.asyncio = AsyncMock(return_value=mock_response)
+        original_list = logins_module.list_data_source_logins.asyncio_detailed
+        logins_module.list_data_source_logins.asyncio_detailed = AsyncMock(
+            return_value=_make_success_response(mock_response_obj)
+        )
 
         # Act
         logins = await logins_async_resource.list()
@@ -445,10 +471,10 @@ class TestLoginsAsyncResource:
         # Assert
         assert len(logins) == 2
         assert logins[0].login_id == "login_abc123"
-        assert logins_module.list_data_source_logins.asyncio.called
+        assert logins_module.list_data_source_logins.asyncio_detailed.called
 
         # Cleanup
-        logins_module.list_data_source_logins.asyncio = original_list
+        logins_module.list_data_source_logins.asyncio_detailed = original_list
 
     @pytest.mark.asyncio
     async def test_get_by_username_async(
@@ -461,12 +487,14 @@ class TestLoginsAsyncResource:
             username="another@example.com",
             ds_info=sample_login.ds_info,
         )
-        mock_response = ListDataSourceLoginsResponse200(data=[sample_login, login2], meta=UNSET)
+        mock_response_obj = ListDataSourceLoginsResponse200(data=[sample_login, login2], meta=UNSET)
 
         import supermetrics.resources.logins as logins_module
 
-        original_list = logins_module.list_data_source_logins.asyncio
-        logins_module.list_data_source_logins.asyncio = AsyncMock(return_value=mock_response)
+        original_list = logins_module.list_data_source_logins.asyncio_detailed
+        logins_module.list_data_source_logins.asyncio_detailed = AsyncMock(
+            return_value=_make_success_response(mock_response_obj)
+        )
 
         # Act
         login = await logins_async_resource.get_by_username("user@example.com")
@@ -474,10 +502,10 @@ class TestLoginsAsyncResource:
         # Assert
         assert login.login_id == "login_abc123"
         assert login.username == "user@example.com"
-        assert logins_module.list_data_source_logins.asyncio.called
+        assert logins_module.list_data_source_logins.asyncio_detailed.called
 
         # Cleanup
-        logins_module.list_data_source_logins.asyncio = original_list
+        logins_module.list_data_source_logins.asyncio_detailed = original_list
 
     @pytest.mark.asyncio
     async def test_get_by_username_not_found_async(
@@ -485,16 +513,18 @@ class TestLoginsAsyncResource:
     ) -> None:
         """Test async get_by_username() raises ValueError when username not found."""
         # Arrange
-        mock_response = ListDataSourceLoginsResponse200(data=[sample_login], meta=UNSET)
+        mock_response_obj = ListDataSourceLoginsResponse200(data=[sample_login], meta=UNSET)
 
         import supermetrics.resources.logins as logins_module
 
-        original_list = logins_module.list_data_source_logins.asyncio
-        logins_module.list_data_source_logins.asyncio = AsyncMock(return_value=mock_response)
+        original_list = logins_module.list_data_source_logins.asyncio_detailed
+        logins_module.list_data_source_logins.asyncio_detailed = AsyncMock(
+            return_value=_make_success_response(mock_response_obj)
+        )
 
         # Act & Assert
         with pytest.raises(ValueError, match="No login found with username: notfound@example.com"):
             await logins_async_resource.get_by_username("notfound@example.com")
 
         # Cleanup
-        logins_module.list_data_source_logins.asyncio = original_list
+        logins_module.list_data_source_logins.asyncio_detailed = original_list

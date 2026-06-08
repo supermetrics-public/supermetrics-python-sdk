@@ -1,62 +1,17 @@
 """DatasourceDetails resource adapter for Supermetrics API."""
 
-import logging
 from typing import cast
-
-import httpx
 
 from supermetrics._generated.supermetrics_api_client import AuthenticatedClient
 from supermetrics._generated.supermetrics_api_client import Client as GeneratedClient
 from supermetrics._generated.supermetrics_api_client.api.datasource import (
-    get_teams_team_id_datasource_data_source_id,
+    get_datasource_details,
 )
 from supermetrics._generated.supermetrics_api_client.models.datasource_details import DatasourceDetails
 from supermetrics._generated.supermetrics_api_client.models.datasource_details_response import DatasourceDetailsResponse
-from supermetrics._generated.supermetrics_api_client.types import UNSET
-from supermetrics.exceptions import APIError, AuthenticationError, NetworkError, ValidationError
-from supermetrics.resources._error_handlers import _handle_http_error, _handle_request_error
-
-logger = logging.getLogger(__name__)
-
-
-def _raise_for_error_status(status_code: int, endpoint: str, response_body: str) -> None:
-    """Translate HTTP error status codes into SDK exceptions."""
-    if status_code == 401:
-        raise AuthenticationError("Invalid or expired API key", status_code=401, endpoint=endpoint)
-    if status_code == 400:
-        raise ValidationError(
-            "Invalid request parameters",
-            status_code=400,
-            endpoint=endpoint,
-            response_body=response_body,
-        )
-    if status_code == 403:
-        raise APIError(
-            "Forbidden - insufficient permissions",
-            status_code=403,
-            endpoint=endpoint,
-            response_body=response_body,
-        )
-    if status_code == 404:
-        raise APIError(
-            "Datasource not found or you do not have access to it",
-            status_code=404,
-            endpoint=endpoint,
-            response_body=response_body,
-        )
-    if status_code == 429:
-        raise APIError(
-            "Rate limit exceeded",
-            status_code=429,
-            endpoint=endpoint,
-            response_body=response_body,
-        )
-    raise APIError(
-        f"API error ({status_code})",
-        status_code=status_code,
-        endpoint=endpoint,
-        response_body=response_body,
-    )
+from supermetrics._generated.supermetrics_api_client.types import UNSET, Unset
+from supermetrics.exceptions import APIError
+from supermetrics.resources._error_handlers import _raise_for_status, api_error_handler
 
 
 class DatasourceDetailsAsyncResource:
@@ -90,26 +45,28 @@ class DatasourceDetailsAsyncResource:
             NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/datasource/{data_source_id}"
-        try:
-            response = await get_teams_team_id_datasource_data_source_id.asyncio_detailed(
+        with api_error_handler(endpoint, context_404="Datasource not found"):
+            response = await get_datasource_details.asyncio_detailed(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
                 data_source_id=data_source_id,
                 sm_app_id=sm_app_id if sm_app_id is not None else UNSET,
             )
             if response.status_code == 200:
-                return cast(DatasourceDetailsResponse, response.parsed).data
-            _raise_for_error_status(
-                status_code=int(response.status_code),
-                endpoint=endpoint,
-                response_body=str(response.parsed),
+                data = cast(DatasourceDetailsResponse, response.parsed).data
+                if isinstance(data, Unset):
+                    raise APIError(
+                        "Response missing datasource details data",
+                        status_code=200,
+                        endpoint=endpoint,
+                    )
+                return data
+            _raise_for_status(
+                int(response.status_code),
+                response.parsed,
+                endpoint,
+                not_found_msg="Datasource not found or you do not have access to it",
             )
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_404="Datasource not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
 
 
 class DatasourceDetailsResource:
@@ -172,23 +129,25 @@ class DatasourceDetailsResource:
             >>> print(f"Categories: {details.categories}")
         """
         endpoint = f"/teams/{team_id}/datasource/{data_source_id}"
-        try:
-            response = get_teams_team_id_datasource_data_source_id.sync_detailed(
+        with api_error_handler(endpoint, context_404="Datasource not found"):
+            response = get_datasource_details.sync_detailed(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
                 data_source_id=data_source_id,
                 sm_app_id=sm_app_id if sm_app_id is not None else UNSET,
             )
             if response.status_code == 200:
-                return cast(DatasourceDetailsResponse, response.parsed).data
-            _raise_for_error_status(
-                status_code=int(response.status_code),
-                endpoint=endpoint,
-                response_body=str(response.parsed),
+                data = cast(DatasourceDetailsResponse, response.parsed).data
+                if isinstance(data, Unset):
+                    raise APIError(
+                        "Response missing datasource details data",
+                        status_code=200,
+                        endpoint=endpoint,
+                    )
+                return data
+            _raise_for_status(
+                int(response.status_code),
+                response.parsed,
+                endpoint,
+                not_found_msg="Datasource not found or you do not have access to it",
             )
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_404="Datasource not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)

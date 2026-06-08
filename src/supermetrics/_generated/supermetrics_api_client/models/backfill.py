@@ -8,7 +8,7 @@ from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 from dateutil.parser import isoparse
 
-from ..models.backfill_status import BackfillStatus
+from ..models.backfill_status import BackfillStatus, check_backfill_status
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
@@ -76,7 +76,7 @@ class Backfill:
 
         created_user_id = self.created_user_id
 
-        status = self.status.value
+        status: str = self.status
 
         transfer_runs_total = self.transfer_runs_total
 
@@ -170,7 +170,7 @@ class Backfill:
 
         created_user_id = d.pop("created_user_id")
 
-        status = BackfillStatus(d.pop("status"))
+        status = check_backfill_status(d.pop("status"))
 
         transfer_runs_total = d.pop("transfer_runs_total")
 

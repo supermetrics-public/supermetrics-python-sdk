@@ -34,5 +34,5 @@ Once you have a copy of the source, you can install it with:
 
 ```sh
 cd supermetrics
-uv pip install .
+uv sync --extra dev
 ```

@@ -525,9 +525,15 @@ def main():
 
                     merged_spec['paths'][path][method] = operation
 
-                    # Also copy path-level parameters if present
+                    # Also copy path-level parameters and servers if present
                     if 'parameters' in path_item and 'parameters' not in merged_spec['paths'][path]:
                         merged_spec['paths'][path]['parameters'] = path_item['parameters']
+                    if 'servers' in path_item and 'servers' not in merged_spec['paths'][path]:
+                        merged_spec['paths'][path]['servers'] = deepcopy(path_item['servers'])
+                        # Also promote path-level servers to top-level list
+                        for server in path_item['servers']:
+                            if server not in all_servers:
+                                all_servers.append(deepcopy(server))
 
         print(f"   Matched {matched_count} endpoint(s) from {spec_file.name}")
 
@@ -592,13 +598,20 @@ def main():
         if comp_names:
             print(f"      {comp_type}: {len(comp_names)}")
 
-    # Resolve external file references
+    # Resolve external file references in components
     print("\n🔧 Resolving external file references...")
     replaced_count, failed_count = resolve_external_references(merged_spec['components'], specs_dir)
     if replaced_count > 0:
-        print(f"   ✓ Resolved {replaced_count} external reference(s)")
+        print(f"   ✓ Resolved {replaced_count} external component reference(s)")
     if failed_count > 0:
-        print(f"   ❌ Failed to resolve {failed_count} external reference(s)")
+        print(f"   ❌ Failed to resolve {failed_count} external component reference(s)")
+
+    # Resolve nested external refs everywhere (paths and components)
+    resolved_cache: dict[str, Any] = {}
+    merged_spec['paths'] = resolve_nested_external_refs(merged_spec['paths'], specs_dir, resolved_cache)
+    merged_spec['components'] = resolve_nested_external_refs(merged_spec['components'], specs_dir, resolved_cache)
+    if resolved_cache:
+        print(f"   ✓ Resolved {len(resolved_cache)} inline external reference(s)")
 
     # Apply component patches
     if component_patches:

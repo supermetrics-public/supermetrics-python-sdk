@@ -6,9 +6,11 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..types import UNSET, Unset
+
 if TYPE_CHECKING:
-    from ..models.error_response_error import ErrorResponseError
-    from ..models.meta import Meta
+    from ..models.error import Error
+    from ..models.response_meta import ResponseMeta
 
 
 T = TypeVar("T", bound="ErrorResponse")
@@ -18,39 +20,52 @@ T = TypeVar("T", bound="ErrorResponse")
 class ErrorResponse:
     """
     Attributes:
-        meta (Meta):
-        error (ErrorResponseError):
+        meta (ResponseMeta | Unset):
+        error (Error | Unset):
     """
 
-    meta: Meta
-    error: ErrorResponseError
+    meta: ResponseMeta | Unset = UNSET
+    error: Error | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        meta = self.meta.to_dict()
+        meta: dict[str, Any] | Unset = UNSET
+        if not isinstance(self.meta, Unset):
+            meta = self.meta.to_dict()
 
-        error = self.error.to_dict()
+        error: dict[str, Any] | Unset = UNSET
+        if not isinstance(self.error, Unset):
+            error = self.error.to_dict()
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update(
-            {
-                "meta": meta,
-                "error": error,
-            }
-        )
+        field_dict.update({})
+        if meta is not UNSET:
+            field_dict["meta"] = meta
+        if error is not UNSET:
+            field_dict["error"] = error
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.error_response_error import ErrorResponseError
-        from ..models.meta import Meta
+        from ..models.error import Error
+        from ..models.response_meta import ResponseMeta
 
         d = dict(src_dict)
-        meta = Meta.from_dict(d.pop("meta"))
+        _meta = d.pop("meta", UNSET)
+        meta: ResponseMeta | Unset
+        if isinstance(_meta, Unset):
+            meta = UNSET
+        else:
+            meta = ResponseMeta.from_dict(_meta)
 
-        error = ErrorResponseError.from_dict(d.pop("error"))
+        _error = d.pop("error", UNSET)
+        error: Error | Unset
+        if isinstance(_error, Unset):
+            error = UNSET
+        else:
+            error = Error.from_dict(_error)
 
         error_response = cls(
             meta=meta,
