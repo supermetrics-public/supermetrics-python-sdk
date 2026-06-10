@@ -6,10 +6,7 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error_response import ErrorResponse
-from ...models.get_login_link_response_401 import GetLoginLinkResponse401
 from ...models.get_login_link_response_404 import GetLoginLinkResponse404
-from ...models.get_login_link_response_429 import GetLoginLinkResponse429
-from ...models.get_login_link_response_500 import GetLoginLinkResponse500
 from ...models.login_link_response import LoginLinkResponse
 from ...types import Response
 
@@ -27,22 +24,14 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> (
-    ErrorResponse
-    | GetLoginLinkResponse401
-    | GetLoginLinkResponse404
-    | GetLoginLinkResponse429
-    | GetLoginLinkResponse500
-    | LoginLinkResponse
-    | None
-):
+) -> ErrorResponse | GetLoginLinkResponse404 | LoginLinkResponse | None:
     if response.status_code == 200:
         response_200 = LoginLinkResponse.from_dict(response.json())
 
         return response_200
 
     if response.status_code == 401:
-        response_401 = GetLoginLinkResponse401.from_dict(response.json())
+        response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
 
@@ -57,12 +46,12 @@ def _parse_response(
         return response_422
 
     if response.status_code == 429:
-        response_429 = GetLoginLinkResponse429.from_dict(response.json())
+        response_429 = ErrorResponse.from_dict(response.json())
 
         return response_429
 
     if response.status_code == 500:
-        response_500 = GetLoginLinkResponse500.from_dict(response.json())
+        response_500 = ErrorResponse.from_dict(response.json())
 
         return response_500
 
@@ -74,14 +63,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[
-    ErrorResponse
-    | GetLoginLinkResponse401
-    | GetLoginLinkResponse404
-    | GetLoginLinkResponse429
-    | GetLoginLinkResponse500
-    | LoginLinkResponse
-]:
+) -> Response[ErrorResponse | GetLoginLinkResponse404 | LoginLinkResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -94,14 +76,7 @@ def sync_detailed(
     link_id: str,
     *,
     client: AuthenticatedClient,
-) -> Response[
-    ErrorResponse
-    | GetLoginLinkResponse401
-    | GetLoginLinkResponse404
-    | GetLoginLinkResponse429
-    | GetLoginLinkResponse500
-    | LoginLinkResponse
-]:
+) -> Response[ErrorResponse | GetLoginLinkResponse404 | LoginLinkResponse]:
     """Get login link
 
      Get details of a specific login link
@@ -114,7 +89,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | GetLoginLinkResponse401 | GetLoginLinkResponse404 | GetLoginLinkResponse429 | GetLoginLinkResponse500 | LoginLinkResponse]
+        Response[ErrorResponse | GetLoginLinkResponse404 | LoginLinkResponse]
     """
 
     kwargs = _get_kwargs(
@@ -132,15 +107,7 @@ def sync(
     link_id: str,
     *,
     client: AuthenticatedClient,
-) -> (
-    ErrorResponse
-    | GetLoginLinkResponse401
-    | GetLoginLinkResponse404
-    | GetLoginLinkResponse429
-    | GetLoginLinkResponse500
-    | LoginLinkResponse
-    | None
-):
+) -> ErrorResponse | GetLoginLinkResponse404 | LoginLinkResponse | None:
     """Get login link
 
      Get details of a specific login link
@@ -153,7 +120,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | GetLoginLinkResponse401 | GetLoginLinkResponse404 | GetLoginLinkResponse429 | GetLoginLinkResponse500 | LoginLinkResponse
+        ErrorResponse | GetLoginLinkResponse404 | LoginLinkResponse
     """
 
     return sync_detailed(
@@ -166,14 +133,7 @@ async def asyncio_detailed(
     link_id: str,
     *,
     client: AuthenticatedClient,
-) -> Response[
-    ErrorResponse
-    | GetLoginLinkResponse401
-    | GetLoginLinkResponse404
-    | GetLoginLinkResponse429
-    | GetLoginLinkResponse500
-    | LoginLinkResponse
-]:
+) -> Response[ErrorResponse | GetLoginLinkResponse404 | LoginLinkResponse]:
     """Get login link
 
      Get details of a specific login link
@@ -186,7 +146,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | GetLoginLinkResponse401 | GetLoginLinkResponse404 | GetLoginLinkResponse429 | GetLoginLinkResponse500 | LoginLinkResponse]
+        Response[ErrorResponse | GetLoginLinkResponse404 | LoginLinkResponse]
     """
 
     kwargs = _get_kwargs(
@@ -202,15 +162,7 @@ async def asyncio(
     link_id: str,
     *,
     client: AuthenticatedClient,
-) -> (
-    ErrorResponse
-    | GetLoginLinkResponse401
-    | GetLoginLinkResponse404
-    | GetLoginLinkResponse429
-    | GetLoginLinkResponse500
-    | LoginLinkResponse
-    | None
-):
+) -> ErrorResponse | GetLoginLinkResponse404 | LoginLinkResponse | None:
     """Get login link
 
      Get details of a specific login link
@@ -223,7 +175,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | GetLoginLinkResponse401 | GetLoginLinkResponse404 | GetLoginLinkResponse429 | GetLoginLinkResponse500 | LoginLinkResponse
+        ErrorResponse | GetLoginLinkResponse404 | LoginLinkResponse
     """
 
     return (

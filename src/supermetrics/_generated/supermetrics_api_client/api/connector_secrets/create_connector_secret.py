@@ -7,11 +7,6 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.create_connector_secret_response_201 import CreateConnectorSecretResponse201
 from ...models.create_connector_secret_response_400 import CreateConnectorSecretResponse400
-from ...models.create_connector_secret_response_401 import CreateConnectorSecretResponse401
-from ...models.create_connector_secret_response_404 import CreateConnectorSecretResponse404
-from ...models.create_connector_secret_response_409 import CreateConnectorSecretResponse409
-from ...models.create_connector_secret_response_429 import CreateConnectorSecretResponse429
-from ...models.create_connector_secret_response_500 import CreateConnectorSecretResponse500
 from ...models.create_secret_request import CreateSecretRequest
 from ...models.error_response import ErrorResponse
 from ...types import Response
@@ -40,17 +35,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> (
-    CreateConnectorSecretResponse201
-    | CreateConnectorSecretResponse400
-    | CreateConnectorSecretResponse401
-    | CreateConnectorSecretResponse404
-    | CreateConnectorSecretResponse409
-    | CreateConnectorSecretResponse429
-    | CreateConnectorSecretResponse500
-    | ErrorResponse
-    | None
-):
+) -> CreateConnectorSecretResponse201 | CreateConnectorSecretResponse400 | ErrorResponse | None:
     if response.status_code == 201:
         response_201 = CreateConnectorSecretResponse201.from_dict(response.json())
 
@@ -62,7 +47,7 @@ def _parse_response(
         return response_400
 
     if response.status_code == 401:
-        response_401 = CreateConnectorSecretResponse401.from_dict(response.json())
+        response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
 
@@ -72,12 +57,12 @@ def _parse_response(
         return response_403
 
     if response.status_code == 404:
-        response_404 = CreateConnectorSecretResponse404.from_dict(response.json())
+        response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
 
     if response.status_code == 409:
-        response_409 = CreateConnectorSecretResponse409.from_dict(response.json())
+        response_409 = ErrorResponse.from_dict(response.json())
 
         return response_409
 
@@ -87,12 +72,12 @@ def _parse_response(
         return response_422
 
     if response.status_code == 429:
-        response_429 = CreateConnectorSecretResponse429.from_dict(response.json())
+        response_429 = ErrorResponse.from_dict(response.json())
 
         return response_429
 
     if response.status_code == 500:
-        response_500 = CreateConnectorSecretResponse500.from_dict(response.json())
+        response_500 = ErrorResponse.from_dict(response.json())
 
         return response_500
 
@@ -104,16 +89,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[
-    CreateConnectorSecretResponse201
-    | CreateConnectorSecretResponse400
-    | CreateConnectorSecretResponse401
-    | CreateConnectorSecretResponse404
-    | CreateConnectorSecretResponse409
-    | CreateConnectorSecretResponse429
-    | CreateConnectorSecretResponse500
-    | ErrorResponse
-]:
+) -> Response[CreateConnectorSecretResponse201 | CreateConnectorSecretResponse400 | ErrorResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -128,16 +104,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     body: CreateSecretRequest,
-) -> Response[
-    CreateConnectorSecretResponse201
-    | CreateConnectorSecretResponse400
-    | CreateConnectorSecretResponse401
-    | CreateConnectorSecretResponse404
-    | CreateConnectorSecretResponse409
-    | CreateConnectorSecretResponse429
-    | CreateConnectorSecretResponse500
-    | ErrorResponse
-]:
+) -> Response[CreateConnectorSecretResponse201 | CreateConnectorSecretResponse400 | ErrorResponse]:
     """Create connector secret
 
      Create a new encrypted secret for a connector. The secret placeholder is generated server-side.
@@ -153,7 +120,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[CreateConnectorSecretResponse201 | CreateConnectorSecretResponse400 | CreateConnectorSecretResponse401 | CreateConnectorSecretResponse404 | CreateConnectorSecretResponse409 | CreateConnectorSecretResponse429 | CreateConnectorSecretResponse500 | ErrorResponse]
+        Response[CreateConnectorSecretResponse201 | CreateConnectorSecretResponse400 | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
@@ -175,17 +142,7 @@ def sync(
     *,
     client: AuthenticatedClient,
     body: CreateSecretRequest,
-) -> (
-    CreateConnectorSecretResponse201
-    | CreateConnectorSecretResponse400
-    | CreateConnectorSecretResponse401
-    | CreateConnectorSecretResponse404
-    | CreateConnectorSecretResponse409
-    | CreateConnectorSecretResponse429
-    | CreateConnectorSecretResponse500
-    | ErrorResponse
-    | None
-):
+) -> CreateConnectorSecretResponse201 | CreateConnectorSecretResponse400 | ErrorResponse | None:
     """Create connector secret
 
      Create a new encrypted secret for a connector. The secret placeholder is generated server-side.
@@ -201,7 +158,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        CreateConnectorSecretResponse201 | CreateConnectorSecretResponse400 | CreateConnectorSecretResponse401 | CreateConnectorSecretResponse404 | CreateConnectorSecretResponse409 | CreateConnectorSecretResponse429 | CreateConnectorSecretResponse500 | ErrorResponse
+        CreateConnectorSecretResponse201 | CreateConnectorSecretResponse400 | ErrorResponse
     """
 
     return sync_detailed(
@@ -218,16 +175,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     body: CreateSecretRequest,
-) -> Response[
-    CreateConnectorSecretResponse201
-    | CreateConnectorSecretResponse400
-    | CreateConnectorSecretResponse401
-    | CreateConnectorSecretResponse404
-    | CreateConnectorSecretResponse409
-    | CreateConnectorSecretResponse429
-    | CreateConnectorSecretResponse500
-    | ErrorResponse
-]:
+) -> Response[CreateConnectorSecretResponse201 | CreateConnectorSecretResponse400 | ErrorResponse]:
     """Create connector secret
 
      Create a new encrypted secret for a connector. The secret placeholder is generated server-side.
@@ -243,7 +191,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[CreateConnectorSecretResponse201 | CreateConnectorSecretResponse400 | CreateConnectorSecretResponse401 | CreateConnectorSecretResponse404 | CreateConnectorSecretResponse409 | CreateConnectorSecretResponse429 | CreateConnectorSecretResponse500 | ErrorResponse]
+        Response[CreateConnectorSecretResponse201 | CreateConnectorSecretResponse400 | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
@@ -263,17 +211,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     body: CreateSecretRequest,
-) -> (
-    CreateConnectorSecretResponse201
-    | CreateConnectorSecretResponse400
-    | CreateConnectorSecretResponse401
-    | CreateConnectorSecretResponse404
-    | CreateConnectorSecretResponse409
-    | CreateConnectorSecretResponse429
-    | CreateConnectorSecretResponse500
-    | ErrorResponse
-    | None
-):
+) -> CreateConnectorSecretResponse201 | CreateConnectorSecretResponse400 | ErrorResponse | None:
     """Create connector secret
 
      Create a new encrypted secret for a connector. The secret placeholder is generated server-side.
@@ -289,7 +227,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        CreateConnectorSecretResponse201 | CreateConnectorSecretResponse400 | CreateConnectorSecretResponse401 | CreateConnectorSecretResponse404 | CreateConnectorSecretResponse409 | CreateConnectorSecretResponse429 | CreateConnectorSecretResponse500 | ErrorResponse
+        CreateConnectorSecretResponse201 | CreateConnectorSecretResponse400 | ErrorResponse
     """
 
     return (

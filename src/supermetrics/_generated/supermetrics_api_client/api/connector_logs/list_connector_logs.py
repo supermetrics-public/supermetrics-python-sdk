@@ -9,9 +9,6 @@ from ...client import AuthenticatedClient, Client
 from ...models.error_response import ErrorResponse
 from ...models.list_connector_logs_response_200 import ListConnectorLogsResponse200
 from ...models.list_connector_logs_response_400 import ListConnectorLogsResponse400
-from ...models.list_connector_logs_response_401 import ListConnectorLogsResponse401
-from ...models.list_connector_logs_response_429 import ListConnectorLogsResponse429
-from ...models.list_connector_logs_response_500 import ListConnectorLogsResponse500
 from ...types import UNSET, Response, Unset
 
 
@@ -44,15 +41,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> (
-    ErrorResponse
-    | ListConnectorLogsResponse200
-    | ListConnectorLogsResponse400
-    | ListConnectorLogsResponse401
-    | ListConnectorLogsResponse429
-    | ListConnectorLogsResponse500
-    | None
-):
+) -> ErrorResponse | ListConnectorLogsResponse200 | ListConnectorLogsResponse400 | None:
     if response.status_code == 200:
         response_200 = ListConnectorLogsResponse200.from_dict(response.json())
 
@@ -64,7 +53,7 @@ def _parse_response(
         return response_400
 
     if response.status_code == 401:
-        response_401 = ListConnectorLogsResponse401.from_dict(response.json())
+        response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
 
@@ -74,12 +63,12 @@ def _parse_response(
         return response_403
 
     if response.status_code == 429:
-        response_429 = ListConnectorLogsResponse429.from_dict(response.json())
+        response_429 = ErrorResponse.from_dict(response.json())
 
         return response_429
 
     if response.status_code == 500:
-        response_500 = ListConnectorLogsResponse500.from_dict(response.json())
+        response_500 = ErrorResponse.from_dict(response.json())
 
         return response_500
 
@@ -91,14 +80,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[
-    ErrorResponse
-    | ListConnectorLogsResponse200
-    | ListConnectorLogsResponse400
-    | ListConnectorLogsResponse401
-    | ListConnectorLogsResponse429
-    | ListConnectorLogsResponse500
-]:
+) -> Response[ErrorResponse | ListConnectorLogsResponse200 | ListConnectorLogsResponse400]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -114,14 +96,7 @@ def sync_detailed(
     client: AuthenticatedClient,
     limit: int | Unset = 100,
     before: datetime.datetime | Unset = UNSET,
-) -> Response[
-    ErrorResponse
-    | ListConnectorLogsResponse200
-    | ListConnectorLogsResponse400
-    | ListConnectorLogsResponse401
-    | ListConnectorLogsResponse429
-    | ListConnectorLogsResponse500
-]:
+) -> Response[ErrorResponse | ListConnectorLogsResponse200 | ListConnectorLogsResponse400]:
     """List connector logs
 
      Fetch execution logs for a connector. Returns logs in reverse chronological order.
@@ -137,7 +112,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | ListConnectorLogsResponse200 | ListConnectorLogsResponse400 | ListConnectorLogsResponse401 | ListConnectorLogsResponse429 | ListConnectorLogsResponse500]
+        Response[ErrorResponse | ListConnectorLogsResponse200 | ListConnectorLogsResponse400]
     """
 
     kwargs = _get_kwargs(
@@ -161,15 +136,7 @@ def sync(
     client: AuthenticatedClient,
     limit: int | Unset = 100,
     before: datetime.datetime | Unset = UNSET,
-) -> (
-    ErrorResponse
-    | ListConnectorLogsResponse200
-    | ListConnectorLogsResponse400
-    | ListConnectorLogsResponse401
-    | ListConnectorLogsResponse429
-    | ListConnectorLogsResponse500
-    | None
-):
+) -> ErrorResponse | ListConnectorLogsResponse200 | ListConnectorLogsResponse400 | None:
     """List connector logs
 
      Fetch execution logs for a connector. Returns logs in reverse chronological order.
@@ -185,7 +152,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | ListConnectorLogsResponse200 | ListConnectorLogsResponse400 | ListConnectorLogsResponse401 | ListConnectorLogsResponse429 | ListConnectorLogsResponse500
+        ErrorResponse | ListConnectorLogsResponse200 | ListConnectorLogsResponse400
     """
 
     return sync_detailed(
@@ -204,14 +171,7 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     limit: int | Unset = 100,
     before: datetime.datetime | Unset = UNSET,
-) -> Response[
-    ErrorResponse
-    | ListConnectorLogsResponse200
-    | ListConnectorLogsResponse400
-    | ListConnectorLogsResponse401
-    | ListConnectorLogsResponse429
-    | ListConnectorLogsResponse500
-]:
+) -> Response[ErrorResponse | ListConnectorLogsResponse200 | ListConnectorLogsResponse400]:
     """List connector logs
 
      Fetch execution logs for a connector. Returns logs in reverse chronological order.
@@ -227,7 +187,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | ListConnectorLogsResponse200 | ListConnectorLogsResponse400 | ListConnectorLogsResponse401 | ListConnectorLogsResponse429 | ListConnectorLogsResponse500]
+        Response[ErrorResponse | ListConnectorLogsResponse200 | ListConnectorLogsResponse400]
     """
 
     kwargs = _get_kwargs(
@@ -249,15 +209,7 @@ async def asyncio(
     client: AuthenticatedClient,
     limit: int | Unset = 100,
     before: datetime.datetime | Unset = UNSET,
-) -> (
-    ErrorResponse
-    | ListConnectorLogsResponse200
-    | ListConnectorLogsResponse400
-    | ListConnectorLogsResponse401
-    | ListConnectorLogsResponse429
-    | ListConnectorLogsResponse500
-    | None
-):
+) -> ErrorResponse | ListConnectorLogsResponse200 | ListConnectorLogsResponse400 | None:
     """List connector logs
 
      Fetch execution logs for a connector. Returns logs in reverse chronological order.
@@ -273,7 +225,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | ListConnectorLogsResponse200 | ListConnectorLogsResponse400 | ListConnectorLogsResponse401 | ListConnectorLogsResponse429 | ListConnectorLogsResponse500
+        ErrorResponse | ListConnectorLogsResponse200 | ListConnectorLogsResponse400
     """
 
     return (

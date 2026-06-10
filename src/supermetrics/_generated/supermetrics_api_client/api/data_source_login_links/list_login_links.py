@@ -7,9 +7,6 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error_response import ErrorResponse
 from ...models.list_login_links_response_200 import ListLoginLinksResponse200
-from ...models.list_login_links_response_401 import ListLoginLinksResponse401
-from ...models.list_login_links_response_429 import ListLoginLinksResponse429
-from ...models.list_login_links_response_500 import ListLoginLinksResponse500
 from ...types import Response
 
 
@@ -24,21 +21,14 @@ def _get_kwargs() -> dict[str, Any]:
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> (
-    ErrorResponse
-    | ListLoginLinksResponse200
-    | ListLoginLinksResponse401
-    | ListLoginLinksResponse429
-    | ListLoginLinksResponse500
-    | None
-):
+) -> ErrorResponse | ListLoginLinksResponse200 | None:
     if response.status_code == 200:
         response_200 = ListLoginLinksResponse200.from_dict(response.json())
 
         return response_200
 
     if response.status_code == 401:
-        response_401 = ListLoginLinksResponse401.from_dict(response.json())
+        response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
 
@@ -48,12 +38,12 @@ def _parse_response(
         return response_422
 
     if response.status_code == 429:
-        response_429 = ListLoginLinksResponse429.from_dict(response.json())
+        response_429 = ErrorResponse.from_dict(response.json())
 
         return response_429
 
     if response.status_code == 500:
-        response_500 = ListLoginLinksResponse500.from_dict(response.json())
+        response_500 = ErrorResponse.from_dict(response.json())
 
         return response_500
 
@@ -65,13 +55,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[
-    ErrorResponse
-    | ListLoginLinksResponse200
-    | ListLoginLinksResponse401
-    | ListLoginLinksResponse429
-    | ListLoginLinksResponse500
-]:
+) -> Response[ErrorResponse | ListLoginLinksResponse200]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -83,13 +67,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-) -> Response[
-    ErrorResponse
-    | ListLoginLinksResponse200
-    | ListLoginLinksResponse401
-    | ListLoginLinksResponse429
-    | ListLoginLinksResponse500
-]:
+) -> Response[ErrorResponse | ListLoginLinksResponse200]:
     """List login links
 
      List all data source login links
@@ -99,7 +77,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | ListLoginLinksResponse200 | ListLoginLinksResponse401 | ListLoginLinksResponse429 | ListLoginLinksResponse500]
+        Response[ErrorResponse | ListLoginLinksResponse200]
     """
 
     kwargs = _get_kwargs()
@@ -114,14 +92,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-) -> (
-    ErrorResponse
-    | ListLoginLinksResponse200
-    | ListLoginLinksResponse401
-    | ListLoginLinksResponse429
-    | ListLoginLinksResponse500
-    | None
-):
+) -> ErrorResponse | ListLoginLinksResponse200 | None:
     """List login links
 
      List all data source login links
@@ -131,7 +102,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | ListLoginLinksResponse200 | ListLoginLinksResponse401 | ListLoginLinksResponse429 | ListLoginLinksResponse500
+        ErrorResponse | ListLoginLinksResponse200
     """
 
     return sync_detailed(
@@ -142,13 +113,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-) -> Response[
-    ErrorResponse
-    | ListLoginLinksResponse200
-    | ListLoginLinksResponse401
-    | ListLoginLinksResponse429
-    | ListLoginLinksResponse500
-]:
+) -> Response[ErrorResponse | ListLoginLinksResponse200]:
     """List login links
 
      List all data source login links
@@ -158,7 +123,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | ListLoginLinksResponse200 | ListLoginLinksResponse401 | ListLoginLinksResponse429 | ListLoginLinksResponse500]
+        Response[ErrorResponse | ListLoginLinksResponse200]
     """
 
     kwargs = _get_kwargs()
@@ -171,14 +136,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-) -> (
-    ErrorResponse
-    | ListLoginLinksResponse200
-    | ListLoginLinksResponse401
-    | ListLoginLinksResponse429
-    | ListLoginLinksResponse500
-    | None
-):
+) -> ErrorResponse | ListLoginLinksResponse200 | None:
     """List login links
 
      List all data source login links
@@ -188,7 +146,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | ListLoginLinksResponse200 | ListLoginLinksResponse401 | ListLoginLinksResponse429 | ListLoginLinksResponse500
+        ErrorResponse | ListLoginLinksResponse200
     """
 
     return (

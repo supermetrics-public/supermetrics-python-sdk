@@ -9,10 +9,6 @@ from ...models.error_response import ErrorResponse
 from ...models.upload_connector_logo_body import UploadConnectorLogoBody
 from ...models.upload_connector_logo_response_201 import UploadConnectorLogoResponse201
 from ...models.upload_connector_logo_response_400 import UploadConnectorLogoResponse400
-from ...models.upload_connector_logo_response_401 import UploadConnectorLogoResponse401
-from ...models.upload_connector_logo_response_404 import UploadConnectorLogoResponse404
-from ...models.upload_connector_logo_response_429 import UploadConnectorLogoResponse429
-from ...models.upload_connector_logo_response_500 import UploadConnectorLogoResponse500
 from ...types import Response
 
 
@@ -37,16 +33,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> (
-    ErrorResponse
-    | UploadConnectorLogoResponse201
-    | UploadConnectorLogoResponse400
-    | UploadConnectorLogoResponse401
-    | UploadConnectorLogoResponse404
-    | UploadConnectorLogoResponse429
-    | UploadConnectorLogoResponse500
-    | None
-):
+) -> ErrorResponse | UploadConnectorLogoResponse201 | UploadConnectorLogoResponse400 | None:
     if response.status_code == 201:
         response_201 = UploadConnectorLogoResponse201.from_dict(response.json())
 
@@ -58,7 +45,7 @@ def _parse_response(
         return response_400
 
     if response.status_code == 401:
-        response_401 = UploadConnectorLogoResponse401.from_dict(response.json())
+        response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
 
@@ -68,27 +55,17 @@ def _parse_response(
         return response_403
 
     if response.status_code == 404:
-        response_404 = UploadConnectorLogoResponse404.from_dict(response.json())
+        response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
 
-    if response.status_code == 413:
-        response_413 = ErrorResponse.from_dict(response.json())
-
-        return response_413
-
-    if response.status_code == 415:
-        response_415 = ErrorResponse.from_dict(response.json())
-
-        return response_415
-
     if response.status_code == 429:
-        response_429 = UploadConnectorLogoResponse429.from_dict(response.json())
+        response_429 = ErrorResponse.from_dict(response.json())
 
         return response_429
 
     if response.status_code == 500:
-        response_500 = UploadConnectorLogoResponse500.from_dict(response.json())
+        response_500 = ErrorResponse.from_dict(response.json())
 
         return response_500
 
@@ -100,15 +77,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[
-    ErrorResponse
-    | UploadConnectorLogoResponse201
-    | UploadConnectorLogoResponse400
-    | UploadConnectorLogoResponse401
-    | UploadConnectorLogoResponse404
-    | UploadConnectorLogoResponse429
-    | UploadConnectorLogoResponse500
-]:
+) -> Response[ErrorResponse | UploadConnectorLogoResponse201 | UploadConnectorLogoResponse400]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -123,15 +92,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     body: UploadConnectorLogoBody,
-) -> Response[
-    ErrorResponse
-    | UploadConnectorLogoResponse201
-    | UploadConnectorLogoResponse400
-    | UploadConnectorLogoResponse401
-    | UploadConnectorLogoResponse404
-    | UploadConnectorLogoResponse429
-    | UploadConnectorLogoResponse500
-]:
+) -> Response[ErrorResponse | UploadConnectorLogoResponse201 | UploadConnectorLogoResponse400]:
     """Upload connector logo
 
      Upload a logo image for a connector.
@@ -146,7 +107,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | UploadConnectorLogoResponse201 | UploadConnectorLogoResponse400 | UploadConnectorLogoResponse401 | UploadConnectorLogoResponse404 | UploadConnectorLogoResponse429 | UploadConnectorLogoResponse500]
+        Response[ErrorResponse | UploadConnectorLogoResponse201 | UploadConnectorLogoResponse400]
     """
 
     kwargs = _get_kwargs(
@@ -168,16 +129,7 @@ def sync(
     *,
     client: AuthenticatedClient,
     body: UploadConnectorLogoBody,
-) -> (
-    ErrorResponse
-    | UploadConnectorLogoResponse201
-    | UploadConnectorLogoResponse400
-    | UploadConnectorLogoResponse401
-    | UploadConnectorLogoResponse404
-    | UploadConnectorLogoResponse429
-    | UploadConnectorLogoResponse500
-    | None
-):
+) -> ErrorResponse | UploadConnectorLogoResponse201 | UploadConnectorLogoResponse400 | None:
     """Upload connector logo
 
      Upload a logo image for a connector.
@@ -192,7 +144,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | UploadConnectorLogoResponse201 | UploadConnectorLogoResponse400 | UploadConnectorLogoResponse401 | UploadConnectorLogoResponse404 | UploadConnectorLogoResponse429 | UploadConnectorLogoResponse500
+        ErrorResponse | UploadConnectorLogoResponse201 | UploadConnectorLogoResponse400
     """
 
     return sync_detailed(
@@ -209,15 +161,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     body: UploadConnectorLogoBody,
-) -> Response[
-    ErrorResponse
-    | UploadConnectorLogoResponse201
-    | UploadConnectorLogoResponse400
-    | UploadConnectorLogoResponse401
-    | UploadConnectorLogoResponse404
-    | UploadConnectorLogoResponse429
-    | UploadConnectorLogoResponse500
-]:
+) -> Response[ErrorResponse | UploadConnectorLogoResponse201 | UploadConnectorLogoResponse400]:
     """Upload connector logo
 
      Upload a logo image for a connector.
@@ -232,7 +176,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | UploadConnectorLogoResponse201 | UploadConnectorLogoResponse400 | UploadConnectorLogoResponse401 | UploadConnectorLogoResponse404 | UploadConnectorLogoResponse429 | UploadConnectorLogoResponse500]
+        Response[ErrorResponse | UploadConnectorLogoResponse201 | UploadConnectorLogoResponse400]
     """
 
     kwargs = _get_kwargs(
@@ -252,16 +196,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     body: UploadConnectorLogoBody,
-) -> (
-    ErrorResponse
-    | UploadConnectorLogoResponse201
-    | UploadConnectorLogoResponse400
-    | UploadConnectorLogoResponse401
-    | UploadConnectorLogoResponse404
-    | UploadConnectorLogoResponse429
-    | UploadConnectorLogoResponse500
-    | None
-):
+) -> ErrorResponse | UploadConnectorLogoResponse201 | UploadConnectorLogoResponse400 | None:
     """Upload connector logo
 
      Upload a logo image for a connector.
@@ -276,7 +211,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | UploadConnectorLogoResponse201 | UploadConnectorLogoResponse400 | UploadConnectorLogoResponse401 | UploadConnectorLogoResponse404 | UploadConnectorLogoResponse429 | UploadConnectorLogoResponse500
+        ErrorResponse | UploadConnectorLogoResponse201 | UploadConnectorLogoResponse400
     """
 
     return (

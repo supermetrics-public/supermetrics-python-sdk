@@ -12,9 +12,6 @@ info:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
 servers:
-- url: https://api.supermetrics.com
-  description: Global production public Supermetrics API base path.
-  x-internal: false
 - url: https://api.supermetrics.com/v2
   description: Global production public Supermetrics Data API base path.
   x-internal: false
@@ -25,630 +22,13 @@ servers:
 - url: https://api.supermetrics.com/v2
   description: Global production public Supermetrics Management API base path.
   x-internal: false
+- url: https://api.supermetrics.com
+  description: Global production public Supermetrics API base path (for Connector
+    Builder and Team endpoints).
+  x-internal: false
 - url: https://dts-api.supermetrics.com/v1
   description: Data Backfills API
-- url: https://api.supermetrics.com/v2
-  description: Global production public Supermetrics API base path.
-  x-internal: false
 paths:
-  /v1/teams/{team_id}/connector_builder/connectors:
-    get:
-      summary: List connectors
-      description: Fetch information for the connectors you have access to.
-      operationId: listConnectors
-      tags:
-      - Connectors
-      security:
-      - BearerAuth: []
-      - ApiKeyAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TeamIdPath'
-      - name: include_configs
-        in: query
-        required: false
-        description: Whether to include connector configurations in the response.
-          Defaults to false.
-        schema:
-          type: boolean
-          default: false
-      responses:
-        '200':
-          description: List of connectors retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  count:
-                    type: integer
-                    format: int32
-                    minimum: 0
-                    description: Total number of connectors
-                  connectors:
-                    type: array
-                    maxItems: 1000
-                    items:
-                      $ref: '#/components/schemas/Connector'
-                required:
-                - count
-                - connectors
-              example:
-                count: 1
-                connectors:
-                - connector_identifier: T3S70
-                  name: Test Connector
-                  description: A custom connector
-                  logo_url: https://assets.supermetrics.com/images/dsLogos/Custom_Connector_Default.png
-                  created_at: '2025-01-01T00:00:00+00:00'
-                  updated_at: '2025-01-01T00:00:00+00:00'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-    post:
-      summary: Create connector
-      description: Create a new custom connector. Optionally duplicate an existing
-        connector by providing its identifier.
-      operationId: createConnector
-      tags:
-      - Connectors
-      security:
-      - BearerAuth: []
-      - ApiKeyAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TeamIdPath'
-      requestBody:
-        description: Connector creation parameters. Provide title and optionally duplicate
-          from existing connector.
-        required: true
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              required:
-              - title
-              properties:
-                title:
-                  type: string
-                  maxLength: 255
-                  description: Name of the connector
-                description:
-                  type: string
-                  maxLength: 1000
-                  description: Description of the connector
-                connector_identifier:
-                  type: string
-                  maxLength: 100
-                  description: Identifier of an existing connector to duplicate. If
-                    omitted, creates with default configuration.
-            example:
-              title: My Custom Connector
-              description: Fetches marketing data from a custom API
-      responses:
-        '201':
-          description: Connector created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ConnectorWithConfiguration'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-  /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}:
-    get:
-      summary: Get connector
-      description: Fetch information for a connector including its configuration.
-      operationId: getConnector
-      tags:
-      - Connectors
-      security:
-      - BearerAuth: []
-      - ApiKeyAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TeamIdPath'
-      - $ref: '#/components/parameters/ConnectorIdentifierPath'
-      responses:
-        '200':
-          description: Connector retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ConnectorWithConfiguration'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-    put:
-      summary: Update connector
-      description: Update a connector's name, description, and configuration.
-      operationId: updateConnector
-      tags:
-      - Connectors
-      security:
-      - BearerAuth: []
-      - ApiKeyAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TeamIdPath'
-      - $ref: '#/components/parameters/ConnectorIdentifierPath'
-      requestBody:
-        description: Connector metadata and configuration to update.
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateConnectorRequest'
-            example:
-              connector:
-                name: Updated Connector Name
-                description: Updated description for the connector
-              configuration:
-                configuration_json:
-                  auth:
-                    type: oauth2
-      responses:
-        '204':
-          description: Connector updated successfully
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-    delete:
-      summary: Delete connector
-      description: Delete a connector and all its associated data.
-      operationId: deleteConnector
-      tags:
-      - Connectors
-      security:
-      - BearerAuth: []
-      - ApiKeyAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TeamIdPath'
-      - $ref: '#/components/parameters/ConnectorIdentifierPath'
-      responses:
-        '204':
-          description: Connector deleted successfully
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-  /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/secrets:
-    get:
-      summary: List connector secrets
-      description: Fetch all secrets for a connector. Secret values are never returned.
-      operationId: listConnectorSecrets
-      tags:
-      - Connector Secrets
-      security:
-      - BearerAuth: []
-      - ApiKeyAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TeamIdPath'
-      - $ref: '#/components/parameters/ConnectorIdentifierPath'
-      responses:
-        '200':
-          description: Secrets retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  count:
-                    type: integer
-                    format: int32
-                    minimum: 0
-                    description: Number of secrets
-                  secrets:
-                    type: array
-                    maxItems: 100
-                    items:
-                      $ref: '#/components/schemas/Secret'
-                required:
-                - count
-                - secrets
-              example:
-                count: 1
-                secrets:
-                - secret_placeholder: sec_a23f23d26
-                  secret_name: client_id
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-    post:
-      summary: Create connector secret
-      description: Create a new encrypted secret for a connector. The secret placeholder
-        is generated server-side. Returns the updated list of secrets.
-      operationId: createConnectorSecret
-      tags:
-      - Connector Secrets
-      security:
-      - BearerAuth: []
-      - ApiKeyAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TeamIdPath'
-      - $ref: '#/components/parameters/ConnectorIdentifierPath'
-      requestBody:
-        description: Secret name and value to encrypt and store.
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateSecretRequest'
-            example:
-              secret_name: client_id
-              secret_value: my-super-secret-value
-      responses:
-        '201':
-          description: Secret created successfully. Returns updated list of secrets.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  count:
-                    type: integer
-                    format: int32
-                    minimum: 0
-                    description: Number of secrets
-                  secrets:
-                    type: array
-                    maxItems: 100
-                    items:
-                      $ref: '#/components/schemas/Secret'
-                required:
-                - count
-                - secrets
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-  /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/secrets/{secret_placeholder}:
-    put:
-      summary: Update connector secret
-      description: Overwrite the value of an existing secret. The previous value cannot
-        be recovered.
-      operationId: updateConnectorSecret
-      tags:
-      - Connector Secrets
-      security:
-      - BearerAuth: []
-      - ApiKeyAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TeamIdPath'
-      - $ref: '#/components/parameters/ConnectorIdentifierPath'
-      - $ref: '#/components/parameters/SecretPlaceholderPath'
-      requestBody:
-        description: New secret value to overwrite the existing one.
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateSecretRequest'
-            example:
-              secret_value: new-secret-value
-      responses:
-        '204':
-          description: Secret updated successfully
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-    delete:
-      summary: Delete connector secret
-      description: Delete a secret from a connector.
-      operationId: deleteConnectorSecret
-      tags:
-      - Connector Secrets
-      security:
-      - BearerAuth: []
-      - ApiKeyAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TeamIdPath'
-      - $ref: '#/components/parameters/ConnectorIdentifierPath'
-      - $ref: '#/components/parameters/SecretPlaceholderPath'
-      responses:
-        '204':
-          description: Secret deleted successfully
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-  /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logs:
-    get:
-      summary: List connector logs
-      description: Fetch execution logs for a connector. Returns logs in reverse chronological
-        order.
-      operationId: listConnectorLogs
-      tags:
-      - Connector Logs
-      security:
-      - BearerAuth: []
-      - ApiKeyAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TeamIdPath'
-      - $ref: '#/components/parameters/ConnectorIdentifierPath'
-      - name: limit
-        in: query
-        required: false
-        description: Number of log entries to return, up to a maximum of 1000.
-        schema:
-          type: integer
-          format: int32
-          minimum: 1
-          maximum: 1000
-          default: 100
-      - name: before
-        in: query
-        required: false
-        description: ISO 8601 timestamp to return logs before. If omitted, starts
-          from latest entry.
-        schema:
-          type: string
-          format: date-time
-        example: '2025-06-01T00:00:00Z'
-      responses:
-        '200':
-          description: Logs retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  logs:
-                    type: array
-                    maxItems: 1000
-                    items:
-                      $ref: '#/components/schemas/LogEntry'
-                required:
-                - logs
-              example:
-                logs:
-                - id: 123-foo
-                  log_time: '2025-01-01T00:00:00Z'
-                  status: 200
-                  event: auth.token.refresh
-                  request: POST /api/oauth/token_refresh
-                  duration_ms: 253
-                  request_id: 8dc24bc2-8a17-4188-a509-217cb8799929
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-  /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logs/{log_id}:
-    get:
-      summary: Get connector log
-      description: Fetch detailed information for a specific connector log entry.
-      operationId: getConnectorLog
-      tags:
-      - Connector Logs
-      security:
-      - BearerAuth: []
-      - ApiKeyAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TeamIdPath'
-      - $ref: '#/components/parameters/ConnectorIdentifierPath'
-      - $ref: '#/components/parameters/LogIdPath'
-      responses:
-        '200':
-          description: Log details retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LogEntry'
-              example:
-                id: '123'
-                log_time: '2025-01-01T00:00:00Z'
-                status: 200
-                event: auth.token.refresh
-                request: POST /api/oauth/token_refresh
-                duration_ms: 253
-                request_id: 8dc24bc2-8a17-4188-a509-217cb8799929
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-  /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logo:
-    get:
-      summary: Get connector logo
-      description: Get the logo URL for a connector.
-      operationId: getConnectorLogo
-      tags:
-      - Connector Logo
-      security:
-      - BearerAuth: []
-      - ApiKeyAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TeamIdPath'
-      - $ref: '#/components/parameters/ConnectorIdentifierPath'
-      responses:
-        '200':
-          description: Logo URL retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  logo_url:
-                    type: string
-                    format: uri
-                    maxLength: 2048
-                    description: URL of the connector logo
-                required:
-                - logo_url
-              example:
-                logo_url: https://assets.supermetrics.com/images/dsLogos/Custom_Connector_Default.png
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-    post:
-      summary: Upload connector logo
-      description: Upload a logo image for a connector.
-      operationId: uploadConnectorLogo
-      tags:
-      - Connector Logo
-      security:
-      - BearerAuth: []
-      - ApiKeyAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TeamIdPath'
-      - $ref: '#/components/parameters/ConnectorIdentifierPath'
-      requestBody:
-        description: Logo image file for the connector.
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              required:
-              - logo
-              properties:
-                logo:
-                  type: string
-                  format: binary
-                  description: The image file to set as the connector logo.
-      responses:
-        '201':
-          description: Logo uploaded successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  logo_url:
-                    type: string
-                    format: uri
-                    maxLength: 2048
-                    description: URL of the uploaded connector logo
-                required:
-                - logo_url
-              example:
-                logo_url: https://assets.supermetrics.com/images/dsLogos/Custom_Connector_Default.png
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '413':
-          description: Logo file too large
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                meta:
-                  request_id: BXaEFVtjc7TXaJxgZhmFgSUD9edqq_CN
-                error:
-                  code: PAYLOAD_TOO_LARGE
-                  message: The uploaded logo file exceeds the maximum allowed size.
-        '415':
-          description: Unsupported media type
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                meta:
-                  request_id: BXaEFVtjc7TXaJxgZhmFgSUD9edqq_CN
-                error:
-                  code: UNSUPPORTED_MEDIA_TYPE
-                  message: The uploaded file type is not supported.
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
   /query/data/json:
     get:
       summary: Query data
@@ -1673,6 +1053,600 @@ paths:
           $ref: '#/components/responses/DwhTooManyRequests'
         '500':
           $ref: '#/components/responses/DwhInternalServerError'
+  /v1/teams/{team_id}/connector_builder/connectors:
+    get:
+      summary: List connectors
+      description: Fetch information for the connectors you have access to.
+      operationId: listConnectors
+      tags:
+      - Connectors
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - name: include_configs
+        in: query
+        required: false
+        description: Whether to include connector configurations in the response.
+          Defaults to false.
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: List of connectors retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    format: int32
+                    minimum: 0
+                    description: Total number of connectors
+                  connectors:
+                    type: array
+                    maxItems: 1000
+                    items:
+                      $ref: '#/components/schemas/Connector'
+                required:
+                - count
+                - connectors
+              example:
+                count: 1
+                connectors:
+                - connector_identifier: T3S70
+                  name: Test Connector
+                  description: A custom connector
+                  logo_url: https://assets.supermetrics.com/images/dsLogos/Custom_Connector_Default.png
+                  created_at: '2025-01-01T00:00:00+00:00'
+                  updated_at: '2025-01-01T00:00:00+00:00'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Create connector
+      description: Create a new custom connector. Optionally duplicate an existing
+        connector by providing its identifier.
+      operationId: createConnector
+      tags:
+      - Connectors
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      requestBody:
+        description: Connector creation parameters. Provide title and optionally duplicate
+          from existing connector.
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+              - title
+              properties:
+                title:
+                  type: string
+                  maxLength: 255
+                  description: Name of the connector
+                description:
+                  type: string
+                  maxLength: 1000
+                  description: Description of the connector
+                connector_identifier:
+                  type: string
+                  maxLength: 100
+                  description: Identifier of an existing connector to duplicate. If
+                    omitted, creates with default configuration.
+            example:
+              title: My Custom Connector
+              description: Fetches marketing data from a custom API
+      responses:
+        '201':
+          description: Connector created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorWithConfiguration'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}:
+    get:
+      summary: Get connector
+      description: Fetch information for a connector including its configuration.
+      operationId: getConnector
+      tags:
+      - Connectors
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/ConnectorIdentifierPath'
+      responses:
+        '200':
+          description: Connector retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorWithConfiguration'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      summary: Update connector
+      description: Update a connector's name, description, and configuration.
+      operationId: updateConnector
+      tags:
+      - Connectors
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/ConnectorIdentifierPath'
+      requestBody:
+        description: Connector metadata and configuration to update.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateConnectorRequest'
+            example:
+              connector:
+                name: Updated Connector Name
+                description: Updated description for the connector
+              configuration:
+                configuration_json:
+                  auth:
+                    type: oauth2
+      responses:
+        '204':
+          description: Connector updated successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Delete connector
+      description: Delete a connector and all its associated data.
+      operationId: deleteConnector
+      tags:
+      - Connectors
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/ConnectorIdentifierPath'
+      responses:
+        '204':
+          description: Connector deleted successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/secrets:
+    get:
+      summary: List connector secrets
+      description: Fetch all secrets for a connector. Secret values are never returned.
+      operationId: listConnectorSecrets
+      tags:
+      - Connector Secrets
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/ConnectorIdentifierPath'
+      responses:
+        '200':
+          description: Secrets retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    format: int32
+                    minimum: 0
+                    description: Number of secrets
+                  secrets:
+                    type: array
+                    maxItems: 100
+                    items:
+                      $ref: '#/components/schemas/Secret'
+                required:
+                - count
+                - secrets
+              example:
+                count: 1
+                secrets:
+                - secret_placeholder: sec_a23f23d26
+                  secret_name: client_id
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Create connector secret
+      description: Create a new encrypted secret for a connector. The secret placeholder
+        is generated server-side. Returns the updated list of secrets.
+      operationId: createConnectorSecret
+      tags:
+      - Connector Secrets
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/ConnectorIdentifierPath'
+      requestBody:
+        description: Secret name and value to encrypt and store.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSecretRequest'
+            example:
+              secret_name: client_id
+              secret_value: my-super-secret-value
+      responses:
+        '201':
+          description: Secret created successfully. Returns updated list of secrets.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    format: int32
+                    minimum: 0
+                    description: Number of secrets
+                  secrets:
+                    type: array
+                    maxItems: 100
+                    items:
+                      $ref: '#/components/schemas/Secret'
+                required:
+                - count
+                - secrets
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/secrets/{secret_placeholder}:
+    put:
+      summary: Update connector secret
+      description: Overwrite the value of an existing secret. The previous value cannot
+        be recovered.
+      operationId: updateConnectorSecret
+      tags:
+      - Connector Secrets
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/ConnectorIdentifierPath'
+      - $ref: '#/components/parameters/SecretPlaceholderPath'
+      requestBody:
+        description: New secret value to overwrite the existing one.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSecretRequest'
+            example:
+              secret_value: new-secret-value
+      responses:
+        '204':
+          description: Secret updated successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Delete connector secret
+      description: Delete a secret from a connector.
+      operationId: deleteConnectorSecret
+      tags:
+      - Connector Secrets
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/ConnectorIdentifierPath'
+      - $ref: '#/components/parameters/SecretPlaceholderPath'
+      responses:
+        '204':
+          description: Secret deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logs:
+    get:
+      summary: List connector logs
+      description: Fetch execution logs for a connector. Returns logs in reverse chronological
+        order.
+      operationId: listConnectorLogs
+      tags:
+      - Connector Logs
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/ConnectorIdentifierPath'
+      - name: limit
+        in: query
+        required: false
+        description: Number of log entries to return, up to a maximum of 1000.
+        schema:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 1000
+          default: 100
+      - name: before
+        in: query
+        required: false
+        description: ISO 8601 timestamp to return logs before. If omitted, starts
+          from latest entry.
+        schema:
+          type: string
+          format: date-time
+        example: '2025-06-01T00:00:00Z'
+      responses:
+        '200':
+          description: Logs retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logs:
+                    type: array
+                    maxItems: 1000
+                    items:
+                      $ref: '#/components/schemas/LogEntry'
+                required:
+                - logs
+              example:
+                logs:
+                - id: 123-foo
+                  log_time: '2025-01-01T00:00:00Z'
+                  status: 200
+                  event: auth.token.refresh
+                  request: POST /api/oauth/token_refresh
+                  duration_ms: 253
+                  request_id: 8dc24bc2-8a17-4188-a509-217cb8799929
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logs/{log_id}:
+    get:
+      summary: Get connector log
+      description: Fetch detailed information for a specific connector log entry.
+      operationId: getConnectorLog
+      tags:
+      - Connector Logs
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/ConnectorIdentifierPath'
+      - $ref: '#/components/parameters/LogIdPath'
+      responses:
+        '200':
+          description: Log details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogEntry'
+              example:
+                id: '123'
+                log_time: '2025-01-01T00:00:00Z'
+                status: 200
+                event: auth.token.refresh
+                request: POST /api/oauth/token_refresh
+                duration_ms: 253
+                request_id: 8dc24bc2-8a17-4188-a509-217cb8799929
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logo:
+    get:
+      summary: Get connector logo
+      description: Get the logo URL for a connector.
+      operationId: getConnectorLogo
+      tags:
+      - Connector Logo
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/ConnectorIdentifierPath'
+      responses:
+        '200':
+          description: Logo URL retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logo_url:
+                    type: string
+                    format: uri
+                    maxLength: 2048
+                    description: URL of the connector logo
+                required:
+                - logo_url
+              example:
+                logo_url: https://assets.supermetrics.com/images/dsLogos/Custom_Connector_Default.png
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Upload connector logo
+      description: Upload a logo image for a connector.
+      operationId: uploadConnectorLogo
+      tags:
+      - Connector Logo
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/ConnectorIdentifierPath'
+      requestBody:
+        description: Logo image file for the connector.
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+              - logo
+              properties:
+                logo:
+                  type: string
+                  format: binary
+                  description: The image file to set as the connector logo.
+      responses:
+        '201':
+          description: Logo uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logo_url:
+                    type: string
+                    format: uri
+                    maxLength: 2048
+                    description: URL of the uploaded connector logo
+                required:
+                - logo_url
+              example:
+                logo_url: https://assets.supermetrics.com/images/dsLogos/Custom_Connector_Default.png
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /teams/{team_id}/datasource/{data_source_id}:
     get:
       summary: Get datasource configuration details
@@ -1682,15 +1656,7 @@ paths:
       tags:
       - Datasource
       parameters:
-      - name: team_id
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int32
-          minimum: 1
-          maximum: 2147483647
-        description: Team ID
+      - $ref: '#/components/parameters/TeamId'
       - name: data_source_id
         in: path
         required: true
@@ -1707,10 +1673,8 @@ paths:
           example: XPLD
         description: Application identifier
       security:
-      - ApiKeyAuth:
-        - default
-      - BearerAuth:
-        - default
+      - ApiKeyAuth: []
+      - BearerAuth: []
       responses:
         '200':
           description: Successfully retrieved datasource details
@@ -1723,7 +1687,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
-          $ref: '#/components/responses/DatasourceNotFound'
+          $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
         '500':
@@ -2771,6 +2735,7 @@ components:
           type: string
           maxLength: 50
           pattern: ^[A-Za-z0-9_-]+$
+          description: API request ID
     Secret:
       type: object
       description: A connector secret (value is never returned).
@@ -2952,87 +2917,18 @@ components:
     Conflict:
       description: Conflict - resource already exists
       headers:
-        X-RateLimit-Limit:
-          description: Request limit per hour
-          schema:
-            type: integer
-            format: int32
-            minimum: 1
-            maximum: 10000
-            example: 5000
-        X-RateLimit-Remaining:
-          description: Remaining requests in current window
-          schema:
-            type: integer
-            format: int32
-            minimum: 0
-            maximum: 10000
-            example: 4999
-        Access-Control-Allow-Origin:
-          description: CORS header
-          schema:
-            type: string
-            maxLength: 255
-            enum:
-            - '*'
-            example: '*'
-      content:
-        application/json:
-          schema:
-            type: object
-            description: Standard envelope returned by all error (4xx/5xx) responses.
-            properties:
-              meta:
-                type: object
-                description: Metadata included in every API response.
-                properties:
-                  request_id:
-                    $ref: '#/components/schemas/RequestId'
-                required:
-                - request_id
-                additionalProperties: false
-              error:
-                $ref: '#/components/schemas/Error'
-            required:
-            - meta
-            - error
-            additionalProperties: false
-          example:
-            meta:
-              request_id: BXaEFVtjc7TXaJxgZhmFgSUD9edqq_CN
-            error:
-              code: CONFLICT_ERROR
-              message: The resource already exists.
-    DatasourceNotFound:
-      description: Data source not found
-      headers:
-        X-RateLimit-Limit:
-          $ref: '#/components/headers/X-RateLimit-Limit'
-        X-RateLimit-Remaining:
-          $ref: '#/components/headers/X-RateLimit-Remaining'
         Access-Control-Allow-Origin:
           $ref: '#/components/headers/Access-Control-Allow-Origin'
       content:
         application/json:
           schema:
-            type: object
-            description: Standard envelope returned by all error (4xx/5xx) responses.
-            properties:
-              meta:
-                type: object
-                description: Metadata included in every API response.
-                properties:
-                  request_id:
-                    $ref: '#/components/schemas/RequestId'
-                required:
-                - request_id
-                additionalProperties: false
-              error:
-                $ref: '#/components/schemas/Error'
-            required:
-            - meta
-            - error
-            additionalProperties: false
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            meta:
+              request_id: 01892A4D-7586-7000-8000-000000000000
+            error:
+              code: CONFLICT_ERROR
+              message: The resource already exists.
     DwhBackfillNotFound:
       description: Backfill not found
       headers:
@@ -3142,43 +3038,20 @@ components:
               message: Access Denied
               description: You do not have permission to perform this operation.
     InternalServerError:
-      description: Internal server error
+      description: Internal Server Error - unexpected server error
       headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
         Access-Control-Allow-Origin:
-          description: CORS header
-          schema:
-            type: string
-            maxLength: 255
-            enum:
-            - '*'
-            example: '*'
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
       content:
         application/json:
           schema:
-            type: object
-            description: Standard envelope returned by all error (4xx/5xx) responses.
-            properties:
-              meta:
-                type: object
-                description: Metadata included in every API response.
-                properties:
-                  request_id:
-                    $ref: '#/components/schemas/RequestId'
-                required:
-                - request_id
-                additionalProperties: false
-              error:
-                $ref: '#/components/schemas/Error'
-            required:
-            - meta
-            - error
-            additionalProperties: false
-          example:
-            meta:
-              request_id: BXaEFVtjc7TXaJxgZhmFgSUD9edqq_CN
-            error:
-              code: INTERNAL_SERVER_ERROR
-              message: An unexpected error occurred.
+            $ref: '#/components/schemas/ErrorResponse'
     LinkLimitExceeded:
       description: Link Limit Exceeded
       headers:
@@ -3302,179 +3175,55 @@ components:
     NotFound:
       description: Resource not found
       headers:
-        X-RateLimit-Limit:
-          description: Request limit per hour
-          schema:
-            type: integer
-            format: int32
-            minimum: 1
-            maximum: 10000
-            example: 5000
-        X-RateLimit-Remaining:
-          description: Remaining requests in current window
-          schema:
-            type: integer
-            format: int32
-            minimum: 0
-            maximum: 10000
-            example: 4999
         Access-Control-Allow-Origin:
-          description: CORS header
-          schema:
-            type: string
-            maxLength: 255
-            enum:
-            - '*'
-            example: '*'
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
       content:
         application/json:
           schema:
-            type: object
-            description: Standard envelope returned by all error (4xx/5xx) responses.
-            properties:
-              meta:
-                type: object
-                description: Metadata included in every API response.
-                properties:
-                  request_id:
-                    $ref: '#/components/schemas/RequestId'
-                required:
-                - request_id
-                additionalProperties: false
-              error:
-                $ref: '#/components/schemas/Error'
-            required:
-            - meta
-            - error
-            additionalProperties: false
+            $ref: '#/components/schemas/ErrorResponse'
           example:
             meta:
-              request_id: BXaEFVtjc7TXaJxgZhmFgSUD9edqq_CN
+              request_id: 01892A4D-7586-7000-8000-000000000000
             error:
               code: NOT_FOUND
               message: The requested resource was not found.
     TooManyRequests:
-      description: Too Many Requests
+      description: Too Many Requests - rate limit exceeded
       headers:
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
         X-RateLimit-Limit:
-          description: Request limit per hour
-          schema:
-            type: integer
-            format: int32
-            minimum: 1
-            maximum: 10000
-            example: 5000
+          $ref: '#/components/headers/X-RateLimit-Limit'
         X-RateLimit-Remaining:
-          description: Remaining requests in current window
-          schema:
-            type: integer
-            format: int32
-            minimum: 0
-            maximum: 10000
-            example: 4999
+          $ref: '#/components/headers/X-RateLimit-Remaining'
         Retry-After:
-          description: Seconds until rate limit resets
           schema:
             type: integer
             format: int32
             minimum: 1
-            maximum: 86400
-            example: 3600
+            maximum: 3600
+          description: Number of seconds to wait before making another request
         Access-Control-Allow-Origin:
-          description: CORS header
-          schema:
-            type: string
-            maxLength: 255
-            enum:
-            - '*'
-            example: '*'
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
       content:
         application/json:
           schema:
-            type: object
-            description: Standard envelope returned by all error (4xx/5xx) responses.
-            properties:
-              meta:
-                type: object
-                description: Metadata included in every API response.
-                properties:
-                  request_id:
-                    $ref: '#/components/schemas/RequestId'
-                required:
-                - request_id
-                additionalProperties: false
-              error:
-                $ref: '#/components/schemas/Error'
-            required:
-            - meta
-            - error
-            additionalProperties: false
-          example:
-            meta:
-              request_id: BXaEFVtjc7TXaJxgZhmFgSUD9edqq_CN
-            error:
-              code: TOO_MANY_REQUESTS
-              message: Rate limit exceeded. Retry later.
+            $ref: '#/components/schemas/ErrorResponse'
     Unauthorized:
-      description: Unauthorized
+      description: Unauthorized - invalid or missing authentication
       headers:
-        WWW-Authenticate:
-          description: Bearer token required
-          schema:
-            type: string
-            maxLength: 255
-            pattern: ^Bearer.*
+        Content-Type:
+          $ref: '#/components/headers/Content-Type'
         X-RateLimit-Limit:
-          description: Request limit per hour
-          schema:
-            type: integer
-            format: int32
-            minimum: 1
-            maximum: 10000
-            example: 5000
+          $ref: '#/components/headers/X-RateLimit-Limit'
         X-RateLimit-Remaining:
-          description: Remaining requests in current window
-          schema:
-            type: integer
-            format: int32
-            minimum: 0
-            maximum: 10000
-            example: 4999
+          $ref: '#/components/headers/X-RateLimit-Remaining'
         Access-Control-Allow-Origin:
-          description: CORS header
-          schema:
-            type: string
-            maxLength: 255
-            enum:
-            - '*'
-            example: '*'
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
       content:
         application/json:
           schema:
-            type: object
-            description: Standard envelope returned by all error (4xx/5xx) responses.
-            properties:
-              meta:
-                type: object
-                description: Metadata included in every API response.
-                properties:
-                  request_id:
-                    $ref: '#/components/schemas/RequestId'
-                required:
-                - request_id
-                additionalProperties: false
-              error:
-                $ref: '#/components/schemas/Error'
-            required:
-            - meta
-            - error
-            additionalProperties: false
-          example:
-            meta:
-              request_id: BXaEFVtjc7TXaJxgZhmFgSUD9edqq_CN
-            error:
-              code: UNAUTHORIZED
-              message: Authentication is required.
+            $ref: '#/components/schemas/ErrorResponse'
     UnprocessableEntity:
       description: Unprocessable Entity - request validation failed
       headers:
@@ -3552,17 +3301,17 @@ components:
         type: string
         maxLength: 100
       example: sec_a23f23d26
-    TeamIdPath:
+    TeamId:
       name: team_id
       in: path
-      description: ID of the team
       required: true
+      description: ID of the team
+      example: 936506
       schema:
         type: integer
         format: int64
         minimum: 1
         maximum: 9223372036854775807
-      example: 936506
   headers:
     Access-Control-Allow-Origin:
       description: CORS header
@@ -3593,7 +3342,7 @@ components:
         format: int32
         minimum: 1
         maximum: 10000
-        example: 5000
+        example: 100
     X-RateLimit-Remaining:
       description: Remaining requests in current window
       schema:
@@ -3601,7 +3350,7 @@ components:
         format: int32
         minimum: 0
         maximum: 10000
-        example: 4999
+        example: 49
   securitySchemes:
     BearerAuth:
       type: http
@@ -3614,9 +3363,14 @@ components:
         '
     ApiKeyAuth:
       type: apiKey
-      in: query
-      name: api_key
-      description: API key passed as query parameter
+      in: header
+      name: authorization
+      description: 'API Key authentication. Include the API key directly in the Authorization
+        header:
+
+        `Authorization: <your-api-key>`
+
+        '
     BearerKeyAuth:
       type: http
       scheme: bearer
@@ -3630,5 +3384,4 @@ components:
         Authorization: Bearer YOUR_API_KEY
 
         '
-security:
-- BearerAuth: []
+security: []

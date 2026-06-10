@@ -15,7 +15,7 @@ T = TypeVar("T", bound="ResponseMeta")
 class ResponseMeta:
     """
     Attributes:
-        request_id (str | Unset):
+        request_id (str | Unset): API request ID
     """
 
     request_id: str | Unset = UNSET

@@ -7,10 +7,6 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error_response import ErrorResponse
 from ...models.get_connector_logo_response_200 import GetConnectorLogoResponse200
-from ...models.get_connector_logo_response_401 import GetConnectorLogoResponse401
-from ...models.get_connector_logo_response_404 import GetConnectorLogoResponse404
-from ...models.get_connector_logo_response_429 import GetConnectorLogoResponse429
-from ...models.get_connector_logo_response_500 import GetConnectorLogoResponse500
 from ...types import Response
 
 
@@ -28,22 +24,14 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> (
-    ErrorResponse
-    | GetConnectorLogoResponse200
-    | GetConnectorLogoResponse401
-    | GetConnectorLogoResponse404
-    | GetConnectorLogoResponse429
-    | GetConnectorLogoResponse500
-    | None
-):
+) -> ErrorResponse | GetConnectorLogoResponse200 | None:
     if response.status_code == 200:
         response_200 = GetConnectorLogoResponse200.from_dict(response.json())
 
         return response_200
 
     if response.status_code == 401:
-        response_401 = GetConnectorLogoResponse401.from_dict(response.json())
+        response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
 
@@ -53,17 +41,17 @@ def _parse_response(
         return response_403
 
     if response.status_code == 404:
-        response_404 = GetConnectorLogoResponse404.from_dict(response.json())
+        response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
 
     if response.status_code == 429:
-        response_429 = GetConnectorLogoResponse429.from_dict(response.json())
+        response_429 = ErrorResponse.from_dict(response.json())
 
         return response_429
 
     if response.status_code == 500:
-        response_500 = GetConnectorLogoResponse500.from_dict(response.json())
+        response_500 = ErrorResponse.from_dict(response.json())
 
         return response_500
 
@@ -75,14 +63,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[
-    ErrorResponse
-    | GetConnectorLogoResponse200
-    | GetConnectorLogoResponse401
-    | GetConnectorLogoResponse404
-    | GetConnectorLogoResponse429
-    | GetConnectorLogoResponse500
-]:
+) -> Response[ErrorResponse | GetConnectorLogoResponse200]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -96,14 +77,7 @@ def sync_detailed(
     connector_identifier: str,
     *,
     client: AuthenticatedClient,
-) -> Response[
-    ErrorResponse
-    | GetConnectorLogoResponse200
-    | GetConnectorLogoResponse401
-    | GetConnectorLogoResponse404
-    | GetConnectorLogoResponse429
-    | GetConnectorLogoResponse500
-]:
+) -> Response[ErrorResponse | GetConnectorLogoResponse200]:
     """Get connector logo
 
      Get the logo URL for a connector.
@@ -117,7 +91,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | GetConnectorLogoResponse200 | GetConnectorLogoResponse401 | GetConnectorLogoResponse404 | GetConnectorLogoResponse429 | GetConnectorLogoResponse500]
+        Response[ErrorResponse | GetConnectorLogoResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -137,15 +111,7 @@ def sync(
     connector_identifier: str,
     *,
     client: AuthenticatedClient,
-) -> (
-    ErrorResponse
-    | GetConnectorLogoResponse200
-    | GetConnectorLogoResponse401
-    | GetConnectorLogoResponse404
-    | GetConnectorLogoResponse429
-    | GetConnectorLogoResponse500
-    | None
-):
+) -> ErrorResponse | GetConnectorLogoResponse200 | None:
     """Get connector logo
 
      Get the logo URL for a connector.
@@ -159,7 +125,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | GetConnectorLogoResponse200 | GetConnectorLogoResponse401 | GetConnectorLogoResponse404 | GetConnectorLogoResponse429 | GetConnectorLogoResponse500
+        ErrorResponse | GetConnectorLogoResponse200
     """
 
     return sync_detailed(
@@ -174,14 +140,7 @@ async def asyncio_detailed(
     connector_identifier: str,
     *,
     client: AuthenticatedClient,
-) -> Response[
-    ErrorResponse
-    | GetConnectorLogoResponse200
-    | GetConnectorLogoResponse401
-    | GetConnectorLogoResponse404
-    | GetConnectorLogoResponse429
-    | GetConnectorLogoResponse500
-]:
+) -> Response[ErrorResponse | GetConnectorLogoResponse200]:
     """Get connector logo
 
      Get the logo URL for a connector.
@@ -195,7 +154,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | GetConnectorLogoResponse200 | GetConnectorLogoResponse401 | GetConnectorLogoResponse404 | GetConnectorLogoResponse429 | GetConnectorLogoResponse500]
+        Response[ErrorResponse | GetConnectorLogoResponse200]
     """
 
     kwargs = _get_kwargs(
@@ -213,15 +172,7 @@ async def asyncio(
     connector_identifier: str,
     *,
     client: AuthenticatedClient,
-) -> (
-    ErrorResponse
-    | GetConnectorLogoResponse200
-    | GetConnectorLogoResponse401
-    | GetConnectorLogoResponse404
-    | GetConnectorLogoResponse429
-    | GetConnectorLogoResponse500
-    | None
-):
+) -> ErrorResponse | GetConnectorLogoResponse200 | None:
     """Get connector logo
 
      Get the logo URL for a connector.
@@ -235,7 +186,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | GetConnectorLogoResponse200 | GetConnectorLogoResponse401 | GetConnectorLogoResponse404 | GetConnectorLogoResponse429 | GetConnectorLogoResponse500
+        ErrorResponse | GetConnectorLogoResponse200
     """
 
     return (

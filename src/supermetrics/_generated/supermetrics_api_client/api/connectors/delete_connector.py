@@ -6,10 +6,6 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.delete_connector_response_400 import DeleteConnectorResponse400
-from ...models.delete_connector_response_401 import DeleteConnectorResponse401
-from ...models.delete_connector_response_404 import DeleteConnectorResponse404
-from ...models.delete_connector_response_429 import DeleteConnectorResponse429
-from ...models.delete_connector_response_500 import DeleteConnectorResponse500
 from ...models.error_response import ErrorResponse
 from ...types import Response
 
@@ -28,16 +24,7 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> (
-    Any
-    | DeleteConnectorResponse400
-    | DeleteConnectorResponse401
-    | DeleteConnectorResponse404
-    | DeleteConnectorResponse429
-    | DeleteConnectorResponse500
-    | ErrorResponse
-    | None
-):
+) -> Any | DeleteConnectorResponse400 | ErrorResponse | None:
     if response.status_code == 204:
         response_204 = cast(Any, None)
         return response_204
@@ -48,7 +35,7 @@ def _parse_response(
         return response_400
 
     if response.status_code == 401:
-        response_401 = DeleteConnectorResponse401.from_dict(response.json())
+        response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
 
@@ -58,17 +45,17 @@ def _parse_response(
         return response_403
 
     if response.status_code == 404:
-        response_404 = DeleteConnectorResponse404.from_dict(response.json())
+        response_404 = ErrorResponse.from_dict(response.json())
 
         return response_404
 
     if response.status_code == 429:
-        response_429 = DeleteConnectorResponse429.from_dict(response.json())
+        response_429 = ErrorResponse.from_dict(response.json())
 
         return response_429
 
     if response.status_code == 500:
-        response_500 = DeleteConnectorResponse500.from_dict(response.json())
+        response_500 = ErrorResponse.from_dict(response.json())
 
         return response_500
 
@@ -80,15 +67,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[
-    Any
-    | DeleteConnectorResponse400
-    | DeleteConnectorResponse401
-    | DeleteConnectorResponse404
-    | DeleteConnectorResponse429
-    | DeleteConnectorResponse500
-    | ErrorResponse
-]:
+) -> Response[Any | DeleteConnectorResponse400 | ErrorResponse]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -102,15 +81,7 @@ def sync_detailed(
     connector_identifier: str,
     *,
     client: AuthenticatedClient,
-) -> Response[
-    Any
-    | DeleteConnectorResponse400
-    | DeleteConnectorResponse401
-    | DeleteConnectorResponse404
-    | DeleteConnectorResponse429
-    | DeleteConnectorResponse500
-    | ErrorResponse
-]:
+) -> Response[Any | DeleteConnectorResponse400 | ErrorResponse]:
     """Delete connector
 
      Delete a connector and all its associated data.
@@ -124,7 +95,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | DeleteConnectorResponse400 | DeleteConnectorResponse401 | DeleteConnectorResponse404 | DeleteConnectorResponse429 | DeleteConnectorResponse500 | ErrorResponse]
+        Response[Any | DeleteConnectorResponse400 | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
@@ -144,16 +115,7 @@ def sync(
     connector_identifier: str,
     *,
     client: AuthenticatedClient,
-) -> (
-    Any
-    | DeleteConnectorResponse400
-    | DeleteConnectorResponse401
-    | DeleteConnectorResponse404
-    | DeleteConnectorResponse429
-    | DeleteConnectorResponse500
-    | ErrorResponse
-    | None
-):
+) -> Any | DeleteConnectorResponse400 | ErrorResponse | None:
     """Delete connector
 
      Delete a connector and all its associated data.
@@ -167,7 +129,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | DeleteConnectorResponse400 | DeleteConnectorResponse401 | DeleteConnectorResponse404 | DeleteConnectorResponse429 | DeleteConnectorResponse500 | ErrorResponse
+        Any | DeleteConnectorResponse400 | ErrorResponse
     """
 
     return sync_detailed(
@@ -182,15 +144,7 @@ async def asyncio_detailed(
     connector_identifier: str,
     *,
     client: AuthenticatedClient,
-) -> Response[
-    Any
-    | DeleteConnectorResponse400
-    | DeleteConnectorResponse401
-    | DeleteConnectorResponse404
-    | DeleteConnectorResponse429
-    | DeleteConnectorResponse500
-    | ErrorResponse
-]:
+) -> Response[Any | DeleteConnectorResponse400 | ErrorResponse]:
     """Delete connector
 
      Delete a connector and all its associated data.
@@ -204,7 +158,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | DeleteConnectorResponse400 | DeleteConnectorResponse401 | DeleteConnectorResponse404 | DeleteConnectorResponse429 | DeleteConnectorResponse500 | ErrorResponse]
+        Response[Any | DeleteConnectorResponse400 | ErrorResponse]
     """
 
     kwargs = _get_kwargs(
@@ -222,16 +176,7 @@ async def asyncio(
     connector_identifier: str,
     *,
     client: AuthenticatedClient,
-) -> (
-    Any
-    | DeleteConnectorResponse400
-    | DeleteConnectorResponse401
-    | DeleteConnectorResponse404
-    | DeleteConnectorResponse429
-    | DeleteConnectorResponse500
-    | ErrorResponse
-    | None
-):
+) -> Any | DeleteConnectorResponse400 | ErrorResponse | None:
     """Delete connector
 
      Delete a connector and all its associated data.
@@ -245,7 +190,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | DeleteConnectorResponse400 | DeleteConnectorResponse401 | DeleteConnectorResponse404 | DeleteConnectorResponse429 | DeleteConnectorResponse500 | ErrorResponse
+        Any | DeleteConnectorResponse400 | ErrorResponse
     """
 
     return (

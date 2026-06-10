@@ -7,9 +7,7 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.error_response import ErrorResponse
 from ...models.get_data_source_login_response_200 import GetDataSourceLoginResponse200
-from ...models.get_data_source_login_response_401 import GetDataSourceLoginResponse401
 from ...models.get_data_source_login_response_404 import GetDataSourceLoginResponse404
-from ...models.get_data_source_login_response_429 import GetDataSourceLoginResponse429
 from ...models.get_data_source_login_response_500 import GetDataSourceLoginResponse500
 from ...types import Response
 
@@ -28,13 +26,7 @@ def _get_kwargs(
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
 ) -> (
-    ErrorResponse
-    | GetDataSourceLoginResponse200
-    | GetDataSourceLoginResponse401
-    | GetDataSourceLoginResponse404
-    | GetDataSourceLoginResponse429
-    | GetDataSourceLoginResponse500
-    | None
+    ErrorResponse | GetDataSourceLoginResponse200 | GetDataSourceLoginResponse404 | GetDataSourceLoginResponse500 | None
 ):
     if response.status_code == 200:
         response_200 = GetDataSourceLoginResponse200.from_dict(response.json())
@@ -42,7 +34,7 @@ def _parse_response(
         return response_200
 
     if response.status_code == 401:
-        response_401 = GetDataSourceLoginResponse401.from_dict(response.json())
+        response_401 = ErrorResponse.from_dict(response.json())
 
         return response_401
 
@@ -57,7 +49,7 @@ def _parse_response(
         return response_422
 
     if response.status_code == 429:
-        response_429 = GetDataSourceLoginResponse429.from_dict(response.json())
+        response_429 = ErrorResponse.from_dict(response.json())
 
         return response_429
 
@@ -75,12 +67,7 @@ def _parse_response(
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
 ) -> Response[
-    ErrorResponse
-    | GetDataSourceLoginResponse200
-    | GetDataSourceLoginResponse401
-    | GetDataSourceLoginResponse404
-    | GetDataSourceLoginResponse429
-    | GetDataSourceLoginResponse500
+    ErrorResponse | GetDataSourceLoginResponse200 | GetDataSourceLoginResponse404 | GetDataSourceLoginResponse500
 ]:
     return Response(
         status_code=HTTPStatus(response.status_code),
@@ -95,12 +82,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[
-    ErrorResponse
-    | GetDataSourceLoginResponse200
-    | GetDataSourceLoginResponse401
-    | GetDataSourceLoginResponse404
-    | GetDataSourceLoginResponse429
-    | GetDataSourceLoginResponse500
+    ErrorResponse | GetDataSourceLoginResponse200 | GetDataSourceLoginResponse404 | GetDataSourceLoginResponse500
 ]:
     """Get login
 
@@ -114,7 +96,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | GetDataSourceLoginResponse200 | GetDataSourceLoginResponse401 | GetDataSourceLoginResponse404 | GetDataSourceLoginResponse429 | GetDataSourceLoginResponse500]
+        Response[ErrorResponse | GetDataSourceLoginResponse200 | GetDataSourceLoginResponse404 | GetDataSourceLoginResponse500]
     """
 
     kwargs = _get_kwargs(
@@ -133,13 +115,7 @@ def sync(
     *,
     client: AuthenticatedClient,
 ) -> (
-    ErrorResponse
-    | GetDataSourceLoginResponse200
-    | GetDataSourceLoginResponse401
-    | GetDataSourceLoginResponse404
-    | GetDataSourceLoginResponse429
-    | GetDataSourceLoginResponse500
-    | None
+    ErrorResponse | GetDataSourceLoginResponse200 | GetDataSourceLoginResponse404 | GetDataSourceLoginResponse500 | None
 ):
     """Get login
 
@@ -153,7 +129,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | GetDataSourceLoginResponse200 | GetDataSourceLoginResponse401 | GetDataSourceLoginResponse404 | GetDataSourceLoginResponse429 | GetDataSourceLoginResponse500
+        ErrorResponse | GetDataSourceLoginResponse200 | GetDataSourceLoginResponse404 | GetDataSourceLoginResponse500
     """
 
     return sync_detailed(
@@ -167,12 +143,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
 ) -> Response[
-    ErrorResponse
-    | GetDataSourceLoginResponse200
-    | GetDataSourceLoginResponse401
-    | GetDataSourceLoginResponse404
-    | GetDataSourceLoginResponse429
-    | GetDataSourceLoginResponse500
+    ErrorResponse | GetDataSourceLoginResponse200 | GetDataSourceLoginResponse404 | GetDataSourceLoginResponse500
 ]:
     """Get login
 
@@ -186,7 +157,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | GetDataSourceLoginResponse200 | GetDataSourceLoginResponse401 | GetDataSourceLoginResponse404 | GetDataSourceLoginResponse429 | GetDataSourceLoginResponse500]
+        Response[ErrorResponse | GetDataSourceLoginResponse200 | GetDataSourceLoginResponse404 | GetDataSourceLoginResponse500]
     """
 
     kwargs = _get_kwargs(
@@ -203,13 +174,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
 ) -> (
-    ErrorResponse
-    | GetDataSourceLoginResponse200
-    | GetDataSourceLoginResponse401
-    | GetDataSourceLoginResponse404
-    | GetDataSourceLoginResponse429
-    | GetDataSourceLoginResponse500
-    | None
+    ErrorResponse | GetDataSourceLoginResponse200 | GetDataSourceLoginResponse404 | GetDataSourceLoginResponse500 | None
 ):
     """Get login
 
@@ -223,7 +188,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | GetDataSourceLoginResponse200 | GetDataSourceLoginResponse401 | GetDataSourceLoginResponse404 | GetDataSourceLoginResponse429 | GetDataSourceLoginResponse500
+        ErrorResponse | GetDataSourceLoginResponse200 | GetDataSourceLoginResponse404 | GetDataSourceLoginResponse500
     """
 
     return (
