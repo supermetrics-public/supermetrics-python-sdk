@@ -19,7 +19,7 @@ class UpdateConnectorSecretResponse400:
 
     Attributes:
         meta (UpdateConnectorSecretResponse400Meta): Metadata included in every API response.
-        error (Error):
+        error (Error): Machine- and human-readable detail for a failed request.
     """
 
     meta: UpdateConnectorSecretResponse400Meta

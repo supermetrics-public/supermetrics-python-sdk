@@ -10,7 +10,7 @@ from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.datasource_details import DatasourceDetails
-    from ..models.response_meta import ResponseMeta
+    from ..models.datasource_details_response_meta import DatasourceDetailsResponseMeta
 
 
 T = TypeVar("T", bound="DatasourceDetailsResponse")
@@ -20,11 +20,11 @@ T = TypeVar("T", bound="DatasourceDetailsResponse")
 class DatasourceDetailsResponse:
     """
     Attributes:
-        meta (ResponseMeta | Unset):
+        meta (DatasourceDetailsResponseMeta | Unset): Metadata included in every API response.
         data (DatasourceDetails | Unset):
     """
 
-    meta: ResponseMeta | Unset = UNSET
+    meta: DatasourceDetailsResponseMeta | Unset = UNSET
     data: DatasourceDetails | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -50,15 +50,15 @@ class DatasourceDetailsResponse:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.datasource_details import DatasourceDetails
-        from ..models.response_meta import ResponseMeta
+        from ..models.datasource_details_response_meta import DatasourceDetailsResponseMeta
 
         d = dict(src_dict)
         _meta = d.pop("meta", UNSET)
-        meta: ResponseMeta | Unset
+        meta: DatasourceDetailsResponseMeta | Unset
         if isinstance(_meta, Unset):
             meta = UNSET
         else:
-            meta = ResponseMeta.from_dict(_meta)
+            meta = DatasourceDetailsResponseMeta.from_dict(_meta)
 
         _data = d.pop("data", UNSET)
         data: DatasourceDetails | Unset

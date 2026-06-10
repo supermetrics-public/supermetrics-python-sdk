@@ -5,7 +5,11 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.error_response import ErrorResponse
+from ...models.get_connector_log_response_401 import GetConnectorLogResponse401
+from ...models.get_connector_log_response_403 import GetConnectorLogResponse403
+from ...models.get_connector_log_response_404 import GetConnectorLogResponse404
+from ...models.get_connector_log_response_429 import GetConnectorLogResponse429
+from ...models.get_connector_log_response_500 import GetConnectorLogResponse500
 from ...models.log_entry import LogEntry
 from ...types import Response
 
@@ -25,34 +29,42 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> ErrorResponse | LogEntry | None:
+) -> (
+    GetConnectorLogResponse401
+    | GetConnectorLogResponse403
+    | GetConnectorLogResponse404
+    | GetConnectorLogResponse429
+    | GetConnectorLogResponse500
+    | LogEntry
+    | None
+):
     if response.status_code == 200:
         response_200 = LogEntry.from_dict(response.json())
 
         return response_200
 
     if response.status_code == 401:
-        response_401 = ErrorResponse.from_dict(response.json())
+        response_401 = GetConnectorLogResponse401.from_dict(response.json())
 
         return response_401
 
     if response.status_code == 403:
-        response_403 = ErrorResponse.from_dict(response.json())
+        response_403 = GetConnectorLogResponse403.from_dict(response.json())
 
         return response_403
 
     if response.status_code == 404:
-        response_404 = ErrorResponse.from_dict(response.json())
+        response_404 = GetConnectorLogResponse404.from_dict(response.json())
 
         return response_404
 
     if response.status_code == 429:
-        response_429 = ErrorResponse.from_dict(response.json())
+        response_429 = GetConnectorLogResponse429.from_dict(response.json())
 
         return response_429
 
     if response.status_code == 500:
-        response_500 = ErrorResponse.from_dict(response.json())
+        response_500 = GetConnectorLogResponse500.from_dict(response.json())
 
         return response_500
 
@@ -64,7 +76,14 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[ErrorResponse | LogEntry]:
+) -> Response[
+    GetConnectorLogResponse401
+    | GetConnectorLogResponse403
+    | GetConnectorLogResponse404
+    | GetConnectorLogResponse429
+    | GetConnectorLogResponse500
+    | LogEntry
+]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -79,7 +98,14 @@ def sync_detailed(
     log_id: str,
     *,
     client: AuthenticatedClient,
-) -> Response[ErrorResponse | LogEntry]:
+) -> Response[
+    GetConnectorLogResponse401
+    | GetConnectorLogResponse403
+    | GetConnectorLogResponse404
+    | GetConnectorLogResponse429
+    | GetConnectorLogResponse500
+    | LogEntry
+]:
     """Get connector log
 
      Fetch detailed information for a specific connector log entry.
@@ -94,7 +120,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | LogEntry]
+        Response[GetConnectorLogResponse401 | GetConnectorLogResponse403 | GetConnectorLogResponse404 | GetConnectorLogResponse429 | GetConnectorLogResponse500 | LogEntry]
     """
 
     kwargs = _get_kwargs(
@@ -116,7 +142,15 @@ def sync(
     log_id: str,
     *,
     client: AuthenticatedClient,
-) -> ErrorResponse | LogEntry | None:
+) -> (
+    GetConnectorLogResponse401
+    | GetConnectorLogResponse403
+    | GetConnectorLogResponse404
+    | GetConnectorLogResponse429
+    | GetConnectorLogResponse500
+    | LogEntry
+    | None
+):
     """Get connector log
 
      Fetch detailed information for a specific connector log entry.
@@ -131,7 +165,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | LogEntry
+        GetConnectorLogResponse401 | GetConnectorLogResponse403 | GetConnectorLogResponse404 | GetConnectorLogResponse429 | GetConnectorLogResponse500 | LogEntry
     """
 
     return sync_detailed(
@@ -148,7 +182,14 @@ async def asyncio_detailed(
     log_id: str,
     *,
     client: AuthenticatedClient,
-) -> Response[ErrorResponse | LogEntry]:
+) -> Response[
+    GetConnectorLogResponse401
+    | GetConnectorLogResponse403
+    | GetConnectorLogResponse404
+    | GetConnectorLogResponse429
+    | GetConnectorLogResponse500
+    | LogEntry
+]:
     """Get connector log
 
      Fetch detailed information for a specific connector log entry.
@@ -163,7 +204,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | LogEntry]
+        Response[GetConnectorLogResponse401 | GetConnectorLogResponse403 | GetConnectorLogResponse404 | GetConnectorLogResponse429 | GetConnectorLogResponse500 | LogEntry]
     """
 
     kwargs = _get_kwargs(
@@ -183,7 +224,15 @@ async def asyncio(
     log_id: str,
     *,
     client: AuthenticatedClient,
-) -> ErrorResponse | LogEntry | None:
+) -> (
+    GetConnectorLogResponse401
+    | GetConnectorLogResponse403
+    | GetConnectorLogResponse404
+    | GetConnectorLogResponse429
+    | GetConnectorLogResponse500
+    | LogEntry
+    | None
+):
     """Get connector log
 
      Fetch detailed information for a specific connector log entry.
@@ -198,7 +247,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | LogEntry
+        GetConnectorLogResponse401 | GetConnectorLogResponse403 | GetConnectorLogResponse404 | GetConnectorLogResponse429 | GetConnectorLogResponse500 | LogEntry
     """
 
     return (

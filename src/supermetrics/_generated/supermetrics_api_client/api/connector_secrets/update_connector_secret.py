@@ -5,8 +5,13 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.error_response import ErrorResponse
 from ...models.update_connector_secret_response_400 import UpdateConnectorSecretResponse400
+from ...models.update_connector_secret_response_401 import UpdateConnectorSecretResponse401
+from ...models.update_connector_secret_response_403 import UpdateConnectorSecretResponse403
+from ...models.update_connector_secret_response_404 import UpdateConnectorSecretResponse404
+from ...models.update_connector_secret_response_422 import UpdateConnectorSecretResponse422
+from ...models.update_connector_secret_response_429 import UpdateConnectorSecretResponse429
+from ...models.update_connector_secret_response_500 import UpdateConnectorSecretResponse500
 from ...models.update_secret_request import UpdateSecretRequest
 from ...types import Response
 
@@ -35,7 +40,17 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Any | ErrorResponse | UpdateConnectorSecretResponse400 | None:
+) -> (
+    Any
+    | UpdateConnectorSecretResponse400
+    | UpdateConnectorSecretResponse401
+    | UpdateConnectorSecretResponse403
+    | UpdateConnectorSecretResponse404
+    | UpdateConnectorSecretResponse422
+    | UpdateConnectorSecretResponse429
+    | UpdateConnectorSecretResponse500
+    | None
+):
     if response.status_code == 204:
         response_204 = cast(Any, None)
         return response_204
@@ -46,32 +61,32 @@ def _parse_response(
         return response_400
 
     if response.status_code == 401:
-        response_401 = ErrorResponse.from_dict(response.json())
+        response_401 = UpdateConnectorSecretResponse401.from_dict(response.json())
 
         return response_401
 
     if response.status_code == 403:
-        response_403 = ErrorResponse.from_dict(response.json())
+        response_403 = UpdateConnectorSecretResponse403.from_dict(response.json())
 
         return response_403
 
     if response.status_code == 404:
-        response_404 = ErrorResponse.from_dict(response.json())
+        response_404 = UpdateConnectorSecretResponse404.from_dict(response.json())
 
         return response_404
 
     if response.status_code == 422:
-        response_422 = ErrorResponse.from_dict(response.json())
+        response_422 = UpdateConnectorSecretResponse422.from_dict(response.json())
 
         return response_422
 
     if response.status_code == 429:
-        response_429 = ErrorResponse.from_dict(response.json())
+        response_429 = UpdateConnectorSecretResponse429.from_dict(response.json())
 
         return response_429
 
     if response.status_code == 500:
-        response_500 = ErrorResponse.from_dict(response.json())
+        response_500 = UpdateConnectorSecretResponse500.from_dict(response.json())
 
         return response_500
 
@@ -83,7 +98,16 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Any | ErrorResponse | UpdateConnectorSecretResponse400]:
+) -> Response[
+    Any
+    | UpdateConnectorSecretResponse400
+    | UpdateConnectorSecretResponse401
+    | UpdateConnectorSecretResponse403
+    | UpdateConnectorSecretResponse404
+    | UpdateConnectorSecretResponse422
+    | UpdateConnectorSecretResponse429
+    | UpdateConnectorSecretResponse500
+]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -99,7 +123,16 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     body: UpdateSecretRequest,
-) -> Response[Any | ErrorResponse | UpdateConnectorSecretResponse400]:
+) -> Response[
+    Any
+    | UpdateConnectorSecretResponse400
+    | UpdateConnectorSecretResponse401
+    | UpdateConnectorSecretResponse403
+    | UpdateConnectorSecretResponse404
+    | UpdateConnectorSecretResponse422
+    | UpdateConnectorSecretResponse429
+    | UpdateConnectorSecretResponse500
+]:
     """Update connector secret
 
      Overwrite the value of an existing secret. The previous value cannot be recovered.
@@ -115,7 +148,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | ErrorResponse | UpdateConnectorSecretResponse400]
+        Response[Any | UpdateConnectorSecretResponse400 | UpdateConnectorSecretResponse401 | UpdateConnectorSecretResponse403 | UpdateConnectorSecretResponse404 | UpdateConnectorSecretResponse422 | UpdateConnectorSecretResponse429 | UpdateConnectorSecretResponse500]
     """
 
     kwargs = _get_kwargs(
@@ -139,7 +172,17 @@ def sync(
     *,
     client: AuthenticatedClient,
     body: UpdateSecretRequest,
-) -> Any | ErrorResponse | UpdateConnectorSecretResponse400 | None:
+) -> (
+    Any
+    | UpdateConnectorSecretResponse400
+    | UpdateConnectorSecretResponse401
+    | UpdateConnectorSecretResponse403
+    | UpdateConnectorSecretResponse404
+    | UpdateConnectorSecretResponse422
+    | UpdateConnectorSecretResponse429
+    | UpdateConnectorSecretResponse500
+    | None
+):
     """Update connector secret
 
      Overwrite the value of an existing secret. The previous value cannot be recovered.
@@ -155,7 +198,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | ErrorResponse | UpdateConnectorSecretResponse400
+        Any | UpdateConnectorSecretResponse400 | UpdateConnectorSecretResponse401 | UpdateConnectorSecretResponse403 | UpdateConnectorSecretResponse404 | UpdateConnectorSecretResponse422 | UpdateConnectorSecretResponse429 | UpdateConnectorSecretResponse500
     """
 
     return sync_detailed(
@@ -174,7 +217,16 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     body: UpdateSecretRequest,
-) -> Response[Any | ErrorResponse | UpdateConnectorSecretResponse400]:
+) -> Response[
+    Any
+    | UpdateConnectorSecretResponse400
+    | UpdateConnectorSecretResponse401
+    | UpdateConnectorSecretResponse403
+    | UpdateConnectorSecretResponse404
+    | UpdateConnectorSecretResponse422
+    | UpdateConnectorSecretResponse429
+    | UpdateConnectorSecretResponse500
+]:
     """Update connector secret
 
      Overwrite the value of an existing secret. The previous value cannot be recovered.
@@ -190,7 +242,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | ErrorResponse | UpdateConnectorSecretResponse400]
+        Response[Any | UpdateConnectorSecretResponse400 | UpdateConnectorSecretResponse401 | UpdateConnectorSecretResponse403 | UpdateConnectorSecretResponse404 | UpdateConnectorSecretResponse422 | UpdateConnectorSecretResponse429 | UpdateConnectorSecretResponse500]
     """
 
     kwargs = _get_kwargs(
@@ -212,7 +264,17 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     body: UpdateSecretRequest,
-) -> Any | ErrorResponse | UpdateConnectorSecretResponse400 | None:
+) -> (
+    Any
+    | UpdateConnectorSecretResponse400
+    | UpdateConnectorSecretResponse401
+    | UpdateConnectorSecretResponse403
+    | UpdateConnectorSecretResponse404
+    | UpdateConnectorSecretResponse422
+    | UpdateConnectorSecretResponse429
+    | UpdateConnectorSecretResponse500
+    | None
+):
     """Update connector secret
 
      Overwrite the value of an existing secret. The previous value cannot be recovered.
@@ -228,7 +290,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | ErrorResponse | UpdateConnectorSecretResponse400
+        Any | UpdateConnectorSecretResponse400 | UpdateConnectorSecretResponse401 | UpdateConnectorSecretResponse403 | UpdateConnectorSecretResponse404 | UpdateConnectorSecretResponse422 | UpdateConnectorSecretResponse429 | UpdateConnectorSecretResponse500
     """
 
     return (

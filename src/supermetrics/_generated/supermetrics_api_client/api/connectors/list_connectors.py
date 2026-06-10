@@ -5,8 +5,11 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.error_response import ErrorResponse
 from ...models.list_connectors_response_200 import ListConnectorsResponse200
+from ...models.list_connectors_response_401 import ListConnectorsResponse401
+from ...models.list_connectors_response_403 import ListConnectorsResponse403
+from ...models.list_connectors_response_429 import ListConnectorsResponse429
+from ...models.list_connectors_response_500 import ListConnectorsResponse500
 from ...types import UNSET, Response, Unset
 
 
@@ -32,29 +35,36 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> ErrorResponse | ListConnectorsResponse200 | None:
+) -> (
+    ListConnectorsResponse200
+    | ListConnectorsResponse401
+    | ListConnectorsResponse403
+    | ListConnectorsResponse429
+    | ListConnectorsResponse500
+    | None
+):
     if response.status_code == 200:
         response_200 = ListConnectorsResponse200.from_dict(response.json())
 
         return response_200
 
     if response.status_code == 401:
-        response_401 = ErrorResponse.from_dict(response.json())
+        response_401 = ListConnectorsResponse401.from_dict(response.json())
 
         return response_401
 
     if response.status_code == 403:
-        response_403 = ErrorResponse.from_dict(response.json())
+        response_403 = ListConnectorsResponse403.from_dict(response.json())
 
         return response_403
 
     if response.status_code == 429:
-        response_429 = ErrorResponse.from_dict(response.json())
+        response_429 = ListConnectorsResponse429.from_dict(response.json())
 
         return response_429
 
     if response.status_code == 500:
-        response_500 = ErrorResponse.from_dict(response.json())
+        response_500 = ListConnectorsResponse500.from_dict(response.json())
 
         return response_500
 
@@ -66,7 +76,13 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[ErrorResponse | ListConnectorsResponse200]:
+) -> Response[
+    ListConnectorsResponse200
+    | ListConnectorsResponse401
+    | ListConnectorsResponse403
+    | ListConnectorsResponse429
+    | ListConnectorsResponse500
+]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -80,7 +96,13 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     include_configs: bool | Unset = False,
-) -> Response[ErrorResponse | ListConnectorsResponse200]:
+) -> Response[
+    ListConnectorsResponse200
+    | ListConnectorsResponse401
+    | ListConnectorsResponse403
+    | ListConnectorsResponse429
+    | ListConnectorsResponse500
+]:
     """List connectors
 
      Fetch information for the connectors you have access to.
@@ -94,7 +116,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | ListConnectorsResponse200]
+        Response[ListConnectorsResponse200 | ListConnectorsResponse401 | ListConnectorsResponse403 | ListConnectorsResponse429 | ListConnectorsResponse500]
     """
 
     kwargs = _get_kwargs(
@@ -114,7 +136,14 @@ def sync(
     *,
     client: AuthenticatedClient,
     include_configs: bool | Unset = False,
-) -> ErrorResponse | ListConnectorsResponse200 | None:
+) -> (
+    ListConnectorsResponse200
+    | ListConnectorsResponse401
+    | ListConnectorsResponse403
+    | ListConnectorsResponse429
+    | ListConnectorsResponse500
+    | None
+):
     """List connectors
 
      Fetch information for the connectors you have access to.
@@ -128,7 +157,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | ListConnectorsResponse200
+        ListConnectorsResponse200 | ListConnectorsResponse401 | ListConnectorsResponse403 | ListConnectorsResponse429 | ListConnectorsResponse500
     """
 
     return sync_detailed(
@@ -143,7 +172,13 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     include_configs: bool | Unset = False,
-) -> Response[ErrorResponse | ListConnectorsResponse200]:
+) -> Response[
+    ListConnectorsResponse200
+    | ListConnectorsResponse401
+    | ListConnectorsResponse403
+    | ListConnectorsResponse429
+    | ListConnectorsResponse500
+]:
     """List connectors
 
      Fetch information for the connectors you have access to.
@@ -157,7 +192,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | ListConnectorsResponse200]
+        Response[ListConnectorsResponse200 | ListConnectorsResponse401 | ListConnectorsResponse403 | ListConnectorsResponse429 | ListConnectorsResponse500]
     """
 
     kwargs = _get_kwargs(
@@ -175,7 +210,14 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     include_configs: bool | Unset = False,
-) -> ErrorResponse | ListConnectorsResponse200 | None:
+) -> (
+    ListConnectorsResponse200
+    | ListConnectorsResponse401
+    | ListConnectorsResponse403
+    | ListConnectorsResponse429
+    | ListConnectorsResponse500
+    | None
+):
     """List connectors
 
      Fetch information for the connectors you have access to.
@@ -189,7 +231,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | ListConnectorsResponse200
+        ListConnectorsResponse200 | ListConnectorsResponse401 | ListConnectorsResponse403 | ListConnectorsResponse429 | ListConnectorsResponse500
     """
 
     return (

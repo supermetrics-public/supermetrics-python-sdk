@@ -18,7 +18,7 @@ T = TypeVar("T", bound="ListIncompleteBackfillsResponse200")
 class ListIncompleteBackfillsResponse200:
     """
     Attributes:
-        meta (ResponseMeta):
+        meta (ResponseMeta): Metadata included in every API response.
         data (list[Backfill]): Array of incomplete backfill objects
     """
 

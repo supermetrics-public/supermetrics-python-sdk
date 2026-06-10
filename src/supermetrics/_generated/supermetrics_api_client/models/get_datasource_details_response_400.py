@@ -19,7 +19,7 @@ class GetDatasourceDetailsResponse400:
 
     Attributes:
         meta (GetDatasourceDetailsResponse400Meta): Metadata included in every API response.
-        error (Error):
+        error (Error): Machine- and human-readable detail for a failed request.
     """
 
     meta: GetDatasourceDetailsResponse400Meta

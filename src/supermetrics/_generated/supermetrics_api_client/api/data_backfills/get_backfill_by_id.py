@@ -6,7 +6,11 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.backfill_response import BackfillResponse
-from ...models.error_response import ErrorResponse
+from ...models.get_backfill_by_id_response_401 import GetBackfillByIdResponse401
+from ...models.get_backfill_by_id_response_403 import GetBackfillByIdResponse403
+from ...models.get_backfill_by_id_response_404 import GetBackfillByIdResponse404
+from ...models.get_backfill_by_id_response_429 import GetBackfillByIdResponse429
+from ...models.get_backfill_by_id_response_500 import GetBackfillByIdResponse500
 from ...types import Response
 
 
@@ -24,34 +28,42 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> BackfillResponse | ErrorResponse | None:
+) -> (
+    BackfillResponse
+    | GetBackfillByIdResponse401
+    | GetBackfillByIdResponse403
+    | GetBackfillByIdResponse404
+    | GetBackfillByIdResponse429
+    | GetBackfillByIdResponse500
+    | None
+):
     if response.status_code == 200:
         response_200 = BackfillResponse.from_dict(response.json())
 
         return response_200
 
     if response.status_code == 401:
-        response_401 = ErrorResponse.from_dict(response.json())
+        response_401 = GetBackfillByIdResponse401.from_dict(response.json())
 
         return response_401
 
     if response.status_code == 403:
-        response_403 = ErrorResponse.from_dict(response.json())
+        response_403 = GetBackfillByIdResponse403.from_dict(response.json())
 
         return response_403
 
     if response.status_code == 404:
-        response_404 = ErrorResponse.from_dict(response.json())
+        response_404 = GetBackfillByIdResponse404.from_dict(response.json())
 
         return response_404
 
     if response.status_code == 429:
-        response_429 = ErrorResponse.from_dict(response.json())
+        response_429 = GetBackfillByIdResponse429.from_dict(response.json())
 
         return response_429
 
     if response.status_code == 500:
-        response_500 = ErrorResponse.from_dict(response.json())
+        response_500 = GetBackfillByIdResponse500.from_dict(response.json())
 
         return response_500
 
@@ -63,7 +75,14 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[BackfillResponse | ErrorResponse]:
+) -> Response[
+    BackfillResponse
+    | GetBackfillByIdResponse401
+    | GetBackfillByIdResponse403
+    | GetBackfillByIdResponse404
+    | GetBackfillByIdResponse429
+    | GetBackfillByIdResponse500
+]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -77,7 +96,14 @@ def sync_detailed(
     backfill_id: int,
     *,
     client: AuthenticatedClient,
-) -> Response[BackfillResponse | ErrorResponse]:
+) -> Response[
+    BackfillResponse
+    | GetBackfillByIdResponse401
+    | GetBackfillByIdResponse403
+    | GetBackfillByIdResponse404
+    | GetBackfillByIdResponse429
+    | GetBackfillByIdResponse500
+]:
     """Get backfill by ID
 
      Retrieve detailed information about a specific backfill using its unique identifier.
@@ -104,7 +130,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[BackfillResponse | ErrorResponse]
+        Response[BackfillResponse | GetBackfillByIdResponse401 | GetBackfillByIdResponse403 | GetBackfillByIdResponse404 | GetBackfillByIdResponse429 | GetBackfillByIdResponse500]
     """
 
     kwargs = _get_kwargs(
@@ -124,7 +150,15 @@ def sync(
     backfill_id: int,
     *,
     client: AuthenticatedClient,
-) -> BackfillResponse | ErrorResponse | None:
+) -> (
+    BackfillResponse
+    | GetBackfillByIdResponse401
+    | GetBackfillByIdResponse403
+    | GetBackfillByIdResponse404
+    | GetBackfillByIdResponse429
+    | GetBackfillByIdResponse500
+    | None
+):
     """Get backfill by ID
 
      Retrieve detailed information about a specific backfill using its unique identifier.
@@ -151,7 +185,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        BackfillResponse | ErrorResponse
+        BackfillResponse | GetBackfillByIdResponse401 | GetBackfillByIdResponse403 | GetBackfillByIdResponse404 | GetBackfillByIdResponse429 | GetBackfillByIdResponse500
     """
 
     return sync_detailed(
@@ -166,7 +200,14 @@ async def asyncio_detailed(
     backfill_id: int,
     *,
     client: AuthenticatedClient,
-) -> Response[BackfillResponse | ErrorResponse]:
+) -> Response[
+    BackfillResponse
+    | GetBackfillByIdResponse401
+    | GetBackfillByIdResponse403
+    | GetBackfillByIdResponse404
+    | GetBackfillByIdResponse429
+    | GetBackfillByIdResponse500
+]:
     """Get backfill by ID
 
      Retrieve detailed information about a specific backfill using its unique identifier.
@@ -193,7 +234,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[BackfillResponse | ErrorResponse]
+        Response[BackfillResponse | GetBackfillByIdResponse401 | GetBackfillByIdResponse403 | GetBackfillByIdResponse404 | GetBackfillByIdResponse429 | GetBackfillByIdResponse500]
     """
 
     kwargs = _get_kwargs(
@@ -211,7 +252,15 @@ async def asyncio(
     backfill_id: int,
     *,
     client: AuthenticatedClient,
-) -> BackfillResponse | ErrorResponse | None:
+) -> (
+    BackfillResponse
+    | GetBackfillByIdResponse401
+    | GetBackfillByIdResponse403
+    | GetBackfillByIdResponse404
+    | GetBackfillByIdResponse429
+    | GetBackfillByIdResponse500
+    | None
+):
     """Get backfill by ID
 
      Retrieve detailed information about a specific backfill using its unique identifier.
@@ -238,7 +287,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        BackfillResponse | ErrorResponse
+        BackfillResponse | GetBackfillByIdResponse401 | GetBackfillByIdResponse403 | GetBackfillByIdResponse404 | GetBackfillByIdResponse429 | GetBackfillByIdResponse500
     """
 
     return (

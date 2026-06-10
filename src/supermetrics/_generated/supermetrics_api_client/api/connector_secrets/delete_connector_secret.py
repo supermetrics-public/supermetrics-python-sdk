@@ -5,7 +5,11 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.error_response import ErrorResponse
+from ...models.delete_connector_secret_response_401 import DeleteConnectorSecretResponse401
+from ...models.delete_connector_secret_response_403 import DeleteConnectorSecretResponse403
+from ...models.delete_connector_secret_response_404 import DeleteConnectorSecretResponse404
+from ...models.delete_connector_secret_response_429 import DeleteConnectorSecretResponse429
+from ...models.delete_connector_secret_response_500 import DeleteConnectorSecretResponse500
 from ...types import Response
 
 
@@ -22,33 +26,43 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Any | ErrorResponse | None:
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> (
+    Any
+    | DeleteConnectorSecretResponse401
+    | DeleteConnectorSecretResponse403
+    | DeleteConnectorSecretResponse404
+    | DeleteConnectorSecretResponse429
+    | DeleteConnectorSecretResponse500
+    | None
+):
     if response.status_code == 204:
         response_204 = cast(Any, None)
         return response_204
 
     if response.status_code == 401:
-        response_401 = ErrorResponse.from_dict(response.json())
+        response_401 = DeleteConnectorSecretResponse401.from_dict(response.json())
 
         return response_401
 
     if response.status_code == 403:
-        response_403 = ErrorResponse.from_dict(response.json())
+        response_403 = DeleteConnectorSecretResponse403.from_dict(response.json())
 
         return response_403
 
     if response.status_code == 404:
-        response_404 = ErrorResponse.from_dict(response.json())
+        response_404 = DeleteConnectorSecretResponse404.from_dict(response.json())
 
         return response_404
 
     if response.status_code == 429:
-        response_429 = ErrorResponse.from_dict(response.json())
+        response_429 = DeleteConnectorSecretResponse429.from_dict(response.json())
 
         return response_429
 
     if response.status_code == 500:
-        response_500 = ErrorResponse.from_dict(response.json())
+        response_500 = DeleteConnectorSecretResponse500.from_dict(response.json())
 
         return response_500
 
@@ -58,7 +72,16 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[Any | ErrorResponse]:
+def _build_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[
+    Any
+    | DeleteConnectorSecretResponse401
+    | DeleteConnectorSecretResponse403
+    | DeleteConnectorSecretResponse404
+    | DeleteConnectorSecretResponse429
+    | DeleteConnectorSecretResponse500
+]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -73,7 +96,14 @@ def sync_detailed(
     secret_placeholder: str,
     *,
     client: AuthenticatedClient,
-) -> Response[Any | ErrorResponse]:
+) -> Response[
+    Any
+    | DeleteConnectorSecretResponse401
+    | DeleteConnectorSecretResponse403
+    | DeleteConnectorSecretResponse404
+    | DeleteConnectorSecretResponse429
+    | DeleteConnectorSecretResponse500
+]:
     """Delete connector secret
 
      Delete a secret from a connector.
@@ -88,7 +118,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | ErrorResponse]
+        Response[Any | DeleteConnectorSecretResponse401 | DeleteConnectorSecretResponse403 | DeleteConnectorSecretResponse404 | DeleteConnectorSecretResponse429 | DeleteConnectorSecretResponse500]
     """
 
     kwargs = _get_kwargs(
@@ -110,7 +140,15 @@ def sync(
     secret_placeholder: str,
     *,
     client: AuthenticatedClient,
-) -> Any | ErrorResponse | None:
+) -> (
+    Any
+    | DeleteConnectorSecretResponse401
+    | DeleteConnectorSecretResponse403
+    | DeleteConnectorSecretResponse404
+    | DeleteConnectorSecretResponse429
+    | DeleteConnectorSecretResponse500
+    | None
+):
     """Delete connector secret
 
      Delete a secret from a connector.
@@ -125,7 +163,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | ErrorResponse
+        Any | DeleteConnectorSecretResponse401 | DeleteConnectorSecretResponse403 | DeleteConnectorSecretResponse404 | DeleteConnectorSecretResponse429 | DeleteConnectorSecretResponse500
     """
 
     return sync_detailed(
@@ -142,7 +180,14 @@ async def asyncio_detailed(
     secret_placeholder: str,
     *,
     client: AuthenticatedClient,
-) -> Response[Any | ErrorResponse]:
+) -> Response[
+    Any
+    | DeleteConnectorSecretResponse401
+    | DeleteConnectorSecretResponse403
+    | DeleteConnectorSecretResponse404
+    | DeleteConnectorSecretResponse429
+    | DeleteConnectorSecretResponse500
+]:
     """Delete connector secret
 
      Delete a secret from a connector.
@@ -157,7 +202,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | ErrorResponse]
+        Response[Any | DeleteConnectorSecretResponse401 | DeleteConnectorSecretResponse403 | DeleteConnectorSecretResponse404 | DeleteConnectorSecretResponse429 | DeleteConnectorSecretResponse500]
     """
 
     kwargs = _get_kwargs(
@@ -177,7 +222,15 @@ async def asyncio(
     secret_placeholder: str,
     *,
     client: AuthenticatedClient,
-) -> Any | ErrorResponse | None:
+) -> (
+    Any
+    | DeleteConnectorSecretResponse401
+    | DeleteConnectorSecretResponse403
+    | DeleteConnectorSecretResponse404
+    | DeleteConnectorSecretResponse429
+    | DeleteConnectorSecretResponse500
+    | None
+):
     """Delete connector secret
 
      Delete a secret from a connector.
@@ -192,7 +245,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | ErrorResponse
+        Any | DeleteConnectorSecretResponse401 | DeleteConnectorSecretResponse403 | DeleteConnectorSecretResponse404 | DeleteConnectorSecretResponse429 | DeleteConnectorSecretResponse500
     """
 
     return (

@@ -5,9 +5,14 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.error_response import ErrorResponse
 from ...models.update_connector_request import UpdateConnectorRequest
 from ...models.update_connector_response_400 import UpdateConnectorResponse400
+from ...models.update_connector_response_401 import UpdateConnectorResponse401
+from ...models.update_connector_response_403 import UpdateConnectorResponse403
+from ...models.update_connector_response_404 import UpdateConnectorResponse404
+from ...models.update_connector_response_422 import UpdateConnectorResponse422
+from ...models.update_connector_response_429 import UpdateConnectorResponse429
+from ...models.update_connector_response_500 import UpdateConnectorResponse500
 from ...types import Response
 
 
@@ -34,7 +39,17 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Any | ErrorResponse | UpdateConnectorResponse400 | None:
+) -> (
+    Any
+    | UpdateConnectorResponse400
+    | UpdateConnectorResponse401
+    | UpdateConnectorResponse403
+    | UpdateConnectorResponse404
+    | UpdateConnectorResponse422
+    | UpdateConnectorResponse429
+    | UpdateConnectorResponse500
+    | None
+):
     if response.status_code == 204:
         response_204 = cast(Any, None)
         return response_204
@@ -45,32 +60,32 @@ def _parse_response(
         return response_400
 
     if response.status_code == 401:
-        response_401 = ErrorResponse.from_dict(response.json())
+        response_401 = UpdateConnectorResponse401.from_dict(response.json())
 
         return response_401
 
     if response.status_code == 403:
-        response_403 = ErrorResponse.from_dict(response.json())
+        response_403 = UpdateConnectorResponse403.from_dict(response.json())
 
         return response_403
 
     if response.status_code == 404:
-        response_404 = ErrorResponse.from_dict(response.json())
+        response_404 = UpdateConnectorResponse404.from_dict(response.json())
 
         return response_404
 
     if response.status_code == 422:
-        response_422 = ErrorResponse.from_dict(response.json())
+        response_422 = UpdateConnectorResponse422.from_dict(response.json())
 
         return response_422
 
     if response.status_code == 429:
-        response_429 = ErrorResponse.from_dict(response.json())
+        response_429 = UpdateConnectorResponse429.from_dict(response.json())
 
         return response_429
 
     if response.status_code == 500:
-        response_500 = ErrorResponse.from_dict(response.json())
+        response_500 = UpdateConnectorResponse500.from_dict(response.json())
 
         return response_500
 
@@ -82,7 +97,16 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Any | ErrorResponse | UpdateConnectorResponse400]:
+) -> Response[
+    Any
+    | UpdateConnectorResponse400
+    | UpdateConnectorResponse401
+    | UpdateConnectorResponse403
+    | UpdateConnectorResponse404
+    | UpdateConnectorResponse422
+    | UpdateConnectorResponse429
+    | UpdateConnectorResponse500
+]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -97,7 +121,16 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     body: UpdateConnectorRequest,
-) -> Response[Any | ErrorResponse | UpdateConnectorResponse400]:
+) -> Response[
+    Any
+    | UpdateConnectorResponse400
+    | UpdateConnectorResponse401
+    | UpdateConnectorResponse403
+    | UpdateConnectorResponse404
+    | UpdateConnectorResponse422
+    | UpdateConnectorResponse429
+    | UpdateConnectorResponse500
+]:
     """Update connector
 
      Update a connector's name, description, and configuration.
@@ -112,7 +145,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | ErrorResponse | UpdateConnectorResponse400]
+        Response[Any | UpdateConnectorResponse400 | UpdateConnectorResponse401 | UpdateConnectorResponse403 | UpdateConnectorResponse404 | UpdateConnectorResponse422 | UpdateConnectorResponse429 | UpdateConnectorResponse500]
     """
 
     kwargs = _get_kwargs(
@@ -134,7 +167,17 @@ def sync(
     *,
     client: AuthenticatedClient,
     body: UpdateConnectorRequest,
-) -> Any | ErrorResponse | UpdateConnectorResponse400 | None:
+) -> (
+    Any
+    | UpdateConnectorResponse400
+    | UpdateConnectorResponse401
+    | UpdateConnectorResponse403
+    | UpdateConnectorResponse404
+    | UpdateConnectorResponse422
+    | UpdateConnectorResponse429
+    | UpdateConnectorResponse500
+    | None
+):
     """Update connector
 
      Update a connector's name, description, and configuration.
@@ -149,7 +192,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | ErrorResponse | UpdateConnectorResponse400
+        Any | UpdateConnectorResponse400 | UpdateConnectorResponse401 | UpdateConnectorResponse403 | UpdateConnectorResponse404 | UpdateConnectorResponse422 | UpdateConnectorResponse429 | UpdateConnectorResponse500
     """
 
     return sync_detailed(
@@ -166,7 +209,16 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     body: UpdateConnectorRequest,
-) -> Response[Any | ErrorResponse | UpdateConnectorResponse400]:
+) -> Response[
+    Any
+    | UpdateConnectorResponse400
+    | UpdateConnectorResponse401
+    | UpdateConnectorResponse403
+    | UpdateConnectorResponse404
+    | UpdateConnectorResponse422
+    | UpdateConnectorResponse429
+    | UpdateConnectorResponse500
+]:
     """Update connector
 
      Update a connector's name, description, and configuration.
@@ -181,7 +233,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | ErrorResponse | UpdateConnectorResponse400]
+        Response[Any | UpdateConnectorResponse400 | UpdateConnectorResponse401 | UpdateConnectorResponse403 | UpdateConnectorResponse404 | UpdateConnectorResponse422 | UpdateConnectorResponse429 | UpdateConnectorResponse500]
     """
 
     kwargs = _get_kwargs(
@@ -201,7 +253,17 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     body: UpdateConnectorRequest,
-) -> Any | ErrorResponse | UpdateConnectorResponse400 | None:
+) -> (
+    Any
+    | UpdateConnectorResponse400
+    | UpdateConnectorResponse401
+    | UpdateConnectorResponse403
+    | UpdateConnectorResponse404
+    | UpdateConnectorResponse422
+    | UpdateConnectorResponse429
+    | UpdateConnectorResponse500
+    | None
+):
     """Update connector
 
      Update a connector's name, description, and configuration.
@@ -216,7 +278,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | ErrorResponse | UpdateConnectorResponse400
+        Any | UpdateConnectorResponse400 | UpdateConnectorResponse401 | UpdateConnectorResponse403 | UpdateConnectorResponse404 | UpdateConnectorResponse422 | UpdateConnectorResponse429 | UpdateConnectorResponse500
     """
 
     return (

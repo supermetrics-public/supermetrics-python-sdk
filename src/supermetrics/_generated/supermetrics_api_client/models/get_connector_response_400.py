@@ -19,7 +19,7 @@ class GetConnectorResponse400:
 
     Attributes:
         meta (GetConnectorResponse400Meta): Metadata included in every API response.
-        error (Error):
+        error (Error): Machine- and human-readable detail for a failed request.
     """
 
     meta: GetConnectorResponse400Meta

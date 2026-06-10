@@ -19,7 +19,7 @@ class GetAccountsResponse400:
 
     Attributes:
         meta (GetAccountsResponse400Meta): Metadata included in every API response.
-        error (Error):
+        error (Error): Machine- and human-readable detail for a failed request.
     """
 
     meta: GetAccountsResponse400Meta
