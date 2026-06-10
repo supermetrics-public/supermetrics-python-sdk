@@ -13,11 +13,10 @@ T = TypeVar("T", bound="DatasourceDetailsAccountLabelsType0")
 
 @_attrs_define
 class DatasourceDetailsAccountLabelsType0:
-    """Labels for the accounts
-
+    """
     Attributes:
-        plural (str | Unset): Plural form of the account label Example: Accounts.
-        singular (str | Unset): Singular form of the account label Example: Account.
+        plural (str | Unset):
+        singular (str | Unset):
     """
 
     plural: str | Unset = UNSET

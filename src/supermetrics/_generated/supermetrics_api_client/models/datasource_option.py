@@ -15,8 +15,8 @@ T = TypeVar("T", bound="DatasourceOption")
 class DatasourceOption:
     """
     Attributes:
-        option_id (str | Unset): Unique identifier for the option Example: default_attribution.
-        label (str | Unset): Human-readable label for the option Example: Default attribution.
+        option_id (str | Unset):
+        label (str | Unset):
     """
 
     option_id: str | Unset = UNSET
