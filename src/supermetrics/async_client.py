@@ -10,6 +10,9 @@ from supermetrics.__version__ import __version__
 from supermetrics._generated.supermetrics_api_client.client import Client as GeneratedClient
 from supermetrics.resources.accounts import AccountsAsyncResource
 from supermetrics.resources.backfills import BackfillsAsyncResource
+from supermetrics.resources.connector_builder import ConnectorBuilderAsyncResource
+from supermetrics.resources.connector_builder_logs import ConnectorBuilderLogsAsyncResource
+from supermetrics.resources.connector_builder_secrets import ConnectorBuilderSecretsAsyncResource
 from supermetrics.resources.datasource_details import DatasourceDetailsAsyncResource
 from supermetrics.resources.login_links import LoginLinksAsyncResource
 from supermetrics.resources.logins import LoginsAsyncResource
@@ -94,6 +97,9 @@ class SupermetricsAsyncClient:
         self.accounts = AccountsAsyncResource(self._client)
         self.queries = QueriesAsyncResource(self._client)
         self.backfills = BackfillsAsyncResource(self._client)
+        self.connector_builder = ConnectorBuilderAsyncResource(self._client)
+        self.connector_builder_secrets = ConnectorBuilderSecretsAsyncResource(self._client)
+        self.connector_builder_logs = ConnectorBuilderLogsAsyncResource(self._client)
         self.datasource_details = DatasourceDetailsAsyncResource(self._client)
 
         logger.info("SupermetricsAsyncClient initialized successfully")

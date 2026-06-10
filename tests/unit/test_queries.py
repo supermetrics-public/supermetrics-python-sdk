@@ -9,7 +9,9 @@ import pytest
 from supermetrics._generated.supermetrics_api_client.client import Client as GeneratedClient
 from supermetrics._generated.supermetrics_api_client.models.data_response import DataResponse
 from supermetrics._generated.supermetrics_api_client.models.data_response_meta import DataResponseMeta
+from supermetrics._generated.supermetrics_api_client.models.error import Error
 from supermetrics._generated.supermetrics_api_client.models.get_data_response_400 import GetDataResponse400
+from supermetrics._generated.supermetrics_api_client.models.get_data_response_400_meta import GetDataResponse400Meta
 from supermetrics._generated.supermetrics_api_client.types import UNSET, Response
 from supermetrics.exceptions import APIError, AuthenticationError, NetworkError, ValidationError
 from supermetrics.resources.queries import QueriesAsyncResource, QueriesResource
@@ -397,7 +399,10 @@ class TestQueriesResource:
         original_get_data = queries_module.get_data.sync_detailed
 
         # Create a GetDataResponse400 instance with required fields
-        error_response = GetDataResponse400(type_="about:blank", title="Bad Request", status=400)
+        error_response = GetDataResponse400(
+            meta=GetDataResponse400Meta(request_id="req-id"),
+            error=Error(code="BAD_REQUEST", message="Bad Request"),
+        )
         queries_module.get_data.sync_detailed = MagicMock(
             return_value=_make_error_response(HTTPStatus.BAD_REQUEST, error_response)
         )

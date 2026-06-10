@@ -13,7 +13,7 @@ Official Python client for Supermetrics
 * Type-safe Python client generated from OpenAPI specification
 * Dual sync/async support via separate Client classes
 * Pydantic v2 models for request/response validation
-* Comprehensive API coverage: login links, logins, accounts, queries, DWH backfills
+* Comprehensive API coverage: login links, logins, accounts, queries, DWH backfills, Connector Builder
 * Custom exception hierarchy with HTTP status code mapping
 * Resource-based API organization
 
@@ -60,6 +60,39 @@ result = client.queries.execute(
 print(f"Retrieved {len(result.data)} rows")
 ```
 
+### Connector Builder
+
+```python
+from supermetrics import SupermetricsClient
+
+client = SupermetricsClient(api_key="your_api_key")
+
+# List connectors
+connectors = client.connector_builder.list(team_id=12345)
+
+# Create a connector
+created = client.connector_builder.create(
+    team_id=12345,
+    title="My Custom Connector",
+    description="Fetches data from a custom API"
+)
+connector_id = created.connector_identifier
+
+# Manage secrets
+client.connector_builder_secrets.create(
+    team_id=12345,
+    connector_identifier=connector_id,
+    secret_name="api_key",
+    secret_value="sk-secret-value"
+)
+
+# View execution logs
+logs = client.connector_builder_logs.list(
+    team_id=12345,
+    connector_identifier=connector_id
+)
+```
+
 ### Data Warehouse Backfills
 
 ```python
@@ -100,6 +133,7 @@ See the [examples/](./examples/) directory for complete working examples:
 
 - `complete_flow.py` - Full sync workflow from authentication to query execution
 - `async_flow.py` - Async version of complete workflow
+- `connector_builder_flow.py` - Connector Builder end-to-end operations (supports `--base-url` for local dev)
 
 See [examples/README.md](./examples/README.md) for setup and running instructions.
 
@@ -141,7 +175,7 @@ The SDK client is auto-generated from the Supermetrics OpenAPI specification.
 
 ### Source Specifications
 
-- **Location:** `openapi-specs/` directory (contains `openapi-data.yaml` and `openapi-management.yaml`)
+- **Location:** `openapi-specs/` directory (contains `openapi-data.yaml`, `openapi-managment.yaml`, `openapi-team.yaml`, `openapi-connector-builder.yaml`)
 - **Merged Spec:** `openapi-spec.yaml` (project root) - filtered, patched, and merged from source specs
 - **Configuration:** `scripts/references/sdk-endpoint-filters.yaml` - controls which endpoints are included and applies patches/customizations
 - **Documentation:** See [scripts/README.md](./scripts/README.md) for detailed patch system documentation
