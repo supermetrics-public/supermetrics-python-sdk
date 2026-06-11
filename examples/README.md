@@ -10,6 +10,9 @@ Demonstrates the full customer onboarding flow from client initialization throug
 ### `async_flow.py` - Asynchronous Complete Workflow
 Same workflow as `complete_flow.py` but using async/await for non-blocking operations.
 
+### `connector_builder_flow.py` - Connector Builder End-to-End
+Demonstrates creating, configuring, and managing custom connectors including secrets and logs. Supports `--base-url` flag for targeting local dev environments.
+
 ## Prerequisites
 
 1. **Python 3.11 or higher**
@@ -46,6 +49,19 @@ python examples/complete_flow.py
 
 ```bash
 python examples/async_flow.py
+```
+
+### Connector Builder Example
+
+```bash
+# Production
+python examples/connector_builder_flow.py
+
+# Local dev (ismtip)
+python examples/connector_builder_flow.py --base-url https://{replace-me}
+
+# With team ID
+python examples/connector_builder_flow.py --team-id 12345 --base-url https://{replace-me}
 ```
 
 ## What to Expect

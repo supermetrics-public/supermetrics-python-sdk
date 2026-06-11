@@ -6,8 +6,14 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.backfill_response import BackfillResponse
-from ...models.error_response import ErrorResponse
 from ...models.update_backfill_status_body import UpdateBackfillStatusBody
+from ...models.update_backfill_status_response_400 import UpdateBackfillStatusResponse400
+from ...models.update_backfill_status_response_401 import UpdateBackfillStatusResponse401
+from ...models.update_backfill_status_response_403 import UpdateBackfillStatusResponse403
+from ...models.update_backfill_status_response_404 import UpdateBackfillStatusResponse404
+from ...models.update_backfill_status_response_422 import UpdateBackfillStatusResponse422
+from ...models.update_backfill_status_response_429 import UpdateBackfillStatusResponse429
+from ...models.update_backfill_status_response_500 import UpdateBackfillStatusResponse500
 from ...types import Response
 
 
@@ -34,44 +40,54 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> BackfillResponse | ErrorResponse | None:
+) -> (
+    BackfillResponse
+    | UpdateBackfillStatusResponse400
+    | UpdateBackfillStatusResponse401
+    | UpdateBackfillStatusResponse403
+    | UpdateBackfillStatusResponse404
+    | UpdateBackfillStatusResponse422
+    | UpdateBackfillStatusResponse429
+    | UpdateBackfillStatusResponse500
+    | None
+):
     if response.status_code == 200:
         response_200 = BackfillResponse.from_dict(response.json())
 
         return response_200
 
     if response.status_code == 400:
-        response_400 = ErrorResponse.from_dict(response.json())
+        response_400 = UpdateBackfillStatusResponse400.from_dict(response.json())
 
         return response_400
 
     if response.status_code == 401:
-        response_401 = ErrorResponse.from_dict(response.json())
+        response_401 = UpdateBackfillStatusResponse401.from_dict(response.json())
 
         return response_401
 
     if response.status_code == 403:
-        response_403 = ErrorResponse.from_dict(response.json())
+        response_403 = UpdateBackfillStatusResponse403.from_dict(response.json())
 
         return response_403
 
     if response.status_code == 404:
-        response_404 = ErrorResponse.from_dict(response.json())
+        response_404 = UpdateBackfillStatusResponse404.from_dict(response.json())
 
         return response_404
 
     if response.status_code == 422:
-        response_422 = ErrorResponse.from_dict(response.json())
+        response_422 = UpdateBackfillStatusResponse422.from_dict(response.json())
 
         return response_422
 
     if response.status_code == 429:
-        response_429 = ErrorResponse.from_dict(response.json())
+        response_429 = UpdateBackfillStatusResponse429.from_dict(response.json())
 
         return response_429
 
     if response.status_code == 500:
-        response_500 = ErrorResponse.from_dict(response.json())
+        response_500 = UpdateBackfillStatusResponse500.from_dict(response.json())
 
         return response_500
 
@@ -83,7 +99,16 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[BackfillResponse | ErrorResponse]:
+) -> Response[
+    BackfillResponse
+    | UpdateBackfillStatusResponse400
+    | UpdateBackfillStatusResponse401
+    | UpdateBackfillStatusResponse403
+    | UpdateBackfillStatusResponse404
+    | UpdateBackfillStatusResponse422
+    | UpdateBackfillStatusResponse429
+    | UpdateBackfillStatusResponse500
+]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -98,7 +123,16 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     body: UpdateBackfillStatusBody,
-) -> Response[BackfillResponse | ErrorResponse]:
+) -> Response[
+    BackfillResponse
+    | UpdateBackfillStatusResponse400
+    | UpdateBackfillStatusResponse401
+    | UpdateBackfillStatusResponse403
+    | UpdateBackfillStatusResponse404
+    | UpdateBackfillStatusResponse422
+    | UpdateBackfillStatusResponse429
+    | UpdateBackfillStatusResponse500
+]:
     r"""Update backfill status
 
      Update the status of a backfill. Currently, the only supported operation is
@@ -137,7 +171,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[BackfillResponse | ErrorResponse]
+        Response[BackfillResponse | UpdateBackfillStatusResponse400 | UpdateBackfillStatusResponse401 | UpdateBackfillStatusResponse403 | UpdateBackfillStatusResponse404 | UpdateBackfillStatusResponse422 | UpdateBackfillStatusResponse429 | UpdateBackfillStatusResponse500]
     """
 
     kwargs = _get_kwargs(
@@ -159,7 +193,17 @@ def sync(
     *,
     client: AuthenticatedClient,
     body: UpdateBackfillStatusBody,
-) -> BackfillResponse | ErrorResponse | None:
+) -> (
+    BackfillResponse
+    | UpdateBackfillStatusResponse400
+    | UpdateBackfillStatusResponse401
+    | UpdateBackfillStatusResponse403
+    | UpdateBackfillStatusResponse404
+    | UpdateBackfillStatusResponse422
+    | UpdateBackfillStatusResponse429
+    | UpdateBackfillStatusResponse500
+    | None
+):
     r"""Update backfill status
 
      Update the status of a backfill. Currently, the only supported operation is
@@ -198,7 +242,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        BackfillResponse | ErrorResponse
+        BackfillResponse | UpdateBackfillStatusResponse400 | UpdateBackfillStatusResponse401 | UpdateBackfillStatusResponse403 | UpdateBackfillStatusResponse404 | UpdateBackfillStatusResponse422 | UpdateBackfillStatusResponse429 | UpdateBackfillStatusResponse500
     """
 
     return sync_detailed(
@@ -215,7 +259,16 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     body: UpdateBackfillStatusBody,
-) -> Response[BackfillResponse | ErrorResponse]:
+) -> Response[
+    BackfillResponse
+    | UpdateBackfillStatusResponse400
+    | UpdateBackfillStatusResponse401
+    | UpdateBackfillStatusResponse403
+    | UpdateBackfillStatusResponse404
+    | UpdateBackfillStatusResponse422
+    | UpdateBackfillStatusResponse429
+    | UpdateBackfillStatusResponse500
+]:
     r"""Update backfill status
 
      Update the status of a backfill. Currently, the only supported operation is
@@ -254,7 +307,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[BackfillResponse | ErrorResponse]
+        Response[BackfillResponse | UpdateBackfillStatusResponse400 | UpdateBackfillStatusResponse401 | UpdateBackfillStatusResponse403 | UpdateBackfillStatusResponse404 | UpdateBackfillStatusResponse422 | UpdateBackfillStatusResponse429 | UpdateBackfillStatusResponse500]
     """
 
     kwargs = _get_kwargs(
@@ -274,7 +327,17 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     body: UpdateBackfillStatusBody,
-) -> BackfillResponse | ErrorResponse | None:
+) -> (
+    BackfillResponse
+    | UpdateBackfillStatusResponse400
+    | UpdateBackfillStatusResponse401
+    | UpdateBackfillStatusResponse403
+    | UpdateBackfillStatusResponse404
+    | UpdateBackfillStatusResponse422
+    | UpdateBackfillStatusResponse429
+    | UpdateBackfillStatusResponse500
+    | None
+):
     r"""Update backfill status
 
      Update the status of a backfill. Currently, the only supported operation is
@@ -313,7 +376,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        BackfillResponse | ErrorResponse
+        BackfillResponse | UpdateBackfillStatusResponse400 | UpdateBackfillStatusResponse401 | UpdateBackfillStatusResponse403 | UpdateBackfillStatusResponse404 | UpdateBackfillStatusResponse422 | UpdateBackfillStatusResponse429 | UpdateBackfillStatusResponse500
     """
 
     return (

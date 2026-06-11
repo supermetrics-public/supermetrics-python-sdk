@@ -21,18 +21,14 @@ T = TypeVar("T", bound="DatasourceSetting")
 class DatasourceSetting:
     """
     Attributes:
-        setting_id (str | Unset): Unique identifier for the setting, using the v2 API key format Example:
-            blanks_to_zero.
-        context (DatasourceSettingContext | Unset): The context in which the setting is applied. Example: options.
-        type_ (DatasourceSettingType | Unset): UI component type Example: checkbox.
-        label (str | Unset): Human-readable label for the setting Example: Replace blank metric values with zeros.
-        help_text (None | str | Unset): Optional helper text shown to users Example: When you're splitting the data by a
-            time dimension, using this setting ensures all time values (dates / weeks / months / years) will be returned,
-            even if there's no data for some of them..
-        default_value (Any | Unset): Optional default value; type depends on the setting type
-        options (list[DatasourceOption] | Unset): Zero or more selectable options, applicable when type is
-            select/multiselect
-        is_value_required (bool | Unset): Whether a value is mandatory for this setting
+        setting_id (str | Unset):
+        context (DatasourceSettingContext | Unset):
+        type_ (DatasourceSettingType | Unset):
+        label (str | Unset):
+        help_text (None | str | Unset):
+        default_value (None | str | Unset):
+        options (list[DatasourceOption] | Unset):
+        is_value_required (bool | Unset):
     """
 
     setting_id: str | Unset = UNSET
@@ -40,7 +36,7 @@ class DatasourceSetting:
     type_: DatasourceSettingType | Unset = UNSET
     label: str | Unset = UNSET
     help_text: None | str | Unset = UNSET
-    default_value: Any | Unset = UNSET
+    default_value: None | str | Unset = UNSET
     options: list[DatasourceOption] | Unset = UNSET
     is_value_required: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -64,7 +60,11 @@ class DatasourceSetting:
         else:
             help_text = self.help_text
 
-        default_value = self.default_value
+        default_value: None | str | Unset
+        if isinstance(self.default_value, Unset):
+            default_value = UNSET
+        else:
+            default_value = self.default_value
 
         options: list[dict[str, Any]] | Unset = UNSET
         if not isinstance(self.options, Unset):
@@ -129,7 +129,14 @@ class DatasourceSetting:
 
         help_text = _parse_help_text(d.pop("help_text", UNSET))
 
-        default_value = d.pop("default_value", UNSET)
+        def _parse_default_value(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        default_value = _parse_default_value(d.pop("default_value", UNSET))
 
         _options = d.pop("options", UNSET)
         options: list[DatasourceOption] | Unset = UNSET

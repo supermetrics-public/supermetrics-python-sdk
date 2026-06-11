@@ -66,6 +66,40 @@ endpoints:
   - method: GET
     path: /teams/{team_id}/datasource/{data_source_id}
 
+  # Connector Builder - Connectors
+  - method: GET
+    path: /v1/teams/{team_id}/connector_builder/connectors
+  - method: POST
+    path: /v1/teams/{team_id}/connector_builder/connectors
+  - method: GET
+    path: /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}
+  - method: PUT
+    path: /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}
+  - method: DELETE
+    path: /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}
+
+  # Connector Builder - Secrets
+  - method: GET
+    path: /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/secrets
+  - method: POST
+    path: /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/secrets
+  - method: PUT
+    path: /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/secrets/{secret_placeholder}
+  - method: DELETE
+    path: /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/secrets/{secret_placeholder}
+
+  # Connector Builder - Logs
+  - method: GET
+    path: /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logs
+  - method: GET
+    path: /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logs/{log_id}
+
+  # Connector Builder - Logo
+  - method: GET
+    path: /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logo
+  - method: POST
+    path: /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logo
+
   # ==========================================
   # EXAMPLE: Endpoint with comprehensive patches
   # ==========================================
