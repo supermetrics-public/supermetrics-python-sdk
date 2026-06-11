@@ -6,7 +6,7 @@ using the Connector Builder API.
 
 Usage:
     python examples/connector_builder_flow.py
-    python examples/connector_builder_flow.py --base-url https://api.ismtip.com
+    python examples/connector_builder_flow.py --base-url https://{replace-me}
 
 Setup:
     export SUPERMETRICS_API_KEY=your_api_key
@@ -35,7 +35,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--base-url",
         default="https://api.supermetrics.com",
-        help="API base URL (default: https://api.supermetrics.com, use https://api.ismtip.com for local dev)",
+        help="API base URL (default: https://api.supermetrics.com, or use your local dev URL)",
     )
     parser.add_argument("--team-id", type=int, help="Team ID (or set SUPERMETRICS_TEAM_ID env var)")
     return parser.parse_args()
