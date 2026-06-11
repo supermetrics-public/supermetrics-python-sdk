@@ -10,7 +10,7 @@ from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.login_link import LoginLink
-    from ..models.response_meta import ResponseMeta
+    from ..models.login_link_response_meta import LoginLinkResponseMeta
 
 
 T = TypeVar("T", bound="LoginLinkResponse")
@@ -20,11 +20,11 @@ T = TypeVar("T", bound="LoginLinkResponse")
 class LoginLinkResponse:
     """
     Attributes:
-        meta (ResponseMeta | Unset):
+        meta (LoginLinkResponseMeta | Unset): Metadata included in every API response.
         data (LoginLink | Unset):
     """
 
-    meta: ResponseMeta | Unset = UNSET
+    meta: LoginLinkResponseMeta | Unset = UNSET
     data: LoginLink | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -50,15 +50,15 @@ class LoginLinkResponse:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.login_link import LoginLink
-        from ..models.response_meta import ResponseMeta
+        from ..models.login_link_response_meta import LoginLinkResponseMeta
 
         d = dict(src_dict)
         _meta = d.pop("meta", UNSET)
-        meta: ResponseMeta | Unset
+        meta: LoginLinkResponseMeta | Unset
         if isinstance(_meta, Unset):
             meta = UNSET
         else:
-            meta = ResponseMeta.from_dict(_meta)
+            meta = LoginLinkResponseMeta.from_dict(_meta)
 
         _data = d.pop("data", UNSET)
         data: LoginLink | Unset

@@ -26,37 +26,31 @@ T = TypeVar("T", bound="DatasourceDetails")
 class DatasourceDetails:
     """
     Attributes:
-        id (str | Unset): Unique identifier of the datasource (e.g., "GAWA", "AW", "SA360") Example: GAWA.
-        name (str | Unset): Human-readable name of the datasource Example: Google Analytics 4.
-        description (str | Unset): Detailed description of the datasource and its capabilities Example: A web analytics
-            service for tracking website traffic and user behavior, with a focus on AI and machine learning..
-        marketing_name (None | str | Unset): Connector marketing name Example: Google Analytics.
-        logo_url (str | Unset): Connector logo URL Example: https://assets.supermetrics.com/images/dsLogos/GAWA.png.
-        categories (list[DatasourceDetailsCategoriesItem] | Unset): Categories that this datasource belongs to Example:
-            ['Analytics'].
-        products (list[str] | Unset): List of products where this datasource is available Example: ['API', 'DS',
-            'SHEETS', 'EXCEL', 'DWH'].
-        status (DatasourceDetailsStatus | Unset): Connector release status Example: Released.
-        is_premium (bool | Unset): Is connector premium
-        tags (list[str] | Unset): Tags associated with this datasource (e.g., "popular") Example: ['popular'].
-        is_authentication_required (bool | Unset): Whether this datasource requires authentication to use Example: True.
-        has_account_list (bool | Unset): Whether this datasource has account-level resources that can be selected
-            Example: True.
-        has_fields (bool | Unset): Whether this datasource has field selection capabilities Example: True.
-        has_segments (bool | Unset): Indicates if the data source supports segments
-        has_report_type_selection (bool | Unset): Whether the report type selection UI should be shown to users
-        is_date_range_required (bool | Unset): Whether date range selection is applicable at the datasource level (can
-            be overridden by report types) Example: True.
-        is_custom_data_import (bool | Unset): Indicates if the data source supports custom data import
-        min_metrics (int | None | Unset): Minimum number of metrics required for the data source query Example: 1.
-        max_metrics (int | None | Unset): Maximum number of metrics allowed for the data source query Example: 10.
-        min_dimensions (int | None | Unset): Minimum number of dimensions required for the data source query
-        max_dimensions (int | None | Unset): Maximum number of dimensions allowed for the data source query Example: 9.
-        report_type_header_label (str | Unset): Dynamic label used for UI to show what the report type header should be
-            called Example: Report Type.
-        account_labels (DatasourceDetailsAccountLabelsType0 | None | Unset): Labels for the accounts
-        report_types (list[DatasourceReportType] | Unset): Available report types for this datasource
-        common_settings (list[DatasourceSetting] | Unset): General settings not tied to a specific report type
+        id (str | Unset):  Example: GAWA.
+        name (str | Unset):  Example: Google Analytics 4.
+        description (str | Unset):
+        marketing_name (None | str | Unset):
+        logo_url (str | Unset):
+        categories (list[DatasourceDetailsCategoriesItem] | Unset):
+        products (list[str] | Unset):  Example: ['API', 'DS', 'SHEETS', 'EXCEL', 'DWH'].
+        status (DatasourceDetailsStatus | Unset):  Example: Released.
+        is_premium (bool | Unset):
+        tags (list[str] | Unset):  Example: ['popular'].
+        is_authentication_required (bool | Unset):  Example: True.
+        has_account_list (bool | Unset):  Example: True.
+        has_fields (bool | Unset):  Example: True.
+        has_segments (bool | Unset):
+        has_report_type_selection (bool | Unset):
+        is_date_range_required (bool | Unset):  Example: True.
+        is_custom_data_import (bool | Unset):
+        min_metrics (int | None | Unset):  Example: 1.
+        max_metrics (int | None | Unset):  Example: 10.
+        min_dimensions (int | None | Unset):
+        max_dimensions (int | None | Unset):  Example: 9.
+        report_type_header_label (str | Unset):  Example: Report Type.
+        account_labels (DatasourceDetailsAccountLabelsType0 | None | Unset):
+        report_types (list[DatasourceReportType] | Unset):
+        common_settings (list[DatasourceSetting] | Unset):
     """
 
     id: str | Unset = UNSET

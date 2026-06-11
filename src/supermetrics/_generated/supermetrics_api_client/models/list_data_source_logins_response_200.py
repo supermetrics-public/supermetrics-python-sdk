@@ -20,7 +20,7 @@ T = TypeVar("T", bound="ListDataSourceLoginsResponse200")
 class ListDataSourceLoginsResponse200:
     """
     Attributes:
-        meta (ResponseMeta | Unset):
+        meta (ResponseMeta | Unset): Metadata included in every API response.
         data (list[DataSourceLogin] | Unset):
     """
 

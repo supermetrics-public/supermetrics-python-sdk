@@ -1,81 +1,59 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from attrs import define as _attrs_define
 
-from ..types import UNSET, Unset
+if TYPE_CHECKING:
+    from ..models.error import Error
+    from ..models.get_datasource_details_response_500_meta import GetDatasourceDetailsResponse500Meta
+
 
 T = TypeVar("T", bound="GetDatasourceDetailsResponse500")
 
 
 @_attrs_define
 class GetDatasourceDetailsResponse500:
-    """RFC 9457 Problem Details for HTTP APIs
+    """Standard envelope returned by all error (4xx/5xx) responses.
 
     Attributes:
-        type_ (str): A URI reference that identifies the problem type Example:
-            https://supermetrics.com/problems/unauthorized.
-        title (str): A short, human-readable summary of the problem type Example: Unauthorized.
-        status (int): The HTTP status code Example: 401.
-        detail (str | Unset): A human-readable explanation specific to this occurrence Example: Authentication required.
-        instance (str | Unset): A URI reference that identifies the specific occurrence Example:
-            https://api.supermetrics.com/v2/api-keys.
+        meta (GetDatasourceDetailsResponse500Meta): Metadata included in every API response.
+        error (Error): Machine- and human-readable detail for a failed request.
     """
 
-    type_: str
-    title: str
-    status: int
-    detail: str | Unset = UNSET
-    instance: str | Unset = UNSET
+    meta: GetDatasourceDetailsResponse500Meta
+    error: Error
 
     def to_dict(self) -> dict[str, Any]:
-        type_ = self.type_
+        meta = self.meta.to_dict()
 
-        title = self.title
-
-        status = self.status
-
-        detail = self.detail
-
-        instance = self.instance
+        error = self.error.to_dict()
 
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
             {
-                "type": type_,
-                "title": title,
-                "status": status,
+                "meta": meta,
+                "error": error,
             }
         )
-        if detail is not UNSET:
-            field_dict["detail"] = detail
-        if instance is not UNSET:
-            field_dict["instance"] = instance
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.error import Error
+        from ..models.get_datasource_details_response_500_meta import GetDatasourceDetailsResponse500Meta
+
         d = dict(src_dict)
-        type_ = d.pop("type")
+        meta = GetDatasourceDetailsResponse500Meta.from_dict(d.pop("meta"))
 
-        title = d.pop("title")
-
-        status = d.pop("status")
-
-        detail = d.pop("detail", UNSET)
-
-        instance = d.pop("instance", UNSET)
+        error = Error.from_dict(d.pop("error"))
 
         get_datasource_details_response_500 = cls(
-            type_=type_,
-            title=title,
-            status=status,
-            detail=detail,
-            instance=instance,
+            meta=meta,
+            error=error,
         )
 
         return get_datasource_details_response_500
