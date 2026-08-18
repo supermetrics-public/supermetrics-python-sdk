@@ -5,8 +5,11 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.error_response import ErrorResponse
 from ...models.list_incomplete_backfills_response_200 import ListIncompleteBackfillsResponse200
+from ...models.list_incomplete_backfills_response_401 import ListIncompleteBackfillsResponse401
+from ...models.list_incomplete_backfills_response_403 import ListIncompleteBackfillsResponse403
+from ...models.list_incomplete_backfills_response_429 import ListIncompleteBackfillsResponse429
+from ...models.list_incomplete_backfills_response_500 import ListIncompleteBackfillsResponse500
 from ...types import Response
 
 
@@ -23,29 +26,36 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> ErrorResponse | ListIncompleteBackfillsResponse200 | None:
+) -> (
+    ListIncompleteBackfillsResponse200
+    | ListIncompleteBackfillsResponse401
+    | ListIncompleteBackfillsResponse403
+    | ListIncompleteBackfillsResponse429
+    | ListIncompleteBackfillsResponse500
+    | None
+):
     if response.status_code == 200:
         response_200 = ListIncompleteBackfillsResponse200.from_dict(response.json())
 
         return response_200
 
     if response.status_code == 401:
-        response_401 = ErrorResponse.from_dict(response.json())
+        response_401 = ListIncompleteBackfillsResponse401.from_dict(response.json())
 
         return response_401
 
     if response.status_code == 403:
-        response_403 = ErrorResponse.from_dict(response.json())
+        response_403 = ListIncompleteBackfillsResponse403.from_dict(response.json())
 
         return response_403
 
     if response.status_code == 429:
-        response_429 = ErrorResponse.from_dict(response.json())
+        response_429 = ListIncompleteBackfillsResponse429.from_dict(response.json())
 
         return response_429
 
     if response.status_code == 500:
-        response_500 = ErrorResponse.from_dict(response.json())
+        response_500 = ListIncompleteBackfillsResponse500.from_dict(response.json())
 
         return response_500
 
@@ -57,7 +67,13 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[ErrorResponse | ListIncompleteBackfillsResponse200]:
+) -> Response[
+    ListIncompleteBackfillsResponse200
+    | ListIncompleteBackfillsResponse401
+    | ListIncompleteBackfillsResponse403
+    | ListIncompleteBackfillsResponse429
+    | ListIncompleteBackfillsResponse500
+]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -70,7 +86,13 @@ def sync_detailed(
     team_id: int,
     *,
     client: AuthenticatedClient,
-) -> Response[ErrorResponse | ListIncompleteBackfillsResponse200]:
+) -> Response[
+    ListIncompleteBackfillsResponse200
+    | ListIncompleteBackfillsResponse401
+    | ListIncompleteBackfillsResponse403
+    | ListIncompleteBackfillsResponse429
+    | ListIncompleteBackfillsResponse500
+]:
     r"""List incomplete backfills for team
 
      Retrieve a list of all incomplete backfills for your team.
@@ -98,7 +120,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | ListIncompleteBackfillsResponse200]
+        Response[ListIncompleteBackfillsResponse200 | ListIncompleteBackfillsResponse401 | ListIncompleteBackfillsResponse403 | ListIncompleteBackfillsResponse429 | ListIncompleteBackfillsResponse500]
     """
 
     kwargs = _get_kwargs(
@@ -116,7 +138,14 @@ def sync(
     team_id: int,
     *,
     client: AuthenticatedClient,
-) -> ErrorResponse | ListIncompleteBackfillsResponse200 | None:
+) -> (
+    ListIncompleteBackfillsResponse200
+    | ListIncompleteBackfillsResponse401
+    | ListIncompleteBackfillsResponse403
+    | ListIncompleteBackfillsResponse429
+    | ListIncompleteBackfillsResponse500
+    | None
+):
     r"""List incomplete backfills for team
 
      Retrieve a list of all incomplete backfills for your team.
@@ -144,7 +173,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | ListIncompleteBackfillsResponse200
+        ListIncompleteBackfillsResponse200 | ListIncompleteBackfillsResponse401 | ListIncompleteBackfillsResponse403 | ListIncompleteBackfillsResponse429 | ListIncompleteBackfillsResponse500
     """
 
     return sync_detailed(
@@ -157,7 +186,13 @@ async def asyncio_detailed(
     team_id: int,
     *,
     client: AuthenticatedClient,
-) -> Response[ErrorResponse | ListIncompleteBackfillsResponse200]:
+) -> Response[
+    ListIncompleteBackfillsResponse200
+    | ListIncompleteBackfillsResponse401
+    | ListIncompleteBackfillsResponse403
+    | ListIncompleteBackfillsResponse429
+    | ListIncompleteBackfillsResponse500
+]:
     r"""List incomplete backfills for team
 
      Retrieve a list of all incomplete backfills for your team.
@@ -185,7 +220,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ErrorResponse | ListIncompleteBackfillsResponse200]
+        Response[ListIncompleteBackfillsResponse200 | ListIncompleteBackfillsResponse401 | ListIncompleteBackfillsResponse403 | ListIncompleteBackfillsResponse429 | ListIncompleteBackfillsResponse500]
     """
 
     kwargs = _get_kwargs(
@@ -201,7 +236,14 @@ async def asyncio(
     team_id: int,
     *,
     client: AuthenticatedClient,
-) -> ErrorResponse | ListIncompleteBackfillsResponse200 | None:
+) -> (
+    ListIncompleteBackfillsResponse200
+    | ListIncompleteBackfillsResponse401
+    | ListIncompleteBackfillsResponse403
+    | ListIncompleteBackfillsResponse429
+    | ListIncompleteBackfillsResponse500
+    | None
+):
     r"""List incomplete backfills for team
 
      Retrieve a list of all incomplete backfills for your team.
@@ -229,7 +271,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ErrorResponse | ListIncompleteBackfillsResponse200
+        ListIncompleteBackfillsResponse200 | ListIncompleteBackfillsResponse401 | ListIncompleteBackfillsResponse403 | ListIncompleteBackfillsResponse429 | ListIncompleteBackfillsResponse500
     """
 
     return (

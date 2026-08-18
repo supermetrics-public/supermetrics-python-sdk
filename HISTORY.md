@@ -1,5 +1,14 @@
 # History
 
+## 0.3.0-beta1 (2026-06-09)
+
+* Add Connector Builder resource with full CRUD support: create, get, list, update, delete connectors
+* Add Connector Builder Secrets resource: create, list, update, delete encrypted secrets
+* Add Connector Builder Logs resource: list and get connector execution logs
+* Add Connector Builder Logo support: get and upload connector logos
+* Add `connector_builder_flow.py` example with `--base-url` flag for local dev testing
+* Fix OpenAPI filter script: resolve transitive schema dependencies and bare `$ref` rewriting
+
 ## 0.2.0-beta1 (2026-03-26)
 
 * Add Backfills resource with full CRUD support: create, get latest, list incomplete, and cancel backfills ([#16](../../pull/16))

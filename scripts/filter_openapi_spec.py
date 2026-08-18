@@ -238,17 +238,31 @@ def resolve_external_file_reference(
             else:
                 return None
 
-        # Cache this result
+        # Mark as in-progress to avoid infinite loops
         resolved_cache[cache_key] = component
 
         # Recursively resolve any nested external references in this component
         component = resolve_nested_external_refs(component, full_path.parent, resolved_cache)
+
+        # Update cache with fully resolved version
+        resolved_cache[cache_key] = component
 
         return component
 
     except Exception as e:
         print(f"      Error loading external file {ref_path}: {e}")
         return None
+
+
+def _rewrite_bare_ref(ref: str) -> str:
+    """Rewrite bare #/Name refs from shared files to #/components/schemas/Name."""
+    if ref.startswith('#/components/'):
+        return ref
+    if ref.startswith('#/'):
+        name = ref[2:]
+        if '/' not in name:
+            return f'#/components/schemas/{name}'
+    return ref
 
 
 def resolve_nested_external_refs(obj: Any, base_path: Path, resolved_cache: dict[str, Any]) -> Any:
@@ -285,8 +299,9 @@ def resolve_nested_external_refs(obj: Any, base_path: Path, resolved_cache: dict
                         # Keep the broken ref as-is
                         result[key] = value
                 else:
-                    # Internal ref, keep as-is
-                    result[key] = value
+                    # Internal ref — rewrite bare #/Name refs from resolved shared
+                    # files to proper #/components/schemas/Name paths
+                    result[key] = _rewrite_bare_ref(value)
             else:
                 # Recursively process the value
                 result[key] = resolve_nested_external_refs(value, base_path, resolved_cache)
@@ -612,6 +627,48 @@ def main():
     merged_spec['components'] = resolve_nested_external_refs(merged_spec['components'], specs_dir, resolved_cache)
     if resolved_cache:
         print(f"   ✓ Resolved {len(resolved_cache)} inline external reference(s)")
+
+    # Second pass: iteratively collect transitive dependencies from resolved content
+    for pass_num in range(5):
+        new_refs: set[str] = set()
+        extract_refs(merged_spec['components'], new_refs)
+        extract_refs(merged_spec['paths'], new_refs)
+        added = 0
+        for ref in sorted(new_refs):
+            ref_type, ref_name = resolve_component_name(ref)
+            if not ref_type or not ref_name:
+                continue
+            if ref_name in collected_components.get(ref_type, set()):
+                continue
+            if ref_type not in collected_components:
+                collected_components[ref_type] = set()
+            collected_components[ref_type].add(ref_name)
+            added += 1
+            # Check all_components (from source specs)
+            if ref_type in all_components and ref_name in all_components[ref_type]:
+                merged_spec['components'].setdefault(ref_type, {})[ref_name] = all_components[ref_type][ref_name]
+            elif ref_type == 'schemas' and ref_name not in merged_spec.get('components', {}).get('schemas', {}):
+                # Try to find in shared schema files
+                for shared_file in (specs_dir / 'shared' / 'schemas').rglob('*.yaml'):
+                    try:
+                        shared_data = load_yaml_file(shared_file)
+                        if ref_name in shared_data:
+                            resolved_def = resolve_nested_external_refs(
+                                shared_data[ref_name], shared_file.parent, resolved_cache
+                            )
+                            merged_spec['components'].setdefault('schemas', {})[ref_name] = resolved_def
+                            break
+                    except Exception:
+                        continue
+        if added == 0:
+            break
+        # Resolve any new external refs
+        new_replaced, _ = resolve_external_references(merged_spec['components'], specs_dir)
+        if new_replaced > 0:
+            merged_spec['components'] = resolve_nested_external_refs(
+                merged_spec['components'], specs_dir, resolved_cache
+            )
+        print(f"   ✓ Pass {pass_num + 2}: added {added} transitive component(s)")
 
     # Apply component patches
     if component_patches:

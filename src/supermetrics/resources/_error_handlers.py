@@ -118,6 +118,40 @@ def _raise_for_status(
     )
 
 
+def _raise_for_error_response(response: object, endpoint: str) -> NoReturn:
+    """Translate a generated ErrorResponse model into the appropriate SDK exception."""
+    code = ""
+    message = ""
+
+    error = getattr(response, "error", None)
+    if error is not None and not isinstance(error, str):
+        code = getattr(error, "code", "") or ""
+        message = getattr(error, "message", "") or ""
+        description = getattr(error, "description", "") or ""
+        if description and description != message and description != code:
+            message = f"{message}: {description}"
+
+    error_body = message or str(response)
+
+    if code == "UNAUTHORIZED" or code == "401":
+        raise AuthenticationError("Invalid or expired API key", status_code=401, endpoint=endpoint)
+    if code in ("BAD_REQUEST", "VALIDATION_ERROR"):
+        raise ValidationError(error_body, status_code=400, endpoint=endpoint, response_body=error_body)
+    if code in ("FORBIDDEN", "ACCESS_DENIED", "PERMISSION_ERROR"):
+        raise APIError(error_body, status_code=403, endpoint=endpoint, response_body=error_body)
+    if code in ("NOT_FOUND", "CONNECTOR_NOT_FOUND", "SECRET_NOT_FOUND", "LOG_NOT_FOUND"):
+        raise APIError(error_body, status_code=404, endpoint=endpoint, response_body=error_body)
+    if code == "CONFLICT_ERROR":
+        raise APIError(error_body, status_code=409, endpoint=endpoint, response_body=error_body)
+    if code == "TOO_MANY_REQUESTS":
+        raise APIError(error_body, status_code=429, endpoint=endpoint, response_body=error_body)
+    if code in ("INTERNAL_SERVER_ERROR", "SERVICE_UNAVAILABLE"):
+        raise APIError(error_body, status_code=500, endpoint=endpoint, response_body=error_body)
+    if code == "UNPROCESSABLE_ENTITY":
+        raise ValidationError(error_body, status_code=422, endpoint=endpoint, response_body=error_body)
+    raise APIError(f"API error: {error_body}", status_code=0, endpoint=endpoint, response_body=error_body)
+
+
 @contextmanager
 def api_error_handler(
     endpoint: str,

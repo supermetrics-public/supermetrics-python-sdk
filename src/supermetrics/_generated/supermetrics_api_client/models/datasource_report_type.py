@@ -19,12 +19,11 @@ T = TypeVar("T", bound="DatasourceReportType")
 class DatasourceReportType:
     """
     Attributes:
-        label (str | Unset): Human-readable report type name Example: Cohort Daily.
-        id (str | Unset): Unique identifier for the report type Example: CohortDaily.
-        is_date_range_required (bool | Unset): Whether date range selection is required for this specific report type
-        is_free_text_account_required (bool | Unset): Whether this report type requires free-text account input (e.g.,
-            page aliases, URLs) Example: True.
-        settings (list[DatasourceSetting] | Unset): List of settings applicable to this report type
+        label (str | Unset):
+        id (str | Unset):
+        is_date_range_required (bool | Unset):
+        is_free_text_account_required (bool | Unset):
+        settings (list[DatasourceSetting] | Unset):
     """
 
     label: str | Unset = UNSET
