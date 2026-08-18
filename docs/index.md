@@ -12,6 +12,9 @@ The Supermetrics Python SDK is a type-safe Python client that provides seamless 
 - Comprehensive API coverage: login links, logins, accounts, queries
 - Custom exception hierarchy with HTTP status code mapping
 - Resource-based API organization
+- API key, OAuth bearer token, and dynamic token provider authentication
+- Per-request authorization, header, and timeout overrides on a shared connection pool
+- `with_raw_response` access to HTTP status codes, headers, and raw payloads
 
 ## Quick Start
 
@@ -46,6 +49,8 @@ result = client.queries.execute(
 
 - [Installation](installation.md) - Installation instructions and requirements
 - [Usage](usage.md) - Quick usage overview and basic examples
+- [Authentication & Transport](authentication-and-transport.md) - Credentials, dynamic token
+  providers, per-request overrides, response metadata, and the error taxonomy
 
 ### Guides
 
@@ -67,6 +72,8 @@ result = client.queries.execute(
   - Common error scenarios
   - Retry strategies
   - Production-ready error handling
+
+- [OpenAPI Code Generation](openapi-generation.md) - Pipeline for generating and updating SDK client code from OpenAPI specs
 
 ### Additional Resources
 

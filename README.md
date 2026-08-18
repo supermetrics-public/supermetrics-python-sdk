@@ -16,6 +16,9 @@ Official Python client for Supermetrics
 * Comprehensive API coverage: login links, logins, accounts, queries, DWH backfills, Connector Builder
 * Custom exception hierarchy with HTTP status code mapping
 * Resource-based API organization
+* API key, OAuth bearer token, and dynamic token provider authentication
+* Per-request authorization, header, and timeout overrides on a shared connection pool
+* `with_raw_response` access to HTTP status codes, headers, and raw payloads
 
 ## Quick Start
 
@@ -108,6 +111,55 @@ cancelled = client.backfills.cancel(team_id=12345, backfill_id=67890)
 print(f"Backfill cancelled: {cancelled.status}")
 ```
 
+## Authentication
+
+The client accepts exactly one of `api_key`, `bearer_token`, or `token_provider`:
+
+```python
+from supermetrics import SupermetricsAsyncClient, SupermetricsClient
+
+# Static API key
+client = SupermetricsClient(api_key="api_live_abc123")
+
+# OAuth access token
+client = SupermetricsClient(bearer_token="otok_abc123")
+
+
+# Dynamic provider, re-evaluated on every request so short-lived tokens can be
+# refreshed without discarding the connection pool
+async def get_valid_token() -> str:
+    return await oauth_service.get_access_token(team_id=123)
+
+
+client = SupermetricsAsyncClient(token_provider=get_valid_token)
+```
+
+Every resource method takes per-request `auth_token`, `headers`, and `timeout` overrides,
+so one shared client can serve concurrent callers that each bring their own credential and
+tracing context:
+
+```python
+sync_client = SupermetricsClient(api_key="api_live_abc123")
+
+login = sync_client.logins.get(
+    "login_abc123",
+    auth_token="otok_this_caller",
+    headers={"X-Span-Id": "a8f3b2c9", "Idempotency-Key": "req-42"},
+    timeout=120.0,
+)
+```
+
+Use `with_raw_response` when you need the HTTP status, headers, or raw payload alongside
+the parsed model:
+
+```python
+response = sync_client.with_raw_response.logins.get("login_abc123")
+print(response.status_code, response.span_id, response.retry_after)
+print(response.data.username)
+```
+
+See [Authentication & Transport](docs/authentication-and-transport.md) for the full guide.
+
 ## Examples
 
 See the [examples/](./examples/) directory for complete working examples:
@@ -124,29 +176,42 @@ The SDK provides specific exception types for different error scenarios:
 
 ```python
 from supermetrics import (
-    SupermetricsClient,
-    AuthenticationError,
-    ValidationError,
     APIError,
     NetworkError,
+    SupermetricsAuthError,
+    SupermetricsNotFoundError,
+    SupermetricsRateLimitError,
+    SupermetricsValidationError,
+    SupermetricsClient,
 )
 
 client = SupermetricsClient(api_key="your_key")
 
 try:
     link = client.login_links.create(ds_id="GAWA", description="Test")
-except AuthenticationError as e:
-    print(f"Invalid API key: {e.message}")
-except ValidationError as e:
+except SupermetricsAuthError as e:
+    # e.error_code carries the upstream OAuth code, e.g. ACCESS_TOKEN_INVALID
+    print(f"Credential rejected ({e.error_code}): {e.message}")
+except SupermetricsValidationError as e:
     print(f"Invalid parameters: {e.message}")
+except SupermetricsNotFoundError as e:
+    print(f"Not found: {e.message}")
+except SupermetricsRateLimitError as e:
+    print(f"Throttled; retry after {e.retry_after}s")
 except APIError as e:
-    print(f"API error: {e.message}")
+    # Any other HTTP error. Carries status_code, headers, error_code and details.
+    print(f"API error {e.status_code}: {e.message}")
 except NetworkError as e:
     print(f"Network error: {e.message}")
 ```
 
+`AuthenticationError` and `ValidationError` remain available as aliases of
+`SupermetricsAuthError` and `SupermetricsValidationError`, and every HTTP error is a
+subclass of `APIError`.
+
 ## Documentation
 
+- [Authentication & Transport](docs/authentication-and-transport.md) - Credentials, per-request overrides, response metadata, error taxonomy
 - [Examples](./examples/) - Working code examples
 - [Scripts](./scripts/README.md) - OpenAPI filtering, patching, and SDK generation
 

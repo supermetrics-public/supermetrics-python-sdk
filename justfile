@@ -18,28 +18,40 @@ typecheck:
 
 # Run all the formatting, linting, and testing commands
 qa: format lint typecheck
-    uv run --extra dev pytest .
+    uv run --extra dev pytest -m "not live"
 
 # Run all the tests for all the supported Python versions
 testall:
-    uv run --python=3.11 --extra dev pytest
-    uv run --python=3.12 --extra dev pytest
-    uv run --python=3.13 --extra dev pytest
-    uv run --python=3.14 --extra dev pytest
+    uv run --python=3.11 --extra dev pytest -m "not live"
+    uv run --python=3.12 --extra dev pytest -m "not live"
+    uv run --python=3.13 --extra dev pytest -m "not live"
+    uv run --python=3.14 --extra dev pytest -m "not live"
 
-# Run all the tests, but allow for arguments to be passed
+# Run the hermetic tests (unit + e2e + parity); pass extra pytest args if needed
 test *ARGS:
     @echo "Running with arg: {{ARGS}}"
-    uv run --extra dev pytest {{ARGS}}
+    uv run --extra dev pytest -m "not live" {{ARGS}}
+
+# Run only the end-to-end transport tests (real sockets, local HTTP server)
+e2e *ARGS:
+    uv run --extra dev pytest tests/e2e -m e2e -o addopts="" -v {{ARGS}}
+
+# Verify strict sync/async API parity
+parity:
+    uv run --extra dev pytest tests/test_api_parity.py -o addopts="" -v
+
+# Run the live smoke tests against the real API (needs SUPERMETRICS_API_KEY)
+live:
+    uv run --extra dev pytest tests/e2e/test_live_smoke.py -m live -o addopts="" -v -rs
 
 # Run all the tests, but on failure, drop into the debugger
 pdb *ARGS:
     @echo "Running with arg: {{ARGS}}"
-    uv run --extra dev pytest --pdb --maxfail=10 --pdbcls=IPython.terminal.debugger:TerminalPdb {{ARGS}}
+    uv run --extra dev pytest -m "not live" --pdb --maxfail=10 --pdbcls=IPython.terminal.debugger:TerminalPdb {{ARGS}}
 
 # Run coverage, and build to HTML
 coverage:
-    uv run --extra dev coverage run -m pytest .
+    uv run --extra dev coverage run -m pytest -m "not live"
     uv run --extra dev coverage report -m
     uv run --extra dev coverage html
 

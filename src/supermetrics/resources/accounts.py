@@ -1,7 +1,11 @@
 """Accounts resource adapter for Supermetrics API."""
 
+from __future__ import annotations
+
 import logging
 from typing import cast
+
+import httpx
 
 from supermetrics._generated.supermetrics_api_client import AuthenticatedClient
 from supermetrics._generated.supermetrics_api_client import Client as GeneratedClient
@@ -12,6 +16,7 @@ from supermetrics._generated.supermetrics_api_client.models.get_accounts_respons
     GetAccountsResponse200DataItemAccountsItem,
 )
 from supermetrics._generated.supermetrics_api_client.types import UNSET, Unset
+from supermetrics._transport import request_options
 from supermetrics.resources._error_handlers import _raise_for_status, api_error_handler
 
 logger = logging.getLogger(__name__)
@@ -56,6 +61,10 @@ class AccountsResource:
         ds_id: str,
         login_usernames: str | list[str] | None = None,
         cache_minutes: int | None = None,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
     ) -> list[GetAccountsResponse200DataItemAccountsItem]:
         """List all accounts for a data source.
 
@@ -70,6 +79,13 @@ class AccountsResource:
                 belonging to these login usernames will be returned.
             cache_minutes: Maximum allowed age of cache in minutes. If the
                 cached data is older, fresh data will be fetched.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             list[GetAccountsResponse200DataItemAccountsItem]: Flattened list
@@ -104,7 +120,10 @@ class AccountsResource:
         )
 
         endpoint = "/query/accounts"
-        with api_error_handler(endpoint, context_400="Invalid request parameters"):
+        with (
+            api_error_handler(endpoint, context_400="Invalid request parameters"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             request_params = GetAccountsJson(
                 ds_id=ds_id,
                 ds_users=login_usernames if login_usernames is not None else UNSET,
@@ -122,7 +141,9 @@ class AccountsResource:
                         all_accounts.extend(data_item.accounts)
                 logger.info(f"Retrieved {len(all_accounts)} accounts for ds_id={ds_id}")
                 return all_accounts
-            _raise_for_status(response.status_code, response.parsed, endpoint)
+            _raise_for_status(
+                response.status_code, response.parsed, endpoint, headers=response.headers, raw_body=response.content
+            )
 
 
 class AccountsAsyncResource:
@@ -150,6 +171,10 @@ class AccountsAsyncResource:
         ds_id: str,
         login_usernames: str | list[str] | None = None,
         cache_minutes: int | None = None,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
     ) -> list[GetAccountsResponse200DataItemAccountsItem]:
         """List all accounts for a data source.
 
@@ -159,6 +184,13 @@ class AccountsAsyncResource:
             ds_id: Data source ID (e.g., "GAWA", "google_ads").
             login_usernames: Optional login username(s) to filter accounts.
             cache_minutes: Maximum allowed age of cache in minutes.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             list[GetAccountsResponse200DataItemAccountsItem]: Flattened list
@@ -175,7 +207,10 @@ class AccountsAsyncResource:
         )
 
         endpoint = "/query/accounts"
-        with api_error_handler(endpoint, context_400="Invalid request parameters"):
+        with (
+            api_error_handler(endpoint, context_400="Invalid request parameters"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             request_params = GetAccountsJson(
                 ds_id=ds_id,
                 ds_users=login_usernames if login_usernames is not None else UNSET,
@@ -195,4 +230,6 @@ class AccountsAsyncResource:
                         all_accounts.extend(data_item.accounts)
                 logger.info(f"Retrieved {len(all_accounts)} accounts (async) for ds_id={ds_id}")
                 return all_accounts
-            _raise_for_status(response.status_code, response.parsed, endpoint)
+            _raise_for_status(
+                response.status_code, response.parsed, endpoint, headers=response.headers, raw_body=response.content
+            )

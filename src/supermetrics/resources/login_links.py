@@ -1,8 +1,12 @@
 """Login Links resource adapter for Supermetrics API."""
 
+from __future__ import annotations
+
 import datetime
 import logging
 from typing import Any, cast
+
+import httpx
 
 from supermetrics._generated.supermetrics_api_client import AuthenticatedClient
 from supermetrics._generated.supermetrics_api_client import Client as GeneratedClient
@@ -19,6 +23,7 @@ from supermetrics._generated.supermetrics_api_client.models.list_login_links_res
 from supermetrics._generated.supermetrics_api_client.models.login_link import LoginLink
 from supermetrics._generated.supermetrics_api_client.models.login_link_response import LoginLinkResponse
 from supermetrics._generated.supermetrics_api_client.types import UNSET, Unset
+from supermetrics._transport import request_options
 from supermetrics.exceptions import APIError
 from supermetrics.resources._error_handlers import _raise_for_status, api_error_handler
 
@@ -60,6 +65,10 @@ class LoginLinksResource:
         ds_id: str,
         description: str | None = None,
         expiry_time: datetime.datetime | None = None,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
         **kwargs: Any,
     ) -> LoginLink:
         """Create a new login link for data source authentication.
@@ -75,6 +84,13 @@ class LoginLinksResource:
             expiry_time: Optional expiry datetime for the link. Defaults to 24 hours
                 from creation if not specified.
             **kwargs: Additional API parameters (require_username, redirect_url).
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             LoginLink: The created login link with authentication URL.
@@ -109,7 +125,10 @@ class LoginLinksResource:
         )
 
         endpoint = "/ds/login/link"
-        with api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Resource not found"):
+        with (
+            api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Resource not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = create_login_link.sync_detailed(client=cast(AuthenticatedClient, self._client), body=body)
             if response.status_code in (200, 201):
                 parsed = cast(LoginLinkResponse, response.parsed)
@@ -118,15 +137,35 @@ class LoginLinksResource:
                     raise APIError("Response missing login link data", status_code=200, endpoint=endpoint)
                 logger.info(f"Created login link: id={link.link_id}, ds_id={link.ds_id}")
                 return link
-            _raise_for_status(response.status_code, str(response.parsed) if response.parsed else "", endpoint)
+            _raise_for_status(
+                response.status_code,
+                str(response.parsed) if response.parsed else "",
+                endpoint,
+                headers=response.headers,
+                raw_body=response.content,
+            )
 
-    def get(self, link_id: str) -> LoginLink:
+    def get(
+        self,
+        link_id: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> LoginLink:
         """Retrieve a login link by ID.
 
         Fetches the current state of a login link, including authentication status.
 
         Args:
             link_id: The login link ID to retrieve.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             LoginLink: The login link details.
@@ -147,7 +186,10 @@ class LoginLinksResource:
         logger.debug(f"Retrieving login link: link_id={link_id}")
 
         endpoint = f"/ds/login/link/{link_id}"
-        with api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Login link not found"):
+        with (
+            api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Login link not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = get_login_link.sync_detailed(link_id=link_id, client=cast(AuthenticatedClient, self._client))
             if response.status_code == 200:
                 parsed = cast(LoginLinkResponse, response.parsed)
@@ -156,10 +198,31 @@ class LoginLinksResource:
                     raise APIError("Response missing login link data", status_code=200, endpoint=endpoint)
                 logger.info(f"Retrieved login link: id={link.link_id}, status={link.status_code}")
                 return link
-            _raise_for_status(response.status_code, str(response.parsed) if response.parsed else "", endpoint)
+            _raise_for_status(
+                response.status_code,
+                str(response.parsed) if response.parsed else "",
+                endpoint,
+                headers=response.headers,
+                raw_body=response.content,
+            )
 
-    def list(self) -> list[LoginLink]:
+    def list(
+        self,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> list[LoginLink]:
         """List all login links for the authenticated user.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             list[LoginLink]: List of all login links.
@@ -178,7 +241,7 @@ class LoginLinksResource:
         logger.debug("Listing all login links")
 
         endpoint = "/ds/login/links"
-        with api_error_handler(endpoint):
+        with api_error_handler(endpoint), request_options(auth_token=auth_token, headers=headers, timeout=timeout):
             response = list_login_links.sync_detailed(client=cast(AuthenticatedClient, self._client))
             if response.status_code == 200:
                 parsed = cast(ListLoginLinksResponse200, response.parsed)
@@ -187,9 +250,22 @@ class LoginLinksResource:
                 links = parsed.data
                 logger.info(f"Retrieved {len(links)} login links")
                 return links
-            _raise_for_status(response.status_code, str(response.parsed) if response.parsed else "", endpoint)
+            _raise_for_status(
+                response.status_code,
+                str(response.parsed) if response.parsed else "",
+                endpoint,
+                headers=response.headers,
+                raw_body=response.content,
+            )
 
-    def close(self, link_id: str) -> None:
+    def close(
+        self,
+        link_id: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> None:
         """Close/expire a login link.
 
         Closes an open login link, preventing further authentication attempts.
@@ -197,6 +273,13 @@ class LoginLinksResource:
 
         Args:
             link_id: The login link ID to close.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Raises:
             AuthenticationError: If the API key is invalid or expired (HTTP 401).
@@ -210,12 +293,21 @@ class LoginLinksResource:
         logger.debug(f"Closing login link: link_id={link_id}")
 
         endpoint = f"/ds/login/link/{link_id}/close"
-        with api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Login link not found"):
+        with (
+            api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Login link not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = close_login_link.sync_detailed(link_id=link_id, client=cast(AuthenticatedClient, self._client))
             if response.status_code == 200:
                 logger.info(f"Closed login link: id={link_id}")
                 return
-            _raise_for_status(response.status_code, str(response.parsed) if response.parsed else "", endpoint)
+            _raise_for_status(
+                response.status_code,
+                str(response.parsed) if response.parsed else "",
+                endpoint,
+                headers=response.headers,
+                raw_body=response.content,
+            )
 
 
 class LoginLinksAsyncResource:
@@ -246,6 +338,10 @@ class LoginLinksAsyncResource:
         ds_id: str,
         description: str | None = None,
         expiry_time: datetime.datetime | None = None,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
         **kwargs: Any,
     ) -> LoginLink:
         """Create a new login link for data source authentication.
@@ -257,6 +353,13 @@ class LoginLinksAsyncResource:
             description: Optional internal description.
             expiry_time: Optional expiry datetime.
             **kwargs: Additional API parameters.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             LoginLink: The created login link.
@@ -281,7 +384,10 @@ class LoginLinksAsyncResource:
         )
 
         endpoint = "/ds/login/link"
-        with api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Resource not found"):
+        with (
+            api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Resource not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = await create_login_link.asyncio_detailed(
                 client=cast(AuthenticatedClient, self._client), body=body
             )
@@ -292,15 +398,35 @@ class LoginLinksAsyncResource:
                     raise APIError("Response missing login link data", status_code=200, endpoint=endpoint)
                 logger.info(f"Created login link (async): id={link.link_id}, ds_id={link.ds_id}")
                 return link
-            _raise_for_status(response.status_code, str(response.parsed) if response.parsed else "", endpoint)
+            _raise_for_status(
+                response.status_code,
+                str(response.parsed) if response.parsed else "",
+                endpoint,
+                headers=response.headers,
+                raw_body=response.content,
+            )
 
-    async def get(self, link_id: str) -> LoginLink:
+    async def get(
+        self,
+        link_id: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> LoginLink:
         """Retrieve a login link by ID.
 
         Async version of get(). See LoginLinksResource.get() for full documentation.
 
         Args:
             link_id: The login link ID.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             LoginLink: The login link details.
@@ -314,7 +440,10 @@ class LoginLinksAsyncResource:
         logger.debug(f"Retrieving login link (async): link_id={link_id}")
 
         endpoint = f"/ds/login/link/{link_id}"
-        with api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Login link not found"):
+        with (
+            api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Login link not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = await get_login_link.asyncio_detailed(
                 link_id=link_id, client=cast(AuthenticatedClient, self._client)
             )
@@ -325,12 +454,33 @@ class LoginLinksAsyncResource:
                     raise APIError("Response missing login link data", status_code=200, endpoint=endpoint)
                 logger.info(f"Retrieved login link (async): id={link.link_id}, status={link.status_code}")
                 return link
-            _raise_for_status(response.status_code, str(response.parsed) if response.parsed else "", endpoint)
+            _raise_for_status(
+                response.status_code,
+                str(response.parsed) if response.parsed else "",
+                endpoint,
+                headers=response.headers,
+                raw_body=response.content,
+            )
 
-    async def list(self) -> list[LoginLink]:
+    async def list(
+        self,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> list[LoginLink]:
         """List all login links.
 
         Async version of list(). See LoginLinksResource.list() for full documentation.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             list[LoginLink]: List of all login links.
@@ -344,7 +494,7 @@ class LoginLinksAsyncResource:
         logger.debug("Listing all login links (async)")
 
         endpoint = "/ds/login/links"
-        with api_error_handler(endpoint):
+        with api_error_handler(endpoint), request_options(auth_token=auth_token, headers=headers, timeout=timeout):
             response = await list_login_links.asyncio_detailed(client=cast(AuthenticatedClient, self._client))
             if response.status_code == 200:
                 parsed = cast(ListLoginLinksResponse200, response.parsed)
@@ -353,15 +503,35 @@ class LoginLinksAsyncResource:
                 links = parsed.data
                 logger.info(f"Retrieved {len(links)} login links (async)")
                 return links
-            _raise_for_status(response.status_code, str(response.parsed) if response.parsed else "", endpoint)
+            _raise_for_status(
+                response.status_code,
+                str(response.parsed) if response.parsed else "",
+                endpoint,
+                headers=response.headers,
+                raw_body=response.content,
+            )
 
-    async def close(self, link_id: str) -> None:
+    async def close(
+        self,
+        link_id: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> None:
         """Close/expire a login link.
 
         Async version of close(). See LoginLinksResource.close() for full documentation.
 
         Args:
             link_id: The login link ID to close.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Raises:
             AuthenticationError: If the API key is invalid or expired (HTTP 401).
@@ -372,11 +542,20 @@ class LoginLinksAsyncResource:
         logger.debug(f"Closing login link (async): link_id={link_id}")
 
         endpoint = f"/ds/login/link/{link_id}/close"
-        with api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Login link not found"):
+        with (
+            api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Login link not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = await close_login_link.asyncio_detailed(
                 link_id=link_id, client=cast(AuthenticatedClient, self._client)
             )
             if response.status_code == 200:
                 logger.info(f"Closed login link (async): id={link_id}")
                 return
-            _raise_for_status(response.status_code, str(response.parsed) if response.parsed else "", endpoint)
+            _raise_for_status(
+                response.status_code,
+                str(response.parsed) if response.parsed else "",
+                endpoint,
+                headers=response.headers,
+                raw_body=response.content,
+            )

@@ -13,6 +13,9 @@ Same workflow as `complete_flow.py` but using async/await for non-blocking opera
 ### `connector_builder_flow.py` - Connector Builder End-to-End
 Demonstrates creating, configuring, and managing custom connectors including secrets and logs. Supports `--base-url` flag for targeting local dev environments.
 
+### `multi_tenant_flow.py` - Shared Client with Per-Request Credentials
+Demonstrates the transport features for services acting on behalf of many end users: dynamic token providers, per-request `auth_token` / `headers` / `timeout` overrides on one pooled client, concurrent callers with distinct credentials, `with_raw_response` for HTTP metadata, and refresh-and-retry on an expired token. See [Authentication & Transport](../docs/authentication-and-transport.md).
+
 ## Prerequisites
 
 1. **Python 3.11 or higher**
@@ -38,6 +41,12 @@ export SUPERMETRICS_API_KEY="your_api_key_here"
 ```
 
 ## Running the Examples
+
+### Multi-Tenant / Transport Example
+
+```bash
+python examples/multi_tenant_flow.py
+```
 
 ### Synchronous Example
 

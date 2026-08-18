@@ -70,6 +70,10 @@ Ready to contribute? Here's how to set up `supermetrics-python-sdk` for local de
    just qa
    ```
 
+   `just qa` covers everything the pull-request checks run. See
+   [Running the Tests](#running-the-tests) for the individual suites, including the
+   end-to-end tests and the optional live smoke tests.
+
 6. Commit your changes and push your branch to GitHub:
 
    ```sh
@@ -100,11 +104,104 @@ Available commands:
 | `just lint` | Lint code with ruff (auto-fixes safe issues) |
 | `just typecheck` | Run mypy type checking |
 | `just test` | Run tests with pytest |
+| `just e2e` | Run only the end-to-end transport tests |
+| `just parity` | Verify strict sync/async API parity |
+| `just live` | Run smoke tests against the real API (needs credentials) |
 | `just qa` | Run all of the above (format + lint + typecheck + test) |
 | `just testall` | Run tests across Python 3.11, 3.12, 3.13, and 3.14 |
 | `just coverage` | Run tests with coverage and generate HTML report |
 | `just build` | Build the package |
 | `just clean` | Remove all build, test, and Python artifacts |
+
+## Running the Tests
+
+The suite has three layers. `just test` (and `just qa`) runs the first two; the third is
+opt-in because it needs credentials.
+
+### 1. Unit tests — `tests/unit/`
+
+Fast and hermetic. They mock at the generated-client boundary and never open a socket.
+
+```sh
+just test tests/unit
+```
+
+### 2. End-to-end tests — `tests/e2e/`
+
+These exercise the whole stack over a **real TCP socket**: the public client classes, the
+resource adapters, the generated client, the `httpx` transport, the event hooks that apply
+per-request authentication and header/timeout overrides, and the error translation layer.
+Nothing is mocked or patched — the only substitution is the server on the other end, a
+local `http.server.ThreadingHTTPServer` that serves scripted responses and records every
+request it receives.
+
+They need no credentials and no network access beyond loopback, so they run everywhere:
+
+```sh
+just e2e                      # all of them, verbose, with timings
+just e2e -k concurrency       # just one area
+just test tests/e2e           # quietly, as part of a wider run
+```
+
+Everything is marked `e2e`, so `-m e2e` selects them and `-m "not e2e"` skips them.
+
+Writing one: take a fixture from `tests/e2e/conftest.py`. `api_server` gives you a bare
+server you script yourself; `logins_server` comes pre-wired with the two login routes.
+
+```python
+def test_something(api_server: MockAPIServer) -> None:
+    api_server.route("/ds/logins", ScriptedResponse(status=429, headers={"Retry-After": "30"}))
+
+    with SupermetricsClient(api_key="api_k", base_url=api_server.base_url) as client:
+        with pytest.raises(SupermetricsRateLimitError) as exc_info:
+            client.logins.list()
+
+    assert exc_info.value.retry_after == 30
+    assert api_server.last_request.bearer_token == "api_k"  # assert on what went out
+```
+
+`ScriptedResponse` takes `status`, `json_body`, `raw_body`, `headers` and `delay` — `delay`
+is how the timeout tests get a genuinely slow endpoint. Pass several to `route()` to script
+a sequence; the last one repeats.
+
+### 3. Live smoke tests — `tests/e2e/test_live_smoke.py`
+
+These call the real Supermetrics API. They **skip themselves** when no credentials are
+present, so they never block a normal run or a pull request from a fork.
+
+```sh
+cp .env.example .env          # then put a real key in .env
+just live
+```
+
+`.env` is gitignored — never commit a real credential. A real environment variable wins
+over the file, so this works too:
+
+```sh
+SUPERMETRICS_API_KEY=api_... just live
+```
+
+Set `SUPERMETRICS_BASE_URL` to point them at a non-production environment.
+
+### What CI runs
+
+`.github/workflows/sdk-lint-test.yml` runs `lint`, `typecheck` (mypy strict), the unit and
+e2e suites across Python 3.11–3.14, plus dedicated `e2e` and `parity` jobs so a failure in
+either is visible on its own. `.github/workflows/sdk-e2e-live.yml` runs the live smoke
+tests on a schedule, and self-skips when the repository has no `SUPERMETRICS_API_KEY`
+secret configured.
+
+`just qa` reproduces the pull-request checks locally; `just testall` adds the version matrix.
+
+### Test expectations for a contribution
+
+- Cover both the sync and the async path — a reflection test (`tests/test_api_parity.py`)
+  fails the build if the two client surfaces drift apart in any way.
+- Add an e2e test whenever a change touches authentication, headers, timeouts, retries, or
+  error classification. Those behaviours only show up on the wire, and a unit test that
+  mocks the transport cannot see them.
+- Assert on what the server received (`api_server.last_request`), not only on what the
+  client returned.
 
 ## OpenAPI Spec Workflow
 

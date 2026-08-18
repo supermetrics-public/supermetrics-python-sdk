@@ -1,5 +1,7 @@
 """Connector Builder resource adapter for Supermetrics API."""
 
+from __future__ import annotations
+
 import logging
 from typing import Any, cast
 
@@ -40,8 +42,13 @@ from supermetrics._generated.supermetrics_api_client.models.upload_connector_log
     UploadConnectorLogoResponse201,
 )
 from supermetrics._generated.supermetrics_api_client.types import UNSET, File
-from supermetrics.exceptions import APIError, AuthenticationError, ValidationError
-from supermetrics.resources._error_handlers import _handle_http_error, _handle_request_error, _raise_for_error_response
+from supermetrics._transport import request_options
+from supermetrics.resources._error_handlers import (
+    _raise_for_error_response,
+    _raise_if_failed,
+    _raise_unexpected_response,
+    api_error_handler,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -65,10 +72,22 @@ class ConnectorBuilderAsyncResource:
         team_id: int,
         *,
         include_configs: bool = False,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
     ) -> ListConnectorsResponse200:
         """List all connectors for a team.
 
         Async version of ConnectorBuilderResource.list(). See sync version for full documentation.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Raises:
             AuthenticationError: If the API key is invalid or expired (HTTP 401).
@@ -76,7 +95,10 @@ class ConnectorBuilderAsyncResource:
             NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors"
-        try:
+        with (
+            api_error_handler(endpoint),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             kwargs: dict[str, Any] = {
                 "client": cast(AuthenticatedClient, self._client),
                 "team_id": team_id,
@@ -88,18 +110,29 @@ class ConnectorBuilderAsyncResource:
                 return response
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e)
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)
 
-    async def get(self, team_id: int, connector_identifier: str) -> ConnectorWithConfiguration:
+    async def get(
+        self,
+        team_id: int,
+        connector_identifier: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> ConnectorWithConfiguration:
         """Get a single connector with its configuration.
 
         Async version of ConnectorBuilderResource.get(). See sync version for full documentation.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Raises:
             AuthenticationError: If the API key is invalid or expired (HTTP 401).
@@ -107,7 +140,10 @@ class ConnectorBuilderAsyncResource:
             NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors/{connector_identifier}"
-        try:
+        with (
+            api_error_handler(endpoint, context_404="Connector not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = await get_connector.asyncio(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
@@ -117,13 +153,7 @@ class ConnectorBuilderAsyncResource:
                 return response
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_404="Connector not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)
 
     async def create(
         self,
@@ -132,10 +162,22 @@ class ConnectorBuilderAsyncResource:
         *,
         description: str | None = None,
         connector_identifier: str | None = None,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
     ) -> ConnectorWithConfiguration:
         """Create a new connector.
 
         Async version of ConnectorBuilderResource.create(). See sync version for full documentation.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Raises:
             AuthenticationError: If the API key is invalid or expired (HTTP 401).
@@ -144,7 +186,10 @@ class ConnectorBuilderAsyncResource:
             NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors"
-        try:
+        with (
+            api_error_handler(endpoint, context_400="Invalid request parameters"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             body = CreateConnectorBody(
                 title=title,
                 description=description if description is not None else UNSET,
@@ -159,13 +204,7 @@ class ConnectorBuilderAsyncResource:
                 return response
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_400="Invalid request parameters")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)
 
     async def update(
         self,
@@ -173,10 +212,23 @@ class ConnectorBuilderAsyncResource:
         connector_identifier: str,
         connector: dict[str, Any],
         configuration: dict[str, Any],
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
     ) -> None:
         """Update a connector and its configuration.
 
         Async version of ConnectorBuilderResource.update(). See sync version for full documentation.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Raises:
             AuthenticationError: If the API key is invalid or expired (HTTP 401).
@@ -185,7 +237,10 @@ class ConnectorBuilderAsyncResource:
             NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors/{connector_identifier}"
-        try:
+        with (
+            api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Connector not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             body = UpdateConnectorRequest(
                 connector=UpdateConnectorRequestConnector.from_dict(connector),
                 configuration=UpdateConnectorRequestConfiguration.from_dict(configuration),
@@ -197,21 +252,35 @@ class ConnectorBuilderAsyncResource:
                 body=body,
             )
             if response is None:
+                # The generated parser also returns None for a status the spec does not
+                # describe, so confirm the transport actually saw a success.
+                _raise_if_failed(endpoint, not_found_msg="Connector not found")
                 return None
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_400="Invalid request parameters", context_404="Connector not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)
 
-    async def delete(self, team_id: int, connector_identifier: str) -> None:
+    async def delete(
+        self,
+        team_id: int,
+        connector_identifier: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> None:
         """Soft-delete a connector.
 
         Async version of ConnectorBuilderResource.delete(). See sync version for full documentation.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Raises:
             AuthenticationError: If the API key is invalid or expired (HTTP 401).
@@ -219,28 +288,45 @@ class ConnectorBuilderAsyncResource:
             NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors/{connector_identifier}"
-        try:
+        with (
+            api_error_handler(endpoint, context_404="Connector not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = await delete_connector.asyncio(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
                 connector_identifier=connector_identifier,
             )
             if response is None:
+                # The generated parser also returns None for a status the spec does not
+                # describe, so confirm the transport actually saw a success.
+                _raise_if_failed(endpoint, not_found_msg="Connector not found")
                 return None
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_404="Connector not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)
 
-    async def get_logo(self, team_id: int, connector_identifier: str) -> GetConnectorLogoResponse200:
+    async def get_logo(
+        self,
+        team_id: int,
+        connector_identifier: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> GetConnectorLogoResponse200:
         """Get the logo URL for a connector.
 
         Async version of ConnectorBuilderResource.get_logo(). See sync version for full documentation.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Raises:
             AuthenticationError: If the API key is invalid or expired (HTTP 401).
@@ -248,7 +334,10 @@ class ConnectorBuilderAsyncResource:
             NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logo"
-        try:
+        with (
+            api_error_handler(endpoint, context_404="Connector not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = await get_connector_logo.asyncio(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
@@ -258,18 +347,30 @@ class ConnectorBuilderAsyncResource:
                 return response
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_404="Connector not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)
 
-    async def upload_logo(self, team_id: int, connector_identifier: str, logo: File) -> UploadConnectorLogoResponse201:
+    async def upload_logo(
+        self,
+        team_id: int,
+        connector_identifier: str,
+        logo: File,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> UploadConnectorLogoResponse201:
         """Upload a logo image for a connector.
 
         Async version of ConnectorBuilderResource.upload_logo(). See sync version for full documentation.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Raises:
             AuthenticationError: If the API key is invalid or expired (HTTP 401).
@@ -278,7 +379,10 @@ class ConnectorBuilderAsyncResource:
             NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logo"
-        try:
+        with (
+            api_error_handler(endpoint, context_400="Invalid logo file", context_404="Connector not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             body = UploadConnectorLogoBody(logo=logo)
             response = await upload_connector_logo.asyncio(
                 client=cast(AuthenticatedClient, self._client),
@@ -290,13 +394,7 @@ class ConnectorBuilderAsyncResource:
                 return response
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_400="Invalid logo file", context_404="Connector not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)
 
 
 class ConnectorBuilderResource:
@@ -346,6 +444,9 @@ class ConnectorBuilderResource:
         team_id: int,
         *,
         include_configs: bool = False,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
     ) -> ListConnectorsResponse200:
         """List all Connector Builder connectors for a team.
 
@@ -353,6 +454,13 @@ class ConnectorBuilderResource:
             team_id: The unique identifier of the team.
             include_configs: Whether to include connector configurations in the
                 response. Defaults to False.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             ListConnectorsResponse200: Response containing the list of connectors
@@ -370,7 +478,10 @@ class ConnectorBuilderResource:
             ... )
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors"
-        try:
+        with (
+            api_error_handler(endpoint),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             kwargs: dict[str, Any] = {
                 "client": cast(AuthenticatedClient, self._client),
                 "team_id": team_id,
@@ -382,20 +493,29 @@ class ConnectorBuilderResource:
                 return response
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e)
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)
 
-    def get(self, team_id: int, connector_identifier: str) -> ConnectorWithConfiguration:
+    def get(
+        self,
+        team_id: int,
+        connector_identifier: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> ConnectorWithConfiguration:
         """Get a single Connector Builder connector with its configuration.
 
         Args:
             team_id: The unique identifier of the team.
             connector_identifier: The unique identifier of the connector.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             ConnectorWithConfiguration: The connector details with configuration.
@@ -411,7 +531,10 @@ class ConnectorBuilderResource:
             ... )
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors/{connector_identifier}"
-        try:
+        with (
+            api_error_handler(endpoint, context_404="Connector not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = get_connector.sync(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
@@ -421,13 +544,7 @@ class ConnectorBuilderResource:
                 return response
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_404="Connector not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)
 
     def create(
         self,
@@ -436,6 +553,9 @@ class ConnectorBuilderResource:
         *,
         description: str | None = None,
         connector_identifier: str | None = None,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
     ) -> ConnectorWithConfiguration:
         """Create a new Connector Builder connector.
 
@@ -447,6 +567,13 @@ class ConnectorBuilderResource:
             description: Description of the connector. Optional.
             connector_identifier: Identifier of an existing connector to duplicate
                 from. Optional.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             ConnectorWithConfiguration: The created connector.
@@ -471,7 +598,10 @@ class ConnectorBuilderResource:
             ... )
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors"
-        try:
+        with (
+            api_error_handler(endpoint, context_400="Invalid request parameters"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             body = CreateConnectorBody(
                 title=title,
                 description=description if description is not None else UNSET,
@@ -486,13 +616,7 @@ class ConnectorBuilderResource:
                 return response
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_400="Invalid request parameters")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)
 
     def update(
         self,
@@ -500,6 +624,10 @@ class ConnectorBuilderResource:
         connector_identifier: str,
         connector: dict[str, Any],
         configuration: dict[str, Any],
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
     ) -> None:
         """Update a Connector Builder connector and its configuration.
 
@@ -509,6 +637,13 @@ class ConnectorBuilderResource:
             connector: Connector metadata as a dict with name and description.
             configuration: Connector configuration as a dict with id, version,
                 and configuration_json.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             None: The API returns 204 No Content on success.
@@ -528,7 +663,10 @@ class ConnectorBuilderResource:
             ... )
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors/{connector_identifier}"
-        try:
+        with (
+            api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Connector not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             body = UpdateConnectorRequest(
                 connector=UpdateConnectorRequestConnector.from_dict(connector),
                 configuration=UpdateConnectorRequestConfiguration.from_dict(configuration),
@@ -540,23 +678,35 @@ class ConnectorBuilderResource:
                 body=body,
             )
             if response is None:
+                # The generated parser also returns None for a status the spec does not
+                # describe, so confirm the transport actually saw a success.
+                _raise_if_failed(endpoint, not_found_msg="Connector not found")
                 return None
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_400="Invalid request parameters", context_404="Connector not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)
 
-    def delete(self, team_id: int, connector_identifier: str) -> None:
+    def delete(
+        self,
+        team_id: int,
+        connector_identifier: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> None:
         """Soft-delete a Connector Builder connector.
 
         Args:
             team_id: The unique identifier of the team.
             connector_identifier: The unique identifier of the connector.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             None: The API returns 204 No Content on success.
@@ -572,30 +722,45 @@ class ConnectorBuilderResource:
             ... )
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors/{connector_identifier}"
-        try:
+        with (
+            api_error_handler(endpoint, context_404="Connector not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = delete_connector.sync(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
                 connector_identifier=connector_identifier,
             )
             if response is None:
+                # The generated parser also returns None for a status the spec does not
+                # describe, so confirm the transport actually saw a success.
+                _raise_if_failed(endpoint, not_found_msg="Connector not found")
                 return None
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_404="Connector not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)
 
-    def get_logo(self, team_id: int, connector_identifier: str) -> GetConnectorLogoResponse200:
+    def get_logo(
+        self,
+        team_id: int,
+        connector_identifier: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> GetConnectorLogoResponse200:
         """Get the logo URL for a Connector Builder connector.
 
         Args:
             team_id: The unique identifier of the team.
             connector_identifier: The unique identifier of the connector.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             GetConnectorLogoResponse200: Response containing the logo URL.
@@ -612,7 +777,10 @@ class ConnectorBuilderResource:
             >>> print(logo.logo_url)
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logo"
-        try:
+        with (
+            api_error_handler(endpoint, context_404="Connector not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = get_connector_logo.sync(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
@@ -622,15 +790,18 @@ class ConnectorBuilderResource:
                 return response
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_404="Connector not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)
 
-    def upload_logo(self, team_id: int, connector_identifier: str, logo: File) -> UploadConnectorLogoResponse201:
+    def upload_logo(
+        self,
+        team_id: int,
+        connector_identifier: str,
+        logo: File,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> UploadConnectorLogoResponse201:
         """Upload a logo image for a Connector Builder connector.
 
         Max 5MB, PNG/JPG/JPEG formats accepted.
@@ -639,6 +810,13 @@ class ConnectorBuilderResource:
             team_id: The unique identifier of the team.
             connector_identifier: The unique identifier of the connector.
             logo: A File object containing the logo image data.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             UploadConnectorLogoResponse201: Response containing the uploaded logo URL.
@@ -661,7 +839,10 @@ class ConnectorBuilderResource:
             >>> print(result.logo_url)
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logo"
-        try:
+        with (
+            api_error_handler(endpoint, context_400="Invalid logo file", context_404="Connector not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             body = UploadConnectorLogoBody(logo=logo)
             response = upload_connector_logo.sync(
                 client=cast(AuthenticatedClient, self._client),
@@ -673,10 +854,4 @@ class ConnectorBuilderResource:
                 return response
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_400="Invalid logo file", context_404="Connector not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)

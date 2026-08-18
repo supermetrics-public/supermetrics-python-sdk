@@ -1,0 +1,53 @@
+name: Live API smoke tests
+
+# Smoke tests against the real Supermetrics API. Kept out of the pull-request
+# workflow so that forks, and runs without credentials, are never blocked by them.
+# The tests skip themselves when SUPERMETRICS_API_KEY is absent, so a run without
+# the secret configured is a no-op rather than a failure.
+#
+# The target host comes from the SUPERMETRICS_BASE_URL repository variable, not from a
+# workflow input: a free-text input would let anyone who can dispatch this workflow send
+# the production API key to a host of their choosing.
+on:
+  schedule:
+    # 06:17 UTC daily - off the hour to avoid the scheduler stampede.
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live:
+    name: Live smoke
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Install uv with Python 3.13
+        uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Report credential availability
+        run: |
+          if [ -z "${SUPERMETRICS_API_KEY}" ]; then
+            echo "::notice::SUPERMETRICS_API_KEY is not configured; live smoke tests will self-skip."
+          else
+            echo "::notice::Running live smoke tests against ${SUPERMETRICS_BASE_URL}"
+          fi
+        env:
+          SUPERMETRICS_API_KEY: ${{ secrets.SUPERMETRICS_API_KEY }}
+          SUPERMETRICS_BASE_URL: ${{ vars.SUPERMETRICS_BASE_URL || 'https://api.supermetrics.com' }}
+
+      - name: Run live smoke tests
+        run: uv run pytest tests/e2e/test_live_smoke.py -m live -o addopts="" -v -rs
+        env:
+          SUPERMETRICS_API_KEY: ${{ secrets.SUPERMETRICS_API_KEY }}
+          SUPERMETRICS_BASE_URL: ${{ vars.SUPERMETRICS_BASE_URL || 'https://api.supermetrics.com' }}

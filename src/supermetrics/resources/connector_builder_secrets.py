@@ -1,5 +1,7 @@
 """Connector Builder Secrets resource adapter for Supermetrics API."""
 
+from __future__ import annotations
+
 import logging
 from typing import cast
 
@@ -25,8 +27,13 @@ from supermetrics._generated.supermetrics_api_client.models.list_connector_secre
 from supermetrics._generated.supermetrics_api_client.models.update_secret_request import (
     UpdateSecretRequest,
 )
-from supermetrics.exceptions import APIError, AuthenticationError, ValidationError
-from supermetrics.resources._error_handlers import _handle_http_error, _handle_request_error, _raise_for_error_response
+from supermetrics._transport import request_options
+from supermetrics.resources._error_handlers import (
+    _raise_for_error_response,
+    _raise_if_failed,
+    _raise_unexpected_response,
+    api_error_handler,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -51,10 +58,23 @@ class ConnectorBuilderSecretsAsyncResource:
         self,
         team_id: int,
         connector_identifier: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
     ) -> ListConnectorSecretsResponse200:
         """List all secrets for a connector.
 
         Async version of ConnectorBuilderSecretsResource.list(). See sync version for full documentation.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Raises:
             AuthenticationError: If the API key is invalid or expired (HTTP 401).
@@ -62,7 +82,10 @@ class ConnectorBuilderSecretsAsyncResource:
             NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors/{connector_identifier}/secrets"
-        try:
+        with (
+            api_error_handler(endpoint, context_404="Connector not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = await list_connector_secrets.asyncio(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
@@ -72,13 +95,7 @@ class ConnectorBuilderSecretsAsyncResource:
                 return response
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_404="Connector not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)
 
     async def create(
         self,
@@ -86,10 +103,23 @@ class ConnectorBuilderSecretsAsyncResource:
         connector_identifier: str,
         secret_name: str,
         secret_value: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
     ) -> CreateConnectorSecretResponse201:
         """Create a new secret for a connector.
 
         Async version of ConnectorBuilderSecretsResource.create(). See sync version for full documentation.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Raises:
             AuthenticationError: If the API key is invalid or expired (HTTP 401).
@@ -98,7 +128,10 @@ class ConnectorBuilderSecretsAsyncResource:
             NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors/{connector_identifier}/secrets"
-        try:
+        with (
+            api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Connector not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             body = CreateSecretRequest(
                 secret_name=secret_name,
                 secret_value=secret_value,
@@ -113,13 +146,7 @@ class ConnectorBuilderSecretsAsyncResource:
                 return response
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_400="Invalid request parameters", context_404="Connector not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)
 
     async def update(
         self,
@@ -127,10 +154,23 @@ class ConnectorBuilderSecretsAsyncResource:
         connector_identifier: str,
         secret_placeholder: str,
         secret_value: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
     ) -> None:
         """Update an existing secret value.
 
         Async version of ConnectorBuilderSecretsResource.update(). See sync version for full documentation.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Raises:
             AuthenticationError: If the API key is invalid or expired (HTTP 401).
@@ -139,7 +179,10 @@ class ConnectorBuilderSecretsAsyncResource:
             NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors/{connector_identifier}/secrets/{secret_placeholder}"
-        try:
+        with (
+            api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Secret not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             body = UpdateSecretRequest(secret_value=secret_value)
             response = await update_connector_secret.asyncio(
                 client=cast(AuthenticatedClient, self._client),
@@ -149,26 +192,36 @@ class ConnectorBuilderSecretsAsyncResource:
                 body=body,
             )
             if response is None:
+                # The generated parser also returns None for a status the spec does not
+                # describe, so confirm the transport actually saw a success.
+                _raise_if_failed(endpoint, not_found_msg="Secret not found")
                 return None
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_400="Invalid request parameters", context_404="Secret not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)
 
     async def delete(
         self,
         team_id: int,
         connector_identifier: str,
         secret_placeholder: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
     ) -> None:
         """Delete a secret from a connector.
 
         Async version of ConnectorBuilderSecretsResource.delete(). See sync version for full documentation.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Raises:
             AuthenticationError: If the API key is invalid or expired (HTTP 401).
@@ -176,7 +229,10 @@ class ConnectorBuilderSecretsAsyncResource:
             NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors/{connector_identifier}/secrets/{secret_placeholder}"
-        try:
+        with (
+            api_error_handler(endpoint, context_404="Secret not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = await delete_connector_secret.asyncio(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
@@ -184,16 +240,13 @@ class ConnectorBuilderSecretsAsyncResource:
                 secret_placeholder=secret_placeholder,
             )
             if response is None:
+                # The generated parser also returns None for a status the spec does not
+                # describe, so confirm the transport actually saw a success.
+                _raise_if_failed(endpoint, not_found_msg="Secret not found")
                 return None
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_404="Secret not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)
 
 
 class ConnectorBuilderSecretsResource:
@@ -248,6 +301,10 @@ class ConnectorBuilderSecretsResource:
         self,
         team_id: int,
         connector_identifier: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
     ) -> ListConnectorSecretsResponse200:
         """List all secrets for a Connector Builder connector.
 
@@ -256,6 +313,13 @@ class ConnectorBuilderSecretsResource:
         Args:
             team_id: The unique identifier of the team.
             connector_identifier: The unique identifier of the connector.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             ListConnectorSecretsResponse200: Response containing the list of
@@ -272,7 +336,10 @@ class ConnectorBuilderSecretsResource:
             ... )
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors/{connector_identifier}/secrets"
-        try:
+        with (
+            api_error_handler(endpoint, context_404="Connector not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = list_connector_secrets.sync(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
@@ -282,13 +349,7 @@ class ConnectorBuilderSecretsResource:
                 return response
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_404="Connector not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)
 
     def create(
         self,
@@ -296,6 +357,10 @@ class ConnectorBuilderSecretsResource:
         connector_identifier: str,
         secret_name: str,
         secret_value: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
     ) -> CreateConnectorSecretResponse201:
         """Create a new secret for a Connector Builder connector.
 
@@ -306,6 +371,13 @@ class ConnectorBuilderSecretsResource:
             connector_identifier: The unique identifier of the connector.
             secret_name: Human-readable name for the secret.
             secret_value: Plaintext secret value (will be encrypted at rest).
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             CreateConnectorSecretResponse201: Response containing the updated list
@@ -326,7 +398,10 @@ class ConnectorBuilderSecretsResource:
             ... )
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors/{connector_identifier}/secrets"
-        try:
+        with (
+            api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Connector not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             body = CreateSecretRequest(
                 secret_name=secret_name,
                 secret_value=secret_value,
@@ -341,13 +416,7 @@ class ConnectorBuilderSecretsResource:
                 return response
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_400="Invalid request parameters", context_404="Connector not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)
 
     def update(
         self,
@@ -355,6 +424,10 @@ class ConnectorBuilderSecretsResource:
         connector_identifier: str,
         secret_placeholder: str,
         secret_value: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
     ) -> None:
         """Update the value of an existing secret.
 
@@ -363,6 +436,13 @@ class ConnectorBuilderSecretsResource:
             connector_identifier: The unique identifier of the connector.
             secret_placeholder: The placeholder identifier of the secret to update.
             secret_value: New plaintext secret value (will be encrypted at rest).
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             None: The API returns 204 No Content on success.
@@ -382,7 +462,10 @@ class ConnectorBuilderSecretsResource:
             ... )
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors/{connector_identifier}/secrets/{secret_placeholder}"
-        try:
+        with (
+            api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Secret not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             body = UpdateSecretRequest(secret_value=secret_value)
             response = update_connector_secret.sync(
                 client=cast(AuthenticatedClient, self._client),
@@ -392,22 +475,23 @@ class ConnectorBuilderSecretsResource:
                 body=body,
             )
             if response is None:
+                # The generated parser also returns None for a status the spec does not
+                # describe, so confirm the transport actually saw a success.
+                _raise_if_failed(endpoint, not_found_msg="Secret not found")
                 return None
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_400="Invalid request parameters", context_404="Secret not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)
 
     def delete(
         self,
         team_id: int,
         connector_identifier: str,
         secret_placeholder: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
     ) -> None:
         """Delete a secret from a Connector Builder connector.
 
@@ -415,6 +499,13 @@ class ConnectorBuilderSecretsResource:
             team_id: The unique identifier of the team.
             connector_identifier: The unique identifier of the connector.
             secret_placeholder: The placeholder identifier of the secret to delete.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             None: The API returns 204 No Content on success.
@@ -432,7 +523,10 @@ class ConnectorBuilderSecretsResource:
             ... )
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors/{connector_identifier}/secrets/{secret_placeholder}"
-        try:
+        with (
+            api_error_handler(endpoint, context_404="Secret not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = delete_connector_secret.sync(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
@@ -440,13 +534,10 @@ class ConnectorBuilderSecretsResource:
                 secret_placeholder=secret_placeholder,
             )
             if response is None:
+                # The generated parser also returns None for a status the spec does not
+                # describe, so confirm the transport actually saw a success.
+                _raise_if_failed(endpoint, not_found_msg="Secret not found")
                 return None
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_404="Secret not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)

@@ -1,7 +1,11 @@
 """Logins resource adapter for Supermetrics API."""
 
+from __future__ import annotations
+
 import logging
 from typing import cast
+
+import httpx
 
 from supermetrics._generated.supermetrics_api_client import AuthenticatedClient
 from supermetrics._generated.supermetrics_api_client import Client as GeneratedClient
@@ -17,6 +21,7 @@ from supermetrics._generated.supermetrics_api_client.models.list_data_source_log
     ListDataSourceLoginsResponse200,
 )
 from supermetrics._generated.supermetrics_api_client.types import Unset
+from supermetrics._transport import request_options
 from supermetrics.resources._error_handlers import _raise_for_status, api_error_handler
 
 logger = logging.getLogger(__name__)
@@ -53,7 +58,14 @@ class LoginsResource:
         """
         self._client = client
 
-    def get(self, login_id: str) -> DataSourceLogin:
+    def get(
+        self,
+        login_id: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> DataSourceLogin:
         """Retrieve a login by login ID.
 
         Fetches the details of a specific data source login, including
@@ -61,6 +73,13 @@ class LoginsResource:
 
         Args:
             login_id: The Supermetrics login ID to retrieve.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             DataSourceLogin: The login details.
@@ -80,7 +99,10 @@ class LoginsResource:
         logger.debug(f"Retrieving login: login_id={login_id}")
 
         endpoint = f"/ds/login/{login_id}"
-        with api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Login not found"):
+        with (
+            api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Login not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = get_data_source_login.sync_detailed(
                 login_id=login_id, client=cast(AuthenticatedClient, self._client)
             )
@@ -89,15 +111,33 @@ class LoginsResource:
                 if parsed.data is None or isinstance(parsed.data, Unset):
                     raise ValueError("API returned empty response")
                 login = parsed.data
-                logger.info(f"Retrieved login: id={login.login_id}, username={login.username}")
+                logger.info(f"Retrieved login: id={login.login_id}")
+                logger.debug(f"Retrieved login: id={login.login_id}, username={login.username}")
                 return login
-            _raise_for_status(response.status_code, response.parsed, endpoint)
+            _raise_for_status(
+                response.status_code, response.parsed, endpoint, headers=response.headers, raw_body=response.content
+            )
 
-    def list(self) -> list[DataSourceLogin]:
+    def list(
+        self,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> list[DataSourceLogin]:
         """List all logins for the authenticated user.
 
         Returns all data source logins associated with the API key's account,
         including their authentication status and credentials.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             list[DataSourceLogin]: List of all logins.
@@ -116,7 +156,7 @@ class LoginsResource:
         logger.debug("Listing all logins")
 
         endpoint = "/ds/logins"
-        with api_error_handler(endpoint):
+        with api_error_handler(endpoint), request_options(auth_token=auth_token, headers=headers, timeout=timeout):
             response = list_data_source_logins.sync_detailed(client=cast(AuthenticatedClient, self._client))
             if response.status_code == 200:
                 parsed = cast(ListDataSourceLoginsResponse200, response.parsed)
@@ -125,9 +165,18 @@ class LoginsResource:
                 logins = parsed.data
                 logger.info(f"Retrieved {len(logins)} logins")
                 return logins
-            _raise_for_status(response.status_code, response.parsed, endpoint)
+            _raise_for_status(
+                response.status_code, response.parsed, endpoint, headers=response.headers, raw_body=response.content
+            )
 
-    def get_by_username(self, login_username: str) -> DataSourceLogin:
+    def get_by_username(
+        self,
+        login_username: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> DataSourceLogin:
         """Retrieve a login by username.
 
         Finds a login by searching for a matching username across all logins.
@@ -135,6 +184,13 @@ class LoginsResource:
 
         Args:
             login_username: The username to search for (case-sensitive).
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             DataSourceLogin: The login with matching username.
@@ -153,11 +209,11 @@ class LoginsResource:
         logger.debug(f"Searching for login by username: {login_username}")
 
         # Get all logins and filter by username
-        logins = self.list()
+        logins = self.list(auth_token=auth_token, headers=headers, timeout=timeout)
 
         for login in logins:
             if login.username == login_username:
-                logger.info(f"Found login by username: id={login.login_id}, username={login_username}")
+                logger.info(f"Found login by username: id={login.login_id}")
                 return login
 
         # No matching login found
@@ -184,13 +240,27 @@ class LoginsAsyncResource:
         """
         self._client = client
 
-    async def get(self, login_id: str) -> DataSourceLogin:
+    async def get(
+        self,
+        login_id: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> DataSourceLogin:
         """Retrieve a login by login ID.
 
         Async version of get(). See LoginsResource.get() for full documentation.
 
         Args:
             login_id: The Supermetrics login ID to retrieve.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             DataSourceLogin: The login details.
@@ -204,7 +274,10 @@ class LoginsAsyncResource:
         logger.debug(f"Retrieving login (async): login_id={login_id}")
 
         endpoint = f"/ds/login/{login_id}"
-        with api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Login not found"):
+        with (
+            api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Login not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = await get_data_source_login.asyncio_detailed(
                 login_id=login_id, client=cast(AuthenticatedClient, self._client)
             )
@@ -213,14 +286,32 @@ class LoginsAsyncResource:
                 if parsed.data is None or isinstance(parsed.data, Unset):
                     raise ValueError("API returned empty response")
                 login = parsed.data
-                logger.info(f"Retrieved login (async): id={login.login_id}, username={login.username}")
+                logger.info(f"Retrieved login (async): id={login.login_id}")
+                logger.debug(f"Retrieved login (async): id={login.login_id}, username={login.username}")
                 return login
-            _raise_for_status(response.status_code, response.parsed, endpoint)
+            _raise_for_status(
+                response.status_code, response.parsed, endpoint, headers=response.headers, raw_body=response.content
+            )
 
-    async def list(self) -> list[DataSourceLogin]:
+    async def list(
+        self,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> list[DataSourceLogin]:
         """List all logins for the authenticated user.
 
         Async version of list(). See LoginsResource.list() for full documentation.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             list[DataSourceLogin]: List of all logins.
@@ -234,7 +325,7 @@ class LoginsAsyncResource:
         logger.debug("Listing all logins (async)")
 
         endpoint = "/ds/logins"
-        with api_error_handler(endpoint):
+        with api_error_handler(endpoint), request_options(auth_token=auth_token, headers=headers, timeout=timeout):
             response = await list_data_source_logins.asyncio_detailed(client=cast(AuthenticatedClient, self._client))
             if response.status_code == 200:
                 parsed = cast(ListDataSourceLoginsResponse200, response.parsed)
@@ -243,15 +334,31 @@ class LoginsAsyncResource:
                 logins = parsed.data
                 logger.info(f"Retrieved {len(logins)} logins (async)")
                 return logins
-            _raise_for_status(response.status_code, response.parsed, endpoint)
+            _raise_for_status(
+                response.status_code, response.parsed, endpoint, headers=response.headers, raw_body=response.content
+            )
 
-    async def get_by_username(self, login_username: str) -> DataSourceLogin:
+    async def get_by_username(
+        self,
+        login_username: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> DataSourceLogin:
         """Retrieve a login by username.
 
         Async version of get_by_username(). See LoginsResource.get_by_username() for full documentation.
 
         Args:
             login_username: The username to search for (case-sensitive).
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             DataSourceLogin: The login with matching username.
@@ -265,11 +372,11 @@ class LoginsAsyncResource:
         logger.debug(f"Searching for login by username (async): {login_username}")
 
         # Get all logins and filter by username
-        logins = await self.list()
+        logins = await self.list(auth_token=auth_token, headers=headers, timeout=timeout)
 
         for login in logins:
             if login.username == login_username:
-                logger.info(f"Found login by username (async): id={login.login_id}, username={login_username}")
+                logger.info(f"Found login by username (async): id={login.login_id}")
                 return login
 
         # No matching login found

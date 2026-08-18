@@ -1,7 +1,11 @@
 """Queries resource adapter for Supermetrics API."""
 
+from __future__ import annotations
+
 import logging
 from typing import Any, cast
+
+import httpx
 
 from supermetrics._generated.supermetrics_api_client import AuthenticatedClient
 from supermetrics._generated.supermetrics_api_client import Client as GeneratedClient
@@ -9,6 +13,7 @@ from supermetrics._generated.supermetrics_api_client.api.get_data import get_dat
 from supermetrics._generated.supermetrics_api_client.models.data_query import DataQuery
 from supermetrics._generated.supermetrics_api_client.models.data_response import DataResponse
 from supermetrics._generated.supermetrics_api_client.types import UNSET, Unset
+from supermetrics._transport import request_options
 from supermetrics.resources._error_handlers import _raise_for_status, api_error_handler
 
 logger = logging.getLogger(__name__)
@@ -59,6 +64,10 @@ class QueriesResource:
         fields: list[str],
         start_date: str,
         end_date: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
         **kwargs: Any,
     ) -> DataResponse | None:
         """Execute a data query to retrieve marketing data.
@@ -90,6 +99,18 @@ class QueriesResource:
                 - max_rows: Maximum number of rows to return
                 - cache_minutes: Maximum age of cached data in minutes
                 - sync_timeout: Seconds to wait for query completion
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
+
+        Note:
+            ``auth_token``, ``headers`` and ``timeout`` are reserved keyword-only
+            transport overrides. They are consumed by the SDK and are NOT
+            forwarded to the query payload via ``**kwargs``.
 
         Returns:
             DataResponse | None: Query response containing metadata and data rows.
@@ -144,7 +165,10 @@ class QueriesResource:
             f"fields={fields}, start_date={start_date}, end_date={end_date}, kwargs={kwargs}"
         )
 
-        with api_error_handler(_ENDPOINT, context_400="Invalid request parameters"):
+        with (
+            api_error_handler(_ENDPOINT, context_400="Invalid request parameters"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             # Build request parameters
             request_params = DataQuery(
                 ds_id=ds_id,
@@ -172,9 +196,18 @@ class QueriesResource:
                     logger.info("Query executed successfully")
                 return parsed
 
-            _raise_for_status(response.status_code, response.parsed, _ENDPOINT)
+            _raise_for_status(
+                response.status_code, response.parsed, _ENDPOINT, headers=response.headers, raw_body=response.content
+            )
 
-    def get_results(self, query_id: str) -> DataResponse | None:
+    def get_results(
+        self,
+        query_id: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> DataResponse | None:
         """Retrieve results for a previously executed query.
 
         Use this method to poll for results when a query was executed with
@@ -189,6 +222,13 @@ class QueriesResource:
         Args:
             query_id: The request ID from the query execution response.
                 This is found in response.meta.request_id.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             DataResponse | None: Query results if available.
@@ -225,7 +265,10 @@ class QueriesResource:
         """
         logger.debug(f"Retrieving query results: query_id={query_id}")
 
-        with api_error_handler(_ENDPOINT, context_400="Invalid request parameters"):
+        with (
+            api_error_handler(_ENDPOINT, context_400="Invalid request parameters"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             # Build request parameters with schedule_id set to the query_id
             # This tells the API to return results for this specific query
             request_params = DataQuery(
@@ -248,7 +291,9 @@ class QueriesResource:
                     logger.info(f"Query results retrieved: query_id={query_id}")
                 return parsed
 
-            _raise_for_status(response.status_code, response.parsed, _ENDPOINT)
+            _raise_for_status(
+                response.status_code, response.parsed, _ENDPOINT, headers=response.headers, raw_body=response.content
+            )
 
 
 class QueriesAsyncResource:
@@ -285,6 +330,10 @@ class QueriesAsyncResource:
         fields: list[str],
         start_date: str,
         end_date: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
         **kwargs: Any,
     ) -> DataResponse | None:
         """Execute a data query to retrieve marketing data.
@@ -298,6 +347,18 @@ class QueriesAsyncResource:
             start_date: Start date in ISO 8601 or relative format.
             end_date: End date in ISO 8601 or relative format.
             **kwargs: Additional query parameters.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
+
+        Note:
+            ``auth_token``, ``headers`` and ``timeout`` are reserved keyword-only
+            transport overrides. They are consumed by the SDK and are NOT
+            forwarded to the query payload via ``**kwargs``.
 
         Returns:
             DataResponse | None: Query response with metadata and data.
@@ -313,7 +374,10 @@ class QueriesAsyncResource:
             f"fields={fields}, start_date={start_date}, end_date={end_date}, kwargs={kwargs}"
         )
 
-        with api_error_handler(_ENDPOINT, context_400="Invalid request parameters"):
+        with (
+            api_error_handler(_ENDPOINT, context_400="Invalid request parameters"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             # Build request parameters
             request_params = DataQuery(
                 ds_id=ds_id,
@@ -342,15 +406,31 @@ class QueriesAsyncResource:
                     logger.info("Query executed (async) successfully")
                 return parsed
 
-            _raise_for_status(response.status_code, response.parsed, _ENDPOINT)
+            _raise_for_status(
+                response.status_code, response.parsed, _ENDPOINT, headers=response.headers, raw_body=response.content
+            )
 
-    async def get_results(self, query_id: str) -> DataResponse | None:
+    async def get_results(
+        self,
+        query_id: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> DataResponse | None:
         """Retrieve results for a previously executed query.
 
         Async version of get_results(). See QueriesResource.get_results() for full documentation.
 
         Args:
             query_id: The request ID from the query execution response.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             DataResponse | None: Query results if available.
@@ -363,7 +443,10 @@ class QueriesAsyncResource:
         """
         logger.debug(f"Retrieving query results (async): query_id={query_id}")
 
-        with api_error_handler(_ENDPOINT, context_400="Invalid request parameters"):
+        with (
+            api_error_handler(_ENDPOINT, context_400="Invalid request parameters"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             # Build request parameters with schedule_id set to the query_id
             request_params = DataQuery(
                 ds_id="",  # Required field but not used for result retrieval
@@ -387,4 +470,6 @@ class QueriesAsyncResource:
                     logger.info(f"Query results retrieved (async): query_id={query_id}")
                 return parsed
 
-            _raise_for_status(response.status_code, response.parsed, _ENDPOINT)
+            _raise_for_status(
+                response.status_code, response.parsed, _ENDPOINT, headers=response.headers, raw_body=response.content
+            )
