@@ -12,11 +12,7 @@ Synchronous client for blocking I/O operations.
 from supermetrics import SupermetricsClient
 
 client = SupermetricsClient(
-    api_key="your_api_key",
-    user_agent=None,
-    custom_headers=None,
-    timeout=30.0,
-    base_url="https://api.supermetrics.com"
+    api_key="your_api_key", user_agent=None, custom_headers=None, timeout=30.0, base_url="https://api.supermetrics.com"
 )
 ```
 
@@ -68,11 +64,7 @@ Asynchronous client for non-blocking I/O operations.
 from supermetrics import SupermetricsAsyncClient
 
 client = SupermetricsAsyncClient(
-    api_key="your_api_key",
-    user_agent=None,
-    custom_headers=None,
-    timeout=30.0,
-    base_url="https://api.supermetrics.com"
+    api_key="your_api_key", user_agent=None, custom_headers=None, timeout=30.0, base_url="https://api.supermetrics.com"
 )
 ```
 
@@ -99,10 +91,12 @@ client = SupermetricsAsyncClient(
 import asyncio
 from supermetrics import SupermetricsAsyncClient
 
+
 async def main():
     async with SupermetricsAsyncClient(api_key="your_key") as client:
         accounts = await client.accounts.list(ds_id="GAWA")
         print(f"Found {len(accounts)} accounts")
+
 
 asyncio.run(main())
 ```
@@ -120,12 +114,7 @@ Manage data source authentication links.
 Create a login link for data source authentication.
 
 ```python
-link = client.login_links.create(
-    ds_id="GAWA",
-    description="My Analytics Connection",
-    expiry_time=None,
-    **kwargs
-)
+link = client.login_links.create(ds_id="GAWA", description="My Analytics Connection", expiry_time=None, **kwargs)
 ```
 
 **Parameters:**
@@ -144,10 +133,7 @@ link = client.login_links.create(
 **Example:**
 
 ```python
-link = client.login_links.create(
-    ds_id="GAWA",
-    description="Analytics Connection for Q1 Report"
-)
+link = client.login_links.create(ds_id="GAWA", description="Analytics Connection for Q1 Report")
 print(f"Authentication URL: {link.login_url}")
 print(f"Link ID: {link.link_id}")
 ```
@@ -307,11 +293,7 @@ Retrieve data source accounts available for querying.
 List all accounts for a data source.
 
 ```python
-accounts = client.accounts.list(
-    ds_id="GAWA",
-    login_usernames=None,
-    cache_minutes=None
-)
+accounts = client.accounts.list(ds_id="GAWA", login_usernames=None, cache_minutes=None)
 ```
 
 **Parameters:**
@@ -331,16 +313,10 @@ accounts = client.accounts.list(
 accounts = client.accounts.list(ds_id="GAWA")
 
 # Filter by specific username
-accounts = client.accounts.list(
-    ds_id="GAWA",
-    login_usernames="analytics@company.com"
-)
+accounts = client.accounts.list(ds_id="GAWA", login_usernames="analytics@company.com")
 
 # Filter by multiple usernames
-accounts = client.accounts.list(
-    ds_id="google_ads",
-    login_usernames=["user1@company.com", "user2@company.com"]
-)
+accounts = client.accounts.list(ds_id="google_ads", login_usernames=["user1@company.com", "user2@company.com"])
 
 # Print account details
 for account in accounts:
@@ -364,7 +340,7 @@ result = client.queries.execute(
     fields=["Date", "Sessions", "Users"],
     start_date="2024-01-01",
     end_date="2024-01-07",
-    **kwargs
+    **kwargs,
 )
 ```
 
@@ -397,7 +373,7 @@ result = client.queries.execute(
     start_date="2024-01-01",
     end_date="2024-01-31",
     max_rows=10000,
-    filter_="Sessions > 100"
+    filter_="Sessions > 100",
 )
 
 if result and result.data:
@@ -427,11 +403,7 @@ result = client.queries.get_results(query_id="query_abc123")
 ```python
 # Execute query
 result = client.queries.execute(
-    ds_id="GAWA",
-    ds_accounts=["123456789"],
-    fields=["Date", "Sessions"],
-    start_date="2024-01-01",
-    end_date="2024-12-31"
+    ds_id="GAWA", ds_accounts=["123456789"], fields=["Date", "Sessions"], start_date="2024-01-01", end_date="2024-12-31"
 )
 
 # Check if async processing
@@ -440,6 +412,7 @@ if result and result.meta and result.meta.status_code == "pending":
 
     # Poll for results
     import time
+
     time.sleep(5)
     result = client.queries.get_results(query_id=result.meta.request_id)
 
@@ -476,10 +449,7 @@ Schedule a new backfill for a transfer.
 
 ```python
 backfill = client.backfills.create(
-    team_id=12345,
-    transfer_id=456789,
-    range_start=date(2024, 1, 1),
-    range_end=date(2024, 1, 31)
+    team_id=12345, transfer_id=456789, range_start=date(2024, 1, 1), range_end=date(2024, 1, 31)
 )
 ```
 
@@ -507,10 +477,7 @@ from supermetrics import SupermetricsClient
 
 with SupermetricsClient(api_key="your_key") as client:
     backfill = client.backfills.create(
-        team_id=12345,
-        transfer_id=456789,
-        range_start=date(2024, 1, 1),
-        range_end=date(2024, 1, 31)
+        team_id=12345, transfer_id=456789, range_start=date(2024, 1, 1), range_end=date(2024, 1, 31)
     )
     print(f"Backfill ID: {backfill.transfer_backfill_id}")
     print(f"Status: {backfill.status}")  # "CREATED"
@@ -601,9 +568,11 @@ if not backfills:
     print("No incomplete backfills")
 else:
     for backfill in backfills:
-        print(f"[{backfill.status}] Backfill {backfill.transfer_backfill_id} "
-              f"(transfer {backfill.transfer_id}): "
-              f"{backfill.transfer_runs_completed}/{backfill.transfer_runs_total} runs done")
+        print(
+            f"[{backfill.status}] Backfill {backfill.transfer_backfill_id} "
+            f"(transfer {backfill.transfer_id}): "
+            f"{backfill.transfer_runs_completed}/{backfill.transfer_runs_total} runs done"
+        )
 ```
 
 #### cancel()
@@ -636,7 +605,7 @@ from supermetrics import ValidationError, APIError
 
 try:
     cancelled = client.backfills.cancel(team_id=12345, backfill_id=67890)
-    print(f"Status: {cancelled.status}")        # "CANCELLED"
+    print(f"Status: {cancelled.status}")  # "CANCELLED"
     print(f"Ended at: {cancelled.end_time}")
 except ValidationError:
     print("Cannot cancel — backfill is already in a final state")
@@ -652,21 +621,17 @@ import asyncio
 from datetime import date
 from supermetrics import SupermetricsAsyncClient
 
+
 async def main():
-    async with SupermetricsAsyncClient(
-        api_key="your_key",
-        base_url="https://dts-api.supermetrics.com/v1"
-    ) as client:
+    async with SupermetricsAsyncClient(api_key="your_key", base_url="https://dts-api.supermetrics.com/v1") as client:
         backfill = await client.backfills.create(
-            team_id=12345,
-            transfer_id=456789,
-            range_start=date(2024, 1, 1),
-            range_end=date(2024, 1, 31)
+            team_id=12345, transfer_id=456789, range_start=date(2024, 1, 1), range_end=date(2024, 1, 31)
         )
         print(f"Created backfill: {backfill.transfer_backfill_id}")
 
         incomplete = await client.backfills.list_incomplete(team_id=12345)
         print(f"Incomplete backfills: {len(incomplete)}")
+
 
 asyncio.run(main())
 ```
@@ -685,7 +650,7 @@ Fetch metadata for a data source including report types, settings, and authentic
 details = client.datasource_details.get(
     team_id=12345,
     data_source_id="GAWA",
-    sm_app_id=None   # optional
+    sm_app_id=None,  # optional
 )
 ```
 
@@ -722,13 +687,12 @@ with SupermetricsClient(api_key="your_key") as client:
 import asyncio
 from supermetrics import SupermetricsAsyncClient
 
+
 async def main():
     async with SupermetricsAsyncClient(api_key="your_key") as client:
-        details = await client.datasource_details.get(
-            team_id=12345,
-            data_source_id="GAWA"
-        )
+        details = await client.datasource_details.get(team_id=12345, data_source_id="GAWA")
         print(f"Datasource: {details.name} ({details.status})")
+
 
 asyncio.run(main())
 ```
@@ -841,7 +805,7 @@ print(f"Status:  {details.status}")
 print(f"Premium: {details.is_premium}")
 print(f"Auth required: {details.is_authentication_required}")
 
-for rt in (details.report_types or []):
+for rt in details.report_types or []:
     print(f"  Report type: {rt.id} — {rt.name}")
 ```
 

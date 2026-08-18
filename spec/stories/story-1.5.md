@@ -66,21 +66,21 @@ so that users can verify authentication completion and obtain login credentials.
 **Login Model (from updated tech spec):**
 ```python
 class Login(BaseModel):
-    login_id: str                     # Supermetrics login ID
-    login_type: str                   # Authentication type
-    username: str                     # Authenticated username (used in queries as ds_user)
-    display_name: str                 # Visible name in UIs
-    ds_id: str                        # Data source ID
-    ds_name: str                      # Data source name
-    default_scopes: list[str]         # Default API scopes
-    additional_scopes: list[str]      # Additional granted scopes
-    login_at: datetime                # Last authentication datetime
-    owner_user_id: str                # Supermetrics user ID
-    owner_user_email: str             # Supermetrics user email
-    expires_at: Optional[datetime]    # Expiration datetime if any
-    revoked_at: Optional[datetime]    # Revocation datetime if any
-    is_refreshable: bool              # Can be auto-refreshed
-    is_shared: bool                   # Shared with team users
+    login_id: str  # Supermetrics login ID
+    login_type: str  # Authentication type
+    username: str  # Authenticated username (used in queries as ds_user)
+    display_name: str  # Visible name in UIs
+    ds_id: str  # Data source ID
+    ds_name: str  # Data source name
+    default_scopes: list[str]  # Default API scopes
+    additional_scopes: list[str]  # Additional granted scopes
+    login_at: datetime  # Last authentication datetime
+    owner_user_id: str  # Supermetrics user ID
+    owner_user_email: str  # Supermetrics user email
+    expires_at: Optional[datetime]  # Expiration datetime if any
+    revoked_at: Optional[datetime]  # Revocation datetime if any
+    is_refreshable: bool  # Can be auto-refreshed
+    is_shared: bool  # Shared with team users
 ```
 
 [Source: tech-spec-epic-1.md - Login Model, lines 117-135]

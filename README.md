@@ -34,19 +34,13 @@ from supermetrics import SupermetricsClient
 client = SupermetricsClient(api_key="your_api_key")
 
 # Create login link for data source authentication
-link = client.login_links.create(
-    ds_id="GAWA",
-    description="My Analytics Authentication"
-)
+link = client.login_links.create(ds_id="GAWA", description="My Analytics Authentication")
 
 # Get login details after user authenticates
 login = client.logins.get(login_id=link.login_id)
 
 # List available accounts
-accounts = client.accounts.list(
-    ds_id="GAWA",
-    login_usernames=login.username
-)
+accounts = client.accounts.list(ds_id="GAWA", login_usernames=login.username)
 
 # Execute query
 result = client.queries.execute(
@@ -54,7 +48,7 @@ result = client.queries.execute(
     ds_accounts=[accounts[0].account_id],
     fields=["Date", "Sessions", "Users"],
     start_date="2024-01-01",
-    end_date="2024-01-07"
+    end_date="2024-01-07",
 )
 
 print(f"Retrieved {len(result.data)} rows")
@@ -72,25 +66,17 @@ connectors = client.connector_builder.list(team_id=12345)
 
 # Create a connector
 created = client.connector_builder.create(
-    team_id=12345,
-    title="My Custom Connector",
-    description="Fetches data from a custom API"
+    team_id=12345, title="My Custom Connector", description="Fetches data from a custom API"
 )
 connector_id = created.connector_identifier
 
 # Manage secrets
 client.connector_builder_secrets.create(
-    team_id=12345,
-    connector_identifier=connector_id,
-    secret_name="api_key",
-    secret_value="sk-secret-value"
+    team_id=12345, connector_identifier=connector_id, secret_name="api_key", secret_value="sk-secret-value"
 )
 
 # View execution logs
-logs = client.connector_builder_logs.list(
-    team_id=12345,
-    connector_identifier=connector_id
-)
+logs = client.connector_builder_logs.list(team_id=12345, connector_identifier=connector_id)
 ```
 
 ### Data Warehouse Backfills
@@ -102,12 +88,7 @@ from supermetrics import SupermetricsClient
 client = SupermetricsClient(api_key="your_api_key")
 
 # Create a backfill for historical data
-backfill = client.backfills.create(
-    team_id=12345,
-    transfer_id=456789,
-    range_start="2024-01-01",
-    range_end="2024-01-31"
-)
+backfill = client.backfills.create(team_id=12345, transfer_id=456789, range_start="2024-01-01", range_end="2024-01-31")
 
 print(f"Backfill created: {backfill.transfer_backfill_id}")
 print(f"Status: {backfill.status}")

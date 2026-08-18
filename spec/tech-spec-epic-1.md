@@ -97,73 +97,78 @@ All data models are auto-generated from the OpenAPI specification using Pydantic
 **LoginLink Model (draft):**
 ```python
 class LoginLink(BaseModel):
-    link_id: str                      # Unique login link identifier
-    ds_id: str                        # Data source ID (e.g., "GAWA", "google_ads")
-    ds_name: str                      # Human-readable description
-    login_url: str                    # Full URL to initiate an authentication attempt. Can be accessed multiple times while link is open.
-    require_username: Optional[str]   # Data source username that must be used in authentication attempt
-    redirect_url: Optional[str]       # Custom URL to redirect to after successful authentication, if any
+    link_id: str  # Unique login link identifier
+    ds_id: str  # Data source ID (e.g., "GAWA", "google_ads")
+    ds_name: str  # Human-readable description
+    login_url: str  # Full URL to initiate an authentication attempt. Can be accessed multiple times while link is open.
+    require_username: Optional[str]  # Data source username that must be used in authentication attempt
+    redirect_url: Optional[str]  # Custom URL to redirect to after successful authentication, if any
     redirect_verifier: Optional[str]  # Internal verifier string that is passed to redirect_url
-    owner_user_id: Optional[str]            # Supermetrics user ID of the user who will be marked as the primary owner of the login credentials
-    owner_user_email: Optional[str]         # Supermetrics user email
-    login_id: Optional[str]           # Supermetrics login ID for a successful authentication
-    login_username: Optional[str]     # Username used to authenticate to data source
-    created_at: datetime              # Creation timestamp
-    expires_at: Optional[datetime]    # Expiration timestamp (if applicable)
-    login_at: Optional[datetime]      # ISO 8601 datetime for when authentication occurred
-    status_code: str                  # Link status ("OPEN", "CLOSED", "EXPIRED" )
+    owner_user_id: Optional[
+        str
+    ]  # Supermetrics user ID of the user who will be marked as the primary owner of the login credentials
+    owner_user_email: Optional[str]  # Supermetrics user email
+    login_id: Optional[str]  # Supermetrics login ID for a successful authentication
+    login_username: Optional[str]  # Username used to authenticate to data source
+    created_at: datetime  # Creation timestamp
+    expires_at: Optional[datetime]  # Expiration timestamp (if applicable)
+    login_at: Optional[datetime]  # ISO 8601 datetime for when authentication occurred
+    status_code: str  # Link status ("OPEN", "CLOSED", "EXPIRED" )
 ```
 
 **Login Model:**
 ```python
 class Login(BaseModel):
-    login_id: str # Supermetrics login ID
-    login_type: str # Authentication type. Note that some data sources support multiple types, and user can choose between them.
-    username: str # Authenticated username, used in queries as ds_user
-    display_name: str # Visible name for this authentication in product UIs
-    ds_id: str # Data source ID
-    ds_name: str # Data source name
-    default_scopes: list[str] # List of default source API scopes used in authentication
-    additional_scopes: list[str] # List of additional source API scopes user has granted to access more data
-    login_at: datetime # ISO 8601 datetime for when last user authentication occurred
-    owner_user_id: str # Supermetrics user ID
-    owner_user_email: str # Supermetrics user email
-    expires_at: Optional[datetime] # ISO 8601 datetime for when authentication expires, if any
-    revoked_at: Optional[datetime] # ISO 8601 datetime for when authentication was revoked, if any
-    is_refreshable: bool # Whether authentication can be automatically refreshed after expiry time, without user involvement
-    is_shared: bool # Whether login is shared with all team users
+    login_id: str  # Supermetrics login ID
+    login_type: str  # Authentication type. Note that some data sources support multiple types, and user can choose between them.
+    username: str  # Authenticated username, used in queries as ds_user
+    display_name: str  # Visible name for this authentication in product UIs
+    ds_id: str  # Data source ID
+    ds_name: str  # Data source name
+    default_scopes: list[str]  # List of default source API scopes used in authentication
+    additional_scopes: list[str]  # List of additional source API scopes user has granted to access more data
+    login_at: datetime  # ISO 8601 datetime for when last user authentication occurred
+    owner_user_id: str  # Supermetrics user ID
+    owner_user_email: str  # Supermetrics user email
+    expires_at: Optional[datetime]  # ISO 8601 datetime for when authentication expires, if any
+    revoked_at: Optional[datetime]  # ISO 8601 datetime for when authentication was revoked, if any
+    is_refreshable: (
+        bool  # Whether authentication can be automatically refreshed after expiry time, without user involvement
+    )
+    is_shared: bool  # Whether login is shared with all team users
 ```
 
 **Account Model:**
 ```python
 class Account(BaseModel):
-    account_id: str                   # Account identifier (used in queries)
-    account_name: str                 # Account display name
-    group_name: str                   # Account group name (empty string when not available)
+    account_id: str  # Account identifier (used in queries)
+    account_name: str  # Account display name
+    group_name: str  # Account group name (empty string when not available)
 ```
 
 **QueryResult Model:**
 ```python
 class Field(BaseModel):
-    id: str                     # Field ID the API uses
-    requested_id: str                     # Field ID from the reques
-    name: str                       # Field name
-    type: str                  # Field type
-    split: str                 # Field split by type
-    data_type: str                    # Field data type
-    data_column: int                    # Field value position in each data row
-    visible: bool                    # Whether data for this field is visible
+    id: str  # Field ID the API uses
+    requested_id: str  # Field ID from the reques
+    name: str  # Field name
+    type: str  # Field type
+    split: str  # Field split by type
+    data_type: str  # Field data type
+    data_column: int  # Field value position in each data row
+    visible: bool  # Whether data for this field is visible
+
 
 class QueryResult(BaseModel):
-    request_id: str                     # API request ID
-    schedule_id: str                     # Custom or generated schedule ID for the query
-    status_code: str                       # Status code for the query
-    data: list[dict]                  # Actual data rows
-    fields: list[Field]                 # Field names
-    row_count: int                    # Number of rows returned
-    data_sampled: bool # If data source has provided sampled data
-    cache_used: bool # If cached data was used
-    cache_time: datetime # ISO 8601 datetime for the most recent cached data
+    request_id: str  # API request ID
+    schedule_id: str  # Custom or generated schedule ID for the query
+    status_code: str  # Status code for the query
+    data: list[dict]  # Actual data rows
+    fields: list[Field]  # Field names
+    row_count: int  # Number of rows returned
+    data_sampled: bool  # If data source has provided sampled data
+    cache_used: bool  # If cached data was used
+    cache_time: datetime  # ISO 8601 datetime for the most recent cached data
 ```
 
 **Data Flow and Relationships:**
@@ -478,7 +483,9 @@ Supermetrics API
 **Logging Implementation Pattern:**
 ```python
 import logging
+
 logger = logging.getLogger(__name__)
+
 
 def create(self, ds_id: str, description: str) -> LoginLink:
     logger.debug(f"Creating login link: ds_id={ds_id}")
