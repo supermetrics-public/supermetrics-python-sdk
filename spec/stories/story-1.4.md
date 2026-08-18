@@ -147,21 +147,21 @@ client.login_links.close(link_id: str) -> None
 Based on actual API schema:
 ```python
 class LoginLink(BaseModel):
-    link_id: str                      # Unique login link identifier
-    ds_id: str                        # Data source ID
-    ds_name: str                      # Human-readable description
-    login_url: str                    # Full URL for authentication
-    require_username: Optional[str]   # Required username if any
-    redirect_url: Optional[str]       # Custom redirect URL
+    link_id: str  # Unique login link identifier
+    ds_id: str  # Data source ID
+    ds_name: str  # Human-readable description
+    login_url: str  # Full URL for authentication
+    require_username: Optional[str]  # Required username if any
+    redirect_url: Optional[str]  # Custom redirect URL
     redirect_verifier: Optional[str]  # Verifier string
-    owner_user_id: Optional[str]      # Owner user ID
-    owner_user_email: Optional[str]   # Owner email
-    login_id: Optional[str]           # Login ID after successful auth
-    login_username: Optional[str]     # Username used to authenticate
-    created_at: datetime              # Creation timestamp
-    expires_at: Optional[datetime]    # Expiration timestamp
-    login_at: Optional[datetime]      # Authentication timestamp
-    status_code: str                  # "OPEN", "CLOSED", "EXPIRED"
+    owner_user_id: Optional[str]  # Owner user ID
+    owner_user_email: Optional[str]  # Owner email
+    login_id: Optional[str]  # Login ID after successful auth
+    login_username: Optional[str]  # Username used to authenticate
+    created_at: datetime  # Creation timestamp
+    expires_at: Optional[datetime]  # Expiration timestamp
+    login_at: Optional[datetime]  # Authentication timestamp
+    status_code: str  # "OPEN", "CLOSED", "EXPIRED"
 ```
 
 [Source: tech-spec-epic-1.md - LoginLink Model, lines 97-115]
@@ -177,17 +177,14 @@ def _map_http_exception(self, error: httpx.HTTPStatusError) -> SupermetricsError
 
     if status_code == 401:
         return AuthenticationError(
-            "Invalid or expired API key",
-            status_code=status_code,
-            endpoint=endpoint,
-            response_body=response_text
+            "Invalid or expired API key", status_code=status_code, endpoint=endpoint, response_body=response_text
         )
     elif status_code == 400:
         return ValidationError(
             f"Invalid request parameters: {response_text}",
             status_code=status_code,
             endpoint=endpoint,
-            response_body=response_text
+            response_body=response_text,
         )
     # ... more mappings
 ```

@@ -385,6 +385,7 @@ class Client:
         # Generated implementation
         ...
 
+
 # resources/login_links.py (hand-written, stable public API)
 class LoginLinksResource:
     def __init__(self, client: Client):
@@ -569,6 +570,7 @@ from supermetrics_sdk._generated.models import LoginLink
 
 logger = logging.getLogger(__name__)
 
+
 class LoginLinksResource:
     """Manages login link operations for data source authentication.
 
@@ -585,12 +587,7 @@ class LoginLinksResource:
         """
         self._client = client
 
-    def create(
-        self,
-        ds_id: str,
-        description: str,
-        **kwargs
-    ) -> LoginLink:
+    def create(self, ds_id: str, description: str, **kwargs) -> LoginLink:
         """Create a new login link for data source authentication.
 
         Args:
@@ -619,11 +616,7 @@ class LoginLinksResource:
         logger.debug(f"Creating login link for ds_id={ds_id}")
 
         try:
-            response = self._client.api.create_login_link(
-                ds_id=ds_id,
-                description=description,
-                **kwargs
-            )
+            response = self._client.api.create_login_link(ds_id=ds_id, description=description, **kwargs)
             logger.info(f"Created login link id={response.id}")
             return response
 
@@ -650,31 +643,28 @@ class LoginLinksResource:
 
         if status_code == 401:
             return AuthenticationError(
-                "Invalid or expired API key",
-                status_code=status_code,
-                endpoint=endpoint,
-                response_body=response_text
+                "Invalid or expired API key", status_code=status_code, endpoint=endpoint, response_body=response_text
             )
         elif status_code == 400:
             return ValidationError(
                 f"Invalid request parameters: {response_text}",
                 status_code=status_code,
                 endpoint=endpoint,
-                response_body=response_text
+                response_body=response_text,
             )
         elif status_code >= 500:
             return APIError(
                 f"Supermetrics API error: {response_text}",
                 status_code=status_code,
                 endpoint=endpoint,
-                response_body=response_text
+                response_body=response_text,
             )
         else:
             return APIError(
                 f"API error ({status_code}): {response_text}",
                 status_code=status_code,
                 endpoint=endpoint,
-                response_body=response_text
+                response_body=response_text,
             )
 ```
 
@@ -687,25 +677,24 @@ def create(self, ds_id: str, description: str) -> LoginLink:
     """Type hints are mandatory."""
     ...
 
+
 # Use Optional for optional parameters
-def get(
-    self,
-    link_id: str,
-    *,
-    timeout: Optional[float] = None
-) -> LoginLink:
+def get(self, link_id: str, *, timeout: Optional[float] = None) -> LoginLink:
     """Optional params use Optional[T]."""
     ...
+
 
 # Use list[] for lists (Python 3.10+ syntax)
 def list(self, *, limit: Optional[int] = None) -> list[LoginLink]:
     """Returns list of LoginLink objects."""
     ...
 
+
 # Use dict[] for dictionaries
 def update(self, data: dict[str, Any]) -> LoginLink:
     """Dict with key/value types."""
     ...
+
 
 # Private methods also get type hints
 def _build_headers(self, custom: Optional[dict[str, str]]) -> dict[str, str]:
@@ -717,31 +706,32 @@ def _build_headers(self, custom: Optional[dict[str, str]]) -> dict[str, str]:
 ```python
 from typing import Optional, Union, Literal, TypeVar, Generic
 
+
 # Use Literal for specific string values
 def create(self, ds_id: Literal["GAWA", "google_ads", "facebook"]) -> LoginLink:
     """Literal restricts to specific values."""
     ...
+
 
 # Use Union sparingly (prefer overloads)
 def get(self, identifier: Union[str, int]) -> LoginLink:
     """Union allows multiple types (use sparingly)."""
     ...
 
+
 # For methods that accept different parameter combinations, use @overload
 from typing import overload
+
 
 @overload
 def list(self, *, limit: int) -> list[LoginLink]: ...
 
+
 @overload
 def list(self, *, ds_id: str) -> list[LoginLink]: ...
 
-def list(
-    self,
-    *,
-    limit: Optional[int] = None,
-    ds_id: Optional[str] = None
-) -> list[LoginLink]:
+
+def list(self, *, limit: Optional[int] = None, ds_id: Optional[str] = None) -> list[LoginLink]:
     """Implementation accepts both."""
     ...
 ```
@@ -750,14 +740,7 @@ def list(
 
 **Complete Docstring Template:**
 ```python
-def create(
-    self,
-    ds_id: str,
-    description: str,
-    *,
-    expires_in: Optional[int] = None,
-    **kwargs
-) -> LoginLink:
+def create(self, ds_id: str, description: str, *, expires_in: Optional[int] = None, **kwargs) -> LoginLink:
     """Create a new login link for data source authentication.
 
     This creates a unique authentication URL that users visit to authorize
@@ -848,6 +831,7 @@ def get(self, link_id: str) -> LoginLink:
 ```python
 # src/supermetrics/exceptions.py
 
+
 class SupermetricsError(Exception):
     """Base exception for all SDK errors.
 
@@ -867,13 +851,14 @@ class SupermetricsError(Exception):
         *,
         status_code: Optional[int] = None,
         endpoint: Optional[str] = None,
-        response_body: Optional[str] = None
+        response_body: Optional[str] = None,
     ):
         super().__init__(message)
         self.message = message
         self.status_code = status_code
         self.endpoint = endpoint
         self.response_body = response_body
+
 
 class AuthenticationError(SupermetricsError):
     """API key authentication failed.
@@ -883,6 +868,7 @@ class AuthenticationError(SupermetricsError):
     - API key lacks permissions for requested operation
     - HTTP 401 Unauthorized response
     """
+
 
 class ValidationError(SupermetricsError):
     """Request parameters failed validation.
@@ -894,6 +880,7 @@ class ValidationError(SupermetricsError):
     - HTTP 400 Bad Request response
     """
 
+
 class APIError(SupermetricsError):
     """Supermetrics API returned an error.
 
@@ -902,6 +889,7 @@ class APIError(SupermetricsError):
     - API returns unexpected error response
     - Resource not found (404)
     """
+
 
 class NetworkError(SupermetricsError):
     """Network connectivity error.
@@ -990,6 +978,7 @@ from supermetrics_sdk.resources.queries import QueriesResource
 
 logger = logging.getLogger(__name__)
 
+
 class SupermetricsClient:
     """Synchronous client for Supermetrics API.
 
@@ -1013,7 +1002,7 @@ class SupermetricsClient:
         user_agent: Optional[str] = None,
         custom_headers: Optional[dict[str, str]] = None,
         timeout: float = 30.0,
-        base_url: str = "https://api.supermetrics.com"
+        base_url: str = "https://api.supermetrics.com",
     ) -> None:
         """Initialize Supermetrics client.
 
@@ -1029,6 +1018,7 @@ class SupermetricsClient:
 
         # Build headers
         import sys
+
         py_version = f"{sys.version_info.major}.{sys.version_info.minor}"
         default_user_agent = f"supermetrics-sdk/{__version__} python/{py_version}"
 
@@ -1045,11 +1035,7 @@ class SupermetricsClient:
         logger.debug(f"Initializing SupermetricsClient with base_url={base_url}")
 
         # Create internal generated client
-        self._client = GeneratedClient(
-            base_url=base_url,
-            headers=headers,
-            timeout=timeout
-        )
+        self._client = GeneratedClient(base_url=base_url, headers=headers, timeout=timeout)
 
         # Attach resource adapters
         self.login_links = LoginLinksResource(self._client)
@@ -1093,6 +1079,7 @@ from supermetrics_sdk.resources.queries import QueriesAsyncResource
 
 logger = logging.getLogger(__name__)
 
+
 class SupermetricsAsyncClient:
     """Asynchronous client for Supermetrics API.
 
@@ -1123,7 +1110,7 @@ class SupermetricsAsyncClient:
         user_agent: Optional[str] = None,
         custom_headers: Optional[dict[str, str]] = None,
         timeout: float = 30.0,
-        base_url: str = "https://api.supermetrics.com"
+        base_url: str = "https://api.supermetrics.com",
     ) -> None:
         """Initialize async Supermetrics client.
 
@@ -1138,6 +1125,7 @@ class SupermetricsAsyncClient:
 
         # Build headers (identical to sync client)
         import sys
+
         py_version = f"{sys.version_info.major}.{sys.version_info.minor}"
         default_user_agent = f"supermetrics-sdk/{__version__} python/{py_version}"
 
@@ -1152,11 +1140,7 @@ class SupermetricsAsyncClient:
         logger.debug(f"Initializing SupermetricsAsyncClient with base_url={base_url}")
 
         # Create internal generated async client
-        self._client = GeneratedAsyncClient(
-            base_url=base_url,
-            headers=headers,
-            timeout=timeout
-        )
+        self._client = GeneratedAsyncClient(base_url=base_url, headers=headers, timeout=timeout)
 
         # Attach async resource adapters
         self.login_links = LoginLinksAsyncResource(self._client)
@@ -1210,6 +1194,7 @@ logger.addHandler(logging.NullHandler())
 import logging
 
 logger = logging.getLogger(__name__)  # e.g., "supermetrics_sdk.resources.login_links"
+
 
 class LoginLinksResource:
     def create(self, ds_id: str, description: str) -> LoginLink:
@@ -1272,6 +1257,7 @@ import pytest
 from supermetrics_sdk import SupermetricsClient, SupermetricsAsyncClient
 from supermetrics_sdk.exceptions import AuthenticationError, ValidationError
 
+
 def test_create_login_link_success(mock_httpx_response):
     """Test successful login link creation."""
     # Arrange
@@ -1280,20 +1266,18 @@ def test_create_login_link_success(mock_httpx_response):
         "id": "link_123",
         "ds_id": "GAWA",
         "description": "Test Link",
-        "auth_url": "https://auth.supermetrics.com/link_123"
+        "auth_url": "https://auth.supermetrics.com/link_123",
     }
 
     # Act
-    link = client.login_links.create(
-        ds_id="GAWA",
-        description="Test Link"
-    )
+    link = client.login_links.create(ds_id="GAWA", description="Test Link")
 
     # Assert
     assert link.id == "link_123"
     assert link.ds_id == "GAWA"
     assert link.description == "Test Link"
     assert "auth.supermetrics.com" in link.auth_url
+
 
 def test_create_login_link_invalid_api_key(mock_httpx_401_error):
     """Test login link creation with invalid API key."""
@@ -1306,6 +1290,7 @@ def test_create_login_link_invalid_api_key(mock_httpx_401_error):
 
     assert exc_info.value.status_code == 401
     assert "Invalid or expired API key" in str(exc_info.value)
+
 
 def test_create_login_link_invalid_ds_id(mock_httpx_400_error):
     """Test login link creation with invalid ds_id."""
@@ -1346,11 +1331,13 @@ async def test_create_login_link_async_success(mock_httpx_response):
 import pytest
 from unittest.mock import Mock, AsyncMock
 
+
 @pytest.fixture
 def mock_httpx_response():
     """Mock successful httpx response."""
     mock = Mock()
     return mock
+
 
 @pytest.fixture
 def mock_httpx_401_error():
@@ -1358,19 +1345,12 @@ def mock_httpx_401_error():
     import httpx
 
     request = httpx.Request("POST", "https://api.supermetrics.com/login_links")
-    response = httpx.Response(
-        status_code=401,
-        text='{"error": "Unauthorized"}',
-        request=request
-    )
+    response = httpx.Response(status_code=401, text='{"error": "Unauthorized"}', request=request)
 
-    error = httpx.HTTPStatusError(
-        message="Unauthorized",
-        request=request,
-        response=response
-    )
+    error = httpx.HTTPStatusError(message="Unauthorized", request=request, response=response)
 
     return error
+
 
 @pytest.fixture
 def mock_httpx_400_error():
@@ -1401,6 +1381,7 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
 
+
 class LoginLink(BaseModel):
     """Login link for data source authentication."""
 
@@ -1412,6 +1393,7 @@ class LoginLink(BaseModel):
     expires_at: Optional[datetime] = Field(None, description="Expiration timestamp")
     status: str = Field(..., description="Link status (active, expired, used)")
 
+
 # _generated/models/login.py (generated)
 class Login(BaseModel):
     """User login credentials after authorization."""
@@ -1422,6 +1404,7 @@ class Login(BaseModel):
     status: str = Field(..., description="Login status")
     created_at: datetime
 
+
 # _generated/models/account.py (generated)
 class Account(BaseModel):
     """Data source account information."""
@@ -1430,6 +1413,7 @@ class Account(BaseModel):
     account_name: str = Field(..., description="Account display name")
     ds_id: str = Field(..., description="Data source ID")
     type: str = Field(..., description="Account type")
+
 
 # _generated/models/query_result.py (generated)
 class QueryResult(BaseModel):
@@ -1448,6 +1432,7 @@ Adapters import and expose these models in type hints, providing users with type
 
 ```python
 from supermetrics_sdk._generated.models import LoginLink
+
 
 class LoginLinksResource:
     def create(self, ds_id: str, description: str) -> LoginLink:
@@ -1552,10 +1537,7 @@ except APIError as e:
 **LoginLinks Resource:**
 ```python
 # Create login link
-link: LoginLink = client.login_links.create(
-    ds_id="GAWA",
-    description="Analytics Dashboard"
-)
+link: LoginLink = client.login_links.create(ds_id="GAWA", description="Analytics Dashboard")
 
 # Get login link by ID
 link: LoginLink = client.login_links.get(link_id="link_123")
@@ -1588,10 +1570,7 @@ accounts: list[Account] = client.accounts.list(login_username="user_abc")
 accounts: list[Account] = client.accounts.list(ds_id="GAWA")
 
 # Filter accounts
-accounts: list[Account] = client.accounts.list(
-    login_username="user_abc",
-    account_type="property"
-)
+accounts: list[Account] = client.accounts.list(login_username="user_abc", account_type="property")
 ```
 
 **Queries Resource:**
@@ -1602,7 +1581,7 @@ result: QueryResult = client.queries.execute(
     ds_accounts=["account_123"],
     fields=["sessions", "users", "pageviews"],
     start_date="2025-01-01",
-    end_date="2025-01-31"
+    end_date="2025-01-31",
 )
 
 # For async queries (query is still processing)
@@ -1632,11 +1611,13 @@ if result.status == "pending":
 ```python
 # ✅ GOOD: Load from environment variable
 import os
+
 api_key = os.environ["SUPERMETRICS_API_KEY"]
 client = SupermetricsClient(api_key=api_key)
 
 # ✅ GOOD: Load from secure config file
 import json
+
 with open("config.json") as f:
     config = json.load(f)
 client = SupermetricsClient(api_key=config["api_key"])
@@ -1710,15 +1691,13 @@ raise AuthenticationError(f"API key {api_key} is invalid")
 import asyncio
 from supermetrics_sdk import SupermetricsAsyncClient
 
+
 async def fetch_query(client, account_id):
     """Fetch data for single account."""
     return await client.queries.execute(
-        ds_id="GAWA",
-        ds_accounts=[account_id],
-        fields=["sessions"],
-        start_date="2025-01-01",
-        end_date="2025-01-31"
+        ds_id="GAWA", ds_accounts=[account_id], fields=["sessions"], start_date="2025-01-01", end_date="2025-01-31"
     )
+
 
 async def main():
     async with SupermetricsAsyncClient(api_key=api_key) as client:
@@ -1728,6 +1707,7 @@ async def main():
         results = await asyncio.gather(*tasks)
 
     print(f"Fetched {len(results)} query results concurrently")
+
 
 asyncio.run(main())
 ```
@@ -1804,6 +1784,7 @@ uv pip install supermetrics-sdk
 **Verify installation:**
 ```python
 import supermetrics_sdk
+
 print(supermetrics_sdk.__version__)
 ```
 
