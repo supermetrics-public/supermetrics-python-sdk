@@ -17,10 +17,7 @@ client = SupermetricsClient(api_key="your_api_key_here")
 
 ```python
 # Create a login link for Google Analytics 4
-link = client.login_links.create(
-    ds_id="GAWA",
-    description="My Analytics Connection"
-)
+link = client.login_links.create(ds_id="GAWA", description="My Analytics Connection")
 
 print(f"Authentication URL: {link.login_url}")
 print(f"Link ID: {link.link_id}")
@@ -40,10 +37,7 @@ print(f"Login ID: {login.login_id}")
 
 ```python
 # List available accounts for the data source
-accounts = client.accounts.list(
-    ds_id="GAWA",
-    login_usernames=login.username
-)
+accounts = client.accounts.list(ds_id="GAWA", login_usernames=login.username)
 
 print(f"Found {len(accounts)} accounts")
 for account in accounts:
@@ -59,7 +53,7 @@ result = client.queries.execute(
     ds_accounts=[accounts[0].account_id],
     fields=["Date", "Sessions", "Users", "Pageviews"],
     start_date="2024-01-01",
-    end_date="2024-01-31"
+    end_date="2024-01-31",
 )
 
 if result and result.data:
@@ -97,7 +91,7 @@ try:
         ds_accounts=[accounts[0].account_id],
         fields=["Date", "Sessions", "Users"],
         start_date="2024-01-01",
-        end_date="2024-01-31"
+        end_date="2024-01-31",
     )
 
     # Process results
@@ -111,13 +105,7 @@ finally:
 ## Error Handling
 
 ```python
-from supermetrics import (
-    SupermetricsClient,
-    AuthenticationError,
-    ValidationError,
-    APIError,
-    NetworkError
-)
+from supermetrics import SupermetricsClient, AuthenticationError, ValidationError, APIError, NetworkError
 
 client = SupermetricsClient(api_key="your_key")
 
@@ -127,7 +115,7 @@ try:
         ds_accounts=["123456789"],
         fields=["Date", "Sessions"],
         start_date="2024-01-01",
-        end_date="2024-01-31"
+        end_date="2024-01-31",
     )
 except AuthenticationError as e:
     print(f"Invalid API key: {e.message}")
@@ -145,6 +133,7 @@ except NetworkError as e:
 import asyncio
 from supermetrics import SupermetricsAsyncClient
 
+
 async def main():
     async with SupermetricsAsyncClient(api_key="your_key") as client:
         # All methods are async
@@ -156,11 +145,12 @@ async def main():
             ds_accounts=[accounts[0].account_id],
             fields=["Date", "Sessions", "Users"],
             start_date="2024-01-01",
-            end_date="2024-01-31"
+            end_date="2024-01-31",
         )
 
         if result and result.data:
             print(f"Retrieved {len(result.data)} rows")
+
 
 asyncio.run(main())
 ```

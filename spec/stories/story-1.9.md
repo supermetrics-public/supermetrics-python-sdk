@@ -52,10 +52,7 @@ So that we can validate the POC with the enterprise customer and demonstrate SDK
   ```python
   # Step 2: Create a login link for Google Analytics 4
   # This generates a URL that the user visits to authenticate their GAWA account
-  link = client.login_links.create(
-      ds_id="GAWA",
-      description="My GAWA Authentication"
-  )
+  link = client.login_links.create(ds_id="GAWA", description="My GAWA Authentication")
   print(f"✓ Login link created: {link.login_url}")
   print(f"  Link ID: {link.link_id}")
   print(f"  Status: {link.status_code}")
@@ -121,7 +118,7 @@ So that we can validate the POC with the enterprise customer and demonstrate SDK
       ds_accounts=[selected_account.account_id],
       fields=["Date", "Sessions", "Users"],
       start_date=start_date.isoformat(),
-      end_date=end_date.isoformat()
+      end_date=end_date.isoformat(),
   )
 
   print(f"✓ Query executed:")
@@ -155,9 +152,9 @@ So that we can validate the POC with the enterprise customer and demonstrate SDK
 - [x] Implement Step 8: Display results
   ```python
   # Step 8: Display query results
-  print(f"\n{'='*60}")
+  print(f"\n{'=' * 60}")
   print("QUERY RESULTS")
-  print(f"{'='*60}\n")
+  print(f"{'=' * 60}\n")
 
   # Display field headers
   field_names = [field.name for field in result.fields]
@@ -226,6 +223,7 @@ So that we can validate the POC with the enterprise customer and demonstrate SDK
           # Step 3-8: Same as sync but with await
           ...
 
+
   if __name__ == "__main__":
       asyncio.run(main())
   ```
@@ -289,10 +287,7 @@ So that we can validate the POC with the enterprise customer and demonstrate SDK
   client = SupermetricsClient(api_key="your_api_key")
 
   # Create login link for data source authentication
-  link = client.login_links.create(
-      ds_id="GAWA",
-      description="My Analytics Authentication"
-  )
+  link = client.login_links.create(ds_id="GAWA", description="My Analytics Authentication")
 
   # Get login details after user authenticates
   login = client.logins.get(link_id=link.link_id)
@@ -306,7 +301,7 @@ So that we can validate the POC with the enterprise customer and demonstrate SDK
       ds_accounts=[accounts[0].account_id],
       fields=["Date", "Sessions", "Users"],
       start_date="2024-01-01",
-      end_date="2024-01-07"
+      end_date="2024-01-07",
   )
 
   print(f"Retrieved {result.row_count} rows")
