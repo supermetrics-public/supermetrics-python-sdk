@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -26,10 +27,15 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": f"/v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logo",
+        "url": "/v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logo".format(
+            team_id=quote(str(team_id), safe=""),
+            connector_identifier=quote(str(connector_identifier), safe=""),
+        ),
     }
 
     _kwargs["files"] = body.to_multipart()
+
+    headers["Content-Type"] = "multipart/form-data; boundary=+++"
 
     _kwargs["headers"] = headers
     return _kwargs

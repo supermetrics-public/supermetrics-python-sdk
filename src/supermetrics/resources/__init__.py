@@ -25,6 +25,8 @@ from supermetrics.resources.datasource_details import DatasourceDetailsAsyncReso
 from supermetrics.resources.login_links import LoginLinksAsyncResource, LoginLinksResource
 from supermetrics.resources.logins import LoginsAsyncResource, LoginsResource
 from supermetrics.resources.queries import QueriesAsyncResource, QueriesResource
+from supermetrics.resources.transfer_runs import TransferRunsAsyncResource, TransferRunsResource
+from supermetrics.resources.transfers import TransfersAsyncResource, TransfersResource
 
 __all__ = [
     "AccountsResource",
@@ -45,4 +47,8 @@ __all__ = [
     "LoginsAsyncResource",
     "QueriesResource",
     "QueriesAsyncResource",
+    "TransfersResource",
+    "TransfersAsyncResource",
+    "TransferRunsResource",
+    "TransferRunsAsyncResource",
 ]

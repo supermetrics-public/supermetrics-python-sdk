@@ -20,6 +20,7 @@ def _get_kwargs(
     *,
     json: DataQuery,
 ) -> dict[str, Any]:
+
     params: dict[str, Any] = {}
 
     json_json = json.to_dict()

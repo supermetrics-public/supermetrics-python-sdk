@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -18,9 +19,13 @@ def _get_kwargs(
     team_id: int,
     backfill_id: int,
 ) -> dict[str, Any]:
+
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/teams/{team_id}/backfills/{backfill_id}",
+        "url": "/teams/{team_id}/backfills/{backfill_id}".format(
+            team_id=quote(str(team_id), safe=""),
+            backfill_id=quote(str(backfill_id), safe=""),
+        ),
     }
 
     return _kwargs

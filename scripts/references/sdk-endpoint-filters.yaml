@@ -6,6 +6,7 @@
 # endpoints:
 #   - method: HTTP_METHOD (GET, POST, PUT, PATCH, DELETE, etc.)
 #     path: /api/path
+#     rewrite_path: /path/written/into/the/merged/spec  # Optional - see below
 #     patches:  # Optional - customize the endpoint definition
 #       merge:  # Deep merge these properties with the existing operation
 #         description: "Custom description"
@@ -16,6 +17,25 @@
 #         responses:
 #           '200':
 #             description: "Success"
+
+# ==========================================
+# BASELINE PIN
+# ==========================================
+# Endpoints already present in this merged spec are taken from it verbatim rather
+# than re-read from openapi-specs/. That keeps a regeneration purely ADDITIVE: new
+# endpoints are pulled from upstream, shipped ones keep the exact tags, operationIds
+# and schemas the committed src/supermetrics/_generated/ tree was built from.
+#
+# Why this exists: the upstream specs drift. Operations get retagged, which moves the
+# generated API subpackage and breaks the hand-written adapters' imports, and paths
+# get reparameterised (GET /query/data/json became GET /query/data/{context_type}).
+# Absorbing that drift as a side effect of adding one new domain is how you ship a
+# broken SDK.
+#
+# To deliberately refresh a pinned endpoint against upstream, delete its entry from
+# the committed openapi-spec.yaml, or set this key to null for a full refresh — then
+# expect to update the affected adapters in the same change.
+pin_baseline: openapi-spec.yaml
 
 endpoints:
   # Data Source Logins
@@ -61,6 +81,56 @@ endpoints:
 
   - method: PATCH
     path: /teams/{team_id}/backfills/{backfill_id}
+
+  # DWH Data Transfers & Transfer Runs
+  #
+  # Upstream splits the "/v1" between the path key and the path-level `servers` entry:
+  # the transfers paths are "/v1/teams/..." served from https://dts-api.supermetrics.com,
+  # while data-source-connections is "/teams/..." served from ".../v1". Both resolve to
+  # https://dts-api.supermetrics.com/v1, but openapi-python-client ignores path-level
+  # servers and simply concatenates base_url + path, so the two shapes cannot coexist
+  # under one base URL. rewrite_path normalises the first group onto the second's
+  # convention, which is also what the already-shipped backfills endpoints use.
+  - method: GET
+    path: /v1/teams/{team_id}/transfers
+    rewrite_path: /teams/{team_id}/transfers
+  - method: POST
+    path: /v1/teams/{team_id}/transfers
+    rewrite_path: /teams/{team_id}/transfers
+  - method: GET
+    path: /v1/teams/{team_id}/transfers/{transfer_id}
+    rewrite_path: /teams/{team_id}/transfers/{transfer_id}
+  - method: PUT
+    path: /v1/teams/{team_id}/transfers/{transfer_id}
+    rewrite_path: /teams/{team_id}/transfers/{transfer_id}
+  - method: DELETE
+    path: /v1/teams/{team_id}/transfers/{transfer_id}
+    rewrite_path: /teams/{team_id}/transfers/{transfer_id}
+  - method: PUT
+    path: /v1/teams/{team_id}/transfers/{transfer_id}/state
+    rewrite_path: /teams/{team_id}/transfers/{transfer_id}/state
+  - method: POST
+    path: /v1/teams/{team_id}/transfers/validations
+    rewrite_path: /teams/{team_id}/transfers/validations
+  - method: POST
+    path: /v1/teams/{team_id}/transfers/{transfer_id}/validations
+    rewrite_path: /teams/{team_id}/transfers/{transfer_id}/validations
+  - method: GET
+    path: /v1/teams/{team_id}/transfers/available-sources
+    rewrite_path: /teams/{team_id}/transfers/available-sources
+  - method: GET
+    path: /v1/teams/{team_id}/transfers/available-options
+    rewrite_path: /teams/{team_id}/transfers/available-options
+  - method: GET
+    path: /v1/teams/{team_id}/transfers/{transfer_id}/runs
+    rewrite_path: /teams/{team_id}/transfers/{transfer_id}/runs
+  - method: GET
+    path: /v1/teams/{team_id}/transfer_runs/{transfer_run_id}
+    rewrite_path: /teams/{team_id}/transfer_runs/{transfer_run_id}
+
+  # DWH Data Source Connections (already "/teams/..." upstream; no rewrite needed)
+  - method: POST
+    path: /teams/{team_id}/data-source-connections
 
   # Datasource
   - method: GET

@@ -7,7 +7,6 @@ from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 from ..types import UNSET, Unset
 
@@ -106,7 +105,7 @@ class LogEntry:
         if isinstance(_log_time, Unset):
             log_time = UNSET
         else:
-            log_time = isoparse(_log_time)
+            log_time = datetime.datetime.fromisoformat(_log_time)
 
         def _parse_status(data: object) -> int | None | Unset:
             if data is None:

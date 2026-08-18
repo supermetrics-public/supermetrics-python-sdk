@@ -46,6 +46,149 @@ LOGINS_LIST_BODY: dict[str, Any] = {"data": [LOGIN_PAYLOAD]}
 #: Response body for ``GET /ds/login/{login_id}``.
 LOGIN_GET_BODY: dict[str, Any] = {"data": LOGIN_PAYLOAD}
 
+# --- Data Warehouse transfers -------------------------------------------------
+#
+# The Management API wraps some transfer responses in {"meta": ..., "data": ...} and
+# returns others bare. That split is real, not an oversight in these fixtures: see
+# docs.local/plans/phase2-transfers-and-runs.md §4.
+
+#: Every wrapped response carries this envelope metadata.
+META: dict[str, Any] = {"request_id": "req_0123456789abcdef"}
+
+#: One item of GET /teams/{team_id}/transfers. Note `dwh_transfer_id`, a `schedule`
+#: string and an `accounts` string array — the list item is shaped differently from
+#: the detail object below, which is how the API actually behaves.
+TRANSFER_LIST_ITEM: dict[str, Any] = {
+    "dwh_transfer_id": 36091,
+    "display_name": "Google Ads to BigQuery",
+    "external_transfer_id": "ext-36091",
+    "status": "active",
+    "state": "active",
+    "schedule": "daily",
+    "run_date": "2026-01-01",
+    "accounts": ["8733197711"],
+}
+TRANSFERS_LIST_BODY: dict[str, Any] = {"meta": META, "data": [TRANSFER_LIST_ITEM]}
+
+#: GET /teams/{team_id}/transfers/{transfer_id} — bare, no envelope.
+TRANSFER_DETAIL_BODY: dict[str, Any] = {
+    "transfer_id": 36091,
+    "display_name": "Google Ads to BigQuery",
+    "schema_id": 99999,
+    "destination_id": 8,
+    "accounts": [{"data_source_username": "ads@example.com", "login_id": 1, "account_id": "8733197711"}],
+    "segments": [],
+    "schedule": [{"run_interval": "daily", "run_hour": 4, "refresh_window": 30}],
+    "notification_recipients": [{"email": "ops@example.com"}],
+    "external_url": None,
+}
+
+#: POST /teams/{team_id}/transfers — wrapped, 201.
+TRANSFER_CREATED_BODY: dict[str, Any] = {
+    "meta": META,
+    "data": {"transfer_id": 36091, "transfer_name": "Google Ads to BigQuery"},
+}
+
+#: PUT /teams/{team_id}/transfers/{transfer_id} — bare, despite create being wrapped.
+TRANSFER_UPDATED_BODY: dict[str, Any] = {"transfer_id": 36091, "transfer_name": "Google Ads to BigQuery"}
+
+#: PUT .../state — bare. `state` is a free string upstream; the example is uppercase
+#: while the request enum is lowercase (`pause` / `unpause`).
+TRANSFER_STATE_BODY: dict[str, Any] = {"result": True, "state": "PAUSED"}
+
+#: POST .../validations — returned with HTTP 200 even when the config is invalid.
+VALIDATION_OK_BODY: dict[str, Any] = {"is_valid": True, "errors": []}
+VALIDATION_FAILED_BODY: dict[str, Any] = {
+    "is_valid": False,
+    "errors": [{"field_id": "display_name", "error_code": "isEmpty"}],
+}
+
+#: GET .../available-sources — bare.
+AVAILABLE_SOURCES_BODY: dict[str, Any] = {
+    "data_sources": [
+        {
+            "data_source_id": "AW",
+            "service_name": "Google Ads",
+            "service_provider": "Google",
+            "logo_url": None,
+            "has_custom_fields": True,
+            "is_custom_connector": False,
+            "is_public_beta": False,
+            "is_released": True,
+            "is_internal": None,
+            "applicable_destinations": ["SQL_BQ"],
+        }
+    ],
+    "destinations": [
+        {
+            "destination_id": 8,
+            "destination_name": "Analytics warehouse",
+            "destination_type": "SQL_BQ",
+            "destination_label": "BigQuery",
+            "is_internal": False,
+            "details": [],
+        }
+    ],
+    "destination_types": [{"title": "BigQuery", "type": "SQL_BQ", "is_internal": False}],
+}
+
+#: GET .../available-options — bare, and almost entirely untyped upstream.
+TRANSFER_OPTIONS_BODY: dict[str, Any] = {
+    "data_source": {"data_source_id": "AW", "service_name": "Google Ads", "settings": []},
+    "schedule_options": [],
+    "schemas": [],
+    "logins": [],
+    "accounts": [],
+    "segments": [],
+}
+
+#: GET .../{transfer_id}/runs — wrapped. `type` is one of Recurring / Backfill.
+TRANSFER_RUN_ITEM: dict[str, Any] = {
+    "id": 12345,
+    "status": "COMPLETED",
+    "type": "Recurring",
+    "message": "",
+    "created_time": "2026-01-01T04:00:00Z",
+    "ended_time": "2026-01-01T04:03:20Z",
+    "total_duration": 200.0,
+    "total_rows": 4821,
+    "data_date": "2026-01-01",
+}
+TRANSFER_RUNS_LIST_BODY: dict[str, Any] = {"meta": META, "data": [TRANSFER_RUN_ITEM]}
+
+#: GET /teams/{team_id}/transfer_runs/{transfer_run_id} — wrapped. The detail object
+#: adds query_details / external_id / timing fields and drops `type`.
+TRANSFER_RUN_DETAIL_BODY: dict[str, Any] = {
+    "meta": META,
+    "data": {
+        "id": 12345,
+        "status": "COMPLETED",
+        "external_id": "run-ext-12345",
+        "message": "",
+        "query_details": [{"status": "COMPLETED", "rows": 4821, "duration": 12.5, "error_description": None}],
+        "started_time": "2026-01-01T04:00:10Z",
+        "queued_time": "2026-01-01T04:00:00Z",
+        "ended_time": "2026-01-01T04:03:20Z",
+        "created_time": "2026-01-01T04:00:00Z",
+        "failed_query_amount": 0,
+        "total_duration": 200.0,
+        "total_rows": 4821,
+        "query_amount": 1,
+        "data_date": "2026-01-01",
+    },
+}
+
+#: POST /teams/{team_id}/data-source-connections — wrapped, 201. The connection_id
+#: pattern upstream is uppercase hex only.
+DATA_SOURCE_CONNECTION_BODY: dict[str, Any] = {
+    "meta": META,
+    "data": {
+        "connection_id": "019461A0-0000-7000-8000-000000000001",
+        "login_url": None,
+        "connect_url": None,
+    },
+}
+
 
 @dataclass(frozen=True)
 class RecordedRequest:
@@ -283,4 +426,29 @@ def logins_server(api_server: MockAPIServer) -> MockAPIServer:
     """A server with the two login routes wired to successful responses."""
     api_server.route("/ds/logins", ScriptedResponse(json_body=LOGINS_LIST_BODY))
     api_server.route("/ds/login/login_abc123", ScriptedResponse(json_body=LOGIN_GET_BODY))
+    return api_server
+
+
+@pytest.fixture
+def dts_server() -> Iterator[MockAPIServer]:
+    """A second server, standing in for the Data Warehouse host.
+
+    Transfers, transfer runs, backfills and data source connections are served from
+    ``dts-api.supermetrics.com`` rather than the core API host. Two servers is the only
+    way to prove the SDK actually re-hosts those requests instead of merely building the
+    right path.
+    """
+    server = MockAPIServer()
+    try:
+        yield server
+    finally:
+        server.stop()
+
+
+@pytest.fixture
+def transfers_server(api_server: MockAPIServer) -> MockAPIServer:
+    """A server with the common transfers routes wired to successful responses."""
+    api_server.route("/teams/42/transfers", ScriptedResponse(json_body=TRANSFERS_LIST_BODY))
+    api_server.route("/teams/42/transfers/36091", ScriptedResponse(json_body=TRANSFER_DETAIL_BODY))
+    api_server.route("/teams/42/transfer_runs/12345", ScriptedResponse(json_body=TRANSFER_RUN_DETAIL_BODY))
     return api_server

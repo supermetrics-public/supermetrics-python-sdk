@@ -1,4 +1,4 @@
-from typing import Literal, cast
+from typing import Literal
 
 DatasourceDetailsCategoriesItem = Literal[
     "Ad Verification",
@@ -47,5 +47,5 @@ DATASOURCE_DETAILS_CATEGORIES_ITEM_VALUES: set[DatasourceDetailsCategoriesItem] 
 
 def check_datasource_details_categories_item(value: str) -> DatasourceDetailsCategoriesItem:
     if value in DATASOURCE_DETAILS_CATEGORIES_ITEM_VALUES:
-        return cast(DatasourceDetailsCategoriesItem, value)
+        return value
     raise TypeError(f"Unexpected value {value!r}. Expected one of {DATASOURCE_DETAILS_CATEGORIES_ITEM_VALUES!r}")

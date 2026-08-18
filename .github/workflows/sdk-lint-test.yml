@@ -79,6 +79,12 @@ jobs:
     # server: authentication, dynamic token providers, per-request header and timeout
     # overrides, the raw-response envelope, the error taxonomy, and concurrency
     # isolation on a shared connection pool. Nothing here is mocked or patched.
+    #
+    # Also covers every Data Transfers and Transfer Runs method on both the sync and
+    # async clients, and — using a second local server — proves that Data Warehouse
+    # calls are re-hosted to the DTS origin while core API calls are not. Host routing,
+    # request bodies, and query strings exist only on the wire, so the unit suite
+    # cannot observe them and would stay green while the SDK called the wrong host.
     name: End-to-end (local HTTP server)
     runs-on: ubuntu-latest
     strategy:

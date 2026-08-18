@@ -96,7 +96,7 @@ class BackfillsAsyncResource:
                 response.parsed,
                 endpoint,
                 not_found_msg="Transfer not found or you do not have access to it",
-                bad_request_msg=f"Invalid request parameters: {response.parsed}",
+                bad_request_msg="Invalid request parameters",
                 headers=response.headers,
                 raw_body=response.content,
             )
@@ -287,7 +287,7 @@ class BackfillsAsyncResource:
                 response.parsed,
                 endpoint,
                 not_found_msg="Backfill not found or you do not have access to it",
-                bad_request_msg=f"Cannot cancel backfill - it may already be in a final state: {response.parsed}",
+                bad_request_msg="Cannot cancel backfill - it may already be in a final state",
                 headers=response.headers,
                 raw_body=response.content,
             )
@@ -397,7 +397,7 @@ class BackfillsResource:
                 response.parsed,
                 endpoint,
                 not_found_msg="Transfer not found or you do not have access to it",
-                bad_request_msg=f"Invalid request parameters: {response.parsed}",
+                bad_request_msg="Invalid request parameters",
                 headers=response.headers,
                 raw_body=response.content,
             )
@@ -630,7 +630,7 @@ class BackfillsResource:
                 response.parsed,
                 endpoint,
                 not_found_msg="Backfill not found or you do not have access to it",
-                bad_request_msg=f"Cannot cancel backfill - it may already be in a final state: {response.parsed}",
+                bad_request_msg="Cannot cancel backfill - it may already be in a final state",
                 headers=response.headers,
                 raw_body=response.content,
             )

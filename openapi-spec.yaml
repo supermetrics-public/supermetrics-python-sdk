@@ -28,320 +28,19 @@ servers:
   x-internal: false
 - url: https://dts-api.supermetrics.com/v1
   description: Data Backfills API
+- url: https://dts-api.supermetrics.com/v1
+  description: Global production public Supermetrics Data Warehouse Data Source Connections
+    API base path.
+  x-internal: false
+- url: https://dts-api.supermetrics.com
+  description: Global production public Supermetrics Data Warehouse Transfer Runs
+    API base path.
+  x-internal: false
+- url: https://dts-api.supermetrics.com
+  description: Global production public Supermetrics Data Warehouse Transfers API
+    base path.
+  x-internal: false
 paths:
-  /query/data/json:
-    get:
-      summary: Query data
-      description: Execute a query to retrieve data from a specified data source
-      operationId: getData
-      tags:
-      - Get data
-      parameters:
-      - name: json
-        in: query
-        required: true
-        description: JSON-encoded data query parameters
-        example:
-          ds_id: GAWA
-          start_date: yesterday
-          end_date: yesterday
-          fields:
-          - date
-          - sessions
-        schema:
-          $ref: '#/components/schemas/DataQuery'
-      security:
-      - BearerAuth: []
-      responses:
-        '200':
-          description: Query executed successfully
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/X-RateLimit-Limit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/X-RateLimit-Remaining'
-            Access-Control-Allow-Origin:
-              $ref: '#/components/headers/Access-Control-Allow-Origin'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DataResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-  /query/accounts:
-    get:
-      summary: Get accounts
-      description: Retrieve a list of available data source logins (authentications)
-        and their accounts
-      operationId: getAccounts
-      tags:
-      - Data source
-      parameters:
-      - name: json
-        in: query
-        required: true
-        description: JSON-encoded account query parameters
-        example:
-          ds_id: GAWA
-        schema:
-          type: object
-          required:
-          - ds_id
-          properties:
-            api_key:
-              type: string
-              maxLength: 255
-              pattern: ^[A-Za-z0-9_-]+$
-              description: API key when not using an authorization header
-            ds_id:
-              type: string
-              maxLength: 50
-              pattern: ^[A-Za-z0-9_-]+$
-              description: Data source ID
-            ds_users:
-              oneOf:
-              - type: string
-                maxLength: 255
-              - type: array
-                maxItems: 100
-                items:
-                  type: string
-                  maxLength: 255
-              description: List of data source login usernames to target (case-insensitive)
-            cache_minutes:
-              type: integer
-              format: int32
-              description: Maximum allowed age of cache in minutes
-              minimum: 60
-              maximum: 1440
-      security:
-      - BearerAuth: []
-      responses:
-        '200':
-          description: Accounts retrieved successfully
-          headers:
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/X-RateLimit-Limit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/X-RateLimit-Remaining'
-            Access-Control-Allow-Origin:
-              $ref: '#/components/headers/Access-Control-Allow-Origin'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  meta:
-                    type: object
-                    properties:
-                      request_id:
-                        type: string
-                        maxLength: 50
-                        pattern: ^[A-Za-z0-9_-]+$
-                        description: API request ID
-                      query:
-                        type: object
-                        properties:
-                          cache_minutes:
-                            type: integer
-                            nullable: true
-                            format: int32
-                            minimum: 60
-                            maximum: 1440
-                            description: Requested maximum age of cache in minutes
-                  data:
-                    type: array
-                    maxItems: 100
-                    items:
-                      type: object
-                      properties:
-                        ds_user:
-                          type: string
-                          maxLength: 255
-                          description: Data source login username
-                        display_name:
-                          type: string
-                          maxLength: 255
-                          description: Display name for login
-                        cache_time:
-                          type: string
-                          nullable: true
-                          format: date-time
-                          maxLength: 30
-                          description: ISO 8601 datetime for the last time the login
-                            data was fetched and cached
-                        accounts:
-                          type: array
-                          maxItems: 1000
-                          items:
-                            type: object
-                            properties:
-                              account_id:
-                                type: string
-                                maxLength: 50
-                                description: Account ID
-                              account_name:
-                                type: string
-                                maxLength: 255
-                                description: Account name
-                              group_name:
-                                type: string
-                                maxLength: 255
-                                description: Account group name (empty string when
-                                  not available)
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-  /ds/logins:
-    get:
-      summary: List logins
-      description: Retrieve a list of all data source logins
-      operationId: listDataSourceLogins
-      tags:
-      - Data Source Logins
-      security:
-      - BearerAuth: []
-      responses:
-        '200':
-          description: List of data source logins retrieved successfully
-          headers:
-            Content-Type:
-              $ref: '#/components/headers/Content-Type'
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/X-RateLimit-Limit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/X-RateLimit-Remaining'
-            Access-Control-Allow-Origin:
-              $ref: '#/components/headers/Access-Control-Allow-Origin'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  meta:
-                    $ref: '#/components/schemas/ResponseMeta'
-                  data:
-                    type: array
-                    maxItems: 1000
-                    items:
-                      $ref: '#/components/schemas/DataSourceLogin'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/LoginSearchFailed'
-  /ds/login/{login_id}:
-    get:
-      summary: Get login
-      description: Retrieve details of a specific data source login
-      operationId: getDataSourceLogin
-      tags:
-      - Data Source Logins
-      security:
-      - BearerAuth: []
-      responses:
-        '200':
-          description: Data source login details retrieved successfully
-          headers:
-            Content-Type:
-              $ref: '#/components/headers/Content-Type'
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/X-RateLimit-Limit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/X-RateLimit-Remaining'
-            Access-Control-Allow-Origin:
-              $ref: '#/components/headers/Access-Control-Allow-Origin'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  meta:
-                    $ref: '#/components/schemas/ResponseMeta'
-                  data:
-                    $ref: '#/components/schemas/DataSourceLogin'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/LoginNotFound'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/LoginSearchFailed'
-    parameters:
-    - name: login_id
-      in: path
-      required: true
-      schema:
-        type: string
-        maxLength: 50
-        pattern: ^[A-Za-z0-9_-]+$
-      description: Supermetrics login ID
-  /ds/login/links:
-    get:
-      summary: List login links
-      description: List all data source login links
-      operationId: listLoginLinks
-      tags:
-      - Data Source Login Links
-      security:
-      - BearerAuth: []
-      responses:
-        '200':
-          description: List of login links retrieved successfully
-          headers:
-            Content-Type:
-              $ref: '#/components/headers/Content-Type'
-            X-RateLimit-Limit:
-              $ref: '#/components/headers/X-RateLimit-Limit'
-            X-RateLimit-Remaining:
-              $ref: '#/components/headers/X-RateLimit-Remaining'
-            Access-Control-Allow-Origin:
-              $ref: '#/components/headers/Access-Control-Allow-Origin'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  meta:
-                    $ref: '#/components/schemas/ResponseMeta'
-                  data:
-                    type: array
-                    maxItems: 1000
-                    items:
-                      $ref: '#/components/schemas/LoginLink'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
   /ds/login/link:
     post:
       summary: Create login link
@@ -512,225 +211,319 @@ paths:
         maxLength: 50
         pattern: ^[A-Za-z0-9_-]+$
       description: Supermetrics login link ID
-  /teams/{team_id}/transfers/{transfer_id}/backfills:
-    post:
-      summary: Create a backfill
-      description: 'Schedule a new backfill for a specific transfer. A backfill re-processes
-
-        historical data for a specified date range.
-
-
-        **Returns:** The created backfill object with its ID, status, and progress
-        information.
-
-
-        **Important Notes:**
-
-        - The transfer must exist and belong to your team
-
-        - Requires scope `dwh_transfers_write`
-
-        - Your account must have `dwh.transfer.edit` permission. See [roles and permissions](https://docs.supermetrics.com/docs/about-supermetrics-teams-and-user-roles#user-roles).
-
-        - The date range cannot overlap with an existing active backfill
-
-        - Backfills are processed asynchronously
-
-        - The returned backfill object will have status "CREATED" initially
-
-        '
-      operationId: createBackfill
+  /ds/login/links:
+    get:
+      summary: List login links
+      description: List all data source login links
+      operationId: listLoginLinks
       tags:
-      - Data Backfills
+      - Data Source Login Links
       security:
       - BearerAuth: []
-      parameters:
-      - $ref: '#/components/parameters/DwhTeamIdPathParam'
-      - $ref: '#/components/parameters/DwhTransferIdPathParam'
-      requestBody:
-        required: true
-        description: Backfill creation parameters
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateBackfillRequest'
-            example:
-              range_start: '2024-01-01'
-              range_end: '2024-01-31'
       responses:
         '200':
-          description: Backfill successfully scheduled
+          description: List of login links retrieved successfully
           headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/X-RateLimit-Limit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/X-RateLimit-Remaining'
             Access-Control-Allow-Origin:
               $ref: '#/components/headers/Access-Control-Allow-Origin'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BackfillResponse'
-              example:
-                meta:
-                  request_id: 01892A4D-7586-7000-8000-000000000000
-                data:
-                  transfer_backfill_id: 12345
-                  transfer_id: 456789
-                  range_start_date: '2024-01-01'
-                  range_end_date: '2024-01-31'
-                  created_time: '2024-02-01T09:00:00Z'
-                  created_user_id: 789
-                  start_time: null
-                  end_time: null
-                  status: CREATED
-                  transfer_runs_total: 31
-                  transfer_runs_created: 0
-                  transfer_runs_completed: 0
-                  transfer_runs_failed: 0
-                  error_report: []
-        '400':
-          $ref: '#/components/responses/DwhBadRequest'
+                type: object
+                properties:
+                  meta:
+                    $ref: '#/components/schemas/ResponseMeta'
+                  data:
+                    type: array
+                    maxItems: 1000
+                    items:
+                      $ref: '#/components/schemas/LoginLink'
         '401':
-          $ref: '#/components/responses/DwhUnauthorized'
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /ds/login/{login_id}:
+    get:
+      summary: Get login
+      description: Retrieve details of a specific data source login
+      operationId: getDataSourceLogin
+      tags:
+      - Data Source Logins
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: Data source login details retrieved successfully
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/X-RateLimit-Limit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/X-RateLimit-Remaining'
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    $ref: '#/components/schemas/ResponseMeta'
+                  data:
+                    $ref: '#/components/schemas/DataSourceLogin'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/LoginNotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/LoginSearchFailed'
+    parameters:
+    - name: login_id
+      in: path
+      required: true
+      schema:
+        type: string
+        maxLength: 50
+        pattern: ^[A-Za-z0-9_-]+$
+      description: Supermetrics login ID
+  /ds/logins:
+    get:
+      summary: List logins
+      description: Retrieve a list of all data source logins
+      operationId: listDataSourceLogins
+      tags:
+      - Data Source Logins
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: List of data source logins retrieved successfully
+          headers:
+            Content-Type:
+              $ref: '#/components/headers/Content-Type'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/X-RateLimit-Limit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/X-RateLimit-Remaining'
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    $ref: '#/components/schemas/ResponseMeta'
+                  data:
+                    type: array
+                    maxItems: 1000
+                    items:
+                      $ref: '#/components/schemas/DataSourceLogin'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/LoginSearchFailed'
+  /query/accounts:
+    get:
+      summary: Get accounts
+      description: Retrieve a list of available data source logins (authentications)
+        and their accounts
+      operationId: getAccounts
+      tags:
+      - Data source
+      parameters:
+      - name: json
+        in: query
+        required: true
+        description: JSON-encoded account query parameters
+        example:
+          ds_id: GAWA
+        schema:
+          type: object
+          required:
+          - ds_id
+          properties:
+            api_key:
+              type: string
+              maxLength: 255
+              pattern: ^[A-Za-z0-9_-]+$
+              description: API key when not using an authorization header
+            ds_id:
+              type: string
+              maxLength: 50
+              pattern: ^[A-Za-z0-9_-]+$
+              description: Data source ID
+            ds_users:
+              oneOf:
+              - type: string
+                maxLength: 255
+              - type: array
+                maxItems: 100
+                items:
+                  type: string
+                  maxLength: 255
+              description: List of data source login usernames to target (case-insensitive)
+            cache_minutes:
+              type: integer
+              format: int32
+              description: Maximum allowed age of cache in minutes
+              minimum: 60
+              maximum: 1440
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: Accounts retrieved successfully
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/X-RateLimit-Limit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/X-RateLimit-Remaining'
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        maxLength: 50
+                        pattern: ^[A-Za-z0-9_-]+$
+                        description: API request ID
+                      query:
+                        type: object
+                        properties:
+                          cache_minutes:
+                            type: integer
+                            nullable: true
+                            format: int32
+                            minimum: 60
+                            maximum: 1440
+                            description: Requested maximum age of cache in minutes
+                  data:
+                    type: array
+                    maxItems: 100
+                    items:
+                      type: object
+                      properties:
+                        ds_user:
+                          type: string
+                          maxLength: 255
+                          description: Data source login username
+                        display_name:
+                          type: string
+                          maxLength: 255
+                          description: Display name for login
+                        cache_time:
+                          type: string
+                          nullable: true
+                          format: date-time
+                          maxLength: 30
+                          description: ISO 8601 datetime for the last time the login
+                            data was fetched and cached
+                        accounts:
+                          type: array
+                          maxItems: 1000
+                          items:
+                            type: object
+                            properties:
+                              account_id:
+                                type: string
+                                maxLength: 50
+                                description: Account ID
+                              account_name:
+                                type: string
+                                maxLength: 255
+                                description: Account name
+                              group_name:
+                                type: string
+                                maxLength: 255
+                                description: Account group name (empty string when
+                                  not available)
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
-        '404':
-          description: Transfer not found
-          headers:
-            Access-Control-Allow-Origin:
-              $ref: '#/components/headers/Access-Control-Allow-Origin'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                meta:
-                  request_id: 01892A4D-7586-7000-8000-000000000000
-                error:
-                  code: NOT_FOUND
-                  message: Not Found
-                  description: The requested transfer could not be found or you do
-                    not have access to it.
         '429':
-          $ref: '#/components/responses/DwhTooManyRequests'
+          $ref: '#/components/responses/TooManyRequests'
         '500':
-          $ref: '#/components/responses/DwhInternalServerError'
-    servers:
-    - url: https://dts-api.supermetrics.com/v1
-      description: Data Backfills API
-  /teams/{team_id}/transfers/{transfer_id}/backfills/latest:
+          $ref: '#/components/responses/InternalServerError'
+  /query/data/json:
     get:
-      summary: Get latest backfill for a transfer
-      description: 'Retrieve information about the most recent backfill for a specific
-        transfer.
-
-        This endpoint returns the latest backfill regardless of its status (pending,
-        running, completed, failed, or cancelled).
-
-
-        **Returns:** The latest backfill object with its ID, status, progress information,
-        and error details if any.
-
-
-        **Important Notes:**
-
-        - The transfer must exist and belong to your team
-
-        - Requires scope `dwh_transfers_read`
-
-        - Your account must have `dwh.transfer.view` permission. See [roles and permissions](https://docs.supermetrics.com/docs/about-supermetrics-teams-and-user-roles#user-roles).
-
-        - Returns 404 if no backfill has ever been created for this transfer
-
-        - The backfill object includes real-time progress tracking for running backfills
-
-        '
-      operationId: getLatestBackfill
+      summary: Query data
+      description: Execute a query to retrieve data from a specified data source
+      operationId: getData
       tags:
-      - Data Backfills
+      - Get data
+      parameters:
+      - name: json
+        in: query
+        required: true
+        description: JSON-encoded data query parameters
+        example:
+          ds_id: GAWA
+          start_date: yesterday
+          end_date: yesterday
+          fields:
+          - date
+          - sessions
+        schema:
+          $ref: '#/components/schemas/DataQuery'
       security:
       - BearerAuth: []
-      parameters:
-      - $ref: '#/components/parameters/DwhTeamIdPathParam'
-      - $ref: '#/components/parameters/DwhTransferIdPathParam'
       responses:
         '200':
-          description: Latest backfill retrieved successfully
+          description: Query executed successfully
           headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/X-RateLimit-Limit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/X-RateLimit-Remaining'
             Access-Control-Allow-Origin:
               $ref: '#/components/headers/Access-Control-Allow-Origin'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BackfillResponse'
-              examples:
-                runningBackfill:
-                  summary: Backfill currently in progress
-                  value:
-                    meta:
-                      request_id: 01892A4D-7586-7000-8000-000000000000
-                    data:
-                      transfer_backfill_id: 12345
-                      transfer_id: 456789
-                      range_start_date: '2024-01-01'
-                      range_end_date: '2024-01-31'
-                      created_time: '2024-02-01T09:00:00Z'
-                      created_user_id: 789
-                      start_time: '2024-02-01T10:00:00Z'
-                      end_time: null
-                      status: RUNNING
-                      transfer_runs_total: 31
-                      transfer_runs_created: 31
-                      transfer_runs_completed: 15
-                      transfer_runs_failed: 0
-                      error_report: []
-                completedBackfill:
-                  summary: Completed backfill
-                  value:
-                    meta:
-                      request_id: 01892A4D-7586-7000-8000-000000000000
-                    data:
-                      transfer_backfill_id: 12344
-                      transfer_id: 456789
-                      range_start_date: '2023-12-01'
-                      range_end_date: '2023-12-31'
-                      created_time: '2024-01-15T07:00:00Z'
-                      created_user_id: 789
-                      start_time: '2024-01-15T08:00:00Z'
-                      end_time: '2024-01-15T10:30:00Z'
-                      status: COMPLETED
-                      transfer_runs_total: 31
-                      transfer_runs_created: 31
-                      transfer_runs_completed: 31
-                      transfer_runs_failed: 0
-                      error_report: []
+                $ref: '#/components/schemas/DataResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
-          $ref: '#/components/responses/DwhUnauthorized'
+          $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          description: Transfer or backfill not found
-          headers:
-            Access-Control-Allow-Origin:
-              $ref: '#/components/headers/Access-Control-Allow-Origin'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                meta:
-                  request_id: 01892A4D-7586-7000-8000-000000000000
-                error:
-                  code: NOT_FOUND
-                  message: Not Found
-                  description: No backfill has been created for this transfer yet,
-                    or the transfer does not exist or belong to your team.
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
-          $ref: '#/components/responses/DwhTooManyRequests'
+          $ref: '#/components/responses/TooManyRequests'
         '500':
-          $ref: '#/components/responses/DwhInternalServerError'
-    servers:
-    - url: https://dts-api.supermetrics.com/v1
-      description: Data Backfills API
+          $ref: '#/components/responses/InternalServerError'
   /teams/{team_id}/backfills:
     get:
       summary: List incomplete backfills for team
@@ -1053,6 +846,1174 @@ paths:
           $ref: '#/components/responses/DwhTooManyRequests'
         '500':
           $ref: '#/components/responses/DwhInternalServerError'
+  /teams/{team_id}/data-source-connections:
+    post:
+      summary: Create data source connection
+      description: 'Creates a data source connection for a Hub transfer. This endpoint
+        establishes a connection
+
+        between a data source and a destination for use in data warehouse transfers.
+
+
+        **Returns:** Connection object with connection ID and optional OAuth URLs.
+
+
+        **Important Notes:**
+
+        - The API key must have `dwh_transfers_write` scope
+
+        - Connection credentials are encrypted and stored securely
+
+        - Some data sources may require OAuth authentication (check `login_url` in
+        response)
+
+        - The connection must be created before setting up transfers
+
+
+        **Legacy Reference:** `POST /data_warehouse/transfer_configuration/connect`
+
+        '
+      operationId: createDataSourceConnection
+      tags:
+      - Data Transfers
+      requestBody:
+        required: true
+        description: Connection configuration specifying data source and destination
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDataSourceConnectionRequest'
+            example:
+              data_source_id: ADM
+              destination_type: DWH_SNOWFLAKE
+      responses:
+        '201':
+          description: Connection created successfully
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateDataSourceConnectionResponse'
+              examples:
+                success:
+                  summary: Successful connection creation
+                  value:
+                    meta:
+                      request_id: 019461A0-0000-7000-8000-000000000000
+                    data:
+                      connection_id: 019461A0-0000-7000-8000-000000000001
+                      login_url: null
+                      connect_url: null
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
+    parameters:
+    - $ref: '#/components/parameters/TeamId'
+    servers:
+    - url: https://dts-api.supermetrics.com/v1
+      description: Global production public Supermetrics Data Warehouse Data Source
+        Connections API base path.
+      x-internal: false
+  /teams/{team_id}/datasource/{data_source_id}:
+    get:
+      summary: Get datasource configuration details
+      description: Retrieve complete configuration details for a data source including
+        report types, settings, and authentication requirements.
+      operationId: getDatasourceDetails
+      tags:
+      - Datasource
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - name: data_source_id
+        in: path
+        required: true
+        schema:
+          type: string
+          maxLength: 100
+        description: Data source identifier (e.g., "GAWA", "AW", "SA360")
+      - name: Sm-App-Id
+        in: header
+        required: false
+        schema:
+          type: string
+          maxLength: 100
+          example: XPLD
+        description: Application identifier
+      security:
+      - ApiKeyAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          description: Successfully retrieved datasource details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasourceDetailsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /teams/{team_id}/transfer_runs/{transfer_run_id}:
+    get:
+      summary: Get transfer run details
+      description: 'Retrieve detailed information about a specific transfer run, including
+        status,
+
+        timestamps, duration, row counts, and per-query execution details.
+
+
+        **Returns:** The transfer run object with its ID, status, timing information,
+        and query details.
+
+
+        **Important Notes:**
+
+        - The transfer run must exist and belong to your team
+
+        - Returns 404 if the transfer run does not exist or does not belong to your
+        team
+
+        '
+      operationId: getTransferRun
+      tags:
+      - Data Transfers
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - name: transfer_run_id
+        in: path
+        required: true
+        description: Unique identifier of the transfer run
+        example: 12345
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      responses:
+        '200':
+          description: Transfer run retrieved successfully
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferRunDetailResponse'
+              example:
+                meta:
+                  request_id: 01892A4D-7586-7000-8000-000000000000
+                data:
+                  id: 12345
+                  status: COMPLETED
+                  started_time: '2024-01-15T10:00:00Z'
+                  ended_time: '2024-01-15T10:05:30Z'
+                  created_time: '2024-01-15T09:55:00Z'
+                  queued_time: '2024-01-15T09:58:00Z'
+                  query_details:
+                  - duration: 12.5
+                    status: COMPLETED
+                    rows: 3000
+                    error_description: null
+                  - duration: 8.2
+                    status: COMPLETED
+                    rows: 1500
+                    error_description: null
+                  external_id: ext-12345
+                  failed_query_amount: 0
+                  total_duration: 330.5
+                  total_rows: 4500
+                  query_amount: 2
+                  data_date: '2024-01-15'
+                  message: ''
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
+    servers:
+    - url: https://dts-api.supermetrics.com
+      description: Global production public Supermetrics Data Warehouse Transfer Runs
+        API base path.
+      x-internal: false
+  /teams/{team_id}/transfers:
+    get:
+      summary: List transfers
+      description: 'Retrieve list of transfers for the authenticated team.
+
+
+        **Returns:** Array of transfer objects with basic information.
+
+
+        **Important Notes:**
+
+        - Returns only non-deleted transfers belonging to your team
+
+        '
+      operationId: listTransfers
+      tags:
+      - Data Transfers
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      responses:
+        '200':
+          description: Transfers retrieved successfully
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferListResponse'
+              example:
+                meta:
+                  request_id: 019461A0-0000-7000-8000-000000000000
+                data:
+                - dwh_transfer_id: 36091
+                  display_name: AW enhanced 2022-11-17
+                  external_transfer_id: ext-36091
+                  status: active
+                  state: active
+                  schedule: daily
+                  run_date: '2026-01-01'
+                  data_source: null
+                  destination: null
+                  accounts: []
+                  backfill: null
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
+    servers:
+    - url: https://dts-api.supermetrics.com
+      description: Global production public Supermetrics Data Warehouse Transfers
+        API base path.
+      x-internal: false
+    post:
+      summary: Create transfer
+      description: 'Create a new data transfer from a source to a destination.
+
+
+        **Returns:** The created transfer object with its ID and display name.
+
+
+        **Important Notes:**
+
+        - Validate configuration using `/v1/teams/{team_id}/transfers/validations`
+        before creation
+
+        - Transfer begins processing according to configured schedule
+
+        - Connection to data source must be established first
+
+        '
+      operationId: createTransfer
+      tags:
+      - Data Transfers
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      requestBody:
+        required: true
+        description: Transfer configuration
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferConfigurationRequest'
+      responses:
+        '201':
+          description: Transfer created successfully
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferCreatedEnvelope'
+              example:
+                meta:
+                  request_id: 019461A0-0000-7000-8000-000000000000
+                data:
+                  transfer_id: 36091
+                  transfer_name: AW enhanced 2022-11-17
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
+  /teams/{team_id}/transfers/available-options:
+    get:
+      summary: Get transfer options
+      description: 'Returns all available options for a Hub transfer, according to
+        specific data source and destination.
+
+
+        **Returns:** Transfer configuration parameters for the given source/destination
+        combination.
+
+        '
+      operationId: getTransferOptions
+      tags:
+      - Data Transfers
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - name: source_id
+        in: query
+        required: true
+        description: Data source identifier
+        schema:
+          type: string
+          maxLength: 50
+        example: ADM
+      - name: destination_id
+        in: query
+        required: true
+        description: Destination identifier
+        schema:
+          type: integer
+          format: int32
+        example: 8
+      responses:
+        '200':
+          description: Transfer options retrieved successfully
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferOptionsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
+    servers:
+    - url: https://dts-api.supermetrics.com
+      description: Global production public Supermetrics Data Warehouse Transfers
+        API base path.
+      x-internal: false
+  /teams/{team_id}/transfers/available-sources:
+    get:
+      summary: Get available sources
+      description: 'Returns all available data sources and destinations for a Hub
+        transfer.
+
+
+        **Returns:** Initial configuration data including available sources and destinations.
+
+        '
+      operationId: getAvailableSources
+      tags:
+      - Data Transfers
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      responses:
+        '200':
+          description: Available sources retrieved successfully
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailableSourcesResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
+    servers:
+    - url: https://dts-api.supermetrics.com
+      description: Global production public Supermetrics Data Warehouse Transfers
+        API base path.
+      x-internal: false
+  /teams/{team_id}/transfers/validations:
+    post:
+      summary: Validate transfer configuration
+      description: 'Validates a configuration for a new Hub transfer.
+
+
+        **Returns:** List of validation errors (empty if valid).
+
+
+        **Important Notes:**
+
+        - Use this endpoint before creating a transfer to check configuration validity
+
+        - Returns field-level validation errors
+
+        '
+      operationId: validateTransfer
+      tags:
+      - Data Transfers
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      requestBody:
+        required: true
+        description: Transfer configuration to validate
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferConfigurationRequest'
+      responses:
+        '200':
+          description: Validation completed
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
+    servers:
+    - url: https://dts-api.supermetrics.com
+      description: Global production public Supermetrics Data Warehouse Transfers
+        API base path.
+      x-internal: false
+  /teams/{team_id}/transfers/{transfer_id}:
+    delete:
+      summary: Delete transfer
+      description: 'Delete an existing transfer (soft delete).
+
+
+        **Returns:** No content on success (HTTP 204).
+
+
+        **Important Notes:**
+
+        - The transfer must exist and belong to your team
+
+        - This is a soft delete - transfer data is preserved
+
+        - Associated table settings are also cleaned up
+
+        '
+      operationId: deleteTransfer
+      tags:
+      - Data Transfers
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - name: transfer_id
+        in: path
+        required: true
+        description: Unique identifier for the transfer
+        schema:
+          type: integer
+          format: int32
+          minimum: 1
+        example: 36091
+      responses:
+        '204':
+          description: Transfer deleted successfully
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
+    servers:
+    - url: https://dts-api.supermetrics.com
+      description: Global production public Supermetrics Data Warehouse Transfers
+        API base path.
+      x-internal: false
+    get:
+      summary: Get transfer configuration
+      description: 'Returns configuration for an existing Hub transfer.
+
+
+        **Returns:** Full transfer configuration details.
+
+        '
+      operationId: getTransfer
+      tags:
+      - Data Transfers
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - name: transfer_id
+        in: path
+        required: true
+        description: Unique identifier for the transfer
+        schema:
+          type: integer
+          format: int32
+          minimum: 1
+        example: 36091
+      responses:
+        '200':
+          description: Transfer configuration retrieved successfully
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferConfigurationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
+    put:
+      summary: Update transfer configuration
+      description: 'Updates existing configuration for a Hub transfer.
+
+
+        **Returns:** Updated transfer object with ID and display name.
+
+
+        **Important Notes:**
+
+        - Validate configuration using `/v1/teams/{team_id}/transfers/{transfer_id}/validations`
+        before updating
+
+        - The transfer must exist and belong to your team
+
+        '
+      operationId: updateTransfer
+      tags:
+      - Data Transfers
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - name: transfer_id
+        in: path
+        required: true
+        description: Unique identifier for the transfer
+        schema:
+          type: integer
+          format: int32
+          minimum: 1
+        example: 36091
+      requestBody:
+        required: true
+        description: Updated transfer configuration
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferConfigurationRequest'
+      responses:
+        '200':
+          description: Transfer updated successfully
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferUpdatedResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
+  /teams/{team_id}/transfers/{transfer_id}/backfills:
+    post:
+      summary: Create a backfill
+      description: 'Schedule a new backfill for a specific transfer. A backfill re-processes
+
+        historical data for a specified date range.
+
+
+        **Returns:** The created backfill object with its ID, status, and progress
+        information.
+
+
+        **Important Notes:**
+
+        - The transfer must exist and belong to your team
+
+        - Requires scope `dwh_transfers_write`
+
+        - Your account must have `dwh.transfer.edit` permission. See [roles and permissions](https://docs.supermetrics.com/docs/about-supermetrics-teams-and-user-roles#user-roles).
+
+        - The date range cannot overlap with an existing active backfill
+
+        - Backfills are processed asynchronously
+
+        - The returned backfill object will have status "CREATED" initially
+
+        '
+      operationId: createBackfill
+      tags:
+      - Data Backfills
+      security:
+      - BearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/DwhTeamIdPathParam'
+      - $ref: '#/components/parameters/DwhTransferIdPathParam'
+      requestBody:
+        required: true
+        description: Backfill creation parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBackfillRequest'
+            example:
+              range_start: '2024-01-01'
+              range_end: '2024-01-31'
+      responses:
+        '200':
+          description: Backfill successfully scheduled
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackfillResponse'
+              example:
+                meta:
+                  request_id: 01892A4D-7586-7000-8000-000000000000
+                data:
+                  transfer_backfill_id: 12345
+                  transfer_id: 456789
+                  range_start_date: '2024-01-01'
+                  range_end_date: '2024-01-31'
+                  created_time: '2024-02-01T09:00:00Z'
+                  created_user_id: 789
+                  start_time: null
+                  end_time: null
+                  status: CREATED
+                  transfer_runs_total: 31
+                  transfer_runs_created: 0
+                  transfer_runs_completed: 0
+                  transfer_runs_failed: 0
+                  error_report: []
+        '400':
+          $ref: '#/components/responses/DwhBadRequest'
+        '401':
+          $ref: '#/components/responses/DwhUnauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '404':
+          description: Transfer not found
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                meta:
+                  request_id: 01892A4D-7586-7000-8000-000000000000
+                error:
+                  code: NOT_FOUND
+                  message: Not Found
+                  description: The requested transfer could not be found or you do
+                    not have access to it.
+        '429':
+          $ref: '#/components/responses/DwhTooManyRequests'
+        '500':
+          $ref: '#/components/responses/DwhInternalServerError'
+    servers:
+    - url: https://dts-api.supermetrics.com/v1
+      description: Data Backfills API
+  /teams/{team_id}/transfers/{transfer_id}/backfills/latest:
+    get:
+      summary: Get latest backfill for a transfer
+      description: 'Retrieve information about the most recent backfill for a specific
+        transfer.
+
+        This endpoint returns the latest backfill regardless of its status (pending,
+        running, completed, failed, or cancelled).
+
+
+        **Returns:** The latest backfill object with its ID, status, progress information,
+        and error details if any.
+
+
+        **Important Notes:**
+
+        - The transfer must exist and belong to your team
+
+        - Requires scope `dwh_transfers_read`
+
+        - Your account must have `dwh.transfer.view` permission. See [roles and permissions](https://docs.supermetrics.com/docs/about-supermetrics-teams-and-user-roles#user-roles).
+
+        - Returns 404 if no backfill has ever been created for this transfer
+
+        - The backfill object includes real-time progress tracking for running backfills
+
+        '
+      operationId: getLatestBackfill
+      tags:
+      - Data Backfills
+      security:
+      - BearerAuth: []
+      parameters:
+      - $ref: '#/components/parameters/DwhTeamIdPathParam'
+      - $ref: '#/components/parameters/DwhTransferIdPathParam'
+      responses:
+        '200':
+          description: Latest backfill retrieved successfully
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackfillResponse'
+              examples:
+                runningBackfill:
+                  summary: Backfill currently in progress
+                  value:
+                    meta:
+                      request_id: 01892A4D-7586-7000-8000-000000000000
+                    data:
+                      transfer_backfill_id: 12345
+                      transfer_id: 456789
+                      range_start_date: '2024-01-01'
+                      range_end_date: '2024-01-31'
+                      created_time: '2024-02-01T09:00:00Z'
+                      created_user_id: 789
+                      start_time: '2024-02-01T10:00:00Z'
+                      end_time: null
+                      status: RUNNING
+                      transfer_runs_total: 31
+                      transfer_runs_created: 31
+                      transfer_runs_completed: 15
+                      transfer_runs_failed: 0
+                      error_report: []
+                completedBackfill:
+                  summary: Completed backfill
+                  value:
+                    meta:
+                      request_id: 01892A4D-7586-7000-8000-000000000000
+                    data:
+                      transfer_backfill_id: 12344
+                      transfer_id: 456789
+                      range_start_date: '2023-12-01'
+                      range_end_date: '2023-12-31'
+                      created_time: '2024-01-15T07:00:00Z'
+                      created_user_id: 789
+                      start_time: '2024-01-15T08:00:00Z'
+                      end_time: '2024-01-15T10:30:00Z'
+                      status: COMPLETED
+                      transfer_runs_total: 31
+                      transfer_runs_created: 31
+                      transfer_runs_completed: 31
+                      transfer_runs_failed: 0
+                      error_report: []
+        '401':
+          $ref: '#/components/responses/DwhUnauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Transfer or backfill not found
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                meta:
+                  request_id: 01892A4D-7586-7000-8000-000000000000
+                error:
+                  code: NOT_FOUND
+                  message: Not Found
+                  description: No backfill has been created for this transfer yet,
+                    or the transfer does not exist or belong to your team.
+        '429':
+          $ref: '#/components/responses/DwhTooManyRequests'
+        '500':
+          $ref: '#/components/responses/DwhInternalServerError'
+    servers:
+    - url: https://dts-api.supermetrics.com/v1
+      description: Data Backfills API
+  /teams/{team_id}/transfers/{transfer_id}/runs:
+    get:
+      summary: List transfer runs
+      description: 'Retrieve a paginated, filterable list of transfer runs for a specific
+        transfer.
+
+        Supports date range filtering, issue filtering, sorting, and pagination.
+
+
+        **Returns:** Array of transfer run objects.
+
+
+        **Important Notes:**
+
+        - The transfer must exist and belong to your team
+
+        - Start date and end date are required parameters
+
+        - Results are paginated (default limit: 100, max: 10000)
+
+        '
+      operationId: listTransferRuns
+      tags:
+      - Data Transfers
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - name: transfer_id
+        in: path
+        required: true
+        description: Unique identifier of the transfer
+        example: 456789
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      - name: start_date
+        in: query
+        required: true
+        description: Start date for filtering runs (inclusive)
+        example: '2024-01-01'
+        schema:
+          type: string
+          format: date-time
+      - name: end_date
+        in: query
+        required: true
+        description: End date for filtering runs (inclusive)
+        example: '2024-01-31'
+        schema:
+          type: string
+          format: date-time
+      - name: filter_issues_only
+        in: query
+        required: false
+        description: Filter to show only runs with issues
+        example: false
+        schema:
+          type: boolean
+      - name: sort_field
+        in: query
+        required: false
+        description: Field to sort by
+        example: created_time
+        schema:
+          type: string
+          enum:
+          - created_time
+          - ended_time
+          - data_date
+      - name: sort_direction
+        in: query
+        required: false
+        description: Sort direction
+        example: DESC
+        schema:
+          type: string
+          enum:
+          - ASC
+          - DESC
+      - name: limit
+        in: query
+        required: false
+        description: Maximum number of results to return (default 100, max 10000)
+        example: 100
+        schema:
+          type: integer
+          format: int32
+          minimum: 1
+          default: 100
+      - name: offset
+        in: query
+        required: false
+        description: Number of results to skip for pagination
+        example: 0
+        schema:
+          type: integer
+          format: int32
+          minimum: 0
+          default: 0
+      responses:
+        '200':
+          description: Transfer runs retrieved successfully
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferRunListResponse'
+              examples:
+                multipleRuns:
+                  summary: Multiple transfer runs
+                  value:
+                    meta:
+                      request_id: 01892A4D-7586-7000-8000-000000000000
+                    data:
+                    - id: 12345
+                      status: COMPLETED
+                      created_time: '2024-01-15T09:55:00Z'
+                      ended_time: '2024-01-15T10:05:30Z'
+                      type: Recurring
+                      total_duration: 330.5
+                      total_rows: 4500
+                      data_date: '2024-01-15'
+                      message: ''
+                    - id: 12344
+                      status: FAILED
+                      created_time: '2024-01-14T09:55:00Z'
+                      ended_time: '2024-01-14T10:02:00Z'
+                      type: Recurring
+                      total_duration: 420
+                      total_rows: 0
+                      data_date: '2024-01-14'
+                      message: Connection timeout to data source
+                    - id: 12343
+                      status: COMPLETED
+                      created_time: '2024-01-13T14:00:00Z'
+                      ended_time: '2024-01-13T14:08:15Z'
+                      type: Backfill
+                      total_duration: 495
+                      total_rows: 8200
+                      data_date: '2024-01-13'
+                      message: ''
+                emptyList:
+                  summary: No transfer runs found
+                  value:
+                    meta:
+                      request_id: 01892A4D-7586-7000-8000-000000000000
+                    data: []
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
+    servers:
+    - url: https://dts-api.supermetrics.com
+      description: Global production public Supermetrics Data Warehouse Transfer Runs
+        API base path.
+      x-internal: false
+  /teams/{team_id}/transfers/{transfer_id}/state:
+    put:
+      summary: Change transfer state
+      description: 'Change the state of a transfer (pause or resume).
+
+
+        **Returns:** Transfer state update result with new state.
+
+
+        **Important Notes:**
+
+        - The transfer must exist and belong to your team
+
+        - Valid actions: "pause", "unpause"
+
+        - Pausing a transfer stops scheduled runs but preserves configuration
+
+        - Resuming a transfer restarts scheduled runs from next scheduled time
+
+        '
+      operationId: changeTransferState
+      tags:
+      - Data Transfers
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - name: transfer_id
+        in: path
+        required: true
+        description: Unique identifier for the transfer
+        schema:
+          type: integer
+          format: int32
+          minimum: 1
+        example: 36091
+      requestBody:
+        required: true
+        description: New transfer state
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeTransferStateRequest'
+            example:
+              transfer_state: pause
+      responses:
+        '200':
+          description: Transfer state changed successfully
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferStateUpdateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
+    servers:
+    - url: https://dts-api.supermetrics.com
+      description: Global production public Supermetrics Data Warehouse Transfers
+        API base path.
+      x-internal: false
+  /teams/{team_id}/transfers/{transfer_id}/validations:
+    post:
+      summary: Validate transfer update
+      description: 'Validates configuration before updating an existing Hub transfer.
+
+
+        **Returns:** List of validation errors (empty if valid).
+
+
+        **Important Notes:**
+
+        - Use this endpoint before updating a transfer to check configuration validity
+
+        - Returns field-level validation errors
+
+        '
+      operationId: validateTransferUpdate
+      tags:
+      - Data Transfers
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - name: transfer_id
+        in: path
+        required: true
+        description: Unique identifier for the transfer
+        schema:
+          type: integer
+          format: int32
+          minimum: 1
+        example: 36091
+      requestBody:
+        required: true
+        description: Transfer configuration to validate
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferConfigurationRequest'
+      responses:
+        '200':
+          description: Validation completed
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
+    servers:
+    - url: https://dts-api.supermetrics.com
+      description: Global production public Supermetrics Data Warehouse Transfers
+        API base path.
+      x-internal: false
   /v1/teams/{team_id}/connector_builder/connectors:
     get:
       summary: List connectors
@@ -1168,6 +2129,33 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}:
+    delete:
+      summary: Delete connector
+      description: Delete a connector and all its associated data.
+      operationId: deleteConnector
+      tags:
+      - Connectors
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/ConnectorIdentifierPath'
+      responses:
+        '204':
+          description: Connector deleted successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     get:
       summary: Get connector
       description: Fetch information for a connector including its configuration.
@@ -1243,12 +2231,13 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
-    delete:
-      summary: Delete connector
-      description: Delete a connector and all its associated data.
-      operationId: deleteConnector
+  /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logo:
+    get:
+      summary: Get connector logo
+      description: Get the logo URL for a connector.
+      operationId: getConnectorLogo
       tags:
-      - Connectors
+      - Connector Logo
       security:
       - BearerAuth: []
       - ApiKeyAuth: []
@@ -1256,10 +2245,183 @@ paths:
       - $ref: '#/components/parameters/TeamId'
       - $ref: '#/components/parameters/ConnectorIdentifierPath'
       responses:
-        '204':
-          description: Connector deleted successfully
+        '200':
+          description: Logo URL retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logo_url:
+                    type: string
+                    format: uri
+                    maxLength: 2048
+                    description: URL of the connector logo
+                required:
+                - logo_url
+              example:
+                logo_url: https://assets.supermetrics.com/images/dsLogos/Custom_Connector_Default.png
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Upload connector logo
+      description: Upload a logo image for a connector.
+      operationId: uploadConnectorLogo
+      tags:
+      - Connector Logo
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/ConnectorIdentifierPath'
+      requestBody:
+        description: Logo image file for the connector.
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+              - logo
+              properties:
+                logo:
+                  type: string
+                  format: binary
+                  description: The image file to set as the connector logo.
+      responses:
+        '201':
+          description: Logo uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logo_url:
+                    type: string
+                    format: uri
+                    maxLength: 2048
+                    description: URL of the uploaded connector logo
+                required:
+                - logo_url
+              example:
+                logo_url: https://assets.supermetrics.com/images/dsLogos/Custom_Connector_Default.png
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logs:
+    get:
+      summary: List connector logs
+      description: Fetch execution logs for a connector. Returns logs in reverse chronological
+        order.
+      operationId: listConnectorLogs
+      tags:
+      - Connector Logs
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/ConnectorIdentifierPath'
+      - name: limit
+        in: query
+        required: false
+        description: Number of log entries to return, up to a maximum of 1000.
+        schema:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 1000
+          default: 100
+      - name: before
+        in: query
+        required: false
+        description: ISO 8601 timestamp to return logs before. If omitted, starts
+          from latest entry.
+        schema:
+          type: string
+          format: date-time
+        example: '2025-06-01T00:00:00Z'
+      responses:
+        '200':
+          description: Logs retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logs:
+                    type: array
+                    maxItems: 1000
+                    items:
+                      $ref: '#/components/schemas/LogEntry'
+                required:
+                - logs
+              example:
+                logs:
+                - id: 123-foo
+                  log_time: '2025-01-01T00:00:00Z'
+                  status: 200
+                  event: auth.token.refresh
+                  request: POST /api/oauth/token_refresh
+                  duration_ms: 253
+                  request_id: 8dc24bc2-8a17-4188-a509-217cb8799929
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logs/{log_id}:
+    get:
+      summary: Get connector log
+      description: Fetch detailed information for a specific connector log entry.
+      operationId: getConnectorLog
+      tags:
+      - Connector Logs
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/ConnectorIdentifierPath'
+      - $ref: '#/components/parameters/LogIdPath'
+      responses:
+        '200':
+          description: Log details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogEntry'
+              example:
+                id: '123'
+                log_time: '2025-01-01T00:00:00Z'
+                status: 200
+                event: auth.token.refresh
+                request: POST /api/oauth/token_refresh
+                duration_ms: 253
+                request_id: 8dc24bc2-8a17-4188-a509-217cb8799929
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1380,6 +2542,32 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/secrets/{secret_placeholder}:
+    delete:
+      summary: Delete connector secret
+      description: Delete a secret from a connector.
+      operationId: deleteConnectorSecret
+      tags:
+      - Connector Secrets
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/ConnectorIdentifierPath'
+      - $ref: '#/components/parameters/SecretPlaceholderPath'
+      responses:
+        '204':
+          description: Secret deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     put:
       summary: Update connector secret
       description: Overwrite the value of an existing secret. The previous value cannot
@@ -1420,280 +2608,37 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
-    delete:
-      summary: Delete connector secret
-      description: Delete a secret from a connector.
-      operationId: deleteConnectorSecret
-      tags:
-      - Connector Secrets
-      security:
-      - BearerAuth: []
-      - ApiKeyAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TeamId'
-      - $ref: '#/components/parameters/ConnectorIdentifierPath'
-      - $ref: '#/components/parameters/SecretPlaceholderPath'
-      responses:
-        '204':
-          description: Secret deleted successfully
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-  /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logs:
-    get:
-      summary: List connector logs
-      description: Fetch execution logs for a connector. Returns logs in reverse chronological
-        order.
-      operationId: listConnectorLogs
-      tags:
-      - Connector Logs
-      security:
-      - BearerAuth: []
-      - ApiKeyAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TeamId'
-      - $ref: '#/components/parameters/ConnectorIdentifierPath'
-      - name: limit
-        in: query
-        required: false
-        description: Number of log entries to return, up to a maximum of 1000.
-        schema:
-          type: integer
-          format: int32
-          minimum: 1
-          maximum: 1000
-          default: 100
-      - name: before
-        in: query
-        required: false
-        description: ISO 8601 timestamp to return logs before. If omitted, starts
-          from latest entry.
-        schema:
-          type: string
-          format: date-time
-        example: '2025-06-01T00:00:00Z'
-      responses:
-        '200':
-          description: Logs retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  logs:
-                    type: array
-                    maxItems: 1000
-                    items:
-                      $ref: '#/components/schemas/LogEntry'
-                required:
-                - logs
-              example:
-                logs:
-                - id: 123-foo
-                  log_time: '2025-01-01T00:00:00Z'
-                  status: 200
-                  event: auth.token.refresh
-                  request: POST /api/oauth/token_refresh
-                  duration_ms: 253
-                  request_id: 8dc24bc2-8a17-4188-a509-217cb8799929
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-  /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logs/{log_id}:
-    get:
-      summary: Get connector log
-      description: Fetch detailed information for a specific connector log entry.
-      operationId: getConnectorLog
-      tags:
-      - Connector Logs
-      security:
-      - BearerAuth: []
-      - ApiKeyAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TeamId'
-      - $ref: '#/components/parameters/ConnectorIdentifierPath'
-      - $ref: '#/components/parameters/LogIdPath'
-      responses:
-        '200':
-          description: Log details retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LogEntry'
-              example:
-                id: '123'
-                log_time: '2025-01-01T00:00:00Z'
-                status: 200
-                event: auth.token.refresh
-                request: POST /api/oauth/token_refresh
-                duration_ms: 253
-                request_id: 8dc24bc2-8a17-4188-a509-217cb8799929
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-  /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logo:
-    get:
-      summary: Get connector logo
-      description: Get the logo URL for a connector.
-      operationId: getConnectorLogo
-      tags:
-      - Connector Logo
-      security:
-      - BearerAuth: []
-      - ApiKeyAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TeamId'
-      - $ref: '#/components/parameters/ConnectorIdentifierPath'
-      responses:
-        '200':
-          description: Logo URL retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  logo_url:
-                    type: string
-                    format: uri
-                    maxLength: 2048
-                    description: URL of the connector logo
-                required:
-                - logo_url
-              example:
-                logo_url: https://assets.supermetrics.com/images/dsLogos/Custom_Connector_Default.png
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-    post:
-      summary: Upload connector logo
-      description: Upload a logo image for a connector.
-      operationId: uploadConnectorLogo
-      tags:
-      - Connector Logo
-      security:
-      - BearerAuth: []
-      - ApiKeyAuth: []
-      parameters:
-      - $ref: '#/components/parameters/TeamId'
-      - $ref: '#/components/parameters/ConnectorIdentifierPath'
-      requestBody:
-        description: Logo image file for the connector.
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              required:
-              - logo
-              properties:
-                logo:
-                  type: string
-                  format: binary
-                  description: The image file to set as the connector logo.
-      responses:
-        '201':
-          description: Logo uploaded successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  logo_url:
-                    type: string
-                    format: uri
-                    maxLength: 2048
-                    description: URL of the uploaded connector logo
-                required:
-                - logo_url
-              example:
-                logo_url: https://assets.supermetrics.com/images/dsLogos/Custom_Connector_Default.png
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-  /teams/{team_id}/datasource/{data_source_id}:
-    get:
-      summary: Get datasource configuration details
-      description: Retrieve complete configuration details for a data source including
-        report types, settings, and authentication requirements.
-      operationId: getDatasourceDetails
-      tags:
-      - Datasource
-      parameters:
-      - $ref: '#/components/parameters/TeamId'
-      - name: data_source_id
-        in: path
-        required: true
-        schema:
-          type: string
-          maxLength: 100
-        description: Data source identifier (e.g., "GAWA", "AW", "SA360")
-      - name: Sm-App-Id
-        in: header
-        required: false
-        schema:
-          type: string
-          maxLength: 100
-          example: XPLD
-        description: Application identifier
-      security:
-      - ApiKeyAuth: []
-      - BearerAuth: []
-      responses:
-        '200':
-          description: Successfully retrieved datasource details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DatasourceDetailsResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
 components:
   schemas:
+    AbstractResponse:
+      type: object
+      description: Base envelope for all successful API responses. Concrete responses
+        extend this via `allOf` and add a `data` property.
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+      required:
+      - meta
+    AvailableSourcesResponse:
+      type: object
+      description: Available data sources and destinations for Hub transfers
+      properties:
+        data_sources:
+          type: array
+          description: Available data sources sorted alphabetically by service name
+          items:
+            $ref: '#/components/schemas/DataSourceInfo'
+        destinations:
+          type: array
+          description: Available transfer destinations
+          items:
+            $ref: '#/components/schemas/TransferDestination'
+        destination_types:
+          type: array
+          description: Destination type configurations with setup settings and auth
+            methods
+          items:
+            $ref: '#/components/schemas/DestinationTypeSettings'
     Backfill:
       type: object
       required:
@@ -1841,6 +2786,19 @@ components:
           additionalProperties: false
         data:
           $ref: '#/components/schemas/Backfill'
+    ChangeTransferStateRequest:
+      type: object
+      required:
+      - transfer_state
+      properties:
+        transfer_state:
+          type: string
+          enum:
+          - pause
+          - unpause
+          description: Action to perform on the transfer state
+          example: pause
+      additionalProperties: false
     Connector:
       type: object
       description: A custom connector with its metadata.
@@ -1880,6 +2838,30 @@ components:
           maxLength: 30
           description: Last update timestamp in ISO 8601 format
           example: '2025-01-01T00:00:00+00:00'
+    ConnectorConfiguration:
+      type: object
+      description: Configuration data for a connector.
+      properties:
+        version:
+          type: string
+          maxLength: 20
+          description: Version of the configuration
+          example: 1.0.0
+        configuration_json:
+          type: object
+          description: JSON configuration data
+        created_at:
+          type: string
+          format: date-time
+          maxLength: 30
+          description: Configuration creation timestamp in ISO 8601 format
+          example: '2025-01-01T00:00:00+00:00'
+        updated_at:
+          type: string
+          format: date-time
+          maxLength: 30
+          description: Configuration last update timestamp in ISO 8601 format
+          example: '2025-01-01T00:00:00+00:00'
     ConnectorWithConfiguration:
       description: A connector with its full configuration included.
       allOf:
@@ -1908,6 +2890,51 @@ components:
           description: End date of the backfill range (inclusive)
           example: '2024-01-31'
           pattern: ^\d{4}-\d{2}-\d{2}$
+    CreateDataSourceConnectionRequest:
+      type: object
+      description: 'Connection configuration specifying the data source and destination
+        for a Hub transfer.
+
+        '
+      properties:
+        data_source_id:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Z0-9_]+$
+          description: Data source identifier (e.g., "GA" for Google Analytics, "ADM"
+            for Adobe Analytics Metrics)
+          example: ADM
+        destination_type:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Z0-9_]+$
+          description: Destination type identifier (e.g., "SQL_BQ" for BigQuery, "DWH_SNOWFLAKE"
+            for Snowflake)
+          example: DWH_SNOWFLAKE
+        api_key:
+          type: string
+          maxLength: 255
+          pattern: ^[\s\S]+$
+          description: 'API Key for authentication (optional if provided in Authorization
+            header).
+
+            This is a reserved framework parameter and will be automatically handled.
+
+            '
+          example: sk_your_api_key_here
+      required:
+      - data_source_id
+      - destination_type
+    CreateDataSourceConnectionResponse:
+      description: Response envelope containing a created data source connection.
+      allOf:
+      - $ref: '#/components/schemas/AbstractResponse'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/DataSourceConnection'
+        required:
+        - data
     CreateSecretRequest:
       type: object
       description: Secret name and value to encrypt and store.
@@ -2273,6 +3300,102 @@ components:
               type: string
               maxLength: 10000
           description: Query result rows
+    DataSource:
+      type: object
+      properties:
+        '@type':
+          type: string
+          enum:
+          - ds
+        ds_id:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+          description: Data source ID
+        name:
+          type: string
+          maxLength: 255
+          description: Data source name
+    DataSourceConnection:
+      type: object
+      description: A created data source connection.
+      properties:
+        connection_id:
+          type: string
+          format: uuid
+          maxLength: 36
+          pattern: ^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$
+          description: Unique identifier for the created connection
+          example: 019461A0-0000-7000-8000-000000000000
+        login_url:
+          type: string
+          format: uri
+          maxLength: 2048
+          nullable: true
+          description: 'URL for OAuth login flow (used when data source requires user
+            authentication).
+
+            In the current V1 implementation, this is always null.
+
+            '
+          example: null
+        connect_url:
+          type: string
+          format: uri
+          maxLength: 2048
+          nullable: true
+          description: 'URL for connection flow (used when additional authentication
+            steps are required).
+
+            In the current V1 implementation, this is always null.
+
+            '
+          example: null
+      required:
+      - connection_id
+    DataSourceInfo:
+      type: object
+      description: Data source information
+      properties:
+        data_source_id:
+          type: string
+          description: Unique data source identifier
+          example: AW
+        service_name:
+          type: string
+          nullable: true
+          description: Human-readable service name
+          example: Google Ads
+        service_provider:
+          type: string
+          nullable: true
+          description: Service provider name
+          example: Google
+        logo_url:
+          type: string
+          nullable: true
+          description: URL to the data source logo
+        has_custom_fields:
+          type: boolean
+          description: Whether the data source supports custom account fields
+        is_custom_connector:
+          type: boolean
+          description: Whether this is a custom connector
+        is_public_beta:
+          type: boolean
+          description: Whether the data source is in public beta
+        is_released:
+          type: boolean
+          description: Whether the data source is fully released
+        is_internal:
+          type: boolean
+          nullable: true
+          description: Whether the data source is for internal use only
+        applicable_destinations:
+          type: array
+          description: Product codes this data source supports
+          items:
+            type: string
     DataSourceLogin:
       type: object
       properties:
@@ -2341,6 +3464,154 @@ components:
         is_shared:
           type: boolean
           description: Whether login is shared with all team users
+    DatasourceDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 100
+          example: GAWA
+        name:
+          type: string
+          maxLength: 100
+          example: Google Analytics 4
+        description:
+          type: string
+          maxLength: 2000
+        marketing_name:
+          type: string
+          maxLength: 100
+          nullable: true
+        logo_url:
+          type: string
+          maxLength: 500
+        categories:
+          type: array
+          maxItems: 50
+          items:
+            type: string
+            enum:
+            - Ad Verification
+            - Affiliate
+            - Analytics
+            - Brand Reputation
+            - CRM/Sales
+            - Data Warehouses
+            - DSP
+            - Ecommerce
+            - Files
+            - Marketing Attribution
+            - Marketing Automation
+            - Mobile
+            - Other
+            - Paid Media
+            - Payments
+            - Retail Media
+            - Search
+            - SEO
+            - Social Media
+        products:
+          type: array
+          maxItems: 50
+          items:
+            type: string
+            maxLength: 100
+          example:
+          - API
+          - DS
+          - SHEETS
+          - EXCEL
+          - DWH
+        status:
+          type: string
+          enum:
+          - Early access
+          - Released
+          example: Released
+        is_premium:
+          type: boolean
+          example: false
+        tags:
+          type: array
+          maxItems: 50
+          items:
+            type: string
+            maxLength: 100
+          example:
+          - popular
+        is_authentication_required:
+          type: boolean
+          example: true
+        has_account_list:
+          type: boolean
+          example: true
+        has_fields:
+          type: boolean
+          example: true
+        has_segments:
+          type: boolean
+          example: false
+        has_report_type_selection:
+          type: boolean
+          example: false
+        is_date_range_required:
+          type: boolean
+          example: true
+        is_custom_data_import:
+          type: boolean
+          example: false
+        min_metrics:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 100
+          nullable: true
+          example: 1
+        max_metrics:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 100
+          nullable: true
+          example: 10
+        min_dimensions:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 100
+          nullable: true
+          example: 0
+        max_dimensions:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 100
+          nullable: true
+          example: 9
+        report_type_header_label:
+          type: string
+          maxLength: 100
+          example: Report Type
+        account_labels:
+          type: object
+          nullable: true
+          properties:
+            plural:
+              type: string
+              maxLength: 100
+            singular:
+              type: string
+              maxLength: 100
+        report_types:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/DatasourceReportType'
+        common_settings:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/DatasourceSetting'
     DatasourceDetailsResponse:
       type: object
       properties:
@@ -2355,6 +3626,144 @@ components:
           additionalProperties: false
         data:
           $ref: '#/components/schemas/DatasourceDetails'
+    DatasourceOption:
+      type: object
+      properties:
+        option_id:
+          type: string
+          maxLength: 100
+        label:
+          type: string
+          maxLength: 100
+    DatasourceReportType:
+      type: object
+      properties:
+        label:
+          type: string
+          maxLength: 100
+        id:
+          type: string
+          maxLength: 100
+        is_date_range_required:
+          type: boolean
+        is_free_text_account_required:
+          type: boolean
+        settings:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/DatasourceSetting'
+    DatasourceSetting:
+      type: object
+      properties:
+        setting_id:
+          type: string
+          maxLength: 100
+        context:
+          type: string
+          enum:
+          - options
+          - reportConfiguration
+        type:
+          type: string
+          enum:
+          - checkbox
+          - combobox
+          - none
+          - select
+          - text
+          - textarea
+          - radio
+        label:
+          type: string
+          maxLength: 100
+        help_text:
+          type: string
+          maxLength: 2000
+          nullable: true
+        default_value:
+          type: string
+          maxLength: 255
+          nullable: true
+        options:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/DatasourceOption'
+        is_value_required:
+          type: boolean
+    DestinationTypeSettings:
+      type: object
+      description: Configuration settings for a destination type
+      properties:
+        title:
+          type: string
+          description: Human-readable title
+          example: BigQuery
+        type:
+          type: string
+          description: Destination type identifier
+          example: SQL_BQ
+        connection_check_url:
+          type: string
+          description: URL endpoint to validate connection
+        create_url:
+          type: string
+          description: URL to create new destination instance
+        update_url_template:
+          type: string
+          description: URL template to update existing destination
+        icon_url:
+          type: string
+          description: URL to destination icon
+        app_id:
+          type: string
+          description: OAuth application ID
+        is_internal:
+          type: boolean
+          description: Whether this destination type is for internal use only
+        settings:
+          type: array
+          description: Setup configuration fields
+          items:
+            type: object
+        auth_methods:
+          type: array
+          description: Available authentication methods
+          items:
+            type: object
+    Error:
+      type: object
+      description: Machine- and human-readable detail for a failed request.
+      properties:
+        code:
+          type: string
+          pattern: ^[A-Z][A-Z0-9_]*$
+          maxLength: 100
+          description: 'Stable, screaming-snake-case identifier for the error condition.
+            Clients should branch on this, not on `message`. Common values include
+            BAD_REQUEST, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, CONFLICT_ERROR, PERMISSION_ERROR,
+            UNPROCESSABLE_ENTITY, UNPROCESSABLE_CONTENT, TOO_MANY_REQUESTS, INTERNAL_SERVER_ERROR,
+            DUPLICATION_FAILED, SERVICE_UNAVAILABLE; domains may define additional
+            codes.
+
+            '
+          example: BAD_REQUEST
+        message:
+          type: string
+          maxLength: 255
+          pattern: ^.+$
+          description: Short, human-readable summary of the error.
+          example: The request was invalid.
+        description:
+          type: string
+          maxLength: 2048
+          description: Optional longer explanation specific to this occurrence.
+          example: The field 'display_name' must not be empty.
+      required:
+      - code
+      - message
+      additionalProperties: false
     ErrorResponse:
       type: object
       description: Standard envelope returned by all error (4xx/5xx) responses.
@@ -2516,6 +3925,52 @@ components:
           additionalProperties: false
         data:
           $ref: '#/components/schemas/LoginLink'
+    Meta:
+      type: object
+      description: Metadata included in every API response.
+      properties:
+        request_id:
+          $ref: '#/components/schemas/RequestId'
+      required:
+      - request_id
+      additionalProperties: false
+    QueryDetails:
+      type: object
+      description: Per-query execution details within a transfer run.
+      required:
+      - status
+      - rows
+      properties:
+        duration:
+          type: number
+          format: float
+          nullable: true
+          description: Duration of this query in seconds
+          example: 12.5
+        status:
+          type: string
+          description: Status of this query execution
+          example: COMPLETED
+        rows:
+          type: integer
+          format: int32
+          minimum: 0
+          description: Number of rows returned by this query
+          example: 3000
+        error_description:
+          type: string
+          nullable: true
+          description: Error description if the query failed
+          example: null
+    RequestId:
+      type: string
+      description: Unique identifier for the request, for tracking and debugging.
+      pattern: ^[A-Za-z0-9_-]+$
+      minLength: 8
+      maxLength: 64
+      example: BXaEFVtjc7TXaJxgZhmFgSUD9edqq_CN
+      x-faker:
+        random.alphaNumeric: 30
     ResponseMeta:
       type: object
       description: Metadata included in every API response.
@@ -2542,6 +3997,672 @@ components:
           maxLength: 255
           description: Human-readable name of the secret
           example: client_id
+    TransferAccount:
+      type: object
+      properties:
+        data_source_username:
+          type: string
+          maxLength: 255
+          description: Username for data source authentication
+        login_id:
+          type: integer
+          format: int32
+          description: Login identifier
+        account_id:
+          type: string
+          maxLength: 100
+          description: Account identifier in the data source
+      example:
+        data_source_username: user.name@supermetrics.com
+        login_id: 2682599
+        account_id: '8733197711'
+    TransferBackfillRunError:
+      type: object
+      required:
+      - transfer_run_date
+      - error
+      properties:
+        transfer_run_date:
+          type: string
+          format: date
+          maxLength: 10
+          description: The date of the transfer run that failed
+          example: '2024-01-15'
+        error:
+          type: string
+          maxLength: 1000
+          description: Error message describing what went wrong
+          example: Connection timeout to data source
+    TransferConfigurationRequest:
+      type: object
+      required:
+      - data_source_id
+      - schema_id
+      - destination_id
+      - display_name
+      - schedule
+      - accounts
+      properties:
+        data_source_id:
+          type: string
+          maxLength: 50
+          description: Data source identifier
+          example: AW
+        schema_id:
+          type: integer
+          format: int32
+          description: Numeric schema identifier (the data warehouse `dwh_schema_id`)
+            of the table group this transfer writes into. Obtain it from the `schema_id`
+            field of the List table groups endpoint (`GET /table/groups`). The table
+            group's prefixed `group_id` (for example `tg_99999`) is NOT accepted here.
+          example: 2
+        destination_id:
+          type: integer
+          format: int32
+          description: Destination identifier
+          example: 8
+        display_name:
+          type: string
+          maxLength: 255
+          description: Human-readable name for the transfer
+          example: AW enhanced 2022-11-17
+        schedule:
+          type: array
+          description: Transfer execution schedule configuration
+          items:
+            $ref: '#/components/schemas/TransferSchedule'
+        accounts:
+          type: array
+          description: Data source accounts to include in transfer
+          items:
+            $ref: '#/components/schemas/TransferAccount'
+        segments:
+          type: array
+          description: Data segments to include in transfer
+          items:
+            $ref: '#/components/schemas/TransferSegment'
+        data_source_settings:
+          type: array
+          description: Source-specific configuration settings
+          items:
+            $ref: '#/components/schemas/TransferDataSourceSetting'
+        notification_recipients:
+          type: array
+          description: Email addresses to notify on transfer events
+          items:
+            type: string
+            format: email
+            maxLength: 255
+          example:
+          - user1@supermetrics.com
+          - user2@supermetrics.com
+        transfer_type:
+          type: integer
+          format: int32
+          description: Transfer type identifier
+          example: 1
+      additionalProperties: false
+    TransferConfigurationResponse:
+      type: object
+      description: Full transfer configuration
+      properties:
+        transfer_id:
+          type: integer
+          format: int32
+          description: The transfer ID
+          example: 36091
+        display_name:
+          type: string
+          description: Display name of the transfer
+          example: AW enhanced 2022-11-17
+        schema_id:
+          type: integer
+          format: int32
+          description: Numeric schema identifier (the data warehouse `dwh_schema_id`)
+            of the table group this transfer writes into. Matches the `schema_id`
+            field returned by the List table groups endpoint (`GET /table/groups`).
+          example: 2
+        destination_id:
+          type: integer
+          format: int32
+          nullable: true
+          description: Destination identifier
+          example: 8
+        accounts:
+          type: array
+          description: Data source accounts included in transfer
+          items:
+            $ref: '#/components/schemas/TransferAccount'
+        segments:
+          type: array
+          description: Data segments included in transfer
+          items:
+            $ref: '#/components/schemas/TransferSegment'
+        license:
+          type: object
+          description: License information
+          properties:
+            id:
+              type: integer
+              description: License ID
+            product_title:
+              type: string
+              description: Product title
+            license_title:
+              type: string
+              description: License title
+            is_expired:
+              type: boolean
+              description: Whether license is expired
+            is_trial:
+              type: boolean
+              description: Whether license is trial
+            end_date:
+              type: string
+              format: date-time
+              description: License end date
+            features:
+              type: object
+              description: License features
+              additionalProperties:
+                type: string
+        schedule:
+          type: array
+          description: Transfer schedule configuration
+          items:
+            $ref: '#/components/schemas/TransferSchedule'
+        data_source:
+          type: object
+          description: Data source information and settings
+          properties:
+            data_source_id:
+              type: string
+              description: Data source identifier
+            service_name:
+              type: string
+              description: Service name
+            service_provider:
+              type: string
+              description: Service provider
+            settings:
+              type: array
+              description: Data source settings
+              items:
+                $ref: '#/components/schemas/TransferDataSourceSetting'
+        notification_recipients:
+          type: array
+          nullable: true
+          description: Email recipients for transfer notifications
+          items:
+            type: object
+            properties:
+              email:
+                type: string
+                format: email
+        external_url:
+          type: string
+          nullable: true
+          description: External URL for DTS BigQuery transfers
+    TransferCreatedEnvelope:
+      description: Response envelope containing a created transfer.
+      allOf:
+      - $ref: '#/components/schemas/AbstractResponse'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/TransferCreatedResponse'
+        required:
+        - data
+    TransferCreatedResponse:
+      type: object
+      description: Response from creating a transfer
+      properties:
+        transfer_id:
+          type: integer
+          format: int32
+          description: The ID of the created transfer
+          example: 36091
+        transfer_name:
+          type: string
+          maxLength: 255
+          description: The display name of the created transfer
+          example: AW enhanced 2022-11-17
+    TransferDataSourceSetting:
+      type: object
+      properties:
+        field_id:
+          type: string
+          maxLength: 100
+          description: Setting field identifier
+        value:
+          oneOf:
+          - type: string
+            nullable: true
+          - type: boolean
+            nullable: true
+          - type: integer
+            nullable: true
+          description: Setting value (type varies by field)
+        group:
+          type: string
+          maxLength: 100
+          description: Setting group identifier
+      example:
+        field_id: BRAND_KEYWORDS
+        value: ''
+        group: Default
+    TransferDestination:
+      type: object
+      description: Transfer destination instance
+      properties:
+        destination_id:
+          type: integer
+          format: int32
+          nullable: true
+          description: The destination ID
+          example: 8
+        destination_name:
+          type: string
+          description: Display name of the destination
+          example: My BigQuery
+        destination_type:
+          type: string
+          description: Destination type identifier
+          example: SQL_BQ
+        destination_label:
+          type: string
+          description: Human-readable destination type label
+          example: BigQuery
+        destination_icon_url:
+          type: string
+          description: URL to destination icon
+        is_internal:
+          type: boolean
+          description: Whether this destination is for internal use only
+        details:
+          type: array
+          description: Destination-specific detail fields
+          items:
+            type: object
+    TransferInfoResponse:
+      type: object
+      description: Transfer information for list endpoint
+      properties:
+        dwh_transfer_id:
+          type: integer
+          format: int32
+          description: The transfer ID
+          example: 36091
+        display_name:
+          type: string
+          description: Display name of the transfer
+          example: AW enhanced 2022-11-17
+        external_transfer_id:
+          type: string
+          description: External identifier for the transfer
+          example: ext-36091
+        status:
+          type: string
+          description: Transfer status
+          example: active
+        state:
+          type: string
+          description: Transfer state (active or paused)
+          example: active
+        schedule:
+          type: string
+          description: Schedule description
+          example: daily
+        run_date:
+          type: string
+          description: Last run date
+          example: '2026-01-01'
+        data_source:
+          type: object
+          nullable: true
+          description: Data source information
+        destination:
+          type: object
+          nullable: true
+          description: Destination information
+        accounts:
+          type: array
+          items:
+            type: string
+          description: Account identifiers
+        backfill:
+          type: object
+          nullable: true
+          description: Backfill statistics
+    TransferListResponse:
+      description: Response envelope containing a list of transfers.
+      allOf:
+      - $ref: '#/components/schemas/AbstractResponse'
+      - type: object
+        properties:
+          data:
+            type: array
+            description: Array of transfer objects
+            items:
+              $ref: '#/components/schemas/TransferInfoResponse'
+        required:
+        - data
+    TransferOptionsResponse:
+      type: object
+      description: Transfer configuration options for a given source/destination combination
+      properties:
+        data_source:
+          type: object
+          description: Data source information and settings
+          properties:
+            data_source_id:
+              type: string
+              description: Data source identifier
+              example: AW
+            service_name:
+              type: string
+              description: Human-readable service name
+              example: Google Ads
+            settings:
+              type: array
+              description: Data source specific settings
+              items:
+                type: object
+        schedule_options:
+          type: array
+          description: Available schedule options
+          items:
+            type: object
+        schemas:
+          type: array
+          description: Available schemas for the transfer
+          items:
+            type: object
+        logins:
+          type: array
+          description: Available logins for the data source
+          items:
+            type: object
+        accounts:
+          type: array
+          description: Available accounts for the data source
+          items:
+            type: object
+        segments:
+          type: array
+          description: Available segments for the data source
+          items:
+            type: object
+        license:
+          type: object
+          description: License information for the team
+    TransferRunDetail:
+      type: object
+      description: Detail view of a single transfer run.
+      required:
+      - id
+      - status
+      - external_id
+      - query_details
+      - message
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Unique identifier of the transfer run
+          example: 12345
+        status:
+          type: string
+          description: Current status of the transfer run
+          example: COMPLETED
+        started_time:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp when the transfer run started processing (ISO 8601
+            format)
+          example: '2024-01-15T10:00:00Z'
+        ended_time:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp when the transfer run finished processing (ISO 8601
+            format)
+          example: '2024-01-15T10:05:30Z'
+        created_time:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp when the transfer run was created (ISO 8601 format)
+          example: '2024-01-15T09:55:00Z'
+        queued_time:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp when the transfer run was queued for processing (ISO
+            8601 format)
+          example: '2024-01-15T09:58:00Z'
+        query_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/QueryDetails'
+          description: Per-query execution details for the transfer run
+        external_id:
+          type: string
+          description: External identifier of the transfer run
+          example: ext-12345
+        failed_query_amount:
+          type: integer
+          format: int32
+          minimum: 0
+          nullable: true
+          description: Number of queries that failed during the transfer run
+          example: 0
+        total_duration:
+          type: number
+          format: float
+          nullable: true
+          description: Sum of all query durations in seconds
+          example: 330.5
+        total_rows:
+          type: integer
+          format: int32
+          minimum: 0
+          nullable: true
+          description: Total number of rows processed during the transfer run
+          example: 15000
+        query_amount:
+          type: integer
+          format: int32
+          minimum: 0
+          nullable: true
+          description: Total number of queries executed during the transfer run
+          example: 5
+        data_date:
+          type: string
+          format: date
+          nullable: true
+          description: The data date this transfer run covers
+          example: '2024-01-15'
+        message:
+          type: string
+          description: Status message or error description for the transfer run
+          example: ''
+    TransferRunDetailResponse:
+      description: Response envelope containing a single transfer run detail.
+      allOf:
+      - $ref: '#/components/schemas/AbstractResponse'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/TransferRunDetail'
+        required:
+        - data
+    TransferRunItem:
+      type: object
+      description: List item view of a transfer run.
+      required:
+      - id
+      - status
+      - type
+      - message
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Unique identifier of the transfer run
+          example: 12345
+        status:
+          type: string
+          description: Current status of the transfer run
+          example: COMPLETED
+        created_time:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp when the transfer run was created (ISO 8601 format)
+          example: '2024-01-15T09:55:00Z'
+        ended_time:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp when the transfer run finished processing (ISO 8601
+            format)
+          example: '2024-01-15T10:05:30Z'
+        type:
+          type: string
+          description: Type of the transfer run
+          enum:
+          - Recurring
+          - Backfill
+          example: Recurring
+        total_duration:
+          type: number
+          format: float
+          nullable: true
+          description: Sum of all query durations in seconds
+          example: 330.5
+        total_rows:
+          type: integer
+          format: int32
+          minimum: 0
+          nullable: true
+          description: Total number of rows processed during the transfer run
+          example: 15000
+        data_date:
+          type: string
+          format: date
+          nullable: true
+          description: The data date this transfer run covers
+          example: '2024-01-15'
+        message:
+          type: string
+          description: Status message or error description for the transfer run
+          example: ''
+    TransferRunListResponse:
+      description: Response envelope containing a list of transfer runs.
+      allOf:
+      - $ref: '#/components/schemas/AbstractResponse'
+      - type: object
+        properties:
+          data:
+            type: array
+            description: Array of transfer run objects
+            items:
+              $ref: '#/components/schemas/TransferRunItem'
+        required:
+        - data
+    TransferSchedule:
+      type: object
+      properties:
+        run_interval:
+          type: string
+          enum:
+          - hourly
+          - daily
+          - weekly
+          - monthly
+          description: Frequency of transfer execution
+        run_hour:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 23
+          description: Hour of day to run (UTC)
+        refresh_window:
+          type: integer
+          format: int32
+          minimum: 1
+          description: Number of days to refresh
+        run_weekday:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 7
+          description: Day of week to run (1=Monday, 7=Sunday). Required for weekly
+            interval.
+        run_day:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 31
+          description: Day of month to run. Required for monthly interval.
+      example:
+        run_interval: daily
+        run_hour: 22
+        refresh_window: 1
+    TransferSegment:
+      type: object
+      properties:
+        data_source_username:
+          type: string
+          maxLength: 255
+          description: Username for data source authentication
+        login_id:
+          type: integer
+          format: int32
+          description: Login identifier
+        segment_id:
+          type: string
+          maxLength: 100
+          description: Segment identifier
+        segment_name:
+          type: string
+          maxLength: 255
+          description: Human-readable segment name
+      example:
+        data_source_username: user.name@supermetrics.com
+        login_id: 2830506
+        segment_id: '-1'
+        segment_name: All users
+    TransferStateUpdateResponse:
+      type: object
+      description: Response from changing transfer state
+      properties:
+        result:
+          type: boolean
+          description: Whether the state change succeeded
+          example: true
+        state:
+          type: string
+          description: The current state of the transfer after the action
+          example: PAUSED
+    TransferUpdatedResponse:
+      type: object
+      description: Response from updating a transfer
+      properties:
+        transfer_id:
+          type: integer
+          format: int32
+          description: The ID of the updated transfer
+          example: 36091
+        transfer_name:
+          type: string
+          maxLength: 255
+          description: The display name of the updated transfer
+          example: AW enhanced updated
     UpdateConnectorRequest:
       type: object
       description: Connector metadata and configuration to update.
@@ -2581,252 +4702,6 @@ components:
           maxLength: 10000
           description: New plaintext value to overwrite the existing one
           example: new-secret-value
-    ConnectorConfiguration:
-      type: object
-      description: Configuration data for a connector.
-      properties:
-        version:
-          type: string
-          maxLength: 20
-          description: Version of the configuration
-          example: 1.0.0
-        configuration_json:
-          type: object
-          description: JSON configuration data
-        created_at:
-          type: string
-          format: date-time
-          maxLength: 30
-          description: Configuration creation timestamp in ISO 8601 format
-          example: '2025-01-01T00:00:00+00:00'
-        updated_at:
-          type: string
-          format: date-time
-          maxLength: 30
-          description: Configuration last update timestamp in ISO 8601 format
-          example: '2025-01-01T00:00:00+00:00'
-    DataSource:
-      type: object
-      properties:
-        '@type':
-          type: string
-          enum:
-          - ds
-        ds_id:
-          type: string
-          maxLength: 50
-          pattern: ^[A-Za-z0-9_-]+$
-          description: Data source ID
-        name:
-          type: string
-          maxLength: 255
-          description: Data source name
-    DatasourceDetails:
-      type: object
-      properties:
-        id:
-          type: string
-          maxLength: 100
-          example: GAWA
-        name:
-          type: string
-          maxLength: 100
-          example: Google Analytics 4
-        description:
-          type: string
-          maxLength: 2000
-        marketing_name:
-          type: string
-          maxLength: 100
-          nullable: true
-        logo_url:
-          type: string
-          maxLength: 500
-        categories:
-          type: array
-          maxItems: 50
-          items:
-            type: string
-            enum:
-            - Ad Verification
-            - Affiliate
-            - Analytics
-            - Brand Reputation
-            - CRM/Sales
-            - Data Warehouses
-            - DSP
-            - Ecommerce
-            - Files
-            - Marketing Attribution
-            - Marketing Automation
-            - Mobile
-            - Other
-            - Paid Media
-            - Payments
-            - Retail Media
-            - Search
-            - SEO
-            - Social Media
-        products:
-          type: array
-          maxItems: 50
-          items:
-            type: string
-            maxLength: 100
-          example:
-          - API
-          - DS
-          - SHEETS
-          - EXCEL
-          - DWH
-        status:
-          type: string
-          enum:
-          - Early access
-          - Released
-          example: Released
-        is_premium:
-          type: boolean
-          example: false
-        tags:
-          type: array
-          maxItems: 50
-          items:
-            type: string
-            maxLength: 100
-          example:
-          - popular
-        is_authentication_required:
-          type: boolean
-          example: true
-        has_account_list:
-          type: boolean
-          example: true
-        has_fields:
-          type: boolean
-          example: true
-        has_segments:
-          type: boolean
-          example: false
-        has_report_type_selection:
-          type: boolean
-          example: false
-        is_date_range_required:
-          type: boolean
-          example: true
-        is_custom_data_import:
-          type: boolean
-          example: false
-        min_metrics:
-          type: integer
-          format: int32
-          minimum: 0
-          maximum: 100
-          nullable: true
-          example: 1
-        max_metrics:
-          type: integer
-          format: int32
-          minimum: 0
-          maximum: 100
-          nullable: true
-          example: 10
-        min_dimensions:
-          type: integer
-          format: int32
-          minimum: 0
-          maximum: 100
-          nullable: true
-          example: 0
-        max_dimensions:
-          type: integer
-          format: int32
-          minimum: 0
-          maximum: 100
-          nullable: true
-          example: 9
-        report_type_header_label:
-          type: string
-          maxLength: 100
-          example: Report Type
-        account_labels:
-          type: object
-          nullable: true
-          properties:
-            plural:
-              type: string
-              maxLength: 100
-            singular:
-              type: string
-              maxLength: 100
-        report_types:
-          type: array
-          maxItems: 100
-          items:
-            $ref: '#/components/schemas/DatasourceReportType'
-        common_settings:
-          type: array
-          maxItems: 100
-          items:
-            $ref: '#/components/schemas/DatasourceSetting'
-    Error:
-      type: object
-      description: Machine- and human-readable detail for a failed request.
-      properties:
-        code:
-          type: string
-          pattern: ^[A-Z][A-Z0-9_]*$
-          maxLength: 100
-          description: 'Stable, screaming-snake-case identifier for the error condition.
-            Clients should branch on this, not on `message`. Common values include
-            BAD_REQUEST, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, CONFLICT_ERROR, PERMISSION_ERROR,
-            UNPROCESSABLE_ENTITY, UNPROCESSABLE_CONTENT, TOO_MANY_REQUESTS, INTERNAL_SERVER_ERROR,
-            DUPLICATION_FAILED, SERVICE_UNAVAILABLE; domains may define additional
-            codes.
-
-            '
-          example: BAD_REQUEST
-        message:
-          type: string
-          maxLength: 255
-          pattern: ^.+$
-          description: Short, human-readable summary of the error.
-          example: The request was invalid.
-        description:
-          type: string
-          maxLength: 2048
-          description: Optional longer explanation specific to this occurrence.
-          example: The field 'display_name' must not be empty.
-      required:
-      - code
-      - message
-      additionalProperties: false
-    RequestId:
-      type: string
-      description: Unique identifier for the request, for tracking and debugging.
-      pattern: ^[A-Za-z0-9_-]+$
-      minLength: 8
-      maxLength: 64
-      example: BXaEFVtjc7TXaJxgZhmFgSUD9edqq_CN
-      x-faker:
-        random.alphaNumeric: 30
-    TransferBackfillRunError:
-      type: object
-      required:
-      - transfer_run_date
-      - error
-      properties:
-        transfer_run_date:
-          type: string
-          format: date
-          maxLength: 10
-          description: The date of the transfer run that failed
-          example: '2024-01-15'
-        error:
-          type: string
-          maxLength: 1000
-          description: Error message describing what went wrong
-          example: Connection timeout to data source
     User:
       type: object
       properties:
@@ -2844,72 +4719,31 @@ components:
           format: email
           maxLength: 255
           description: Supermetrics user email
-    DatasourceReportType:
+    ValidationError:
       type: object
+      description: A single field validation error
       properties:
-        label:
+        field_id:
           type: string
-          maxLength: 100
-        id:
+          description: The field that failed validation
+          example: display_name
+        error_code:
           type: string
-          maxLength: 100
-        is_date_range_required:
+          description: The validation error code
+          example: isEmpty
+    ValidationErrorsResponse:
+      type: object
+      description: Response from validating a transfer configuration
+      properties:
+        is_valid:
           type: boolean
-        is_free_text_account_required:
-          type: boolean
-        settings:
+          description: Whether the configuration is valid
+          example: true
+        errors:
           type: array
-          maxItems: 100
+          description: List of validation errors (empty if valid)
           items:
-            $ref: '#/components/schemas/DatasourceSetting'
-    DatasourceSetting:
-      type: object
-      properties:
-        setting_id:
-          type: string
-          maxLength: 100
-        context:
-          type: string
-          enum:
-          - options
-          - reportConfiguration
-        type:
-          type: string
-          enum:
-          - checkbox
-          - combobox
-          - none
-          - select
-          - text
-          - textarea
-          - radio
-        label:
-          type: string
-          maxLength: 100
-        help_text:
-          type: string
-          maxLength: 2000
-          nullable: true
-        default_value:
-          type: string
-          maxLength: 255
-          nullable: true
-        options:
-          type: array
-          maxItems: 100
-          items:
-            $ref: '#/components/schemas/DatasourceOption'
-        is_value_required:
-          type: boolean
-    DatasourceOption:
-      type: object
-      properties:
-        option_id:
-          type: string
-          maxLength: 100
-        label:
-          type: string
-          maxLength: 100
+            $ref: '#/components/schemas/ValidationError'
   responses:
     BadRequest:
       description: Bad request - invalid parameters

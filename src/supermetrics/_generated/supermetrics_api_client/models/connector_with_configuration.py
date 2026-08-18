@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 from ..types import UNSET, Unset
 
@@ -125,14 +124,14 @@ class ConnectorWithConfiguration:
         if isinstance(_created_at, Unset):
             created_at = UNSET
         else:
-            created_at = isoparse(_created_at)
+            created_at = datetime.datetime.fromisoformat(_created_at)
 
         _updated_at = d.pop("updated_at", UNSET)
         updated_at: datetime.datetime | Unset
         if isinstance(_updated_at, Unset):
             updated_at = UNSET
         else:
-            updated_at = isoparse(_updated_at)
+            updated_at = datetime.datetime.fromisoformat(_updated_at)
 
         _configuration = d.pop("configuration", UNSET)
         configuration: ConnectorConfiguration | Unset

@@ -1,5 +1,95 @@
 # History
 
+## 0.5.0 (unreleased)
+
+### Data Transfers & Transfer Runs (Phase 2)
+
+Two new resources, on both clients, covering the full Data Warehouse transfer surface:
+
+* `client.transfers` — `list`, `get`, `create`, `update`, `delete`, `set_state`,
+  `validate`, `validate_update`, `list_available_sources`, `get_available_options`,
+  `list_runs`, and `create_datasource_connection`.
+* `client.transfer_runs` — `get`, looking a run up by its own id within a team.
+
+Both appear under `client.with_raw_response` and take the same keyword-only `auth_token`,
+`headers` and `timeout` overrides as every other resource.
+
+Three behaviours of the upstream API are exposed as they actually are, rather than
+smoothed over:
+
+* **`validate()` and `validate_update()` do not raise on an invalid configuration.** The
+  API answers `200 OK` with `is_valid: false`, and the SDK returns that result. Raising
+  would defeat the purpose of a dry run. A `ValidationError` carries `field_id` and
+  `error_code` only — the API sends no human-readable message.
+* **`set_state()` takes `"pause"` / `"unpause"`**, the only machine-readable enum in this
+  area. The `state` field on the response is a free-form string whose documented example
+  is uppercase `"PAUSED"`; request and response do not share a vocabulary.
+* **`list()` and `get()` return different shapes.** The list item has `dwh_transfer_id`, a
+  `schedule` *string* and an `accounts` *string array*; the detail object has
+  `transfer_id`, a `schedule` *array* and an `accounts` *object array*. The list item is
+  not a subset of the detail object.
+
+`update()` is a whole-object replace: the request schema forbids extra properties and
+there is no PATCH endpoint, so every field has to be resent.
+
+`create_datasource_connection()` deliberately does not expose the request schema's
+optional `api_key` field. Upstream describes it as automatically handled, and it
+duplicates a credential that already travels in the `Authorization` header.
+
+### Data Warehouse calls are routed automatically
+
+Transfers, transfer runs, backfills and data source connections are served from
+`https://dts-api.supermetrics.com/v1`, not from the core API host. The SDK now re-hosts
+those requests from its request event hook, so one pooled client reaches everything:
+
+```python
+client = SupermetricsClient(api_key="api_...")
+client.queries.get(...)  # api.supermetrics.com
+client.transfers.list(team_id=1)  # dts-api.supermetrics.com/v1
+client.backfills.list_incomplete(team_id=1)  # dts-api.supermetrics.com/v1
+```
+
+**This changes backfills.** `client.backfills.*` previously 404'd on a default client;
+callers had to build a second client on the Data Warehouse host, as
+`docs/api-reference.md` instructed. That workaround still works untouched — routing is
+only inferred when `base_url` is left at its production default, and any `base_url` you
+set yourself is taken literally and receives every request. The new keyword-only
+`dts_base_url` parameter, on both clients, points Data Warehouse traffic somewhere
+specific.
+
+If you currently hold two clients, one of them is now redundant.
+
+### Generation pipeline
+
+`scripts/filter_openapi_spec.py` gained two options, both documented in
+`docs/openapi-generation.md`:
+
+* **`pin_baseline`** — endpoints already in the committed `openapi-spec.yaml` are taken
+  from it rather than re-read from upstream, so a regeneration is purely additive. The
+  upstream specifications had drifted far enough that regenerating for this change would
+  otherwise have retagged most operations (moving their generated modules and breaking
+  seven adapter imports) and dropped `GET /query/data/json`, which upstream has
+  reparameterised to `GET /query/data/{context_type}`. Refreshing those is a separate,
+  deliberate change.
+* **`rewrite_path`** — writes an endpoint into the merged spec under a different path.
+  Upstream splits the `/v1` prefix inconsistently between the path and the path-level
+  `servers` entry, and `openapi-python-client` ignores path-level `servers`, so without
+  normalisation the transfers and backfills families cannot share a base URL.
+
+Regenerating also picked up the `openapi-python-client` 0.27.1 → 0.29.0 upgrade, which
+had been pinned but never applied. It adds percent-encoding of path parameters and drops
+some redundant casts across the generated tree. No endpoint or model was removed.
+
+### Testing
+
+`tests/e2e/` covers every new method on both the sync and async clients over a real
+loopback socket, asserting on the outgoing request — verb, path, query string, body, and
+credential — as well as the response. `tests/e2e/test_dts_routing_e2e.py` runs **two**
+local servers, which is the only way to tell "sent to the right host" apart from "sent to
+the only host there is".
+
+---
+
 ## 0.4.0 (2026-08-18)
 
 ### Breaking changes

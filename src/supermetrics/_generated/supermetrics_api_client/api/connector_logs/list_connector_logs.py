@@ -1,6 +1,7 @@
 import datetime
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -22,6 +23,7 @@ def _get_kwargs(
     limit: int | Unset = 100,
     before: datetime.datetime | Unset = UNSET,
 ) -> dict[str, Any]:
+
     params: dict[str, Any] = {}
 
     params["limit"] = limit
@@ -35,7 +37,10 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logs",
+        "url": "/v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logs".format(
+            team_id=quote(str(team_id), safe=""),
+            connector_identifier=quote(str(connector_identifier), safe=""),
+        ),
         "params": params,
     }
 

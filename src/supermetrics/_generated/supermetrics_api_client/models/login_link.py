@@ -6,7 +6,6 @@ from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 from ..models.login_link_status_code import LoginLinkStatusCode, check_login_link_status_code
 from ..types import UNSET, Unset
@@ -182,14 +181,14 @@ class LoginLink:
         if isinstance(_created_time, Unset):
             created_time = UNSET
         else:
-            created_time = isoparse(_created_time)
+            created_time = datetime.datetime.fromisoformat(_created_time)
 
         _expiry_time = d.pop("expiry_time", UNSET)
         expiry_time: datetime.datetime | Unset
         if isinstance(_expiry_time, Unset):
             expiry_time = UNSET
         else:
-            expiry_time = isoparse(_expiry_time)
+            expiry_time = datetime.datetime.fromisoformat(_expiry_time)
 
         def _parse_login_id(data: object) -> None | str | Unset:
             if data is None:
@@ -208,7 +207,7 @@ class LoginLink:
             try:
                 if not isinstance(data, str):
                     raise TypeError()
-                login_time_type_0 = isoparse(data)
+                login_time_type_0 = datetime.datetime.fromisoformat(data)
 
                 return login_time_type_0
             except (TypeError, ValueError, AttributeError, KeyError):

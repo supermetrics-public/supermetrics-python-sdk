@@ -6,7 +6,6 @@ from typing import Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 from ..types import UNSET, Unset
 
@@ -74,7 +73,7 @@ class CreateLoginLinkBody:
         if isinstance(_expiry_time, Unset):
             expiry_time = UNSET
         else:
-            expiry_time = isoparse(_expiry_time)
+            expiry_time = datetime.datetime.fromisoformat(_expiry_time)
 
         description = d.pop("description", UNSET)
 

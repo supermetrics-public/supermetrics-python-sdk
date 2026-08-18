@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 from ..types import UNSET, Unset
 
@@ -87,7 +86,7 @@ class GetAccountsResponse200DataItem:
             try:
                 if not isinstance(data, str):
                     raise TypeError()
-                cache_time_type_0 = isoparse(data)
+                cache_time_type_0 = datetime.datetime.fromisoformat(data)
 
                 return cache_time_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
