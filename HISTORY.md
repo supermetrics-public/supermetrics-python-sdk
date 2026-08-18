@@ -1,6 +1,61 @@
 # History
 
-## 0.4.0-beta1 (2026-08-18)
+## 0.4.0 (2026-08-18)
+
+### Breaking changes
+
+Verified by diffing the public API surface against the previous release and by running
+pre-Phase-1 usage patterns against the new code. **No API shape changed**: nothing was
+removed or renamed, no parameter changed position or default, and all 174 new method
+parameters are keyword-only with defaults. `api_key` went from required-positional to
+optional, which is strictly more permissive. Three behaviours did change.
+
+1. **`except APIError` now catches authentication and validation errors.**
+   `AuthenticationError` and `ValidationError` are subclasses of `APIError`, so a handler
+   chain that lists `APIError` *first* will swallow them:
+
+   ```python
+   try:
+       client.logins.list()
+   except APIError:  # <- now also catches 401 and 400/422
+       ...
+   except AuthenticationError:  # <- unreachable
+       refresh_token()
+   ```
+
+   Fix by ordering the specific clauses first. `except SupermetricsError` is unaffected,
+   and a chain that already listed the specific errors first is unaffected.
+
+2. **`custom_headers={"Authorization": ...}` no longer changes the credential.** It is
+   ignored with a `UserWarning`; the credential comes from `api_key` / `bearer_token` /
+   `token_provider`. Previously it overrode a static `api_key` but lost to a
+   `token_provider`, so the same headers sent different credentials depending on the
+   mechanism. To send a different credential for one call, use a method's `headers` or
+   `auth_token` argument.
+
+3. **Failed writes now raise instead of reporting success.**
+   `connector_builder.update/delete` and `connector_builder_secrets.update/delete`
+   returned `None` for any HTTP status the API specification does not describe — a gateway
+   `502` was indistinguishable from a real `204 No Content`. They now raise
+   `SupermetricsServerError`. Code that relied on those calls never raising will now see
+   exceptions on failures it was previously silently ignoring.
+
+#### Lower-risk behaviour changes
+
+- HTTP 403, 404, 429 and 5xx now raise a specific subclass rather than a bare `APIError`.
+  `except APIError` is unaffected; only an exact `type(e) is APIError` check would notice.
+- `status_code` is now accurate on errors that previously reported `0`, and `error_code` /
+  `details` are populated on routes that previously dropped them.
+- A malformed credential (blank, control characters, non-ASCII) raises
+  `SupermetricsClientError` instead of surfacing later as `NetworkError` or an uncaught
+  `UnicodeEncodeError`.
+- Constructing a client with no credential raises `SupermetricsClientError` (a `ValueError`)
+  rather than `TypeError`.
+- An error response whose body is not JSON now raises an SDK exception instead of letting
+  `json.JSONDecodeError` escape.
+- `logins` no longer logs end-user usernames at INFO.
+
+---
 
 ### Core client, authentication & transport modernization (Phase 1)
 
