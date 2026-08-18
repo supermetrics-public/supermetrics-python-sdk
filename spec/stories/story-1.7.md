@@ -70,25 +70,26 @@ so that users can fetch marketing data with proper parameter validation.
 **QueryResult Model (from updated tech spec):**
 ```python
 class Field(BaseModel):
-    id: str                     # Field ID the API uses
-    requested_id: str           # Field ID from the request
-    name: str                   # Field name
-    type: str                   # Field type
-    split: str                  # Field split by type
-    data_type: str              # Field data type
-    data_column: int            # Field value position in each data row
-    visible: bool               # Whether data for this field is visible
+    id: str  # Field ID the API uses
+    requested_id: str  # Field ID from the request
+    name: str  # Field name
+    type: str  # Field type
+    split: str  # Field split by type
+    data_type: str  # Field data type
+    data_column: int  # Field value position in each data row
+    visible: bool  # Whether data for this field is visible
+
 
 class QueryResult(BaseModel):
-    request_id: str             # API request ID
-    schedule_id: str            # Custom or generated schedule ID
-    status_code: str            # Status code for the query
-    data: list[dict]            # Actual data rows
-    fields: list[Field]         # Field definitions
-    row_count: int              # Number of rows returned
-    data_sampled: bool          # If data source provided sampled data
-    cache_used: bool            # If cached data was used
-    cache_time: datetime        # Most recent cached data timestamp
+    request_id: str  # API request ID
+    schedule_id: str  # Custom or generated schedule ID
+    status_code: str  # Status code for the query
+    data: list[dict]  # Actual data rows
+    fields: list[Field]  # Field definitions
+    row_count: int  # Number of rows returned
+    data_sampled: bool  # If data source provided sampled data
+    cache_used: bool  # If cached data was used
+    cache_time: datetime  # Most recent cached data timestamp
 ```
 
 [Source: tech-spec-epic-1.md - QueryResult Model, lines 145-167]

@@ -196,12 +196,15 @@ if custom_headers:
 def __enter__(self):
     return self
 
+
 def __exit__(self, *args):
     self.close()
+
 
 # Async client
 async def __aenter__(self):
     return self
+
 
 async def __aexit__(self, *args):
     await self.close()
@@ -242,9 +245,8 @@ def __init__(
     user_agent: Optional[str] = None,
     custom_headers: Optional[dict[str, str]] = None,
     timeout: float = 30.0,
-    base_url: str = "https://api.supermetrics.com"
-) -> None:
-    ...
+    base_url: str = "https://api.supermetrics.com",
+) -> None: ...
 ```
 
 [Source: architecture.md - Type Hints, lines 682-713]

@@ -63,9 +63,9 @@ so that users can discover available accounts for querying.
 **Account Model (from updated tech spec):**
 ```python
 class Account(BaseModel):
-    account_id: str        # Account identifier (used in queries)
-    account_name: str      # Account display name
-    group_name: str        # Account group name (empty when not available)
+    account_id: str  # Account identifier (used in queries)
+    account_name: str  # Account display name
+    group_name: str  # Account group name (empty when not available)
 ```
 
 [Source: tech-spec-epic-1.md - Account Model, lines 137-143]
