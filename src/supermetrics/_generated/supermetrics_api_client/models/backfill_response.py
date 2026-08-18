@@ -8,7 +8,7 @@ from attrs import field as _attrs_field
 
 if TYPE_CHECKING:
     from ..models.backfill import Backfill
-    from ..models.response_meta import ResponseMeta
+    from ..models.backfill_response_meta import BackfillResponseMeta
 
 
 T = TypeVar("T", bound="BackfillResponse")
@@ -18,11 +18,11 @@ T = TypeVar("T", bound="BackfillResponse")
 class BackfillResponse:
     """
     Attributes:
-        meta (ResponseMeta):
+        meta (BackfillResponseMeta): Metadata included in every API response.
         data (Backfill):
     """
 
-    meta: ResponseMeta
+    meta: BackfillResponseMeta
     data: Backfill
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -45,10 +45,10 @@ class BackfillResponse:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.backfill import Backfill
-        from ..models.response_meta import ResponseMeta
+        from ..models.backfill_response_meta import BackfillResponseMeta
 
         d = dict(src_dict)
-        meta = ResponseMeta.from_dict(d.pop("meta"))
+        meta = BackfillResponseMeta.from_dict(d.pop("meta"))
 
         data = Backfill.from_dict(d.pop("data"))
 
