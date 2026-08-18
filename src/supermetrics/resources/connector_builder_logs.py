@@ -1,5 +1,7 @@
 """Connector Builder Logs resource adapter for Supermetrics API."""
 
+from __future__ import annotations
+
 import datetime
 import logging
 from typing import cast
@@ -17,8 +19,12 @@ from supermetrics._generated.supermetrics_api_client.models.list_connector_logs_
 )
 from supermetrics._generated.supermetrics_api_client.models.log_entry import LogEntry
 from supermetrics._generated.supermetrics_api_client.types import UNSET
-from supermetrics.exceptions import APIError, AuthenticationError, ValidationError
-from supermetrics.resources._error_handlers import _handle_http_error, _handle_request_error, _raise_for_error_response
+from supermetrics._transport import request_options
+from supermetrics.resources._error_handlers import (
+    _raise_for_error_response,
+    _raise_unexpected_response,
+    api_error_handler,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -46,10 +52,22 @@ class ConnectorBuilderLogsAsyncResource:
         *,
         limit: int | None = None,
         before: datetime.datetime | str | None = None,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
     ) -> ListConnectorLogsResponse200:
         """List execution logs for a connector.
 
         Async version of ConnectorBuilderLogsResource.list(). See sync version for full documentation.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Raises:
             AuthenticationError: If the API key is invalid or expired (HTTP 401).
@@ -57,7 +75,10 @@ class ConnectorBuilderLogsAsyncResource:
             NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logs"
-        try:
+        with (
+            api_error_handler(endpoint, context_404="Connector not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = await list_connector_logs.asyncio(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
@@ -71,23 +92,30 @@ class ConnectorBuilderLogsAsyncResource:
                 return response
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_404="Connector not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)
 
     async def get(
         self,
         team_id: int,
         connector_identifier: str,
         log_id: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
     ) -> LogEntry:
         """Get detailed information for a specific log entry.
 
         Async version of ConnectorBuilderLogsResource.get(). See sync version for full documentation.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Raises:
             AuthenticationError: If the API key is invalid or expired (HTTP 401).
@@ -95,7 +123,10 @@ class ConnectorBuilderLogsAsyncResource:
             NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logs/{log_id}"
-        try:
+        with (
+            api_error_handler(endpoint, context_404="Log entry not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = await get_connector_log.asyncio(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
@@ -106,13 +137,7 @@ class ConnectorBuilderLogsAsyncResource:
                 return response
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_404="Log entry not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)
 
 
 class ConnectorBuilderLogsResource:
@@ -156,6 +181,9 @@ class ConnectorBuilderLogsResource:
         *,
         limit: int | None = None,
         before: datetime.datetime | str | None = None,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
     ) -> ListConnectorLogsResponse200:
         """List execution logs for a Connector Builder connector.
 
@@ -164,6 +192,13 @@ class ConnectorBuilderLogsResource:
             connector_identifier: The unique identifier of the connector.
             limit: Maximum number of log entries to return. Optional.
             before: Cursor for pagination - return logs before this ID. Optional.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             ListConnectorLogsResponse200: Response containing the list of log entries.
@@ -186,7 +221,10 @@ class ConnectorBuilderLogsResource:
             ... )
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logs"
-        try:
+        with (
+            api_error_handler(endpoint, context_404="Connector not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = list_connector_logs.sync(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
@@ -200,19 +238,17 @@ class ConnectorBuilderLogsResource:
                 return response
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_404="Connector not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)
 
     def get(
         self,
         team_id: int,
         connector_identifier: str,
         log_id: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
     ) -> LogEntry:
         """Get detailed information for a specific execution log entry.
 
@@ -220,6 +256,13 @@ class ConnectorBuilderLogsResource:
             team_id: The unique identifier of the team.
             connector_identifier: The unique identifier of the connector.
             log_id: The unique identifier of the log entry.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             LogEntry: The detailed log entry.
@@ -237,7 +280,10 @@ class ConnectorBuilderLogsResource:
             ... )
         """
         endpoint = f"/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logs/{log_id}"
-        try:
+        with (
+            api_error_handler(endpoint, context_404="Log entry not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = get_connector_log.sync(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
@@ -248,10 +294,4 @@ class ConnectorBuilderLogsResource:
                 return response
             if hasattr(response, "error"):
                 _raise_for_error_response(response, endpoint)
-            raise APIError(f"Unexpected response: {type(response).__name__}", endpoint=endpoint)
-        except (AuthenticationError, ValidationError, APIError):
-            raise
-        except httpx.HTTPStatusError as e:
-            _handle_http_error(e, context_404="Log entry not found")
-        except httpx.RequestError as e:
-            _handle_request_error(e)
+            _raise_unexpected_response(response, endpoint)

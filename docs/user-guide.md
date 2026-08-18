@@ -10,6 +10,8 @@ Comprehensive guide to using the Supermetrics Python SDK for integrating with th
 - [Querying Data](#querying-data)
 - [Async Support](#async-support)
 - [Best Practices](#best-practices)
+- [Common Data Sources](#common-data-sources)
+- [Next Steps](#next-steps)
 
 ---
 
@@ -99,6 +101,61 @@ if result and result.data:
 
 ## Authentication
 
+Two different things are authenticated: the **SDK client**, which needs a Supermetrics
+credential, and each **data source**, which the end user authenticates by visiting a login
+link. Both are covered below.
+
+### Client Credentials
+
+`SupermetricsClient` and `SupermetricsAsyncClient` accept **exactly one** of `api_key`,
+`bearer_token`, or `token_provider`:
+
+```python
+from supermetrics import SupermetricsClient
+
+# Static API key
+client = SupermetricsClient(api_key="api_live_abc123")
+
+# OAuth 2.0 access token, or any other bearer credential
+client = SupermetricsClient(bearer_token="otok_abc123")
+
+# Dynamic token provider, re-evaluated on every request
+client = SupermetricsClient(token_provider=lambda: vault.current_access_token())
+```
+
+Supplying none, or more than one, raises `SupermetricsClientError` (which is also a
+`ValueError`) before any request is made:
+
+```python
+from supermetrics import SupermetricsClient, SupermetricsClientError
+
+try:
+    client = SupermetricsClient()
+except SupermetricsClientError as error:
+    print(f"Configuration problem: {error.message}")
+```
+
+A token provider lets short-lived tokens be refreshed without discarding the client's
+connection pool. The async client takes an `AsyncTokenProvider`, which may be a coroutine
+function or a plain callable:
+
+```python
+from supermetrics import SupermetricsAsyncClient
+
+
+async def get_valid_token() -> str:
+    return await oauth_service.get_access_token(team_id=123)
+
+
+client = SupermetricsAsyncClient(token_provider=get_valid_token)
+```
+
+The credential always comes from one of these three arguments. Setting `Authorization` in
+`custom_headers` emits a `UserWarning` and is ignored; to send a different credential for a
+single call, pass `auth_token` to that call. See
+[Authentication & Transport](authentication-and-transport.md) for per-request overrides,
+header precedence, and reading response metadata.
+
 ### Creating Login Links
 
 Login links are URLs that users visit to authenticate with data sources.
@@ -151,7 +208,7 @@ while True:
 # List all logins
 logins = client.logins.list()
 for login in logins:
-    ds_name = login.ds_info.ds_name if login.ds_info else "Unknown"
+    ds_name = login.ds_info.name if login.ds_info else "Unknown"
     print(f"{ds_name}: {login.username}")
 
 # Get specific login
@@ -276,8 +333,8 @@ result = client.queries.execute(
 
 # Check if query succeeded
 if result and result.data:
-    # Get field names
-    fields = [field["field_id"] for field in result.meta.fields]
+    # Get field names (the field list lives on result.meta.query)
+    fields = [field.field_id for field in result.meta.query.fields]
     print(f"Columns: {fields}")
 
     # Get row count
@@ -461,6 +518,37 @@ async def main():
 asyncio.run(main())
 ```
 
+### One Client, Many Callers
+
+One async client is safe to share across concurrent tasks. Every resource method takes
+keyword-only `auth_token`, `headers`, and `timeout` overrides, bound to context variables
+that are isolated per asyncio task, so each caller can send its own credential and tracing
+headers over the same pooled connections:
+
+```python
+import asyncio
+from supermetrics import SupermetricsAsyncClient
+
+
+async def logins_for(client, token, span_id):
+    return await client.logins.list(auth_token=token, headers={"X-Span-Id": span_id})
+
+
+async def main():
+    async with SupermetricsAsyncClient(api_key="shared_fallback_key") as client:
+        results = await asyncio.gather(
+            logins_for(client, "otok_tenant_a", "span-a"),
+            logins_for(client, "otok_tenant_b", "span-b"),
+        )
+        print([len(logins) for logins in results])
+
+
+asyncio.run(main())
+```
+
+See [Authentication & Transport](authentication-and-transport.md) for header precedence,
+ambient propagation from web-framework middleware, and the `with_raw_response` accessor.
+
 ### FastAPI Integration
 
 ```python
@@ -537,7 +625,36 @@ async with SupermetricsAsyncClient(api_key="your_key") as client:
     accounts = await client.accounts.list(ds_id="GAWA")
 ```
 
-### 2. Handle Errors Gracefully
+### 2. Reuse One Client, Not One Per Request
+
+A client owns a connection pool and a TLS session cache, so building one per request is
+wasteful — and unnecessary, because the credential, headers, and timeout can each be
+overridden on the call. Create one client for the lifetime of the process and pass what
+varies:
+
+```python
+import os
+from supermetrics import SupermetricsClient
+
+# Good: one shared client, per-request credential
+client = SupermetricsClient(api_key=os.environ["SUPERMETRICS_API_KEY"])
+
+
+def logins_for_tenant(tenant_token: str):
+    return client.logins.list(auth_token=tenant_token, timeout=15.0)
+
+
+# Avoid: a new pool and TLS handshake for every call
+def logins_for_tenant_wasteful(tenant_token: str):
+    with SupermetricsClient(bearer_token=tenant_token) as fresh_client:
+        return fresh_client.logins.list()
+```
+
+For credentials that expire, use `token_provider` rather than rebuilding the client. The
+context manager in the previous section is for the client's whole lifetime, not for a
+single call.
+
+### 3. Handle Errors Gracefully
 
 Catch specific exceptions for better error handling:
 
@@ -569,7 +686,15 @@ except NetworkError:
     print("Network error - check connectivity")
 ```
 
-### 3. Cache Results When Possible
+> **Changed:** `AuthenticationError` and `ValidationError` are now aliases of
+> `SupermetricsAuthError` and `SupermetricsValidationError`, and both are **subclasses of**
+> `APIError`. Order the specific clauses first, as above — an `except APIError` placed
+> before them will match authentication and validation errors and silently swallow them.
+> `SupermetricsForbiddenError` (403), `SupermetricsNotFoundError` (404),
+> `SupermetricsRateLimitError` (429), and `SupermetricsServerError` (5xx) are available too.
+> See the [error taxonomy](authentication-and-transport.md#error-taxonomy).
+
+### 4. Cache Results When Possible
 
 Use `cache_minutes` to avoid redundant API calls:
 
@@ -588,7 +713,7 @@ result = client.queries.execute(
 )
 ```
 
-### 4. Use Async for Concurrent Operations
+### 5. Use Async for Concurrent Operations
 
 For multiple queries, async is much faster:
 
@@ -602,7 +727,7 @@ tasks = [client.queries.execute(...) for account_id in account_ids]
 results = await asyncio.gather(*tasks)
 ```
 
-### 5. Store API Keys Securely
+### 6. Store API Keys Securely
 
 Never hardcode API keys. Use environment variables:
 
@@ -617,11 +742,11 @@ if not api_key:
 client = SupermetricsClient(api_key=api_key)
 ```
 
-### 6. Implement Retry Logic for Rate Limits
+### 7. Implement Retry Logic for Rate Limits
 
 ```python
 import time
-from supermetrics import SupermetricsClient, APIError
+from supermetrics import SupermetricsClient, SupermetricsRateLimitError
 
 
 def query_with_retry(client, max_retries=3, **query_params):
@@ -629,13 +754,13 @@ def query_with_retry(client, max_retries=3, **query_params):
     for attempt in range(max_retries):
         try:
             return client.queries.execute(**query_params)
-        except APIError as e:
-            if e.status_code == 429 and attempt < max_retries - 1:
-                wait_time = 2**attempt  # 1s, 2s, 4s
-                print(f"Rate limited, waiting {wait_time}s...")
-                time.sleep(wait_time)
-            else:
+        except SupermetricsRateLimitError as e:
+            if attempt == max_retries - 1:
                 raise
+            # Honour Retry-After when the API sends it, back off otherwise
+            wait_time = e.retry_after or 2**attempt  # 1s, 2s, 4s
+            print(f"Rate limited, waiting {wait_time}s...")
+            time.sleep(wait_time)
 
 
 client = SupermetricsClient(api_key="your_key")
@@ -649,7 +774,7 @@ result = query_with_retry(
 )
 ```
 
-### 7. Validate Data Source Fields
+### 8. Validate Data Source Fields
 
 Different data sources support different fields. Check data source documentation:
 
@@ -666,7 +791,7 @@ facebook_ads_fields = ["Date", "Impressions", "Clicks", "Spend", "Purchases"]
 # Always refer to Supermetrics field documentation for your data source
 ```
 
-### 8. Close Unused Login Links
+### 9. Close Unused Login Links
 
 Clean up expired or unused login links:
 
@@ -676,7 +801,7 @@ links = client.login_links.list()
 
 # Close expired or unused links
 for link in links:
-    if link.status_code in ["expired", "closed"] or not link.login_id:
+    if link.status_code in ["EXPIRED", "CLOSED"] or not link.login_id:
         client.login_links.close(link.link_id)
         print(f"Closed link: {link.link_id}")
 ```
@@ -726,6 +851,8 @@ For complete field lists, refer to the [Supermetrics field documentation](https:
 
 ## Next Steps
 
+- Read [Authentication & Transport](authentication-and-transport.md) for credentials, token
+  providers, per-request overrides, and response metadata
 - Review the [API Reference](api-reference.md) for detailed method documentation
 - Check out [Error Handling](error-handling.md) for robust error management
 - Explore the [examples](https://github.com/supermetrics-public/SuperPy-SDK/tree/main/examples) directory for complete working code

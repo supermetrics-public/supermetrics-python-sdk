@@ -16,9 +16,11 @@ Complete documentation for the Supermetrics Python SDK – the Python client for
 
 | Guide | Description |
 |-------|-------------|
+| [authentication-and-transport.md](authentication-and-transport.md) | Credentials, dynamic token providers, per-request overrides, response metadata, and the error taxonomy |
 | [user-guide.md](user-guide.md) | Complete tutorials covering authentication, querying, async support, and best practices |
 | [api-reference.md](api-reference.md) | Full API documentation for all client classes, resources, models, and exceptions |
 | [error-handling.md](error-handling.md) | Error handling patterns, common scenarios, and production best practices |
+| [openapi-generation.md](openapi-generation.md) | Guide to filtering OpenAPI specs, regenerating client code, and writing resource adapters |
 
 ## Quick Navigation
 
@@ -27,12 +29,14 @@ Complete documentation for the Supermetrics Python SDK – the Python client for
 1. Start with [Installation](installation.md) to set up the SDK
 2. Read [Usage](usage.md) for a quick introduction
 3. Follow the [User Guide](user-guide.md) for comprehensive tutorials
-4. Refer to [API Reference](api-reference.md) as needed
+4. Read [Authentication & Transport](authentication-and-transport.md) before wiring the SDK into a multi-tenant service
+5. Refer to [API Reference](api-reference.md) as needed
 
 ### For Experienced Users
 
 - [API Reference](api-reference.md) - Quick lookup for methods and parameters
 - [Error Handling](error-handling.md) - Production error handling patterns
+- [Authentication & Transport](authentication-and-transport.md) - Per-request credentials, tracing headers, timeouts, and raw responses
 - [Examples](https://github.com/supermetrics-public/SuperPy-SDK/tree/main/examples) - Working code examples
 
 ## Documentation Topics

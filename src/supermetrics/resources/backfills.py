@@ -1,7 +1,11 @@
 """Backfills resource adapter for Supermetrics Data Warehouse API."""
 
+from __future__ import annotations
+
 from datetime import date
 from typing import cast
+
+import httpx
 
 from supermetrics._generated.supermetrics_api_client import AuthenticatedClient
 from supermetrics._generated.supermetrics_api_client import Client as GeneratedClient
@@ -19,6 +23,7 @@ from supermetrics._generated.supermetrics_api_client.models.list_incomplete_back
     ListIncompleteBackfillsResponse200,
 )
 from supermetrics._generated.supermetrics_api_client.models.update_backfill_status_body import UpdateBackfillStatusBody
+from supermetrics._transport import request_options
 from supermetrics.resources._error_handlers import _raise_for_status, api_error_handler
 
 
@@ -42,10 +47,29 @@ class BackfillsAsyncResource:
     def __init__(self, client: GeneratedClient) -> None:
         self._client = client
 
-    async def create(self, team_id: int, transfer_id: int, range_start: date, range_end: date) -> Backfill:
+    async def create(
+        self,
+        team_id: int,
+        transfer_id: int,
+        range_start: date,
+        range_end: date,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> Backfill:
         """Create a new backfill for a transfer.
 
         Async version of BackfillsResource.create(). See sync version for full documentation.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Raises:
             AuthenticationError: If the API key is invalid or expired (HTTP 401).
@@ -54,7 +78,10 @@ class BackfillsAsyncResource:
             NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/transfers/{transfer_id}/backfills"
-        with api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Transfer not found"):
+        with (
+            api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Transfer not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             request = CreateBackfillRequest(range_start=range_start, range_end=range_end)
             response = await create_backfill.asyncio_detailed(
                 client=cast(AuthenticatedClient, self._client),
@@ -70,12 +97,31 @@ class BackfillsAsyncResource:
                 endpoint,
                 not_found_msg="Transfer not found or you do not have access to it",
                 bad_request_msg=f"Invalid request parameters: {response.parsed}",
+                headers=response.headers,
+                raw_body=response.content,
             )
 
-    async def get(self, team_id: int, backfill_id: int) -> Backfill:
+    async def get(
+        self,
+        team_id: int,
+        backfill_id: int,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> Backfill:
         """Retrieve a backfill by ID.
 
         Async version of BackfillsResource.get(). See sync version for full documentation.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Raises:
             AuthenticationError: If the API key is invalid or expired (HTTP 401).
@@ -83,7 +129,10 @@ class BackfillsAsyncResource:
             NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/backfills/{backfill_id}"
-        with api_error_handler(endpoint, context_404="Backfill not found"):
+        with (
+            api_error_handler(endpoint, context_404="Backfill not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = await get_backfill_by_id.asyncio_detailed(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
@@ -96,12 +145,31 @@ class BackfillsAsyncResource:
                 response.parsed,
                 endpoint,
                 not_found_msg="Backfill not found or you do not have access to it",
+                headers=response.headers,
+                raw_body=response.content,
             )
 
-    async def get_latest(self, team_id: int, transfer_id: int) -> Backfill:
+    async def get_latest(
+        self,
+        team_id: int,
+        transfer_id: int,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> Backfill:
         """Get the latest backfill for a transfer.
 
         Async version of BackfillsResource.get_latest(). See sync version for full documentation.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Raises:
             AuthenticationError: If the API key is invalid or expired (HTTP 401).
@@ -109,7 +177,10 @@ class BackfillsAsyncResource:
             NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/transfers/{transfer_id}/backfills/latest"
-        with api_error_handler(endpoint, context_404="Backfill not found"):
+        with (
+            api_error_handler(endpoint, context_404="Backfill not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = await get_latest_backfill.asyncio_detailed(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
@@ -122,12 +193,30 @@ class BackfillsAsyncResource:
                 response.parsed,
                 endpoint,
                 not_found_msg="No backfill found for this transfer",
+                headers=response.headers,
+                raw_body=response.content,
             )
 
-    async def list_incomplete(self, team_id: int) -> list[Backfill]:
+    async def list_incomplete(
+        self,
+        team_id: int,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> list[Backfill]:
         """List all incomplete backfills for a team.
 
         Async version of BackfillsResource.list_incomplete(). See sync version for full documentation.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Raises:
             AuthenticationError: If the API key is invalid or expired (HTTP 401).
@@ -135,7 +224,7 @@ class BackfillsAsyncResource:
             NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/backfills"
-        with api_error_handler(endpoint):
+        with api_error_handler(endpoint), request_options(auth_token=auth_token, headers=headers, timeout=timeout):
             response = await list_incomplete_backfills.asyncio_detailed(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
@@ -147,12 +236,31 @@ class BackfillsAsyncResource:
                 response.parsed,
                 endpoint,
                 not_found_msg="No backfills found for this team",
+                headers=response.headers,
+                raw_body=response.content,
             )
 
-    async def cancel(self, team_id: int, backfill_id: int) -> Backfill:
+    async def cancel(
+        self,
+        team_id: int,
+        backfill_id: int,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> Backfill:
         """Cancel a backfill.
 
         Async version of BackfillsResource.cancel(). See sync version for full documentation.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Raises:
             AuthenticationError: If the API key is invalid or expired (HTTP 401).
@@ -161,7 +269,10 @@ class BackfillsAsyncResource:
             NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/backfills/{backfill_id}"
-        with api_error_handler(endpoint, context_400="Cannot cancel backfill", context_404="Backfill not found"):
+        with (
+            api_error_handler(endpoint, context_400="Cannot cancel backfill", context_404="Backfill not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             body = UpdateBackfillStatusBody(status="CANCELLED")
             response = await update_backfill_status.asyncio_detailed(
                 client=cast(AuthenticatedClient, self._client),
@@ -177,6 +288,8 @@ class BackfillsAsyncResource:
                 endpoint,
                 not_found_msg="Backfill not found or you do not have access to it",
                 bad_request_msg=f"Cannot cancel backfill - it may already be in a final state: {response.parsed}",
+                headers=response.headers,
+                raw_body=response.content,
             )
 
 
@@ -219,7 +332,17 @@ class BackfillsResource:
         """
         self._client = client
 
-    def create(self, team_id: int, transfer_id: int, range_start: date, range_end: date) -> Backfill:
+    def create(
+        self,
+        team_id: int,
+        transfer_id: int,
+        range_start: date,
+        range_end: date,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> Backfill:
         """Create a new backfill for a transfer.
 
         Schedules a new backfill to re-process historical data for the specified date range.
@@ -229,6 +352,13 @@ class BackfillsResource:
             transfer_id: The unique identifier of the transfer.
             range_start: Start date of the backfill range as a date object.
             range_end: End date of the backfill range as a date object.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             Backfill: The created backfill object with status "CREATED".
@@ -249,7 +379,10 @@ class BackfillsResource:
             ... )
         """
         endpoint = f"/teams/{team_id}/transfers/{transfer_id}/backfills"
-        with api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Transfer not found"):
+        with (
+            api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Transfer not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             request = CreateBackfillRequest(range_start=range_start, range_end=range_end)
             response = create_backfill.sync_detailed(
                 client=cast(AuthenticatedClient, self._client),
@@ -265,9 +398,19 @@ class BackfillsResource:
                 endpoint,
                 not_found_msg="Transfer not found or you do not have access to it",
                 bad_request_msg=f"Invalid request parameters: {response.parsed}",
+                headers=response.headers,
+                raw_body=response.content,
             )
 
-    def get(self, team_id: int, backfill_id: int) -> Backfill:
+    def get(
+        self,
+        team_id: int,
+        backfill_id: int,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> Backfill:
         """Retrieve a backfill by ID.
 
         Fetches detailed information about a specific backfill, including current status,
@@ -276,6 +419,13 @@ class BackfillsResource:
         Args:
             team_id: The unique identifier of the team.
             backfill_id: The unique identifier of the backfill.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             Backfill: The backfill object with current status and progress.
@@ -292,7 +442,10 @@ class BackfillsResource:
             >>> print(f"Progress: {backfill.transfer_runs_completed}/{backfill.transfer_runs_total}")
         """
         endpoint = f"/teams/{team_id}/backfills/{backfill_id}"
-        with api_error_handler(endpoint, context_404="Backfill not found"):
+        with (
+            api_error_handler(endpoint, context_404="Backfill not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = get_backfill_by_id.sync_detailed(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
@@ -305,9 +458,19 @@ class BackfillsResource:
                 response.parsed,
                 endpoint,
                 not_found_msg="Backfill not found or you do not have access to it",
+                headers=response.headers,
+                raw_body=response.content,
             )
 
-    def get_latest(self, team_id: int, transfer_id: int) -> Backfill:
+    def get_latest(
+        self,
+        team_id: int,
+        transfer_id: int,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> Backfill:
         """Get the latest backfill for a transfer.
 
         Retrieves information about the most recent backfill for a specific transfer,
@@ -316,6 +479,13 @@ class BackfillsResource:
         Args:
             team_id: The unique identifier of the team.
             transfer_id: The unique identifier of the transfer.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             Backfill: The latest backfill object.
@@ -330,7 +500,10 @@ class BackfillsResource:
             >>> print(f"Latest backfill status: {latest.status}")
         """
         endpoint = f"/teams/{team_id}/transfers/{transfer_id}/backfills/latest"
-        with api_error_handler(endpoint, context_404="Backfill not found"):
+        with (
+            api_error_handler(endpoint, context_404="Backfill not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = get_latest_backfill.sync_detailed(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
@@ -343,9 +516,18 @@ class BackfillsResource:
                 response.parsed,
                 endpoint,
                 not_found_msg="No backfill found for this transfer",
+                headers=response.headers,
+                raw_body=response.content,
             )
 
-    def list_incomplete(self, team_id: int) -> list[Backfill]:
+    def list_incomplete(
+        self,
+        team_id: int,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> list[Backfill]:
         """List all incomplete backfills for a team.
 
         Retrieves all backfills that are not yet finished (statuses: CREATED, SCHEDULED,
@@ -353,6 +535,13 @@ class BackfillsResource:
 
         Args:
             team_id: The unique identifier of the team.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             List[Backfill]: List of incomplete backfill objects sorted by creation time.
@@ -368,7 +557,7 @@ class BackfillsResource:
             ...     print(f"Backfill {backfill.transfer_backfill_id}: {backfill.status}")
         """
         endpoint = f"/teams/{team_id}/backfills"
-        with api_error_handler(endpoint):
+        with api_error_handler(endpoint), request_options(auth_token=auth_token, headers=headers, timeout=timeout):
             response = list_incomplete_backfills.sync_detailed(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
@@ -380,9 +569,19 @@ class BackfillsResource:
                 response.parsed,
                 endpoint,
                 not_found_msg="No backfills found for this team",
+                headers=response.headers,
+                raw_body=response.content,
             )
 
-    def cancel(self, team_id: int, backfill_id: int) -> Backfill:
+    def cancel(
+        self,
+        team_id: int,
+        backfill_id: int,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> Backfill:
         """Cancel a backfill.
 
         Updates the backfill status to "CANCELLED". All pending/queued transfer runs
@@ -391,6 +590,13 @@ class BackfillsResource:
         Args:
             team_id: The unique identifier of the team.
             backfill_id: The unique identifier of the backfill to cancel.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             Backfill: The updated backfill object with status "CANCELLED".
@@ -406,7 +612,10 @@ class BackfillsResource:
             >>> print(f"Backfill cancelled: {cancelled.status}")
         """
         endpoint = f"/teams/{team_id}/backfills/{backfill_id}"
-        with api_error_handler(endpoint, context_400="Cannot cancel backfill", context_404="Backfill not found"):
+        with (
+            api_error_handler(endpoint, context_400="Cannot cancel backfill", context_404="Backfill not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             body = UpdateBackfillStatusBody(status="CANCELLED")
             response = update_backfill_status.sync_detailed(
                 client=cast(AuthenticatedClient, self._client),
@@ -422,4 +631,6 @@ class BackfillsResource:
                 endpoint,
                 not_found_msg="Backfill not found or you do not have access to it",
                 bad_request_msg=f"Cannot cancel backfill - it may already be in a final state: {response.parsed}",
+                headers=response.headers,
+                raw_body=response.content,
             )

@@ -1,6 +1,10 @@
 """DatasourceDetails resource adapter for Supermetrics API."""
 
+from __future__ import annotations
+
 from typing import cast
+
+import httpx
 
 from supermetrics._generated.supermetrics_api_client import AuthenticatedClient
 from supermetrics._generated.supermetrics_api_client import Client as GeneratedClient
@@ -10,6 +14,7 @@ from supermetrics._generated.supermetrics_api_client.api.datasource import (
 from supermetrics._generated.supermetrics_api_client.models.datasource_details import DatasourceDetails
 from supermetrics._generated.supermetrics_api_client.models.datasource_details_response import DatasourceDetailsResponse
 from supermetrics._generated.supermetrics_api_client.types import UNSET, Unset
+from supermetrics._transport import request_options
 from supermetrics.exceptions import APIError
 from supermetrics.resources._error_handlers import _raise_for_status, api_error_handler
 
@@ -33,10 +38,22 @@ class DatasourceDetailsAsyncResource:
         data_source_id: str,
         *,
         sm_app_id: str | None = None,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
     ) -> DatasourceDetails:
         """Retrieve configuration details for a data source.
 
         Async version of DatasourceDetailsResource.get(). See sync version for full documentation.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Raises:
             AuthenticationError: If the API key is invalid or expired (HTTP 401).
@@ -45,7 +62,10 @@ class DatasourceDetailsAsyncResource:
             NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/datasource/{data_source_id}"
-        with api_error_handler(endpoint, context_404="Datasource not found"):
+        with (
+            api_error_handler(endpoint, context_404="Datasource not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = await get_datasource_details.asyncio_detailed(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
@@ -66,6 +86,8 @@ class DatasourceDetailsAsyncResource:
                 response.parsed,
                 endpoint,
                 not_found_msg="Datasource not found or you do not have access to it",
+                headers=response.headers,
+                raw_body=response.content,
             )
 
 
@@ -103,6 +125,9 @@ class DatasourceDetailsResource:
         data_source_id: str,
         *,
         sm_app_id: str | None = None,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
     ) -> DatasourceDetails:
         """Retrieve complete configuration details for a data source.
 
@@ -113,6 +138,13 @@ class DatasourceDetailsResource:
             team_id: The unique identifier of the team.
             data_source_id: The unique identifier of the datasource (e.g. "GAWA", "AW").
             sm_app_id: Optional Sm-App-Id header value.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
 
         Returns:
             DatasourceDetails: The datasource configuration details.
@@ -129,7 +161,10 @@ class DatasourceDetailsResource:
             >>> print(f"Categories: {details.categories}")
         """
         endpoint = f"/teams/{team_id}/datasource/{data_source_id}"
-        with api_error_handler(endpoint, context_404="Datasource not found"):
+        with (
+            api_error_handler(endpoint, context_404="Datasource not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
             response = get_datasource_details.sync_detailed(
                 client=cast(AuthenticatedClient, self._client),
                 team_id=team_id,
@@ -150,4 +185,6 @@ class DatasourceDetailsResource:
                 response.parsed,
                 endpoint,
                 not_found_msg="Datasource not found or you do not have access to it",
+                headers=response.headers,
+                raw_body=response.content,
             )

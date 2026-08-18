@@ -32,6 +32,25 @@ jobs:
       - name: Lint
         run: uv run ruff check .
 
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Install uv with Python 3.13
+        uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Type check with mypy (strict)
+        run: uv run mypy src/supermetrics --ignore-missing-imports
+
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -52,5 +71,55 @@ jobs:
       - name: Install dependencies
         run: uv sync --extra dev
 
-      - name: Run tests with python ${{ matrix.python-version }}
-        run: uv run pytest
+      - name: Run unit and end-to-end tests with python ${{ matrix.python-version }}
+        run: uv run pytest -m "not live"
+
+  e2e:
+    # Drives the real client stack over a loopback TCP socket against a local HTTP
+    # server: authentication, dynamic token providers, per-request header and timeout
+    # overrides, the raw-response envelope, the error taxonomy, and concurrency
+    # isolation on a shared connection pool. Nothing here is mocked or patched.
+    name: End-to-end (local HTTP server)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.14"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Install uv with python ${{ matrix.python-version }}
+        uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Run end-to-end transport tests
+        run: uv run pytest tests/e2e -m e2e -o addopts="" -v --durations=10
+
+  parity:
+    # Fails the build the moment the sync and async client surfaces drift apart.
+    name: Sync/async API parity
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Install uv with Python 3.13
+        uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Verify sync/async parity
+        run: uv run pytest tests/test_api_parity.py -o addopts="" -v

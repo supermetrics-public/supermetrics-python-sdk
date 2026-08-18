@@ -6,12 +6,26 @@ This page provides a quick overview of how to use the Supermetrics Python SDK. F
 
 ### Import and Initialize
 
+The client takes **exactly one** credential: `api_key`, `bearer_token`, or `token_provider`.
+Passing none, or more than one, raises `SupermetricsClientError` (which is also a `ValueError`).
+
 ```python
+import os
+
 from supermetrics import SupermetricsClient
 
-# Initialize the client with your API key
+# A static API key
 client = SupermetricsClient(api_key="your_api_key_here")
+
+# An OAuth 2.0 access token
+client = SupermetricsClient(bearer_token="otok_abc123")
+
+# A short-lived token, re-read on every request
+client = SupermetricsClient(token_provider=lambda: os.environ["SUPERMETRICS_ACCESS_TOKEN"])
 ```
+
+See [Authentication & Transport](authentication-and-transport.md) for token providers,
+header precedence, and the full transport story.
 
 ### Create Login Link
 
@@ -62,6 +76,34 @@ if result and result.data:
         print(row)
 ```
 
+### Per-Request Overrides
+
+Every resource method accepts keyword-only `auth_token`, `headers`, and `timeout`, so one
+shared client can serve callers that each bring their own credential and tracing context.
+
+```python
+login = client.logins.get(
+    "login_abc123",
+    auth_token="otok_this_caller",  # overrides the client credential
+    headers={"X-Span-Id": "a8f3b2c9"},
+    timeout=60.0,
+)
+```
+
+### Raw Responses
+
+`client.with_raw_response` mirrors every resource method with an identical signature, but
+each mirrored method returns an `ApiResponse[T]` carrying the transport metadata alongside
+the parsed data.
+
+```python
+response = client.with_raw_response.logins.get("login_abc123")
+
+print(response.status_code)  # 200
+print(response.request_id)  # X-Request-Id, for support tickets
+print(response.data.username)  # the DataSourceLogin the plain method returns
+```
+
 ## Complete Example
 
 ```python
@@ -104,6 +146,10 @@ finally:
 
 ## Error Handling
 
+`AuthenticationError` and `ValidationError` are now **subclasses** of `APIError`, so the
+specific clauses must come first — an `except APIError` placed before them swallows
+everything at the HTTP layer.
+
 ```python
 from supermetrics import SupermetricsClient, AuthenticationError, ValidationError, APIError, NetworkError
 
@@ -118,14 +164,17 @@ try:
         end_date="2024-01-31",
     )
 except AuthenticationError as e:
-    print(f"Invalid API key: {e.message}")
+    print(f"Invalid credential: {e.error_code} - {e.message}")
 except ValidationError as e:
     print(f"Invalid parameters: {e.message}")
 except APIError as e:
-    print(f"API error: {e.message}")
+    print(f"API error {e.status_code}: {e.message}")
 except NetworkError as e:
     print(f"Network error: {e.message}")
 ```
+
+The full hierarchy, the per-error attributes, and the token-refresh and rate-limit patterns
+are in [Authentication & Transport](authentication-and-transport.md#error-taxonomy).
 
 ## Async Support
 
@@ -135,6 +184,8 @@ from supermetrics import SupermetricsAsyncClient
 
 
 async def main():
+    # The async client accepts the same three credentials, and its token_provider
+    # may be a coroutine function as well as a plain callable.
     async with SupermetricsAsyncClient(api_key="your_key") as client:
         # All methods are async
         accounts = await client.accounts.list(ds_id="GAWA")
@@ -157,6 +208,7 @@ asyncio.run(main())
 
 ## Next Steps
 
+- [Authentication & Transport](authentication-and-transport.md) - Credentials, per-request overrides, raw responses, and the error taxonomy
 - [User Guide](user-guide.md) - Comprehensive tutorials and examples
 - [API Reference](api-reference.md) - Complete API documentation
 - [Error Handling](error-handling.md) - Error handling patterns and best practices

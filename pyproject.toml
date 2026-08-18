@@ -79,7 +79,7 @@ packages = ["src/supermetrics"]
 # Ruff configuration
 [tool.ruff]
 # Target Python version for rules and autofix behavior
-target-version = "py312"
+target-version = "py311"
 # Line length for formatting and linting
 line-length = 120
 # Source roots for import resolution and formatting context
@@ -122,3 +122,8 @@ ignore_errors = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+asyncio_mode = "strict"
+markers = [
+    "e2e: end-to-end tests that drive the SDK over a real socket against a local HTTP server",
+    "live: smoke tests against the real Supermetrics API; skipped unless SUPERMETRICS_API_KEY is set",
+]
