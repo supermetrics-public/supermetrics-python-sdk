@@ -95,6 +95,7 @@ except AuthenticationError as e:
 import os
 from supermetrics import SupermetricsClient, AuthenticationError
 
+
 def get_authenticated_client():
     """Get authenticated client with error handling."""
     api_key = os.getenv("SUPERMETRICS_API_KEY")
@@ -109,6 +110,7 @@ def get_authenticated_client():
         return client
     except AuthenticationError:
         raise ValueError("Invalid API key. Please check your credentials.")
+
 
 try:
     client = get_authenticated_client()
@@ -155,13 +157,9 @@ except ValidationError as e:
 from supermetrics import SupermetricsClient, ValidationError
 from datetime import datetime
 
+
 def execute_query_with_validation(
-    client,
-    ds_id: str,
-    account_ids: list[str],
-    fields: list[str],
-    start_date: str,
-    end_date: str
+    client, ds_id: str, account_ids: list[str], fields: list[str], start_date: str, end_date: str
 ):
     """Execute query with input validation."""
     # Validate inputs
@@ -176,11 +174,7 @@ def execute_query_with_validation(
 
     try:
         return client.queries.execute(
-            ds_id=ds_id,
-            ds_accounts=account_ids,
-            fields=fields,
-            start_date=start_date,
-            end_date=end_date
+            ds_id=ds_id, ds_accounts=account_ids, fields=fields, start_date=start_date, end_date=end_date
         )
     except ValidationError as e:
         print(f"API validation failed: {e.message}")
@@ -188,6 +182,7 @@ def execute_query_with_validation(
         if e.response_body:
             print(f"Details: {e.response_body}")
         raise
+
 
 # Usage
 client = SupermetricsClient(api_key="your_key")
@@ -199,7 +194,7 @@ try:
         account_ids=["123456789"],
         fields=["Date", "Sessions"],
         start_date="2024-01-01",
-        end_date="2024-01-31"
+        end_date="2024-01-31",
     )
 except ValueError as e:
     print(f"Input error: {e}")
@@ -254,6 +249,7 @@ except APIError as e:
 import time
 from supermetrics import SupermetricsClient, APIError
 
+
 def execute_with_retry(client, max_retries=3, **query_params):
     """Execute query with retry logic for transient errors."""
     for attempt in range(max_retries):
@@ -264,7 +260,7 @@ def execute_with_retry(client, max_retries=3, **query_params):
             # Rate limiting - exponential backoff
             if e.status_code == 429:
                 if attempt < max_retries - 1:
-                    wait_time = 2 ** attempt  # 1s, 2s, 4s
+                    wait_time = 2**attempt  # 1s, 2s, 4s
                     print(f"Rate limited. Waiting {wait_time}s...")
                     time.sleep(wait_time)
                     continue
@@ -290,6 +286,7 @@ def execute_with_retry(client, max_retries=3, **query_params):
             else:
                 raise
 
+
 # Usage
 client = SupermetricsClient(api_key="your_key")
 
@@ -300,7 +297,7 @@ try:
         ds_accounts=["123456789"],
         fields=["Date", "Sessions"],
         start_date="2024-01-01",
-        end_date="2024-01-31"
+        end_date="2024-01-31",
     )
 except APIError as e:
     print(f"Query failed after retries: {e.message}")
@@ -348,6 +345,7 @@ except NetworkError as e:
 from supermetrics import SupermetricsClient, NetworkError
 import time
 
+
 def create_robust_client(api_key, timeout=30.0, max_retries=3):
     """Create client with network error retry logic."""
     for attempt in range(max_retries):
@@ -361,20 +359,17 @@ def create_robust_client(api_key, timeout=30.0, max_retries=3):
             print(f"Network error (attempt {attempt + 1}/{max_retries}): {e.message}")
 
             if attempt < max_retries - 1:
-                wait_time = 2 ** attempt
+                wait_time = 2**attempt
                 print(f"Retrying in {wait_time}s...")
                 time.sleep(wait_time)
             else:
                 print("Failed to establish connection after retries")
                 raise
 
+
 # Usage
 try:
-    client = create_robust_client(
-        api_key="your_key",
-        timeout=30.0,
-        max_retries=3
-    )
+    client = create_robust_client(api_key="your_key", timeout=30.0, max_retries=3)
     print("Client connected successfully")
 except NetworkError:
     print("Unable to connect. Check network connectivity.")
@@ -389,13 +384,7 @@ except NetworkError:
 Handle each exception type differently:
 
 ```python
-from supermetrics import (
-    SupermetricsClient,
-    AuthenticationError,
-    ValidationError,
-    APIError,
-    NetworkError
-)
+from supermetrics import SupermetricsClient, AuthenticationError, ValidationError, APIError, NetworkError
 
 client = SupermetricsClient(api_key="your_key")
 
@@ -405,7 +394,7 @@ try:
         ds_accounts=["123456789"],
         fields=["Date", "Sessions"],
         start_date="2024-01-01",
-        end_date="2024-01-31"
+        end_date="2024-01-31",
     )
 
 except AuthenticationError as e:
@@ -448,7 +437,7 @@ try:
         ds_accounts=["123456789"],
         fields=["Date", "Sessions"],
         start_date="2024-01-01",
-        end_date="2024-01-31"
+        end_date="2024-01-31",
     )
 
 except SupermetricsError as e:
@@ -458,13 +447,10 @@ except SupermetricsError as e:
 
     # Log error details
     import logging
+
     logging.error(
         f"SDK error: {e.message}",
-        extra={
-            "status_code": e.status_code,
-            "endpoint": e.endpoint,
-            "response_body": e.response_body
-        }
+        extra={"status_code": e.status_code, "endpoint": e.endpoint, "response_body": e.response_body},
     )
 ```
 
@@ -517,6 +503,7 @@ Error handling in async code:
 import asyncio
 from supermetrics import SupermetricsAsyncClient, APIError
 
+
 async def fetch_with_error_handling(client, account_id):
     """Fetch data with error handling."""
     try:
@@ -525,20 +512,18 @@ async def fetch_with_error_handling(client, account_id):
             ds_accounts=[account_id],
             fields=["Date", "Sessions"],
             start_date="2024-01-01",
-            end_date="2024-01-31"
+            end_date="2024-01-31",
         )
         return {"account_id": account_id, "result": result, "error": None}
 
     except APIError as e:
         return {"account_id": account_id, "result": None, "error": e.message}
 
+
 async def main():
     async with SupermetricsAsyncClient(api_key="your_key") as client:
         # Fetch data for multiple accounts
-        tasks = [
-            fetch_with_error_handling(client, account_id)
-            for account_id in ["123", "456", "789"]
-        ]
+        tasks = [fetch_with_error_handling(client, account_id) for account_id in ["123", "456", "789"]]
 
         results = await asyncio.gather(*tasks)
 
@@ -551,6 +536,7 @@ async def main():
 
         for failure in failed:
             print(f"  {failure['account_id']}: {failure['error']}")
+
 
 asyncio.run(main())
 ```
@@ -596,6 +582,7 @@ from supermetrics import SupermetricsClient, APIError
 
 client = SupermetricsClient(api_key="your_key")
 
+
 def execute_with_backoff(client, **query_params):
     """Execute query with exponential backoff on rate limits."""
     max_retries = 5
@@ -607,11 +594,12 @@ def execute_with_backoff(client, **query_params):
 
         except APIError as e:
             if e.status_code == 429 and attempt < max_retries - 1:
-                delay = base_delay * (2 ** attempt)  # 1, 2, 4, 8, 16 seconds
+                delay = base_delay * (2**attempt)  # 1, 2, 4, 8, 16 seconds
                 print(f"Rate limited. Retrying in {delay}s...")
                 time.sleep(delay)
             else:
                 raise
+
 
 result = execute_with_backoff(
     client,
@@ -619,7 +607,7 @@ result = execute_with_backoff(
     ds_accounts=["123456789"],
     fields=["Date", "Sessions"],
     start_date="2024-01-01",
-    end_date="2024-01-31"
+    end_date="2024-01-31",
 )
 ```
 
@@ -637,7 +625,7 @@ try:
         ds_accounts=["123456789"],
         fields=["Date", "Sessions"],
         start_date="2024-01-01",
-        end_date="2024-12-31"  # Large date range
+        end_date="2024-12-31",  # Large date range
     )
 except NetworkError as e:
     print(f"Request timed out: {e.message}")
@@ -657,7 +645,7 @@ try:
         ds_accounts=[],  # Empty list - invalid
         fields=["Date", "Sessions"],
         start_date="2024-01-01",
-        end_date="2024-01-31"
+        end_date="2024-01-31",
     )
 except ValidationError as e:
     print(f"Validation error: {e.message}")
@@ -702,7 +690,7 @@ except SupermetricsError as e:
             "status_code": e.status_code,
             "endpoint": e.endpoint,
             "response_body": e.response_body,
-        }
+        },
     )
 ```
 
@@ -714,8 +702,10 @@ Retry transient errors (rate limits, server errors):
 import time
 from supermetrics import APIError
 
+
 def retry_on_transient_error(func, max_retries=3):
     """Decorator to retry on transient errors."""
+
     def wrapper(*args, **kwargs):
         for attempt in range(max_retries):
             try:
@@ -723,11 +713,13 @@ def retry_on_transient_error(func, max_retries=3):
             except APIError as e:
                 if e.status_code in [429, 500, 503, 504]:
                     if attempt < max_retries - 1:
-                        wait = 2 ** attempt
+                        wait = 2**attempt
                         time.sleep(wait)
                         continue
                 raise
+
     return wrapper
+
 
 @retry_on_transient_error
 def fetch_data(client):
@@ -805,20 +797,14 @@ import logging
 from supermetrics import SupermetricsError
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 try:
     result = client.queries.execute(...)
 except SupermetricsError as e:
     # Log error
-    logger.error(f"Query failed: {e.message}", extra={
-        "status_code": e.status_code,
-        "endpoint": e.endpoint
-    })
+    logger.error(f"Query failed: {e.message}", extra={"status_code": e.status_code, "endpoint": e.endpoint})
 
     # Send alert for critical errors
     if isinstance(e, AuthenticationError):

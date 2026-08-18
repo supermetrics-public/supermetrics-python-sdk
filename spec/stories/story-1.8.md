@@ -30,12 +30,13 @@ So that SDK users can handle errors appropriately and understand what went wrong
   ```python
   class SupermetricsError(Exception):
       """Base exception for all Supermetrics SDK errors."""
+
       def __init__(
           self,
           message: str,
           status_code: Optional[int] = None,
           endpoint: Optional[str] = None,
-          response_body: Optional[str] = None
+          response_body: Optional[str] = None,
       ):
           super().__init__(message)
           self.message = message
@@ -73,44 +74,38 @@ So that SDK users can handle errors appropriately and understand what went wrong
       # Map HTTP status codes to SDK exceptions
       if e.response.status_code == 401:
           raise AuthenticationError(
-              "Invalid or expired API key",
-              status_code=401,
-              endpoint=str(e.request.url),
-              response_body=e.response.text
+              "Invalid or expired API key", status_code=401, endpoint=str(e.request.url), response_body=e.response.text
           )
       elif e.response.status_code == 400:
           raise ValidationError(
               f"Invalid request parameters: {e.response.text}",
               status_code=400,
               endpoint=str(e.request.url),
-              response_body=e.response.text
+              response_body=e.response.text,
           )
       elif e.response.status_code == 404:
           raise APIError(
               f"Login link not found: {e.response.text}",
               status_code=404,
               endpoint=str(e.request.url),
-              response_body=e.response.text
+              response_body=e.response.text,
           )
       elif e.response.status_code >= 500:
           raise APIError(
               f"Supermetrics API error: {e.response.text}",
               status_code=e.response.status_code,
               endpoint=str(e.request.url),
-              response_body=e.response.text
+              response_body=e.response.text,
           )
       else:
           raise APIError(
               f"API error ({e.response.status_code}): {e.response.text}",
               status_code=e.response.status_code,
               endpoint=str(e.request.url),
-              response_body=e.response.text
+              response_body=e.response.text,
           )
   except httpx.RequestError as e:
-      raise NetworkError(
-          f"Network error: {str(e)}",
-          endpoint=str(e.request.url) if hasattr(e, 'request') else None
-      )
+      raise NetworkError(f"Network error: {str(e)}", endpoint=str(e.request.url) if hasattr(e, 'request') else None)
   ```
 - [ ] Apply same pattern to async methods in `LoginLinksAsyncResource`
 - [ ] Format and type check
@@ -268,7 +263,7 @@ def test_authentication_error_on_401(mocker, test_client):
     mocker.patch.object(
         test_client._client.login_links,
         'create',
-        side_effect=httpx.HTTPStatusError("", request=..., response=mock_response)
+        side_effect=httpx.HTTPStatusError("", request=..., response=mock_response),
     )
 
     # Verify AuthenticationError is raised

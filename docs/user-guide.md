@@ -32,10 +32,7 @@ from supermetrics import SupermetricsClient
 client = SupermetricsClient(api_key="your_api_key_here")
 
 # Create a login link for Google Analytics 4
-link = client.login_links.create(
-    ds_id="GAWA",
-    description="My Analytics Connection"
-)
+link = client.login_links.create(ds_id="GAWA", description="My Analytics Connection")
 
 print(f"Visit this URL to authenticate: {link.login_url}")
 ```
@@ -60,10 +57,7 @@ from supermetrics import SupermetricsClient
 client = SupermetricsClient(api_key="your_api_key")
 
 # Step 1: Create login link
-link = client.login_links.create(
-    ds_id="GAWA",
-    description="Q1 Analytics Report"
-)
+link = client.login_links.create(ds_id="GAWA", description="Q1 Analytics Report")
 print(f"Please authenticate at: {link.login_url}")
 
 # Wait for user to authenticate
@@ -80,10 +74,7 @@ login = client.logins.get(updated_link.login_id)
 print(f"Authenticated as: {login.username}")
 
 # Step 4: List available accounts
-accounts = client.accounts.list(
-    ds_id="GAWA",
-    login_usernames=login.username
-)
+accounts = client.accounts.list(ds_id="GAWA", login_usernames=login.username)
 print(f"Found {len(accounts)} accounts:")
 for account in accounts:
     print(f"  - {account.account_name}")
@@ -94,7 +85,7 @@ result = client.queries.execute(
     ds_accounts=[accounts[0].account_id],
     fields=["Date", "Sessions", "Users", "Pageviews"],
     start_date="2024-01-01",
-    end_date="2024-01-31"
+    end_date="2024-01-31",
 )
 
 if result and result.data:
@@ -120,17 +111,10 @@ link = client.login_links.create(ds_id="GAWA")
 from datetime import datetime, timedelta
 
 expiry = datetime.now() + timedelta(hours=2)
-link = client.login_links.create(
-    ds_id="GAWA",
-    description="Analytics for Marketing Dashboard",
-    expiry_time=expiry
-)
+link = client.login_links.create(ds_id="GAWA", description="Analytics for Marketing Dashboard", expiry_time=expiry)
 
 # With required username (force user to authenticate with specific account)
-link = client.login_links.create(
-    ds_id="google_ads",
-    require_username="marketing@company.com"
-)
+link = client.login_links.create(ds_id="google_ads", require_username="marketing@company.com")
 
 print(f"Link ID: {link.link_id}")
 print(f"Authentication URL: {link.login_url}")
@@ -205,21 +189,15 @@ Before querying, you need to know which accounts are available:
 accounts = client.accounts.list(ds_id="GAWA")
 
 # Filter by username
-accounts = client.accounts.list(
-    ds_id="GAWA",
-    login_usernames="analytics@company.com"
-)
+accounts = client.accounts.list(ds_id="GAWA", login_usernames="analytics@company.com")
 
 # Filter by multiple usernames
-accounts = client.accounts.list(
-    ds_id="google_ads",
-    login_usernames=["user1@company.com", "user2@company.com"]
-)
+accounts = client.accounts.list(ds_id="google_ads", login_usernames=["user1@company.com", "user2@company.com"])
 
 # Use cached data (faster)
 accounts = client.accounts.list(
     ds_id="GAWA",
-    cache_minutes=60  # Use cached data up to 1 hour old
+    cache_minutes=60,  # Use cached data up to 1 hour old
 )
 
 # Print account details
@@ -241,7 +219,7 @@ result = client.queries.execute(
     ds_accounts=["123456789"],
     fields=["Date", "Sessions", "Users"],
     start_date="2024-01-01",
-    end_date="2024-01-31"
+    end_date="2024-01-31",
 )
 
 # With filters
@@ -251,7 +229,7 @@ result = client.queries.execute(
     fields=["Date", "Sessions", "Users", "BounceRate"],
     start_date="2024-01-01",
     end_date="2024-01-31",
-    filter_="Sessions > 100"
+    filter_="Sessions > 100",
 )
 
 # With segments
@@ -261,7 +239,7 @@ result = client.queries.execute(
     fields=["Date", "Sessions"],
     start_date="2024-01-01",
     end_date="2024-01-31",
-    ds_segments=["segment_abc123"]
+    ds_segments=["segment_abc123"],
 )
 
 # With row limit
@@ -271,7 +249,7 @@ result = client.queries.execute(
     fields=["Date", "Sessions", "Users"],
     start_date="2024-01-01",
     end_date="2024-01-31",
-    max_rows=10000
+    max_rows=10000,
 )
 
 # Use cached results
@@ -281,7 +259,7 @@ result = client.queries.execute(
     fields=["Date", "Sessions"],
     start_date="2024-01-01",
     end_date="2024-01-31",
-    cache_minutes=30  # Use cached results up to 30 minutes old
+    cache_minutes=30,  # Use cached results up to 30 minutes old
 )
 ```
 
@@ -293,7 +271,7 @@ result = client.queries.execute(
     ds_accounts=["123456789"],
     fields=["Date", "Sessions", "Users"],
     start_date="2024-01-01",
-    end_date="2024-01-07"
+    end_date="2024-01-07",
 )
 
 # Check if query succeeded
@@ -317,6 +295,7 @@ if result and result.data:
 
     # Convert to pandas DataFrame
     import pandas as pd
+
     df = pd.DataFrame(result.data, columns=fields)
     print(df.head())
 ```
@@ -334,7 +313,7 @@ result = client.queries.execute(
     ds_accounts=["123456789"],
     fields=["Date", "Sessions", "Users"],
     start_date="2024-01-01",
-    end_date="2024-12-31"  # Large date range
+    end_date="2024-12-31",  # Large date range
 )
 
 # Check if async
@@ -370,38 +349,22 @@ Use relative date strings for dynamic queries:
 ```python
 # Today
 result = client.queries.execute(
-    ds_id="GAWA",
-    ds_accounts=["123456789"],
-    fields=["Date", "Sessions"],
-    start_date="today",
-    end_date="today"
+    ds_id="GAWA", ds_accounts=["123456789"], fields=["Date", "Sessions"], start_date="today", end_date="today"
 )
 
 # Yesterday
 result = client.queries.execute(
-    ds_id="GAWA",
-    ds_accounts=["123456789"],
-    fields=["Date", "Sessions"],
-    start_date="yesterday",
-    end_date="yesterday"
+    ds_id="GAWA", ds_accounts=["123456789"], fields=["Date", "Sessions"], start_date="yesterday", end_date="yesterday"
 )
 
 # Last 7 days
 result = client.queries.execute(
-    ds_id="GAWA",
-    ds_accounts=["123456789"],
-    fields=["Date", "Sessions"],
-    start_date="7daysago",
-    end_date="today"
+    ds_id="GAWA", ds_accounts=["123456789"], fields=["Date", "Sessions"], start_date="7daysago", end_date="today"
 )
 
 # Last 30 days
 result = client.queries.execute(
-    ds_id="GAWA",
-    ds_accounts=["123456789"],
-    fields=["Date", "Sessions"],
-    start_date="30daysago",
-    end_date="yesterday"
+    ds_id="GAWA", ds_accounts=["123456789"], fields=["Date", "Sessions"], start_date="30daysago", end_date="yesterday"
 )
 
 # This month
@@ -410,7 +373,7 @@ result = client.queries.execute(
     ds_accounts=["123456789"],
     fields=["Date", "Sessions"],
     start_date="first_day_of_month",
-    end_date="today"
+    end_date="today",
 )
 
 # Last month
@@ -419,7 +382,7 @@ result = client.queries.execute(
     ds_accounts=["123456789"],
     fields=["Date", "Sessions"],
     start_date="first_day_of_last_month",
-    end_date="last_day_of_last_month"
+    end_date="last_day_of_last_month",
 )
 ```
 
@@ -435,6 +398,7 @@ For production applications requiring high concurrency, use the async client:
 import asyncio
 from supermetrics import SupermetricsAsyncClient
 
+
 async def main():
     async with SupermetricsAsyncClient(api_key="your_key") as client:
         # All methods are async
@@ -446,11 +410,12 @@ async def main():
             ds_accounts=[accounts[0].account_id],
             fields=["Date", "Sessions", "Users"],
             start_date="2024-01-01",
-            end_date="2024-01-31"
+            end_date="2024-01-31",
         )
 
         if result and result.data:
             print(f"Retrieved {len(result.data)} rows")
+
 
 asyncio.run(main())
 ```
@@ -463,6 +428,7 @@ Execute multiple queries in parallel:
 import asyncio
 from supermetrics import SupermetricsAsyncClient
 
+
 async def fetch_data_for_account(client, account_id, start_date, end_date):
     """Fetch data for a single account."""
     result = await client.queries.execute(
@@ -470,9 +436,10 @@ async def fetch_data_for_account(client, account_id, start_date, end_date):
         ds_accounts=[account_id],
         fields=["Date", "Sessions", "Users"],
         start_date=start_date,
-        end_date=end_date
+        end_date=end_date,
     )
     return account_id, result
+
 
 async def main():
     async with SupermetricsAsyncClient(api_key="your_key") as client:
@@ -481,10 +448,7 @@ async def main():
         account_ids = [acc.account_id for acc in accounts[:5]]  # First 5
 
         # Execute queries concurrently
-        tasks = [
-            fetch_data_for_account(client, acc_id, "2024-01-01", "2024-01-31")
-            for acc_id in account_ids
-        ]
+        tasks = [fetch_data_for_account(client, acc_id, "2024-01-01", "2024-01-31") for acc_id in account_ids]
 
         results = await asyncio.gather(*tasks)
 
@@ -492,6 +456,7 @@ async def main():
         for account_id, result in results:
             if result and result.data:
                 print(f"Account {account_id}: {len(result.data)} rows")
+
 
 asyncio.run(main())
 ```
@@ -504,14 +469,17 @@ from supermetrics import SupermetricsAsyncClient, APIError
 
 app = FastAPI()
 
+
 # Initialize client once at startup
 @app.on_event("startup")
 async def startup():
     app.state.client = SupermetricsAsyncClient(api_key="your_key")
 
+
 @app.on_event("shutdown")
 async def shutdown():
     await app.state.client.close()
+
 
 @app.get("/accounts/{ds_id}")
 async def get_accounts(ds_id: str):
@@ -520,25 +488,14 @@ async def get_accounts(ds_id: str):
         accounts = await app.state.client.accounts.list(ds_id=ds_id)
         return {
             "count": len(accounts),
-            "accounts": [
-                {
-                    "id": acc.account_id,
-                    "name": acc.account_name,
-                    "group": acc.group_name
-                }
-                for acc in accounts
-            ]
+            "accounts": [{"id": acc.account_id, "name": acc.account_name, "group": acc.group_name} for acc in accounts],
         }
     except APIError as e:
         raise HTTPException(status_code=e.status_code or 500, detail=e.message)
 
+
 @app.get("/query/{ds_id}")
-async def query_data(
-    ds_id: str,
-    account_id: str,
-    start_date: str,
-    end_date: str
-):
+async def query_data(ds_id: str, account_id: str, start_date: str, end_date: str):
     """Execute a query for an account."""
     try:
         result = await app.state.client.queries.execute(
@@ -546,14 +503,14 @@ async def query_data(
             ds_accounts=[account_id],
             fields=["Date", "Sessions", "Users"],
             start_date=start_date,
-            end_date=end_date
+            end_date=end_date,
         )
 
         if result and result.data:
             return {
                 "status": result.meta.status_code if result.meta else None,
                 "rows": len(result.data),
-                "data": result.data
+                "data": result.data,
             }
         else:
             return {"status": "no_data", "rows": 0, "data": []}
@@ -585,13 +542,7 @@ async with SupermetricsAsyncClient(api_key="your_key") as client:
 Catch specific exceptions for better error handling:
 
 ```python
-from supermetrics import (
-    SupermetricsClient,
-    AuthenticationError,
-    ValidationError,
-    APIError,
-    NetworkError
-)
+from supermetrics import SupermetricsClient, AuthenticationError, ValidationError, APIError, NetworkError
 
 client = SupermetricsClient(api_key="your_key")
 
@@ -601,7 +552,7 @@ try:
         ds_accounts=["123456789"],
         fields=["Date", "Sessions"],
         start_date="2024-01-01",
-        end_date="2024-01-31"
+        end_date="2024-01-31",
     )
 except AuthenticationError:
     print("Invalid API key - check configuration")
@@ -624,10 +575,7 @@ Use `cache_minutes` to avoid redundant API calls:
 
 ```python
 # Cache account list for 1 hour
-accounts = client.accounts.list(
-    ds_id="GAWA",
-    cache_minutes=60
-)
+accounts = client.accounts.list(ds_id="GAWA", cache_minutes=60)
 
 # Cache query results for 30 minutes
 result = client.queries.execute(
@@ -636,7 +584,7 @@ result = client.queries.execute(
     fields=["Date", "Sessions"],
     start_date="2024-01-01",
     end_date="2024-01-31",
-    cache_minutes=30
+    cache_minutes=30,
 )
 ```
 
@@ -650,10 +598,7 @@ for account_id in account_ids:
     result = client.queries.execute(...)  # 1 second each
 
 # Fast: Concurrent async queries (1 second total)
-tasks = [
-    client.queries.execute(...)
-    for account_id in account_ids
-]
+tasks = [client.queries.execute(...) for account_id in account_ids]
 results = await asyncio.gather(*tasks)
 ```
 
@@ -678,6 +623,7 @@ client = SupermetricsClient(api_key=api_key)
 import time
 from supermetrics import SupermetricsClient, APIError
 
+
 def query_with_retry(client, max_retries=3, **query_params):
     """Execute query with exponential backoff on rate limits."""
     for attempt in range(max_retries):
@@ -685,11 +631,12 @@ def query_with_retry(client, max_retries=3, **query_params):
             return client.queries.execute(**query_params)
         except APIError as e:
             if e.status_code == 429 and attempt < max_retries - 1:
-                wait_time = 2 ** attempt  # 1s, 2s, 4s
+                wait_time = 2**attempt  # 1s, 2s, 4s
                 print(f"Rate limited, waiting {wait_time}s...")
                 time.sleep(wait_time)
             else:
                 raise
+
 
 client = SupermetricsClient(api_key="your_key")
 result = query_with_retry(
@@ -698,7 +645,7 @@ result = query_with_retry(
     ds_accounts=["123456789"],
     fields=["Date", "Sessions"],
     start_date="2024-01-01",
-    end_date="2024-01-31"
+    end_date="2024-01-31",
 )
 ```
 
