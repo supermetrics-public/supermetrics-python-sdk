@@ -190,6 +190,27 @@ endpoints:
   - method: GET
     path: /v1/teams/{team_id}/custom-fields/metadata
 
+  # Account Tags
+  #
+  # Core-API paths, the same shape as Custom Fields and Connector Builder: the upstream
+  # path-level server is https://api.supermetrics.com and the "/v1" lives in the path. No
+  # rewrite_path, for the same two reasons — rewriting to /teams/... would drop the /v1 the
+  # core API requires, and would move these into the shape _DTS_PATH_PATTERN inspects.
+  - method: GET
+    path: /v1/teams/{team_id}/account_tags
+  - method: POST
+    path: /v1/teams/{team_id}/account_tags
+  - method: GET
+    path: /v1/teams/{team_id}/account_tags/{name}
+  - method: PUT
+    path: /v1/teams/{team_id}/account_tags/{name}
+  - method: DELETE
+    path: /v1/teams/{team_id}/account_tags/{name}
+  - method: PATCH
+    path: /v1/teams/{team_id}/account_tags/{name}/add
+  - method: PATCH
+    path: /v1/teams/{team_id}/account_tags/{name}/remove
+
   # ==========================================
   # EXAMPLE: Endpoint with comprehensive patches
   # ==========================================

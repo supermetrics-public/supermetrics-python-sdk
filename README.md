@@ -14,7 +14,7 @@ Official Python client for Supermetrics
 * Dual sync/async support via separate Client classes
 * Pydantic v2 models for request/response validation
 * Comprehensive API coverage: login links, logins, accounts, queries, DWH transfers and
-  transfer runs, DWH backfills, custom fields, Connector Builder
+  transfer runs, DWH backfills, custom fields, account tags, Connector Builder
 * Custom exception hierarchy with HTTP status code mapping
 * Resource-based API organization
 * API key, OAuth bearer token, and dynamic token provider authentication
@@ -57,6 +57,50 @@ result = client.queries.execute(
 )
 
 print(f"Retrieved {len(result.data)} rows")
+```
+
+### Account Tags
+
+An account tag groups data source accounts from across a team's connections under one
+reusable label. A tag is addressed by `name`, the slug the server assigns it; the label
+you choose is `display_name`.
+
+```python
+from supermetrics import SupermetricsClient
+
+client = SupermetricsClient(api_key="your_api_key")
+
+# create() takes no name — the server assigns the slug and hands it back.
+tag = client.account_tags.create(
+    team_id=12345,
+    display_name="EMEA paid media",
+    color="#112233",
+    data_sources=[{"data_source_id": "AW", "accounts": [{"account_id": "123-456-7890"}]}],
+)
+print(tag.name)  # "a1b2c3d" — what every later call addresses this tag by
+
+# list() summarises membership as counts; get() returns the membership itself.
+for overview in client.account_tags.list(team_id=12345):
+    print(overview.display_name, overview.data_source_count, overview.account_count)
+
+detail = client.account_tags.get(team_id=12345, name=tag.name)
+print([selection["data_source_id"] for selection in detail.data_sources])
+
+# update() renames and recolours, and does nothing else. Both fields are required, and
+# it cannot move accounts — that is what add_accounts() and remove_accounts() are for.
+client.account_tags.update(team_id=12345, name=tag.name, display_name="EMEA paid", color="#445566")
+
+client.account_tags.add_accounts(
+    team_id=12345,
+    name=tag.name,
+    data_sources=[{"data_source_id": "FB", "accounts": [{"account_id": "act_99"}]}],
+)
+
+# delete() returns a bool, not None: deletion is idempotent upstream, so deleting a tag
+# that is already gone is a success answering False rather than a 404. No operation in
+# this domain answers 404 at all.
+print(client.account_tags.delete(team_id=12345, name=tag.name))  # True
+print(client.account_tags.delete(team_id=12345, name=tag.name))  # False
 ```
 
 ### Connector Builder

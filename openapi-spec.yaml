@@ -2017,6 +2017,455 @@ paths:
       description: Global production public Supermetrics Data Warehouse Transfers
         API base path.
       x-internal: false
+  /v1/teams/{team_id}/account_tags:
+    get:
+      summary: List all account tags in a team
+      description: List all account tags in a team
+      operationId: fetchAvailableAccountGroups
+      security:
+      - ApiKeyAuth:
+        - account_tags_read
+      parameters:
+      - name: team_id
+        in: path
+        required: true
+        description: The ID of the team
+        example: 936506
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+      responses:
+        '200':
+          description: Account tags retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountTagListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Account Tags
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
+    post:
+      summary: Create a new account tag
+      description: Create a new account tag
+      operationId: createAccountGroup
+      security:
+      - ApiKeyAuth:
+        - account_tags_write
+      x-validate_role:
+      - owner
+      - admin
+      parameters:
+      - name: team_id
+        in: path
+        required: true
+        description: The ID of the team
+        example: 936506
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+      requestBody:
+        required: true
+        description: Account tag creation details
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+              - display_name
+              - color
+              - data_sources
+              properties:
+                display_name:
+                  type: string
+                  maxLength: 255
+                  description: Display name for the new account tag
+                color:
+                  type: string
+                  maxLength: 50
+                  description: Color for the new account tag
+                data_sources:
+                  type: array
+                  maxItems: 100
+                  description: Array of data sources and connections
+                  items:
+                    type: object
+            example:
+              display_name: EMEA paid media
+              color: '#112233'
+              data_sources:
+              - data_source_id: AW
+                accounts:
+                - account_id: 123-456-7890
+      responses:
+        '200':
+          description: Account tag created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountTagResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Account Tags
+  /v1/teams/{team_id}/account_tags/{name}:
+    get:
+      summary: Fetch a single account tag by name
+      description: Fetch a single account tag by name
+      operationId: fetchAccountGroup
+      security:
+      - ApiKeyAuth:
+        - account_tags_read
+      parameters:
+      - name: team_id
+        in: path
+        required: true
+        description: The ID of the team
+        example: 936506
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+      - name: name
+        in: path
+        required: true
+        description: The unique name of the account tag
+        example: a1b2c3d
+        schema:
+          type: string
+          maxLength: 100
+      responses:
+        '200':
+          description: Account tag retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountTagResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Account Tags
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
+    put:
+      summary: Update an account tag
+      description: Update an account tag
+      operationId: updateAccountGroup
+      security:
+      - ApiKeyAuth:
+        - account_tags_write
+      x-validate_role:
+      - owner
+      - admin
+      parameters:
+      - name: team_id
+        in: path
+        required: true
+        description: The ID of the team
+        example: 936506
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+      - name: name
+        in: path
+        required: true
+        description: The unique name of the account tag
+        example: a1b2c3d
+        schema:
+          type: string
+          maxLength: 100
+      requestBody:
+        required: true
+        description: Account tag update details
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+              - display_name
+              - color
+              properties:
+                display_name:
+                  type: string
+                  maxLength: 255
+                  description: Display name for the account tag
+                color:
+                  type: string
+                  maxLength: 50
+                  description: Color for the account tag
+            example:
+              display_name: EMEA paid media
+              color: '#112233'
+      responses:
+        '200':
+          description: Account tag updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountTagResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Account Tags
+    delete:
+      summary: Delete an account tag
+      description: Delete an account tag
+      operationId: deleteAccountGroup
+      security:
+      - ApiKeyAuth:
+        - account_tags_write
+      x-validate_role:
+      - owner
+      - admin
+      parameters:
+      - name: team_id
+        in: path
+        required: true
+        description: The ID of the team
+        example: 936506
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+      - name: name
+        in: path
+        required: true
+        description: The unique name of the account tag
+        example: a1b2c3d
+        schema:
+          type: string
+          maxLength: 100
+      responses:
+        '200':
+          description: 'Account tag deletion result. Deletion is idempotent: deleting
+            a tag that does not exist returns 200 with result=false rather than 404.'
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      result:
+                        type: boolean
+                        description: True when the account tag was deleted; false
+                          when no tag with that name existed
+                        example: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Account Tags
+  /v1/teams/{team_id}/account_tags/{name}/add:
+    patch:
+      summary: Add accounts to an account tag
+      description: Add accounts to an account tag
+      operationId: appendAccountsToGroup
+      security:
+      - ApiKeyAuth:
+        - account_tags_write
+      x-validate_role:
+      - owner
+      - admin
+      parameters:
+      - name: team_id
+        in: path
+        required: true
+        description: The ID of the team
+        example: 936506
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+      - name: name
+        in: path
+        required: true
+        description: The unique name of the account tag
+        example: a1b2c3d
+        schema:
+          type: string
+          maxLength: 100
+      requestBody:
+        required: true
+        description: Accounts to add to the tag
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+              - data_sources
+              properties:
+                data_sources:
+                  type: array
+                  maxItems: 100
+                  description: Array of data sources and connections
+                  items:
+                    type: object
+            example:
+              data_sources:
+              - data_source_id: AW
+                accounts:
+                - account_id: 123-456-7890
+      responses:
+        '200':
+          description: Accounts added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountTagResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Account Tags
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
+  /v1/teams/{team_id}/account_tags/{name}/remove:
+    patch:
+      summary: Remove accounts from an account tag
+      description: Remove accounts from an account tag
+      operationId: removeAccountsFromGroup
+      security:
+      - ApiKeyAuth:
+        - account_tags_write
+      x-validate_role:
+      - owner
+      - admin
+      parameters:
+      - name: team_id
+        in: path
+        required: true
+        description: The ID of the team
+        example: 936506
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+      - name: name
+        in: path
+        required: true
+        description: The unique name of the account tag
+        example: a1b2c3d
+        schema:
+          type: string
+          maxLength: 100
+      requestBody:
+        required: true
+        description: Accounts to remove from the tag
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+              - data_sources
+              properties:
+                data_sources:
+                  type: array
+                  maxItems: 100
+                  description: Array of data sources and connections
+                  items:
+                    type: object
+            example:
+              data_sources:
+              - data_source_id: AW
+                accounts:
+                - account_id: 123-456-7890
+      responses:
+        '200':
+          description: Accounts removed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountTagResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Account Tags
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
   /v1/teams/{team_id}/connector_builder/connectors:
     get:
       summary: List connectors
@@ -2817,6 +3266,56 @@ paths:
       description: production server
       x-internal: false
   /v1/teams/{team_id}/custom-fields/{custom_field_id}:
+    delete:
+      summary: Remove an existing custom field
+      description: Remove an existing custom field. Returns HTTP 204 No Content on
+        success.
+      operationId: deleteTransformation
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - name: custom_field_id
+        in: path
+        required: true
+        description: ID of the custom field
+        example: 42
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+      - name: Sm-App-Id
+        in: header
+        required: false
+        description: Application identifier
+        schema:
+          type: string
+          maxLength: 100
+          pattern: ^[A-Za-z0-9_-]+$
+        example: XPLD
+      responses:
+        '204':
+          description: Transformation deleted successfully (no content)
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth:
+        - custom_fields_write
+      tags:
+      - Custom Fields
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
     get:
       summary: Fetch an existing custom field
       description: Fetch an existing custom field by name
@@ -2866,10 +3365,6 @@ paths:
         - custom_fields_read
       tags:
       - Custom Fields
-    servers:
-    - url: https://api.supermetrics.com
-      description: production server
-      x-internal: false
     put:
       summary: Update an existing custom field
       description: Update an existing custom field
@@ -2938,52 +3433,6 @@ paths:
         - custom_fields_write
       tags:
       - Custom Fields
-    delete:
-      summary: Remove an existing custom field
-      description: Remove an existing custom field. Returns HTTP 204 No Content on
-        success.
-      operationId: deleteTransformation
-      parameters:
-      - $ref: '#/components/parameters/TeamId'
-      - name: custom_field_id
-        in: path
-        required: true
-        description: ID of the custom field
-        example: 42
-        schema:
-          type: integer
-          format: int64
-          minimum: 1
-          maximum: 9223372036854776000
-      - name: Sm-App-Id
-        in: header
-        required: false
-        description: Application identifier
-        schema:
-          type: string
-          maxLength: 100
-          pattern: ^[A-Za-z0-9_-]+$
-        example: XPLD
-      responses:
-        '204':
-          description: Transformation deleted successfully (no content)
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/PermissionDenied'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-      security:
-      - ApiKeyAuth:
-        - custom_fields_write
-      tags:
-      - Custom Fields
 components:
   schemas:
     AbstractResponse:
@@ -2995,6 +3444,98 @@ components:
           $ref: '#/components/schemas/Meta'
       required:
       - meta
+    AccountTag:
+      type: object
+      additionalProperties: false
+      example:
+        name: a1b2c3d
+        display_name: EMEA paid media
+        color: '#112233'
+        data_sources:
+        - data_source_id: AW
+          accounts:
+          - account_id: 123-456-7890
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          description: The unique name of the account tag
+          example: a1b2c3d
+        display_name:
+          type: string
+          maxLength: 255
+          description: Human-readable name of the account tag
+          example: EMEA paid media
+        color:
+          type: string
+          maxLength: 50
+          description: Display color of the account tag
+          example: '#112233'
+        data_sources:
+          type: array
+          maxItems: 100
+          description: Data sources and their accounts belonging to the tag
+          items:
+            type: object
+          example:
+          - data_source_id: AW
+            accounts:
+            - account_id: 123-456-7890
+    AccountTagListResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          maxItems: 500
+          description: The list of account tags
+          items:
+            $ref: '#/components/schemas/AccountTagOverview'
+          example:
+          - name: a1b2c3d
+            display_name: EMEA paid media
+            color: '#112233'
+            data_source_count: 3
+            account_count: 42
+    AccountTagOverview:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          description: The unique name of the account tag
+          example: a1b2c3d
+        display_name:
+          type: string
+          maxLength: 255
+          description: Human-readable name of the account tag
+          example: EMEA paid media
+        color:
+          type: string
+          maxLength: 50
+          description: Display color of the account tag
+          example: '#112233'
+        data_source_count:
+          type: integer
+          format: int64
+          minimum: 0
+          maximum: 9223372036854776000
+          description: Number of data sources represented in the tag
+          example: 3
+        account_count:
+          type: integer
+          format: int64
+          minimum: 0
+          maximum: 9223372036854776000
+          description: Number of accounts in the tag
+          example: 42
+    AccountTagResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        data:
+          $ref: '#/components/schemas/AccountTag'
     AvailableSourcesResponse:
       type: object
       description: Available data sources and destinations for Hub transfers

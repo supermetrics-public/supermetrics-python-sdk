@@ -11,6 +11,7 @@ from supermetrics._auth import AuthConfig, TokenProvider, resolve_auth_config
 from supermetrics._generated.supermetrics_api_client.client import Client as GeneratedClient
 from supermetrics._transport import build_default_headers, build_sync_event_hooks, resolve_dts_base_url
 from supermetrics.resources._raw import SupermetricsClientWithRawResponse
+from supermetrics.resources.account_tags import AccountTagsResource
 from supermetrics.resources.accounts import AccountsResource
 from supermetrics.resources.backfills import BackfillsResource
 from supermetrics.resources.connector_builder import ConnectorBuilderResource
@@ -152,6 +153,7 @@ class SupermetricsClient:
         self.transfers = TransfersResource(self._client)
         self.transfer_runs = TransferRunsResource(self._client)
         self.custom_fields = CustomFieldsResource(self._client)
+        self.account_tags = AccountTagsResource(self._client)
 
         self._with_raw_response: SupermetricsClientWithRawResponse | None = None
 

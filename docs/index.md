@@ -9,7 +9,8 @@ The Supermetrics Python SDK is a type-safe Python client that provides seamless 
 - Type-safe Python client generated from OpenAPI specification
 - Dual sync/async support via separate Client classes
 - Pydantic v2 models for request/response validation
-- Comprehensive API coverage: login links, logins, accounts, queries
+- Comprehensive API coverage: login links, logins, accounts, queries, DWH transfers and
+  transfer runs, DWH backfills, custom fields, account tags, Connector Builder
 - Custom exception hierarchy with HTTP status code mapping
 - Resource-based API organization
 - API key, OAuth bearer token, and dynamic token provider authentication
@@ -63,7 +64,8 @@ result = client.queries.execute(
 
 - [API Reference](api-reference.md) - Complete API documentation including:
   - Client classes (sync and async)
-  - Resource methods (login links, logins, accounts, queries)
+  - Resource methods (login links, logins, accounts, queries, transfers, transfer runs,
+    backfills, custom fields, account tags)
   - Models and types
   - Exception classes
 
@@ -152,6 +154,11 @@ client.accounts.list(...)
 
 client.queries.execute(...)
 client.queries.get_results(...)
+
+client.account_tags.list(...)
+client.account_tags.get(...)
+client.account_tags.create(...)
+client.account_tags.add_accounts(...)
 ```
 
 ## Supported Data Sources

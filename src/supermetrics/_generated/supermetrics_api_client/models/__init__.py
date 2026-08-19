@@ -1,6 +1,21 @@
 """Contains all the data models used in inputs/outputs"""
 
 from .abstract_response import AbstractResponse
+from .account_tag import AccountTag
+from .account_tag_data_sources_item import AccountTagDataSourcesItem
+from .account_tag_list_response import AccountTagListResponse
+from .account_tag_overview import AccountTagOverview
+from .account_tag_response import AccountTagResponse
+from .append_accounts_to_group_body import AppendAccountsToGroupBody
+from .append_accounts_to_group_body_data_sources_item import AppendAccountsToGroupBodyDataSourcesItem
+from .append_accounts_to_group_response_400 import AppendAccountsToGroupResponse400
+from .append_accounts_to_group_response_400_meta import AppendAccountsToGroupResponse400Meta
+from .append_accounts_to_group_response_401 import AppendAccountsToGroupResponse401
+from .append_accounts_to_group_response_401_meta import AppendAccountsToGroupResponse401Meta
+from .append_accounts_to_group_response_429 import AppendAccountsToGroupResponse429
+from .append_accounts_to_group_response_429_meta import AppendAccountsToGroupResponse429Meta
+from .append_accounts_to_group_response_500 import AppendAccountsToGroupResponse500
+from .append_accounts_to_group_response_500_meta import AppendAccountsToGroupResponse500Meta
 from .available_sources_response import AvailableSourcesResponse
 from .backfill import Backfill
 from .backfill_response import BackfillResponse
@@ -39,6 +54,18 @@ from .connector import Connector
 from .connector_configuration import ConnectorConfiguration
 from .connector_configuration_configuration_json import ConnectorConfigurationConfigurationJson
 from .connector_with_configuration import ConnectorWithConfiguration
+from .create_account_group_body import CreateAccountGroupBody
+from .create_account_group_body_data_sources_item import CreateAccountGroupBodyDataSourcesItem
+from .create_account_group_response_400 import CreateAccountGroupResponse400
+from .create_account_group_response_400_meta import CreateAccountGroupResponse400Meta
+from .create_account_group_response_401 import CreateAccountGroupResponse401
+from .create_account_group_response_401_meta import CreateAccountGroupResponse401Meta
+from .create_account_group_response_409 import CreateAccountGroupResponse409
+from .create_account_group_response_409_meta import CreateAccountGroupResponse409Meta
+from .create_account_group_response_429 import CreateAccountGroupResponse429
+from .create_account_group_response_429_meta import CreateAccountGroupResponse429Meta
+from .create_account_group_response_500 import CreateAccountGroupResponse500
+from .create_account_group_response_500_meta import CreateAccountGroupResponse500Meta
 from .create_backfill_request import CreateBackfillRequest
 from .create_backfill_response_400 import CreateBackfillResponse400
 from .create_backfill_response_400_meta import CreateBackfillResponse400Meta
@@ -164,6 +191,16 @@ from .datasource_setting_context import DatasourceSettingContext
 from .datasource_setting_type import DatasourceSettingType
 from .definition_value import DefinitionValue
 from .definition_value_type import DefinitionValueType
+from .delete_account_group_response_200 import DeleteAccountGroupResponse200
+from .delete_account_group_response_200_data import DeleteAccountGroupResponse200Data
+from .delete_account_group_response_400 import DeleteAccountGroupResponse400
+from .delete_account_group_response_400_meta import DeleteAccountGroupResponse400Meta
+from .delete_account_group_response_401 import DeleteAccountGroupResponse401
+from .delete_account_group_response_401_meta import DeleteAccountGroupResponse401Meta
+from .delete_account_group_response_429 import DeleteAccountGroupResponse429
+from .delete_account_group_response_429_meta import DeleteAccountGroupResponse429Meta
+from .delete_account_group_response_500 import DeleteAccountGroupResponse500
+from .delete_account_group_response_500_meta import DeleteAccountGroupResponse500Meta
 from .delete_connector_response_400 import DeleteConnectorResponse400
 from .delete_connector_response_400_meta import DeleteConnectorResponse400Meta
 from .delete_connector_response_401 import DeleteConnectorResponse401
@@ -212,6 +249,22 @@ from .destination_type_settings_settings_item import DestinationTypeSettingsSett
 from .error import Error
 from .error_response import ErrorResponse
 from .error_response_meta import ErrorResponseMeta
+from .fetch_account_group_response_400 import FetchAccountGroupResponse400
+from .fetch_account_group_response_400_meta import FetchAccountGroupResponse400Meta
+from .fetch_account_group_response_401 import FetchAccountGroupResponse401
+from .fetch_account_group_response_401_meta import FetchAccountGroupResponse401Meta
+from .fetch_account_group_response_429 import FetchAccountGroupResponse429
+from .fetch_account_group_response_429_meta import FetchAccountGroupResponse429Meta
+from .fetch_account_group_response_500 import FetchAccountGroupResponse500
+from .fetch_account_group_response_500_meta import FetchAccountGroupResponse500Meta
+from .fetch_available_account_groups_response_400 import FetchAvailableAccountGroupsResponse400
+from .fetch_available_account_groups_response_400_meta import FetchAvailableAccountGroupsResponse400Meta
+from .fetch_available_account_groups_response_401 import FetchAvailableAccountGroupsResponse401
+from .fetch_available_account_groups_response_401_meta import FetchAvailableAccountGroupsResponse401Meta
+from .fetch_available_account_groups_response_429 import FetchAvailableAccountGroupsResponse429
+from .fetch_available_account_groups_response_429_meta import FetchAvailableAccountGroupsResponse429Meta
+from .fetch_available_account_groups_response_500 import FetchAvailableAccountGroupsResponse500
+from .fetch_available_account_groups_response_500_meta import FetchAvailableAccountGroupsResponse500Meta
 from .fetch_metadata_response_400 import FetchMetadataResponse400
 from .fetch_metadata_response_400_meta import FetchMetadataResponse400Meta
 from .fetch_metadata_response_401 import FetchMetadataResponse401
@@ -490,6 +543,16 @@ from .paginated_transformations_output_data import PaginatedTransformationsOutpu
 from .pagination import Pagination
 from .pagination_links import PaginationLinks
 from .query_details import QueryDetails
+from .remove_accounts_from_group_body import RemoveAccountsFromGroupBody
+from .remove_accounts_from_group_body_data_sources_item import RemoveAccountsFromGroupBodyDataSourcesItem
+from .remove_accounts_from_group_response_400 import RemoveAccountsFromGroupResponse400
+from .remove_accounts_from_group_response_400_meta import RemoveAccountsFromGroupResponse400Meta
+from .remove_accounts_from_group_response_401 import RemoveAccountsFromGroupResponse401
+from .remove_accounts_from_group_response_401_meta import RemoveAccountsFromGroupResponse401Meta
+from .remove_accounts_from_group_response_429 import RemoveAccountsFromGroupResponse429
+from .remove_accounts_from_group_response_429_meta import RemoveAccountsFromGroupResponse429Meta
+from .remove_accounts_from_group_response_500 import RemoveAccountsFromGroupResponse500
+from .remove_accounts_from_group_response_500_meta import RemoveAccountsFromGroupResponse500Meta
 from .resource_url import ResourceUrl
 from .response_meta import ResponseMeta
 from .rule_output import RuleOutput
@@ -538,6 +601,15 @@ from .transfer_segment import TransferSegment
 from .transfer_state_update_response import TransferStateUpdateResponse
 from .transfer_updated_response import TransferUpdatedResponse
 from .transformation_user_output import TransformationUserOutput
+from .update_account_group_body import UpdateAccountGroupBody
+from .update_account_group_response_400 import UpdateAccountGroupResponse400
+from .update_account_group_response_400_meta import UpdateAccountGroupResponse400Meta
+from .update_account_group_response_401 import UpdateAccountGroupResponse401
+from .update_account_group_response_401_meta import UpdateAccountGroupResponse401Meta
+from .update_account_group_response_429 import UpdateAccountGroupResponse429
+from .update_account_group_response_429_meta import UpdateAccountGroupResponse429Meta
+from .update_account_group_response_500 import UpdateAccountGroupResponse500
+from .update_account_group_response_500_meta import UpdateAccountGroupResponse500Meta
 from .update_backfill_status_body import UpdateBackfillStatusBody
 from .update_backfill_status_body_status import UpdateBackfillStatusBodyStatus
 from .update_backfill_status_response_400 import UpdateBackfillStatusResponse400
@@ -652,6 +724,21 @@ from .validation_errors_response import ValidationErrorsResponse
 
 __all__ = (
     "AbstractResponse",
+    "AccountTag",
+    "AccountTagDataSourcesItem",
+    "AccountTagListResponse",
+    "AccountTagOverview",
+    "AccountTagResponse",
+    "AppendAccountsToGroupBody",
+    "AppendAccountsToGroupBodyDataSourcesItem",
+    "AppendAccountsToGroupResponse400",
+    "AppendAccountsToGroupResponse400Meta",
+    "AppendAccountsToGroupResponse401",
+    "AppendAccountsToGroupResponse401Meta",
+    "AppendAccountsToGroupResponse429",
+    "AppendAccountsToGroupResponse429Meta",
+    "AppendAccountsToGroupResponse500",
+    "AppendAccountsToGroupResponse500Meta",
     "AvailableSourcesResponse",
     "Backfill",
     "BackfillResponse",
@@ -690,6 +777,18 @@ __all__ = (
     "ConnectorConfiguration",
     "ConnectorConfigurationConfigurationJson",
     "ConnectorWithConfiguration",
+    "CreateAccountGroupBody",
+    "CreateAccountGroupBodyDataSourcesItem",
+    "CreateAccountGroupResponse400",
+    "CreateAccountGroupResponse400Meta",
+    "CreateAccountGroupResponse401",
+    "CreateAccountGroupResponse401Meta",
+    "CreateAccountGroupResponse409",
+    "CreateAccountGroupResponse409Meta",
+    "CreateAccountGroupResponse429",
+    "CreateAccountGroupResponse429Meta",
+    "CreateAccountGroupResponse500",
+    "CreateAccountGroupResponse500Meta",
     "CreateBackfillRequest",
     "CreateBackfillResponse400",
     "CreateBackfillResponse400Meta",
@@ -815,6 +914,16 @@ __all__ = (
     "DataSourceType",
     "DefinitionValue",
     "DefinitionValueType",
+    "DeleteAccountGroupResponse200",
+    "DeleteAccountGroupResponse200Data",
+    "DeleteAccountGroupResponse400",
+    "DeleteAccountGroupResponse400Meta",
+    "DeleteAccountGroupResponse401",
+    "DeleteAccountGroupResponse401Meta",
+    "DeleteAccountGroupResponse429",
+    "DeleteAccountGroupResponse429Meta",
+    "DeleteAccountGroupResponse500",
+    "DeleteAccountGroupResponse500Meta",
     "DeleteConnectorResponse400",
     "DeleteConnectorResponse400Meta",
     "DeleteConnectorResponse401",
@@ -863,6 +972,22 @@ __all__ = (
     "Error",
     "ErrorResponse",
     "ErrorResponseMeta",
+    "FetchAccountGroupResponse400",
+    "FetchAccountGroupResponse400Meta",
+    "FetchAccountGroupResponse401",
+    "FetchAccountGroupResponse401Meta",
+    "FetchAccountGroupResponse429",
+    "FetchAccountGroupResponse429Meta",
+    "FetchAccountGroupResponse500",
+    "FetchAccountGroupResponse500Meta",
+    "FetchAvailableAccountGroupsResponse400",
+    "FetchAvailableAccountGroupsResponse400Meta",
+    "FetchAvailableAccountGroupsResponse401",
+    "FetchAvailableAccountGroupsResponse401Meta",
+    "FetchAvailableAccountGroupsResponse429",
+    "FetchAvailableAccountGroupsResponse429Meta",
+    "FetchAvailableAccountGroupsResponse500",
+    "FetchAvailableAccountGroupsResponse500Meta",
     "FetchMetadataResponse400",
     "FetchMetadataResponse400Meta",
     "FetchMetadataResponse401",
@@ -1141,6 +1266,16 @@ __all__ = (
     "Pagination",
     "PaginationLinks",
     "QueryDetails",
+    "RemoveAccountsFromGroupBody",
+    "RemoveAccountsFromGroupBodyDataSourcesItem",
+    "RemoveAccountsFromGroupResponse400",
+    "RemoveAccountsFromGroupResponse400Meta",
+    "RemoveAccountsFromGroupResponse401",
+    "RemoveAccountsFromGroupResponse401Meta",
+    "RemoveAccountsFromGroupResponse429",
+    "RemoveAccountsFromGroupResponse429Meta",
+    "RemoveAccountsFromGroupResponse500",
+    "RemoveAccountsFromGroupResponse500Meta",
     "ResourceUrl",
     "ResponseMeta",
     "RuleOutput",
@@ -1187,6 +1322,15 @@ __all__ = (
     "TransferStateUpdateResponse",
     "TransferUpdatedResponse",
     "TransformationUserOutput",
+    "UpdateAccountGroupBody",
+    "UpdateAccountGroupResponse400",
+    "UpdateAccountGroupResponse400Meta",
+    "UpdateAccountGroupResponse401",
+    "UpdateAccountGroupResponse401Meta",
+    "UpdateAccountGroupResponse429",
+    "UpdateAccountGroupResponse429Meta",
+    "UpdateAccountGroupResponse500",
+    "UpdateAccountGroupResponse500Meta",
     "UpdateBackfillStatusBody",
     "UpdateBackfillStatusBodyStatus",
     "UpdateBackfillStatusResponse400",
