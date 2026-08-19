@@ -310,6 +310,25 @@ client.blends.update(
 client.blends.delete(team_id=12345, blend_id=blend.blend_id)
 ```
 
+### Teams
+
+Read-only access to a team's identity and its members. Both calls are served by the core
+API host.
+
+```python
+from supermetrics import SupermetricsClient
+
+client = SupermetricsClient(api_key="your_api_key")
+
+# Fetch a team's identity
+team = client.teams.get(team_id=12345)
+print(f"{team.team_id}: {team.name} ({team.status})")
+
+# List the team's members
+for user in client.teams.list_users(team_id=12345):
+    print(f"{user.email} ({user.role})")
+```
+
 ### Data Warehouse Transfers
 
 Transfers, transfer runs and backfills are served by the Data Warehouse API on a separate

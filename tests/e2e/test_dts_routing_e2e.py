@@ -26,6 +26,10 @@ from .conftest import (
     BLENDS_COLLECTION,
     BLENDS_ITEM,
     LOGINS_LIST_BODY,
+    TEAM_GET_BODY,
+    TEAM_ITEM,
+    TEAM_USERS,
+    TEAM_USERS_BODY,
     TRANSFER_RUN_DETAIL_BODY,
     TRANSFERS_LIST_BODY,
     MockAPIServer,
@@ -317,6 +321,29 @@ class TestRequestsReachTheRightHost:
             "/ds/login/link/link_123",
         ]
 
+    def test_teams_are_not_routed(self, api_server: MockAPIServer, dts_server: MockAPIServer) -> None:
+        """Teams are a core-API domain and must never reach the Data Warehouse host.
+
+        Their paths are ``/v1/teams/{id}`` and ``/v1/teams/{id}/users``. ``_DTS_PATH_PATTERN``
+        is anchored ``^/teams/`` and its alternation names only the Data Warehouse segments,
+        so a ``/v1/teams/…`` path cannot match on either count — which is exactly why the
+        spec filter gives these endpoints no ``rewrite_path``. Both methods are checked
+        because the routing hook sees the request, not the method.
+        """
+        api_server.route(TEAM_ITEM, ScriptedResponse(json_body=TEAM_GET_BODY))
+        api_server.route(TEAM_USERS, ScriptedResponse(json_body=TEAM_USERS_BODY))
+
+        with SupermetricsClient(
+            api_key="api_k",
+            base_url=api_server.base_url,
+            dts_base_url=f"{dts_server.base_url}/v1",
+        ) as client:
+            client.teams.get(team_id=42)
+            client.teams.list_users(team_id=42)
+
+        assert dts_server.requests == [], "the DTS server must not have seen these requests"
+        assert [urlsplit(request.path).path for request in api_server.requests] == [TEAM_ITEM, TEAM_USERS]
+
     def test_unset_dts_base_url_sends_everything_to_base_url(
         self, api_server: MockAPIServer, dts_server: MockAPIServer
     ) -> None:
@@ -453,6 +480,23 @@ class TestAsyncRouting:
 
         assert dts_server.requests == []
         assert urlsplit(api_server.last_request.path).path == BLENDS_COLLECTION
+
+    @pytest.mark.asyncio
+    async def test_teams_are_not_routed(self, api_server: MockAPIServer, dts_server: MockAPIServer) -> None:
+        """The async client keeps teams on the core host too."""
+        api_server.route(TEAM_ITEM, ScriptedResponse(json_body=TEAM_GET_BODY))
+        api_server.route(TEAM_USERS, ScriptedResponse(json_body=TEAM_USERS_BODY))
+
+        async with SupermetricsAsyncClient(
+            api_key="api_k",
+            base_url=api_server.base_url,
+            dts_base_url=f"{dts_server.base_url}/v1",
+        ) as client:
+            await client.teams.get(team_id=42)
+            await client.teams.list_users(team_id=42)
+
+        assert dts_server.requests == []
+        assert [urlsplit(request.path).path for request in api_server.requests] == [TEAM_ITEM, TEAM_USERS]
 
     @pytest.mark.asyncio
     async def test_destinations_go_to_the_dts_server(

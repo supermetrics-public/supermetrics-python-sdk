@@ -529,6 +529,63 @@ BLEND_LIST_BODY: dict[str, Any] = {
 BLEND_EMPTY_LIST_BODY: dict[str, Any] = {"meta": META, "data": {}}
 
 
+# --- Teams & user identity ----------------------------------------------------
+#
+# Teams live on the CORE api host under a "/v1" path prefix — the same shape as custom
+# fields, account tags and blends, and the opposite of transfers. Route strings here
+# therefore include the "/v1"; a dropped prefix or an accidental re-host to the Data
+# Warehouse host would leave them unmatched and surface as the server's default 404.
+#
+# Both responses are wrapped in {"meta": ..., "data": ...}. Unlike account tags, `data`
+# is required on these two schemas, so an empty team is `{"data": []}`, never a body with
+# no `data` key at all.
+
+#: The two team routes, for team 42.
+TEAM_ITEM = "/v1/teams/42"
+TEAM_USERS = "/v1/teams/42/users"
+
+#: One team as GET /v1/teams/{team_id} returns it, under `data`. `created_at` is an ISO
+#: 8601 timestamp with a numeric "+00:00" offset, and `display_id` is the SM_-prefixed
+#: human-readable identifier.
+TEAM_PAYLOAD: dict[str, Any] = {
+    "team_id": 42,
+    "name": "My Team",
+    "display_id": "SM_ABC123",
+    "status": 1,
+    "created_at": "2026-01-01T00:00:00+00:00",
+}
+
+#: GET a single team — wrapped in {meta, data}.
+TEAM_GET_BODY: dict[str, Any] = {"meta": META, "data": TEAM_PAYLOAD}
+
+#: The first member of a team, an administrator.
+TEAM_USER_PAYLOAD: dict[str, Any] = {
+    "user_id": 1,
+    "email": "user@example.com",
+    "first_name": "John",
+    "last_name": "Doe",
+    "role": "ADMIN",
+    "created_at": "2026-01-01T00:00:00+00:00",
+}
+
+#: A second member, a plain user, so a list assertion has more than one row to check.
+TEAM_MEMBER_PAYLOAD: dict[str, Any] = {
+    "user_id": 2,
+    "email": "member@example.com",
+    "first_name": "Jane",
+    "last_name": "Roe",
+    "role": "MEMBER",
+    "created_at": "2026-02-01T00:00:00+00:00",
+}
+
+#: GET /v1/teams/{team_id}/users — wrapped, with `data` a bare array. This endpoint is not
+#: paginated, so `meta` carries a request id and nothing else.
+TEAM_USERS_BODY: dict[str, Any] = {"meta": META, "data": [TEAM_USER_PAYLOAD, TEAM_MEMBER_PAYLOAD]}
+
+#: An empty team. `data` is a required array on this schema, so empty is `[]`, not absent.
+TEAM_USERS_EMPTY_BODY: dict[str, Any] = {"meta": META, "data": []}
+
+
 @dataclass(frozen=True)
 class RecordedRequest:
     """A request as the server actually received it.
@@ -852,4 +909,24 @@ def blends_server(api_server: MockAPIServer) -> MockAPIServer:
     """
     api_server.route(BLENDS_COLLECTION, ScriptedResponse(json_body=BLEND_LIST_BODY))
     api_server.route(BLENDS_ITEM, ScriptedResponse(json_body=BLEND_SINGLE_BODY))
+    return api_server
+
+
+@pytest.fixture
+def teams_server(api_server: MockAPIServer) -> MockAPIServer:
+    """A server with both team routes wired to successful responses.
+
+    The paths carry the ``/v1`` prefix because teams are served from the core API host,
+    where the version lives in the path. Getting this wrong surfaces as a
+    ``SupermetricsNotFoundError`` from the server's default 404 route rather than as an
+    obvious fixture mistake.
+
+    Note:
+        The item route answers a single team and the users route answers a two-member
+        list. Tests that need an empty team, or a specific failure status, re-route the
+        path themselves — the last response passed to ``route`` repeats, so overriding one
+        route leaves the other intact.
+    """
+    api_server.route(TEAM_ITEM, ScriptedResponse(json_body=TEAM_GET_BODY))
+    api_server.route(TEAM_USERS, ScriptedResponse(json_body=TEAM_USERS_BODY))
     return api_server

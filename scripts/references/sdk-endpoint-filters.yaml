@@ -275,6 +275,18 @@ endpoints:
   - method: DELETE
     path: /v1/teams/{team_id}/data-blending/blends/{blend_id}
 
+  # Teams & User Identity Discovery
+  #
+  # Core-API paths, the same shape as Custom Fields / Account Tags / Blends: the upstream
+  # path-level server is https://api.supermetrics.com and the "/v1" already sits in the
+  # path key. No rewrite_path, for the same two reasons — rewriting to /teams/... would
+  # drop the /v1 the core API requires, and it would move these paths into the shape
+  # _DTS_PATH_PATTERN matches, sending a core-API call to the Data Warehouse host.
+  - method: GET
+    path: /v1/teams/{team_id}
+  - method: GET
+    path: /v1/teams/{team_id}/users
+
   # ==========================================
   # EXAMPLE: Endpoint with comprehensive patches
   # ==========================================
