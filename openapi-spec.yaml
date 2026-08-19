@@ -43,6 +43,10 @@ servers:
 - url: https://api.supermetrics.com
   description: production server
   x-internal: false
+- url: https://dts-api.supermetrics.com/v1
+  description: Global production public Supermetrics Data Warehouse Destinations API
+    base path.
+  x-internal: false
 paths:
   /ds/login/link:
     post:
@@ -977,6 +981,344 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /teams/{team_id}/destinations:
+    get:
+      summary: List destinations
+      description: List all data warehouse destinations for a team
+      operationId: listDestinations
+      tags:
+      - Data Destinations
+      responses:
+        '200':
+          description: Destinations retrieved successfully
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DestinationListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
+    parameters:
+    - $ref: '#/components/parameters/TeamId'
+    servers:
+    - url: https://dts-api.supermetrics.com/v1
+      description: Global production public Supermetrics Data Warehouse Destinations
+        API base path.
+      x-internal: false
+    post:
+      summary: Create destination
+      description: Create a new data warehouse destination
+      operationId: createDestination
+      tags:
+      - Data Destinations
+      requestBody:
+        required: true
+        description: Destination configuration
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDestinationRequest'
+            example:
+              type: DWH_SNOWFLAKE
+              display_name: My Snowflake Destination
+              auth_method: AUTH_METHOD_KEY_PAIR
+              fields:
+                hostname: any-domain.my-region.snowflakecomputing.com
+                warehouse: DEMO_WH
+                database_name: TEST_DB
+                schema: PUBLIC
+                role: ACCOUNTADMIN
+                username: USER
+                private_key: '-----BEGIN ENCRYPTED PRIVATE KEY-----...'
+                passphrase: '***'
+      responses:
+        '201':
+          description: Destination created successfully
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DestinationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
+  /teams/{team_id}/destinations/test-connection:
+    post:
+      summary: Test destination connection
+      description: Test destination connection using credentials
+      operationId: testConnection
+      tags:
+      - Data Destinations
+      requestBody:
+        required: true
+        description: Connection credentials to test
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TestConnectionRequest'
+            example:
+              type: DWH_SNOWFLAKE
+              display_name: Test Connection
+              auth_method: AUTH_METHOD_KEY_PAIR
+              fields:
+                hostname: test-domain.snowflakecomputing.com
+                warehouse: TEST_WH
+                database_name: TEST_DB
+                schema: PUBLIC
+                role: ACCOUNTADMIN
+                username: TEST_USER
+                private_key: '-----BEGIN ENCRYPTED PRIVATE KEY-----...'
+                passphrase: '***'
+      responses:
+        '200':
+          description: Connection test completed (check response for result)
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestConnectionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
+    parameters:
+    - $ref: '#/components/parameters/TeamId'
+    servers:
+    - url: https://dts-api.supermetrics.com/v1
+      description: Global production public Supermetrics Data Warehouse Destinations
+        API base path.
+      x-internal: false
+  /teams/{team_id}/destinations/{destination_id}:
+    get:
+      summary: Get destination details
+      description: Fetch data about a destination
+      operationId: getDestination
+      tags:
+      - Data Destinations
+      parameters:
+      - name: destination_id
+        in: path
+        required: true
+        description: Unique identifier for the destination
+        schema:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 2147483647
+        example: 8
+      responses:
+        '200':
+          description: Destination retrieved successfully
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DestinationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
+    parameters:
+    - $ref: '#/components/parameters/TeamId'
+    servers:
+    - url: https://dts-api.supermetrics.com/v1
+      description: Global production public Supermetrics Data Warehouse Destinations
+        API base path.
+      x-internal: false
+    put:
+      summary: Update destination
+      description: Update a destinations details
+      operationId: updateDestination
+      tags:
+      - Data Destinations
+      parameters:
+      - name: destination_id
+        in: path
+        required: true
+        description: Unique identifier for the destination
+        schema:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 2147483647
+        example: 8
+      requestBody:
+        required: true
+        description: Destination configuration changes
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDestinationRequest'
+            example:
+              type: DWH_SNOWFLAKE
+              display_name: Updated Snowflake Destination
+              auth_method: AUTH_METHOD_KEY_PAIR
+              fields:
+                hostname: updated-domain.my-region.snowflakecomputing.com
+                warehouse: PRODUCTION_WH
+                database_name: PROD_DB
+                schema: PUBLIC
+                role: SYSADMIN
+                username: PROD_USER
+      responses:
+        '200':
+          description: Destination updated successfully
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DestinationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
+    delete:
+      summary: Delete destination
+      description: Remove a destination
+      operationId: deleteDestination
+      tags:
+      - Data Destinations
+      parameters:
+      - name: destination_id
+        in: path
+        required: true
+        description: Unique identifier for the destination
+        schema:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 2147483647
+        example: 8
+      responses:
+        '204':
+          description: Destination deleted successfully
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
+  /teams/{team_id}/destinations/{destination_id}/usage:
+    get:
+      summary: Get destination usage
+      description: Get transfers using this destination
+      operationId: getDestinationUsage
+      tags:
+      - Data Destinations
+      parameters:
+      - name: destination_id
+        in: path
+        required: true
+        description: Unique identifier for the destination
+        schema:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 2147483647
+        example: 8
+      responses:
+        '200':
+          description: Destination usage retrieved successfully
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DestinationUsageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
+    parameters:
+    - $ref: '#/components/parameters/TeamId'
+    servers:
+    - url: https://dts-api.supermetrics.com/v1
+      description: Global production public Supermetrics Data Warehouse Destinations
+        API base path.
+      x-internal: false
   /teams/{team_id}/transfer_runs/{transfer_run_id}:
     get:
       summary: Get transfer run details
@@ -2817,6 +3159,56 @@ paths:
       description: production server
       x-internal: false
   /v1/teams/{team_id}/custom-fields/{custom_field_id}:
+    delete:
+      summary: Remove an existing custom field
+      description: Remove an existing custom field. Returns HTTP 204 No Content on
+        success.
+      operationId: deleteTransformation
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - name: custom_field_id
+        in: path
+        required: true
+        description: ID of the custom field
+        example: 42
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+      - name: Sm-App-Id
+        in: header
+        required: false
+        description: Application identifier
+        schema:
+          type: string
+          maxLength: 100
+          pattern: ^[A-Za-z0-9_-]+$
+        example: XPLD
+      responses:
+        '204':
+          description: Transformation deleted successfully (no content)
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth:
+        - custom_fields_write
+      tags:
+      - Custom Fields
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
     get:
       summary: Fetch an existing custom field
       description: Fetch an existing custom field by name
@@ -2866,10 +3258,6 @@ paths:
         - custom_fields_read
       tags:
       - Custom Fields
-    servers:
-    - url: https://api.supermetrics.com
-      description: production server
-      x-internal: false
     put:
       summary: Update an existing custom field
       description: Update an existing custom field
@@ -2938,52 +3326,6 @@ paths:
         - custom_fields_write
       tags:
       - Custom Fields
-    delete:
-      summary: Remove an existing custom field
-      description: Remove an existing custom field. Returns HTTP 204 No Content on
-        success.
-      operationId: deleteTransformation
-      parameters:
-      - $ref: '#/components/parameters/TeamId'
-      - name: custom_field_id
-        in: path
-        required: true
-        description: ID of the custom field
-        example: 42
-        schema:
-          type: integer
-          format: int64
-          minimum: 1
-          maximum: 9223372036854776000
-      - name: Sm-App-Id
-        in: header
-        required: false
-        description: Application identifier
-        schema:
-          type: string
-          maxLength: 100
-          pattern: ^[A-Za-z0-9_-]+$
-        example: XPLD
-      responses:
-        '204':
-          description: Transformation deleted successfully (no content)
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/PermissionDenied'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-      security:
-      - ApiKeyAuth:
-        - custom_fields_write
-      tags:
-      - Custom Fields
 components:
   schemas:
     AbstractResponse:
@@ -2995,6 +3337,27 @@ components:
           $ref: '#/components/schemas/Meta'
       required:
       - meta
+    AuthMethod:
+      type: object
+      required:
+      - id
+      - label
+      properties:
+        id:
+          type: string
+          maxLength: 100
+          description: Authentication method identifier
+          example: AUTH_METHOD_KEY_PAIR
+        label:
+          type: string
+          maxLength: 255
+          description: Display label for the authentication method
+          example: Key Pair Authentication
+        is_default:
+          type: boolean
+          description: Whether this is the default authentication method
+          default: false
+      additionalProperties: false
     AvailableSourcesResponse:
       type: object
       description: Available data sources and destinations for Hub transfers
@@ -3393,6 +3756,43 @@ components:
             $ref: '#/components/schemas/DataSourceConnection'
         required:
         - data
+    CreateDestinationRequest:
+      type: object
+      required:
+      - type
+      - display_name
+      - fields
+      properties:
+        type:
+          type: string
+          maxLength: 50
+          description: Destination type (e.g., DWH_SNOWFLAKE, DWH_BIGQUERY)
+          example: DWH_SNOWFLAKE
+        display_name:
+          type: string
+          maxLength: 255
+          description: Human-readable name for the destination
+          example: My Snowflake Destination
+        auth_method:
+          type: string
+          maxLength: 100
+          description: Authentication method for the destination
+          example: AUTH_METHOD_KEY_PAIR
+        fields:
+          type: object
+          description: Destination-specific configuration fields (varies by destination
+            type)
+          additionalProperties: true
+          example:
+            hostname: any-domain.my-region.snowflakecomputing.com
+            warehouse: DEMO_WH
+            database_name: TEST_DB
+            schema: PUBLIC
+            role: ACCOUNTADMIN
+            username: USER
+            private_key: '-----BEGIN ENCRYPTED PRIVATE KEY-----...'
+            passphrase: '***'
+      additionalProperties: false
     CreateSecretRequest:
       type: object
       description: Secret name and value to encrypt and store.
@@ -4293,6 +4693,142 @@ components:
       example:
         type: data_source_field
         value: platform
+    DestinationInfo:
+      type: object
+      required:
+      - display_name
+      - destination_type
+      - edit_settings
+      properties:
+        id:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 2147483647
+          nullable: true
+          description: Unique identifier for the destination
+          example: 123
+        display_name:
+          type: string
+          maxLength: 255
+          description: Human-readable name for the destination
+          example: My Snowflake Destination
+        destination_type:
+          $ref: '#/components/schemas/DestinationType'
+        edit_settings:
+          type: array
+          maxItems: 500
+          description: Configuration settings for the destination
+          items:
+            $ref: '#/components/schemas/SetupSetting'
+      additionalProperties: false
+    DestinationListItem:
+      type: object
+      required:
+      - id
+      - display_name
+      - type
+      properties:
+        id:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 2147483647
+          description: Unique identifier for the destination
+          example: 123
+        display_name:
+          type: string
+          maxLength: 255
+          description: Human-readable name for the destination
+          example: My Snowflake Destination
+        type:
+          type: string
+          maxLength: 50
+          description: Destination type identifier
+          example: DWH_SNOWFLAKE
+      additionalProperties: false
+    DestinationListResponse:
+      description: Response envelope containing a list of destinations.
+      allOf:
+      - $ref: '#/components/schemas/AbstractResponse'
+      - type: object
+        properties:
+          data:
+            type: array
+            maxItems: 10000
+            description: List of destinations for the team
+            items:
+              $ref: '#/components/schemas/DestinationListItem'
+        required:
+        - data
+    DestinationResponse:
+      description: Response envelope containing a single destination.
+      allOf:
+      - $ref: '#/components/schemas/AbstractResponse'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/DestinationInfo'
+        required:
+        - data
+    DestinationType:
+      type: object
+      required:
+      - type
+      - title
+      - icon_url
+      properties:
+        type:
+          type: string
+          maxLength: 50
+          description: Destination type identifier
+          example: DWH_SNOWFLAKE
+        title:
+          type: string
+          maxLength: 255
+          description: Display name for the destination type
+          example: Snowflake
+        icon_url:
+          type: string
+          format: uri
+          maxLength: 2083
+          description: URL to the destination type icon
+          example: https://supermetrics.com/icons/snowflake.svg
+        connection_check_url:
+          type: string
+          format: uri
+          maxLength: 2083
+          description: URL for connection testing
+        create_url:
+          type: string
+          format: uri
+          maxLength: 2083
+          description: URL for creating a destination
+        update_url_template:
+          type: string
+          maxLength: 2083
+          description: URL template for updating a destination
+        app_id:
+          type: string
+          maxLength: 50
+          description: Application identifier
+        is_internal:
+          type: boolean
+          description: Whether this is an internal destination type
+          default: false
+        settings:
+          type: array
+          maxItems: 500
+          description: Available settings for this destination type
+          items:
+            $ref: '#/components/schemas/SetupSetting'
+        auth_methods:
+          type: array
+          maxItems: 50
+          description: Available authentication methods
+          items:
+            $ref: '#/components/schemas/AuthMethod'
+      additionalProperties: false
     DestinationTypeSettings:
       type: object
       description: Configuration settings for a destination type
@@ -4333,6 +4869,48 @@ components:
           description: Available authentication methods
           items:
             type: object
+    DestinationUsage:
+      type: object
+      required:
+      - is_used
+      - transfers
+      properties:
+        is_used:
+          type: boolean
+          description: Whether the destination is currently being used by any transfers
+          example: true
+        transfers:
+          type: array
+          maxItems: 10000
+          description: List of transfers using this destination
+          items:
+            type: object
+            required:
+            - transfer_id
+            - transfer_name
+            properties:
+              transfer_id:
+                type: integer
+                format: int32
+                minimum: 1
+                maximum: 2147483647
+                description: Transfer ID
+                example: 12345
+              transfer_name:
+                type: string
+                maxLength: 255
+                description: Transfer display name
+                example: Google Analytics to BigQuery
+    DestinationUsageResponse:
+      description: Response envelope containing destination usage information.
+      allOf:
+      - $ref: '#/components/schemas/AbstractResponse'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/DestinationUsage'
+        required:
+        - data
     Error:
       type: object
       description: Machine- and human-readable detail for a failed request.
@@ -5017,6 +5595,96 @@ components:
           maxLength: 255
           description: Human-readable name of the secret
           example: client_id
+    SetupSetting:
+      type: object
+      required:
+      - id
+      - input_type
+      - is_required
+      properties:
+        id:
+          type: string
+          maxLength: 100
+          description: Unique identifier for the setting
+          example: hostname
+        label:
+          type: string
+          maxLength: 255
+          nullable: true
+          description: Display label for the setting
+          example: Hostname
+        value:
+          oneOf:
+          - type: string
+            maxLength: 1000
+            nullable: true
+          - type: integer
+            format: int32
+            minimum: -2147483648
+            maximum: 2147483647
+            nullable: true
+          - type: boolean
+            nullable: true
+          description: Current value of the setting (type varies based on input_type)
+          example: myaccount.snowflakecomputing.com
+        input_type:
+          type: string
+          maxLength: 50
+          description: Type of input control
+          example: text
+        is_required:
+          type: boolean
+          description: Whether this setting is required
+          example: true
+        options:
+          type: array
+          maxItems: 500
+          description: Available options for select/radio inputs
+          items:
+            type: object
+          default: []
+        help_text:
+          type: string
+          maxLength: 1000
+          nullable: true
+          description: Help text for the setting
+        help_url:
+          type: string
+          format: uri
+          maxLength: 2083
+          nullable: true
+          description: URL to additional help documentation
+        note:
+          type: string
+          maxLength: 500
+          nullable: true
+          description: Additional notes about the setting
+        group:
+          type: string
+          maxLength: 100
+          description: Group identifier for organizing settings
+        group_label:
+          type: string
+          maxLength: 255
+          description: Display label for the group
+        show_for:
+          type: array
+          maxItems: 200
+          description: Conditional display rules
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                maxLength: 100
+              values:
+                type: array
+                maxItems: 500
+                items:
+                  type: string
+                  maxLength: 100
+          default: []
+      additionalProperties: false
     SingleTransformationOutput:
       description: Success envelope wrapping a single custom field transformation.
       allOf:
@@ -5167,6 +5835,71 @@ components:
             description: null
         report_types:
         - Default
+    TestConnectionRequest:
+      type: object
+      required:
+      - type
+      - display_name
+      - fields
+      properties:
+        type:
+          type: string
+          maxLength: 50
+          description: Destination type to test
+          example: DWH_SNOWFLAKE
+        display_name:
+          type: string
+          maxLength: 255
+          description: Display name for the connection being tested
+          example: Test Connection
+        auth_method:
+          type: string
+          maxLength: 100
+          description: Authentication method to test
+          example: AUTH_METHOD_KEY_PAIR
+        fields:
+          type: object
+          description: Connection credentials and settings to test
+          additionalProperties: true
+        destination_id:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 2147483647
+          description: Optional - ID of existing destination to test with new credentials
+          example: 8
+        new_password:
+          type: string
+          maxLength: 255
+          description: New secret value for credential testing. Field name varies
+            by auth method (e.g., new_private_key for key-pair auth)
+      additionalProperties: false
+    TestConnectionResponse:
+      description: Response envelope containing a connection test result.
+      allOf:
+      - $ref: '#/components/schemas/AbstractResponse'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/TestConnectionResult'
+        required:
+        - data
+    TestConnectionResult:
+      type: object
+      required:
+      - success
+      - error
+      properties:
+        success:
+          type: boolean
+          description: Whether the connection test succeeded
+          example: true
+        error:
+          type: string
+          maxLength: 2000
+          nullable: true
+          description: Error message if connection test failed, null on success
+          example: null
     TransferAccount:
       type: object
       properties:
@@ -5901,6 +6634,39 @@ components:
             configuration_json:
               type: object
               description: JSON configuration data
+    UpdateDestinationRequest:
+      type: object
+      required:
+      - type
+      - display_name
+      - fields
+      properties:
+        type:
+          type: string
+          maxLength: 50
+          description: Destination type (e.g., DWH_SNOWFLAKE, DWH_BIGQUERY)
+          example: DWH_SNOWFLAKE
+        display_name:
+          type: string
+          maxLength: 255
+          description: Human-readable name for the destination
+          example: My Snowflake Destination
+        auth_method:
+          type: string
+          maxLength: 100
+          description: Authentication method for the destination
+          example: AUTH_METHOD_KEY_PAIR
+        fields:
+          type: object
+          description: Destination-specific configuration fields (varies by destination
+            type)
+          additionalProperties: true
+        new_password:
+          type: string
+          maxLength: 255
+          description: New secret value for credential rotation. Field name varies
+            by auth method (e.g., new_private_key for key-pair auth)
+      additionalProperties: false
     UpdateSecretRequest:
       type: object
       description: New secret value to overwrite the existing one.

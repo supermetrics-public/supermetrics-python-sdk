@@ -15,6 +15,7 @@ lint:
 # Run type checking with mypy
 typecheck:
     uv run --extra dev mypy src/supermetrics --ignore-missing-imports
+    uv run --extra dev basedpyright
 
 # Run all the formatting, linting, and testing commands
 qa: format lint typecheck
@@ -34,7 +35,7 @@ test *ARGS:
 
 # Run only the end-to-end transport tests (real sockets, local HTTP server)
 e2e *ARGS:
-    uv run --extra dev pytest tests/e2e -m e2e -o addopts="" -v {{ARGS}}
+    uv run --extra dev pytest tests/e2e -m e2e -o addopts="" --strict-markers -v {{ARGS}}
 
 # Verify strict sync/async API parity
 parity:

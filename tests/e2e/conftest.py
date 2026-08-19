@@ -19,6 +19,7 @@ import time
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -558,10 +559,10 @@ def logins_server(api_server: MockAPIServer) -> MockAPIServer:
 def dts_server() -> Iterator[MockAPIServer]:
     """A second server, standing in for the Data Warehouse host.
 
-    Transfers, transfer runs, backfills and data source connections are served from
-    ``dts-api.supermetrics.com`` rather than the core API host. Two servers is the only
-    way to prove the SDK actually re-hosts those requests instead of merely building the
-    right path.
+    Transfers, transfer runs, backfills, data source connections and destinations
+    are served from ``dts-api.supermetrics.com`` rather than the core API host. Two
+    servers is the only way to prove the SDK actually re-hosts those requests instead
+    of merely building the right path.
     """
     server = MockAPIServer()
     try:
@@ -570,13 +571,35 @@ def dts_server() -> Iterator[MockAPIServer]:
         server.stop()
 
 
-@pytest.fixture
-def transfers_server(api_server: MockAPIServer) -> MockAPIServer:
-    """A server with the common transfers routes wired to successful responses."""
-    api_server.route("/teams/42/transfers", ScriptedResponse(json_body=TRANSFERS_LIST_BODY))
-    api_server.route("/teams/42/transfers/36091", ScriptedResponse(json_body=TRANSFER_DETAIL_BODY))
-    api_server.route("/teams/42/transfer_runs/12345", ScriptedResponse(json_body=TRANSFER_RUN_DETAIL_BODY))
-    return api_server
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    """Mark every test collected from ``tests/e2e`` with the ``e2e`` marker.
+
+    CI runs a dedicated job as ``pytest tests/e2e -m e2e``. When membership of that
+    job depends on each module remembering ``pytestmark = pytest.mark.e2e``, a file
+    that forgets the line — or misspells it — is silently deselected there while
+    still passing in the matrix ``test`` job, so the e2e job stays green while
+    covering less. Deriving the marker from the file's location instead makes the
+    job's contents a property of where a test lives, which cannot be forgotten.
+
+    ``--strict-markers`` (see ``addopts`` in ``pyproject.toml``) closes the other
+    half: a misspelt marker is now a collection error rather than a warning.
+
+    Live smoke tests are left alone. They live in this directory but talk to the
+    real API, are opt-in behind ``-m live`` and a credential check, and must stay
+    out of the hermetic e2e job.
+
+    Args:
+        config: The active pytest configuration. Unused; part of the hook signature.
+        items: The collected items, modified in place.
+    """
+    e2e_dir = Path(__file__).parent
+    for item in items:
+        path = getattr(item, "path", None)
+        if path is None or not path.is_relative_to(e2e_dir):
+            continue
+        if item.get_closest_marker("live") is not None:
+            continue
+        item.add_marker(pytest.mark.e2e)
 
 
 @pytest.fixture

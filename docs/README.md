@@ -52,6 +52,7 @@ Complete documentation for the Supermetrics Python SDK – the Python client for
 - [QueriesResource](api-reference.md#queriesresource) - Execute data queries
 - [BackfillsResource](api-reference.md#backfillsresource) - Backfill historical data
 - [DatasourceDetailsResource](api-reference.md#datasourcedetailsresource) - Inspect data source connections
+- [DestinationsResource](api-reference.md#destinationsresource) - Manage Data Warehouse destinations
 - [TransfersResource](api-reference.md#transfersresource) - Manage Data Warehouse transfers
 - [TransferRunsResource](api-reference.md#transferrunsresource) - Inspect individual transfer runs
 - [CustomFieldsResource](api-reference.md#customfieldsresource) - Define calculated dimensions and metrics

@@ -51,6 +51,13 @@ jobs:
       - name: Type check with mypy (strict)
         run: uv run mypy src/supermetrics --ignore-missing-imports
 
+      # A second checker, not a duplicate one: mypy is nominal and checks
+      # declarations, pyright infers aggressively and is better at narrowing,
+      # unreachable code and overload resolution. Scope and strictness are set
+      # in [tool.basedpyright] in pyproject.toml.
+      - name: Type check with basedpyright
+        run: uv run basedpyright
+
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -80,16 +87,19 @@ jobs:
     # overrides, the raw-response envelope, the error taxonomy, and concurrency
     # isolation on a shared connection pool. Nothing here is mocked or patched.
     #
-    # Also covers every Data Transfers, Transfer Runs and Custom Fields method on both
-    # the sync and async clients, and — using a second local server — proves that Data
-    # Warehouse calls are re-hosted to the DTS origin while core API calls are not. Host
-    # routing, request bodies, and query strings exist only on the wire, so the unit
-    # suite cannot observe them and would stay green while the SDK called the wrong host.
+    # Also covers every Data Transfers, Transfer Runs, Custom Fields and Destinations
+    # method on both the sync and async clients, and — using a second local server —
+    # proves that Data Warehouse calls are re-hosted to the DTS origin while core API
+    # calls are not. Host routing, request bodies, and query strings exist only on the
+    # wire, so the unit suite cannot observe them and would stay green while the SDK
+    # called the wrong host.
     #
-    # tests/e2e/test_e2e_markers.py guards this job's own coverage: pytest is not run
-    # with --strict-markers, so an e2e module that forgets `pytestmark` would be
-    # silently deselected here while still passing under `test` — green, but covering
-    # less than it appears to.
+    # This job's own coverage is guarded twice over, because an e2e module that lost
+    # its marker would be silently deselected here while still passing under `test` —
+    # green, but covering less than it appears to. tests/e2e/conftest.py applies the
+    # marker by directory so it cannot be forgotten, --strict-markers below turns a
+    # misspelt one into a collection error rather than a warning, and
+    # tests/e2e/test_e2e_markers.py asserts the result.
     name: End-to-end (local HTTP server)
     runs-on: ubuntu-latest
     strategy:
@@ -112,7 +122,7 @@ jobs:
         run: uv sync --extra dev
 
       - name: Run end-to-end transport tests
-        run: uv run pytest tests/e2e -m e2e -o addopts="" -v --durations=10
+        run: uv run pytest tests/e2e -m e2e -o addopts="" --strict-markers -v --durations=10
 
   parity:
     # Fails the build the moment the sync and async client surfaces drift apart.

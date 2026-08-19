@@ -132,6 +132,25 @@ endpoints:
   - method: POST
     path: /teams/{team_id}/data-source-connections
 
+  # DWH Data Warehouse Destinations
+  #
+  # Already "/teams/..." served from ".../v1" upstream, the same shape as
+  # data-source-connections, so no rewrite_path is needed.
+  - method: GET
+    path: /teams/{team_id}/destinations
+  - method: POST
+    path: /teams/{team_id}/destinations
+  - method: GET
+    path: /teams/{team_id}/destinations/{destination_id}
+  - method: PUT
+    path: /teams/{team_id}/destinations/{destination_id}
+  - method: DELETE
+    path: /teams/{team_id}/destinations/{destination_id}
+  - method: POST
+    path: /teams/{team_id}/destinations/test-connection
+  - method: GET
+    path: /teams/{team_id}/destinations/{destination_id}/usage
+
   # Datasource
   - method: GET
     path: /teams/{team_id}/datasource/{data_source_id}

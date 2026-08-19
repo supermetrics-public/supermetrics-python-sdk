@@ -2,6 +2,76 @@
 
 ## 0.5.0 (unreleased)
 
+### Data Transfers & Transfer Runs (Phase 2)
+
+Two new resources, on both clients, covering the full Data Warehouse transfer surface:
+
+* `client.transfers` — `list`, `get`, `create`, `update`, `delete`, `set_state`,
+  `validate`, `validate_update`, `list_available_sources`, `get_available_options`,
+  `list_runs`, and `create_datasource_connection`.
+* `client.transfer_runs` — `get`, looking a run up by its own id within a team.
+
+Both appear under `client.with_raw_response` and take the same keyword-only `auth_token`,
+`headers` and `timeout` overrides as every other resource.
+
+Three behaviours of the upstream API are exposed as they actually are, rather than
+smoothed over:
+
+* **`validate()` and `validate_update()` do not raise on an invalid configuration.** The
+  API answers `200 OK` with `is_valid: false`, and the SDK returns that result. Raising
+  would defeat the purpose of a dry run. A `ValidationError` carries `field_id` and
+  `error_code` only — the API sends no human-readable message.
+* **`set_state()` takes `"pause"` / `"unpause"`**, the only machine-readable enum in this
+  area. The `state` field on the response is a free-form string whose documented example
+  is uppercase `"PAUSED"`; request and response do not share a vocabulary.
+* **`list()` and `get()` return different shapes.** The list item has `dwh_transfer_id`, a
+  `schedule` *string* and an `accounts` *string array*; the detail object has
+  `transfer_id`, a `schedule` *array* and an `accounts` *object array*. The list item is
+  not a subset of the detail object.
+
+`update()` is a whole-object replace: the request schema forbids extra properties and
+there is no PATCH endpoint, so every field has to be resent.
+
+`create_datasource_connection()` deliberately does not expose the request schema's
+optional `api_key` field. Upstream describes it as automatically handled, and it
+duplicates a credential that already travels in the `Authorization` header.
+
+### Storage & Warehouse Destinations (Phase 3)
+
+One new resource, on both clients, covering the destinations that transfers write into:
+
+* `client.destinations` — `list`, `get`, `create`, `update`, `delete`, `test_connection`,
+  and `get_usage`.
+
+It appears under `client.with_raw_response` and takes the same keyword-only `auth_token`,
+`headers` and `timeout` overrides as every other resource. Like transfers, transfer runs
+and backfills, these endpoints are served by the Data Warehouse API on its own host, and
+the SDK routes them there automatically — an ordinary client reaches them.
+
+Three things about this domain are worth knowing before the first call:
+
+* **`fields` is a plain `dict[str, Any]`, deliberately.** `create()`, `update()` and
+  `test_connection()` take the destination-specific configuration as a mapping, and the
+  SDK converts it. The generated `CreateDestinationRequestFields`,
+  `UpdateDestinationRequestFields` and `TestConnectionRequestFields` classes keep their
+  storage in an attrs attribute declared `init=False`, so a caller cannot construct one;
+  exporting three unconstructable near-identical types would have been worse than
+  exporting none. This phase adds no new names to the package root.
+* **A failed connection test is a return value, not an exception.** The API answers
+  `200 OK` with `success: false` and an `error` message for credentials that do not work,
+  and `test_connection()` returns that result. Branch on `result.success`; only transport,
+  authorization and malformed-payload failures raise. Same rule as `transfers.validate()`.
+* **The read shape and the write shape differ.** `get()` answers with
+  `edit_settings`, a list of `SetupSetting` UI form descriptors, while `create()` and
+  `update()` take a flat `fields` mapping. A `DestinationInfo` cannot be handed straight
+  back to `update()`; the SDK surfaces the API's own model rather than inventing a
+  symmetrical one.
+
+`create()` and `delete()` both document HTTP 409 Conflict. The error taxonomy has no
+conflict subclass, so a 409 arrives as a generic `SupermetricsAPIError` with
+`status_code == 409` — adding a dedicated subclass is a change to the public taxonomy and
+belongs in its own release, not behind a new resource.
+
 ### Custom Fields (Phase 4)
 
 `client.custom_fields`, on both clients — `list`, `get`, `get_metadata`, `create`,
@@ -56,44 +126,10 @@ their `/v1` prefix in the path — `/v1/teams/{team_id}/custom-fields`. Nothing 
 for them and no routing change was needed; a plain client reaches them as it does queries
 and logins.
 
-### Data Transfers & Transfer Runs (Phase 2)
-
-Two new resources, on both clients, covering the full Data Warehouse transfer surface:
-
-* `client.transfers` — `list`, `get`, `create`, `update`, `delete`, `set_state`,
-  `validate`, `validate_update`, `list_available_sources`, `get_available_options`,
-  `list_runs`, and `create_datasource_connection`.
-* `client.transfer_runs` — `get`, looking a run up by its own id within a team.
-
-Both appear under `client.with_raw_response` and take the same keyword-only `auth_token`,
-`headers` and `timeout` overrides as every other resource.
-
-Three behaviours of the upstream API are exposed as they actually are, rather than
-smoothed over:
-
-* **`validate()` and `validate_update()` do not raise on an invalid configuration.** The
-  API answers `200 OK` with `is_valid: false`, and the SDK returns that result. Raising
-  would defeat the purpose of a dry run. A `ValidationError` carries `field_id` and
-  `error_code` only — the API sends no human-readable message.
-* **`set_state()` takes `"pause"` / `"unpause"`**, the only machine-readable enum in this
-  area. The `state` field on the response is a free-form string whose documented example
-  is uppercase `"PAUSED"`; request and response do not share a vocabulary.
-* **`list()` and `get()` return different shapes.** The list item has `dwh_transfer_id`, a
-  `schedule` *string* and an `accounts` *string array*; the detail object has
-  `transfer_id`, a `schedule` *array* and an `accounts` *object array*. The list item is
-  not a subset of the detail object.
-
-`update()` is a whole-object replace: the request schema forbids extra properties and
-there is no PATCH endpoint, so every field has to be resent.
-
-`create_datasource_connection()` deliberately does not expose the request schema's
-optional `api_key` field. Upstream describes it as automatically handled, and it
-duplicates a credential that already travels in the `Authorization` header.
-
 ### Data Warehouse calls are routed automatically
 
-Transfers, transfer runs, backfills and data source connections are served from
-`https://dts-api.supermetrics.com/v1`, not from the core API host. The SDK now re-hosts
+Transfers, transfer runs, destinations, backfills and data source connections are
+served from `https://dts-api.supermetrics.com/v1`, not from the core API host. The SDK now re-hosts
 those requests from its request event hook, so one pooled client reaches everything:
 
 ```python
@@ -133,6 +169,20 @@ If you currently hold two clients, one of them is now redundant.
 Regenerating also picked up the `openapi-python-client` 0.27.1 → 0.29.0 upgrade, which
 had been pinned but never applied. It adds percent-encoding of path parameters and drops
 some redundant casts across the generated tree. No endpoint or model was removed.
+
+`scripts/regenerate_client.sh` was fixed as well — Step 4 of the documented regeneration
+procedure could not succeed on a stock checkout, and failed destructively:
+
+* It deleted `src/supermetrics/_generated/` **before** running the generator, so any
+  generator failure left the repository with no client at all. It now generates into a
+  staging directory and replaces the committed tree only once generation has succeeded.
+* The generator crashed on this project's default interpreter. `openapi-python-client`
+  0.29.0 pulls in a pydantic that raises `AssertionError` in
+  `_typing_extra.eval_type_backport` under Python 3.14, which is what the project
+  virtualenv runs. The script now runs the generator through `uvx` on a pinned Python 3.12
+  (`GENERATOR_PYTHON`, overridable) at the version read out of `pyproject.toml`, so the
+  generator and its dev-dependency pin cannot drift, and the project virtualenv is left
+  alone.
 
 ### Testing
 

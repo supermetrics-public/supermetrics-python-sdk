@@ -18,6 +18,7 @@ from supermetrics.resources.connector_builder_logs import ConnectorBuilderLogsAs
 from supermetrics.resources.connector_builder_secrets import ConnectorBuilderSecretsAsyncResource
 from supermetrics.resources.custom_fields import CustomFieldsAsyncResource
 from supermetrics.resources.datasource_details import DatasourceDetailsAsyncResource
+from supermetrics.resources.destinations import DestinationsAsyncResource
 from supermetrics.resources.login_links import LoginLinksAsyncResource
 from supermetrics.resources.logins import LoginsAsyncResource
 from supermetrics.resources.queries import QueriesAsyncResource
@@ -92,8 +93,8 @@ class SupermetricsAsyncClient:
             base_url: API base URL (default: production API at
                 https://api.supermetrics.com).
             dts_base_url: Base URL for the Data Warehouse API, which serves transfers,
-                transfer runs, backfills, and data source connections from a different
-                host. Leave unset to route those calls to
+                transfer runs, backfills, data source connections, and destinations
+                from a different host. Leave unset to route those calls to
                 https://dts-api.supermetrics.com/v1 automatically whenever ``base_url``
                 is the production default. If ``base_url`` is anything else, no routing
                 is inferred and every request goes to ``base_url``; pass this explicitly
@@ -150,6 +151,7 @@ class SupermetricsAsyncClient:
         self.connector_builder_secrets = ConnectorBuilderSecretsAsyncResource(self._client)
         self.connector_builder_logs = ConnectorBuilderLogsAsyncResource(self._client)
         self.datasource_details = DatasourceDetailsAsyncResource(self._client)
+        self.destinations = DestinationsAsyncResource(self._client)
         self.transfers = TransfersAsyncResource(self._client)
         self.transfer_runs = TransferRunsAsyncResource(self._client)
         self.custom_fields = CustomFieldsAsyncResource(self._client)

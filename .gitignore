@@ -202,7 +202,9 @@ openapi-specs/*
 .idea
 *.DS_Store
 artifacts
-.claude
+
+# Claude
+.claude/worktrees
 
 # Hermes Agent
 /docs.local/
