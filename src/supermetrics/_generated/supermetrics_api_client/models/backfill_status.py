@@ -1,4 +1,4 @@
-from typing import Literal, cast
+from typing import Literal
 
 BackfillStatus = Literal["CANCELLED", "COMPLETED", "CREATED", "FAILED", "RUNNING", "SCHEDULED"]
 
@@ -14,5 +14,5 @@ BACKFILL_STATUS_VALUES: set[BackfillStatus] = {
 
 def check_backfill_status(value: str) -> BackfillStatus:
     if value in BACKFILL_STATUS_VALUES:
-        return cast(BackfillStatus, value)
+        return value
     raise TypeError(f"Unexpected value {value!r}. Expected one of {BACKFILL_STATUS_VALUES!r}")

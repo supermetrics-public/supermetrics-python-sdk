@@ -1,4 +1,4 @@
-from typing import Literal, cast
+from typing import Literal
 
 UserType = Literal["user"]
 
@@ -9,5 +9,5 @@ USER_TYPE_VALUES: set[UserType] = {
 
 def check_user_type(value: str) -> UserType:
     if value in USER_TYPE_VALUES:
-        return cast(UserType, value)
+        return value
     raise TypeError(f"Unexpected value {value!r}. Expected one of {USER_TYPE_VALUES!r}")

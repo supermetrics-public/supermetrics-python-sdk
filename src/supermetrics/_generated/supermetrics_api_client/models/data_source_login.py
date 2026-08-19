@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 from ..models.data_source_login_type import DataSourceLoginType, check_data_source_login_type
 from ..types import UNSET, Unset
@@ -181,7 +180,7 @@ class DataSourceLogin:
         if isinstance(_auth_time, Unset):
             auth_time = UNSET
         else:
-            auth_time = isoparse(_auth_time)
+            auth_time = datetime.datetime.fromisoformat(_auth_time)
 
         _auth_user_info = d.pop("auth_user_info", UNSET)
         auth_user_info: User | Unset
@@ -198,7 +197,7 @@ class DataSourceLogin:
             try:
                 if not isinstance(data, str):
                     raise TypeError()
-                expiry_time_type_0 = isoparse(data)
+                expiry_time_type_0 = datetime.datetime.fromisoformat(data)
 
                 return expiry_time_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
@@ -215,7 +214,7 @@ class DataSourceLogin:
             try:
                 if not isinstance(data, str):
                     raise TypeError()
-                revoked_time_type_0 = isoparse(data)
+                revoked_time_type_0 = datetime.datetime.fromisoformat(data)
 
                 return revoked_time_type_0
             except (TypeError, ValueError, AttributeError, KeyError):

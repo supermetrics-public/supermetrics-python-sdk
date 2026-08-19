@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 from ..models.backfill_status import BackfillStatus, check_backfill_status
 from ..types import UNSET, Unset
@@ -162,11 +161,11 @@ class Backfill:
 
         transfer_id = d.pop("transfer_id")
 
-        range_start_date = isoparse(d.pop("range_start_date")).date()
+        range_start_date = datetime.date.fromisoformat(d.pop("range_start_date"))
 
-        range_end_date = isoparse(d.pop("range_end_date")).date()
+        range_end_date = datetime.date.fromisoformat(d.pop("range_end_date"))
 
-        created_time = isoparse(d.pop("created_time"))
+        created_time = datetime.datetime.fromisoformat(d.pop("created_time"))
 
         created_user_id = d.pop("created_user_id")
 
@@ -188,7 +187,7 @@ class Backfill:
             try:
                 if not isinstance(data, str):
                     raise TypeError()
-                removed_time_type_0 = isoparse(data)
+                removed_time_type_0 = datetime.datetime.fromisoformat(data)
 
                 return removed_time_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
@@ -214,7 +213,7 @@ class Backfill:
             try:
                 if not isinstance(data, str):
                     raise TypeError()
-                start_time_type_0 = isoparse(data)
+                start_time_type_0 = datetime.datetime.fromisoformat(data)
 
                 return start_time_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
@@ -231,7 +230,7 @@ class Backfill:
             try:
                 if not isinstance(data, str):
                     raise TypeError()
-                end_time_type_0 = isoparse(data)
+                end_time_type_0 = datetime.datetime.fromisoformat(data)
 
                 return end_time_type_0
             except (TypeError, ValueError, AttributeError, KeyError):

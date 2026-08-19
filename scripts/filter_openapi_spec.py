@@ -83,21 +83,51 @@ def apply_patches(operation: dict[str, Any], patches: dict[str, Any]) -> dict[st
     return result
 
 
-def load_endpoint_config(
-    config_file: Path,
-) -> tuple[set[tuple[str, str]], dict[tuple[str, str], dict[str, Any]], dict[str, dict[str, dict[str, Any]]]]:
+class EndpointConfig:
+    """Parsed contents of sdk-endpoint-filters.yaml."""
+
+    def __init__(
+        self,
+        endpoints: set[tuple[str, str]],
+        endpoint_patches: dict[tuple[str, str], dict[str, Any]],
+        component_patches: dict[str, dict[str, dict[str, Any]]],
+        rewrites: dict[tuple[str, str], str],
+        pin_baseline: str | None,
+    ) -> None:
+        #: Set of (METHOD, SOURCE_PATH) tuples to include.
+        self.endpoints = endpoints
+        #: (METHOD, SOURCE_PATH) -> patch configuration for the operation.
+        self.endpoint_patches = endpoint_patches
+        #: component_type -> component_name -> patches.
+        self.component_patches = component_patches
+        #: (METHOD, SOURCE_PATH) -> the path to emit into the merged spec instead.
+        self.rewrites = rewrites
+        #: Path to a previously merged spec whose endpoints are pinned, or None.
+        self.pin_baseline = pin_baseline
+
+    def output_path(self, method: str, path: str) -> str:
+        """Return the path this endpoint is written to in the merged spec."""
+        return self.rewrites.get((method, path), path)
+
+
+def load_endpoint_config(config_file: Path) -> EndpointConfig:
     """
     Load endpoint configuration from sdk-endpoint-filters.yaml.
 
+    Recognised keys:
+        endpoints:      list of {method, path, [rewrite_path], [patches]}
+        component_patches: component_type -> component_name -> {merge, replace}
+        pin_baseline:   path to an already-merged spec (usually openapi-spec.yaml).
+                        Endpoints present there are taken from it verbatim instead of
+                        from the upstream specs, which keeps regeneration additive.
+
     Returns:
-        Tuple of (endpoints_set, endpoint_patches_dict, component_patches_dict)
-        - endpoints_set: Set of (METHOD, PATH) tuples to include
-        - endpoint_patches_dict: Dict mapping (METHOD, PATH) to endpoint patch configuration
-        - component_patches_dict: Dict mapping component_type -> component_name -> patches
+        An EndpointConfig.
     """
     config = load_yaml_file(config_file)
     endpoints = set()
     endpoint_patches_map = {}
+    rewrites: dict[tuple[str, str], str] = {}
     component_patches = {}
 
     # Load endpoints
@@ -120,6 +150,11 @@ def load_endpoint_config(
             endpoint_key = (method, path)
             endpoints.add(endpoint_key)
 
+            # Extract the output path override if present
+            rewrite_path = endpoint_config.get('rewrite_path')
+            if isinstance(rewrite_path, str) and rewrite_path.strip():
+                rewrites[endpoint_key] = rewrite_path.strip()
+
             # Extract patches if present
             if 'patches' in endpoint_config and isinstance(endpoint_config['patches'], dict):
                 endpoint_patches_map[endpoint_key] = endpoint_config['patches']
@@ -133,7 +168,23 @@ def load_endpoint_config(
 
             component_patches[comp_type] = components
 
-    return endpoints, endpoint_patches_map, component_patches
+    # Baseline pin (optional)
+    pin_baseline = config.get('pin_baseline')
+    if pin_baseline is not None and not isinstance(pin_baseline, str):
+        print(f"⚠️  Ignoring non-string 'pin_baseline' in {config_file.name}")
+        pin_baseline = None
+
+    # Fail loudly when two filter entries would be written to the same merged path.
+    seen_outputs: dict[tuple[str, str], str] = {}
+    for method, path in sorted(endpoints):
+        out_path = rewrites.get((method, path), path)
+        previous = seen_outputs.get((method, out_path))
+        if previous is not None:
+            print(f"❌ Rewrite collision: {method} {previous} and {method} {path} both map to {out_path}")
+            sys.exit(1)
+        seen_outputs[(method, out_path)] = path
+
+    return EndpointConfig(endpoints, endpoint_patches_map, component_patches, rewrites, pin_baseline)
 
 
 def extract_refs(obj: Any, refs: set[str]) -> None:
@@ -427,10 +478,15 @@ def main():
 
     # Load endpoint configuration
     print(f"📋 Loading endpoint configuration from {config_file.name}...")
-    endpoint_filter, endpoint_patches_map, component_patches = load_endpoint_config(config_file)
+    endpoint_config = load_endpoint_config(config_file)
+    endpoint_filter = endpoint_config.endpoints
+    endpoint_patches_map = endpoint_config.endpoint_patches
+    component_patches = endpoint_config.component_patches
     print(f"   Found {len(endpoint_filter)} endpoints to include")
     if endpoint_patches_map:
         print(f"   Found {len(endpoint_patches_map)} endpoint(s) with patches")
+    if endpoint_config.rewrites:
+        print(f"   Found {len(endpoint_config.rewrites)} endpoint(s) with a rewritten path")
     if component_patches:
         total_component_patches = sum(len(patches) for patches in component_patches.values())
         print(f"   Found {total_component_patches} component patch(es)")
@@ -472,6 +528,54 @@ def main():
     all_components_by_file = {}
     all_servers = []
     security_schemes = {}
+
+    # ------------------------------------------------------------------
+    # Baseline pin: take already-shipped endpoints from the merged spec we
+    # last committed, so a regeneration only ever ADDS to the generated
+    # client. Upstream specs drift — operations get retagged (which moves the
+    # generated subpackage) and paths get reparameterised — and picking that
+    # drift up as a side effect of adding one new domain silently breaks the
+    # hand-written adapters. Refreshing a pinned endpoint is a deliberate act:
+    # drop 'pin_baseline' from the filter config, or delete the entry.
+    # ------------------------------------------------------------------
+    pinned_keys: set[tuple[str, str]] = set()
+    baseline_components: dict[str, Any] | None = None
+
+    if endpoint_config.pin_baseline:
+        baseline_file = Path(endpoint_config.pin_baseline)
+        if not baseline_file.is_absolute():
+            baseline_file = project_root / baseline_file
+
+        if not baseline_file.exists():
+            print(f"\n⚠️  pin_baseline file not found, ignoring: {baseline_file}")
+        else:
+            print(f"\n📌 Pinning already-shipped endpoints from {baseline_file.name}...")
+            baseline_spec = load_yaml_file(baseline_file)
+            baseline_paths = baseline_spec.get('paths', {}) or {}
+            baseline_components = baseline_spec.get('components', {}) or {}
+
+            for server in baseline_spec.get('servers', []) or []:
+                if server not in all_servers:
+                    all_servers.append(server)
+            security_schemes.update(baseline_components.get('securitySchemes', {}) or {})
+
+            for method_upper, source_path in sorted(endpoint_filter):
+                out_path = endpoint_config.output_path(method_upper, source_path)
+                path_item = baseline_paths.get(out_path)
+                if not path_item or method_upper.lower() not in path_item:
+                    continue
+
+                merged_spec['paths'].setdefault(out_path, {})
+                merged_spec['paths'][out_path][method_upper.lower()] = deepcopy(path_item[method_upper.lower()])
+                if 'parameters' in path_item and 'parameters' not in merged_spec['paths'][out_path]:
+                    merged_spec['paths'][out_path]['parameters'] = deepcopy(path_item['parameters'])
+                if 'servers' in path_item and 'servers' not in merged_spec['paths'][out_path]:
+                    merged_spec['paths'][out_path]['servers'] = deepcopy(path_item['servers'])
+
+                pinned_keys.add((method_upper, source_path))
+                print(f"   📌 Pinned: {method_upper} {out_path}")
+
+            print(f"   Pinned {len(pinned_keys)} endpoint(s) from the baseline")
 
     # Process each spec file
     for spec_file in sorted(spec_files):
@@ -523,12 +627,20 @@ def main():
 
                 # Check if this endpoint matches filter
                 if endpoint_key in endpoint_filter:
-                    print(f"   ✓ Matched: {method_upper} {path}")
+                    if endpoint_key in pinned_keys:
+                        print(f"   📌 Skipped (pinned to baseline): {method_upper} {path}")
+                        continue
+
+                    out_path = endpoint_config.output_path(method_upper, path)
+                    if out_path != path:
+                        print(f"   ✓ Matched: {method_upper} {path}  ->  {out_path}")
+                    else:
+                        print(f"   ✓ Matched: {method_upper} {path}")
                     matched_count += 1
 
-                    # Add path to merged spec
-                    if path not in merged_spec['paths']:
-                        merged_spec['paths'][path] = {}
+                    # Add path to merged spec, under its (possibly rewritten) output path
+                    if out_path not in merged_spec['paths']:
+                        merged_spec['paths'][out_path] = {}
 
                     # Copy the operation
                     operation = deepcopy(path_item[method])
@@ -538,13 +650,13 @@ def main():
                         print(f"      🔧 Applying endpoint patches to {method_upper} {path}")
                         operation = apply_patches(operation, endpoint_patches_map[endpoint_key])
 
-                    merged_spec['paths'][path][method] = operation
+                    merged_spec['paths'][out_path][method] = operation
 
                     # Also copy path-level parameters and servers if present
-                    if 'parameters' in path_item and 'parameters' not in merged_spec['paths'][path]:
-                        merged_spec['paths'][path]['parameters'] = path_item['parameters']
-                    if 'servers' in path_item and 'servers' not in merged_spec['paths'][path]:
-                        merged_spec['paths'][path]['servers'] = deepcopy(path_item['servers'])
+                    if 'parameters' in path_item and 'parameters' not in merged_spec['paths'][out_path]:
+                        merged_spec['paths'][out_path]['parameters'] = path_item['parameters']
+                    if 'servers' in path_item and 'servers' not in merged_spec['paths'][out_path]:
+                        merged_spec['paths'][out_path]['servers'] = deepcopy(path_item['servers'])
                         # Also promote path-level servers to top-level list
                         for server in path_item['servers']:
                             if server not in all_servers:
@@ -583,6 +695,15 @@ def main():
         for comp_type in all_components.keys():
             if comp_type in file_components:
                 all_components[comp_type].update(file_components[comp_type])
+
+    # Baseline components are applied last so they WIN over the upstream definitions.
+    # A shared name such as ErrorResponse exists in both; taking the upstream copy
+    # would regenerate the model that the shipped adapters and their tests are written
+    # against, which is exactly the drift pinning exists to prevent.
+    if baseline_components:
+        for comp_type in all_components.keys():
+            if comp_type in baseline_components:
+                all_components[comp_type].update(baseline_components[comp_type])
 
     # Resolve initial refs (sorted for consistent order)
     for ref in sorted(all_refs):
@@ -681,7 +802,7 @@ def main():
     print("\n✅ Validation:")
     missing_endpoints = []
     for endpoint_key in endpoint_filter:
-        if endpoint_key not in endpoint_sources:
+        if endpoint_key not in endpoint_sources and endpoint_key not in pinned_keys:
             method, path = endpoint_key
             missing_endpoints.append(f"{method} {path}")
 
@@ -691,6 +812,11 @@ def main():
             print(f"      - {endpoint}")
     else:
         print(f"   ✓ All {len(endpoint_filter)} filtered endpoints found and included")
+
+    # Sort paths so the output is byte-stable. Baseline-pinned endpoints are emitted
+    # before upstream ones, so without this the file re-orders itself on the first run
+    # after a new endpoint is pinned and the diff drowns the real change in churn.
+    merged_spec['paths'] = {path: merged_spec['paths'][path] for path in sorted(merged_spec['paths'])}
 
     # Save merged spec
     print(f"\n💾 Writing merged spec to {output_file.name}...")

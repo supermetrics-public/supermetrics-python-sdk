@@ -13,12 +13,14 @@ Official Python client for Supermetrics
 * Type-safe Python client generated from OpenAPI specification
 * Dual sync/async support via separate Client classes
 * Pydantic v2 models for request/response validation
-* Comprehensive API coverage: login links, logins, accounts, queries, DWH backfills, Connector Builder
+* Comprehensive API coverage: login links, logins, accounts, queries, DWH transfers and
+  transfer runs, DWH backfills, Connector Builder
 * Custom exception hierarchy with HTTP status code mapping
 * Resource-based API organization
 * API key, OAuth bearer token, and dynamic token provider authentication
 * Per-request authorization, header, and timeout overrides on a shared connection pool
 * `with_raw_response` access to HTTP status codes, headers, and raw payloads
+* Automatic routing of Data Warehouse calls to their own host, from one pooled client
 
 ## Quick Start
 
@@ -80,6 +82,65 @@ client.connector_builder_secrets.create(
 
 # View execution logs
 logs = client.connector_builder_logs.list(team_id=12345, connector_identifier=connector_id)
+```
+
+### Data Warehouse Transfers
+
+Transfers, transfer runs and backfills are served by the Data Warehouse API on a separate
+host. The SDK routes them there automatically, so an ordinary client reaches everything.
+
+```python
+from datetime import UTC, datetime
+
+from supermetrics import SupermetricsClient
+
+client = SupermetricsClient(api_key="your_api_key")
+
+# List transfers for a team
+for transfer in client.transfers.list(team_id=12345):
+    print(f"{transfer.dwh_transfer_id}: {transfer.display_name} ({transfer.state})")
+
+# Inspect one transfer's configuration
+transfer = client.transfers.get(team_id=12345, transfer_id=36091)
+print(f"Schedule: {transfer.schedule}")
+
+# Dry-run a configuration before creating it. An invalid configuration comes back
+# as a result, not an exception — that is the point of a validation endpoint.
+from supermetrics._generated.supermetrics_api_client.models.transfer_account import TransferAccount
+from supermetrics._generated.supermetrics_api_client.models.transfer_schedule import TransferSchedule
+
+schedule = [TransferSchedule(run_interval="daily", run_hour=4)]
+accounts = [TransferAccount(data_source_username="ads@example.com", login_id=1, account_id="8733197711")]
+
+result = client.transfers.validate(
+    team_id=12345,
+    data_source_id="AW",
+    schema_id=99999,
+    destination_id=8,
+    display_name="Google Ads to BigQuery",
+    schedule=schedule,
+    accounts=accounts,
+)
+if not result.is_valid:
+    for error in result.errors:
+        print(f"{error.field_id}: {error.error_code}")
+
+# Pause and resume. The API's vocabulary is "pause" / "unpause".
+client.transfers.set_state(team_id=12345, transfer_id=36091, state="pause")
+
+# Run history for a transfer, and the detail of one run
+runs = client.transfers.list_runs(
+    team_id=12345,
+    transfer_id=36091,
+    start_date=datetime(2026, 1, 1, tzinfo=UTC),
+    end_date=datetime(2026, 1, 31, tzinfo=UTC),
+)
+for run in runs:
+    print(f"Run {run.id}: {run.status} ({run.total_rows} rows)")
+
+run = client.transfer_runs.get(team_id=12345, transfer_run_id=12345)
+for query in run.query_details:
+    print(f"  query: {query.status}, {query.rows} rows")
 ```
 
 ### Data Warehouse Backfills

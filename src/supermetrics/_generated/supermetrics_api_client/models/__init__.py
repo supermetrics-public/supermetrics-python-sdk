@@ -1,9 +1,25 @@
 """Contains all the data models used in inputs/outputs"""
 
+from .abstract_response import AbstractResponse
+from .available_sources_response import AvailableSourcesResponse
 from .backfill import Backfill
 from .backfill_response import BackfillResponse
 from .backfill_response_meta import BackfillResponseMeta
 from .backfill_status import BackfillStatus
+from .change_transfer_state_request import ChangeTransferStateRequest
+from .change_transfer_state_request_transfer_state import ChangeTransferStateRequestTransferState
+from .change_transfer_state_response_400 import ChangeTransferStateResponse400
+from .change_transfer_state_response_400_meta import ChangeTransferStateResponse400Meta
+from .change_transfer_state_response_401 import ChangeTransferStateResponse401
+from .change_transfer_state_response_401_meta import ChangeTransferStateResponse401Meta
+from .change_transfer_state_response_403 import ChangeTransferStateResponse403
+from .change_transfer_state_response_403_meta import ChangeTransferStateResponse403Meta
+from .change_transfer_state_response_404 import ChangeTransferStateResponse404
+from .change_transfer_state_response_404_meta import ChangeTransferStateResponse404Meta
+from .change_transfer_state_response_429 import ChangeTransferStateResponse429
+from .change_transfer_state_response_429_meta import ChangeTransferStateResponse429Meta
+from .change_transfer_state_response_500 import ChangeTransferStateResponse500
+from .change_transfer_state_response_500_meta import ChangeTransferStateResponse500Meta
 from .close_login_link_response_401 import CloseLoginLinkResponse401
 from .close_login_link_response_401_meta import CloseLoginLinkResponse401Meta
 from .close_login_link_response_404 import CloseLoginLinkResponse404
@@ -59,6 +75,20 @@ from .create_connector_secret_response_429 import CreateConnectorSecretResponse4
 from .create_connector_secret_response_429_meta import CreateConnectorSecretResponse429Meta
 from .create_connector_secret_response_500 import CreateConnectorSecretResponse500
 from .create_connector_secret_response_500_meta import CreateConnectorSecretResponse500Meta
+from .create_data_source_connection_request import CreateDataSourceConnectionRequest
+from .create_data_source_connection_response import CreateDataSourceConnectionResponse
+from .create_data_source_connection_response_400 import CreateDataSourceConnectionResponse400
+from .create_data_source_connection_response_400_meta import CreateDataSourceConnectionResponse400Meta
+from .create_data_source_connection_response_401 import CreateDataSourceConnectionResponse401
+from .create_data_source_connection_response_401_meta import CreateDataSourceConnectionResponse401Meta
+from .create_data_source_connection_response_403 import CreateDataSourceConnectionResponse403
+from .create_data_source_connection_response_403_meta import CreateDataSourceConnectionResponse403Meta
+from .create_data_source_connection_response_422 import CreateDataSourceConnectionResponse422
+from .create_data_source_connection_response_422_meta import CreateDataSourceConnectionResponse422Meta
+from .create_data_source_connection_response_429 import CreateDataSourceConnectionResponse429
+from .create_data_source_connection_response_429_meta import CreateDataSourceConnectionResponse429Meta
+from .create_data_source_connection_response_500 import CreateDataSourceConnectionResponse500
+from .create_data_source_connection_response_500_meta import CreateDataSourceConnectionResponse500Meta
 from .create_login_link_body import CreateLoginLinkBody
 from .create_login_link_response_401 import CreateLoginLinkResponse401
 from .create_login_link_response_401_meta import CreateLoginLinkResponse401Meta
@@ -71,6 +101,20 @@ from .create_login_link_response_429_meta import CreateLoginLinkResponse429Meta
 from .create_login_link_response_500 import CreateLoginLinkResponse500
 from .create_login_link_response_500_meta import CreateLoginLinkResponse500Meta
 from .create_secret_request import CreateSecretRequest
+from .create_transfer_response_400 import CreateTransferResponse400
+from .create_transfer_response_400_meta import CreateTransferResponse400Meta
+from .create_transfer_response_401 import CreateTransferResponse401
+from .create_transfer_response_401_meta import CreateTransferResponse401Meta
+from .create_transfer_response_403 import CreateTransferResponse403
+from .create_transfer_response_403_meta import CreateTransferResponse403Meta
+from .create_transfer_response_409 import CreateTransferResponse409
+from .create_transfer_response_409_meta import CreateTransferResponse409Meta
+from .create_transfer_response_422 import CreateTransferResponse422
+from .create_transfer_response_422_meta import CreateTransferResponse422Meta
+from .create_transfer_response_429 import CreateTransferResponse429
+from .create_transfer_response_429_meta import CreateTransferResponse429Meta
+from .create_transfer_response_500 import CreateTransferResponse500
+from .create_transfer_response_500_meta import CreateTransferResponse500Meta
 from .data_query import DataQuery
 from .data_query_ds_accounts_type_2 import DataQueryDsAccountsType2
 from .data_query_fields_type_2_item import DataQueryFieldsType2Item
@@ -83,6 +127,8 @@ from .data_response_meta_query_fields_item import DataResponseMetaQueryFieldsIte
 from .data_response_meta_query_settings import DataResponseMetaQuerySettings
 from .data_response_meta_result import DataResponseMetaResult
 from .data_source import DataSource
+from .data_source_connection import DataSourceConnection
+from .data_source_info import DataSourceInfo
 from .data_source_login import DataSourceLogin
 from .data_source_login_type import DataSourceLoginType
 from .data_source_type import DataSourceType
@@ -119,6 +165,19 @@ from .delete_connector_secret_response_429 import DeleteConnectorSecretResponse4
 from .delete_connector_secret_response_429_meta import DeleteConnectorSecretResponse429Meta
 from .delete_connector_secret_response_500 import DeleteConnectorSecretResponse500
 from .delete_connector_secret_response_500_meta import DeleteConnectorSecretResponse500Meta
+from .delete_transfer_response_401 import DeleteTransferResponse401
+from .delete_transfer_response_401_meta import DeleteTransferResponse401Meta
+from .delete_transfer_response_403 import DeleteTransferResponse403
+from .delete_transfer_response_403_meta import DeleteTransferResponse403Meta
+from .delete_transfer_response_404 import DeleteTransferResponse404
+from .delete_transfer_response_404_meta import DeleteTransferResponse404Meta
+from .delete_transfer_response_429 import DeleteTransferResponse429
+from .delete_transfer_response_429_meta import DeleteTransferResponse429Meta
+from .delete_transfer_response_500 import DeleteTransferResponse500
+from .delete_transfer_response_500_meta import DeleteTransferResponse500Meta
+from .destination_type_settings import DestinationTypeSettings
+from .destination_type_settings_auth_methods_item import DestinationTypeSettingsAuthMethodsItem
+from .destination_type_settings_settings_item import DestinationTypeSettingsSettingsItem
 from .error import Error
 from .error_response import ErrorResponse
 from .error_response_meta import ErrorResponseMeta
@@ -140,6 +199,14 @@ from .get_accounts_response_429 import GetAccountsResponse429
 from .get_accounts_response_429_meta import GetAccountsResponse429Meta
 from .get_accounts_response_500 import GetAccountsResponse500
 from .get_accounts_response_500_meta import GetAccountsResponse500Meta
+from .get_available_sources_response_401 import GetAvailableSourcesResponse401
+from .get_available_sources_response_401_meta import GetAvailableSourcesResponse401Meta
+from .get_available_sources_response_403 import GetAvailableSourcesResponse403
+from .get_available_sources_response_403_meta import GetAvailableSourcesResponse403Meta
+from .get_available_sources_response_429 import GetAvailableSourcesResponse429
+from .get_available_sources_response_429_meta import GetAvailableSourcesResponse429Meta
+from .get_available_sources_response_500 import GetAvailableSourcesResponse500
+from .get_available_sources_response_500_meta import GetAvailableSourcesResponse500Meta
 from .get_backfill_by_id_response_401 import GetBackfillByIdResponse401
 from .get_backfill_by_id_response_401_meta import GetBackfillByIdResponse401Meta
 from .get_backfill_by_id_response_403 import GetBackfillByIdResponse403
@@ -234,6 +301,34 @@ from .get_login_link_response_429 import GetLoginLinkResponse429
 from .get_login_link_response_429_meta import GetLoginLinkResponse429Meta
 from .get_login_link_response_500 import GetLoginLinkResponse500
 from .get_login_link_response_500_meta import GetLoginLinkResponse500Meta
+from .get_transfer_options_response_401 import GetTransferOptionsResponse401
+from .get_transfer_options_response_401_meta import GetTransferOptionsResponse401Meta
+from .get_transfer_options_response_403 import GetTransferOptionsResponse403
+from .get_transfer_options_response_403_meta import GetTransferOptionsResponse403Meta
+from .get_transfer_options_response_429 import GetTransferOptionsResponse429
+from .get_transfer_options_response_429_meta import GetTransferOptionsResponse429Meta
+from .get_transfer_options_response_500 import GetTransferOptionsResponse500
+from .get_transfer_options_response_500_meta import GetTransferOptionsResponse500Meta
+from .get_transfer_response_401 import GetTransferResponse401
+from .get_transfer_response_401_meta import GetTransferResponse401Meta
+from .get_transfer_response_403 import GetTransferResponse403
+from .get_transfer_response_403_meta import GetTransferResponse403Meta
+from .get_transfer_response_404 import GetTransferResponse404
+from .get_transfer_response_404_meta import GetTransferResponse404Meta
+from .get_transfer_response_429 import GetTransferResponse429
+from .get_transfer_response_429_meta import GetTransferResponse429Meta
+from .get_transfer_response_500 import GetTransferResponse500
+from .get_transfer_response_500_meta import GetTransferResponse500Meta
+from .get_transfer_run_response_401 import GetTransferRunResponse401
+from .get_transfer_run_response_401_meta import GetTransferRunResponse401Meta
+from .get_transfer_run_response_403 import GetTransferRunResponse403
+from .get_transfer_run_response_403_meta import GetTransferRunResponse403Meta
+from .get_transfer_run_response_404 import GetTransferRunResponse404
+from .get_transfer_run_response_404_meta import GetTransferRunResponse404Meta
+from .get_transfer_run_response_429 import GetTransferRunResponse429
+from .get_transfer_run_response_429_meta import GetTransferRunResponse429Meta
+from .get_transfer_run_response_500 import GetTransferRunResponse500
+from .get_transfer_run_response_500_meta import GetTransferRunResponse500Meta
 from .list_connector_logs_response_200 import ListConnectorLogsResponse200
 from .list_connector_logs_response_400 import ListConnectorLogsResponse400
 from .list_connector_logs_response_400_meta import ListConnectorLogsResponse400Meta
@@ -292,14 +387,72 @@ from .list_login_links_response_429 import ListLoginLinksResponse429
 from .list_login_links_response_429_meta import ListLoginLinksResponse429Meta
 from .list_login_links_response_500 import ListLoginLinksResponse500
 from .list_login_links_response_500_meta import ListLoginLinksResponse500Meta
+from .list_transfer_runs_response_401 import ListTransferRunsResponse401
+from .list_transfer_runs_response_401_meta import ListTransferRunsResponse401Meta
+from .list_transfer_runs_response_403 import ListTransferRunsResponse403
+from .list_transfer_runs_response_403_meta import ListTransferRunsResponse403Meta
+from .list_transfer_runs_response_429 import ListTransferRunsResponse429
+from .list_transfer_runs_response_429_meta import ListTransferRunsResponse429Meta
+from .list_transfer_runs_response_500 import ListTransferRunsResponse500
+from .list_transfer_runs_response_500_meta import ListTransferRunsResponse500Meta
+from .list_transfer_runs_sort_direction import ListTransferRunsSortDirection
+from .list_transfer_runs_sort_field import ListTransferRunsSortField
+from .list_transfers_response_401 import ListTransfersResponse401
+from .list_transfers_response_401_meta import ListTransfersResponse401Meta
+from .list_transfers_response_403 import ListTransfersResponse403
+from .list_transfers_response_403_meta import ListTransfersResponse403Meta
+from .list_transfers_response_429 import ListTransfersResponse429
+from .list_transfers_response_429_meta import ListTransfersResponse429Meta
+from .list_transfers_response_500 import ListTransfersResponse500
+from .list_transfers_response_500_meta import ListTransfersResponse500Meta
 from .log_entry import LogEntry
 from .login_link import LoginLink
 from .login_link_response import LoginLinkResponse
 from .login_link_response_meta import LoginLinkResponseMeta
 from .login_link_status_code import LoginLinkStatusCode
+from .meta import Meta
+from .query_details import QueryDetails
 from .response_meta import ResponseMeta
 from .secret import Secret
+from .transfer_account import TransferAccount
 from .transfer_backfill_run_error import TransferBackfillRunError
+from .transfer_configuration_request import TransferConfigurationRequest
+from .transfer_configuration_response import TransferConfigurationResponse
+from .transfer_configuration_response_data_source import TransferConfigurationResponseDataSource
+from .transfer_configuration_response_license import TransferConfigurationResponseLicense
+from .transfer_configuration_response_license_features import TransferConfigurationResponseLicenseFeatures
+from .transfer_configuration_response_notification_recipients_type_0_item import (
+    TransferConfigurationResponseNotificationRecipientsType0Item,
+)
+from .transfer_created_envelope import TransferCreatedEnvelope
+from .transfer_created_response import TransferCreatedResponse
+from .transfer_data_source_setting import TransferDataSourceSetting
+from .transfer_destination import TransferDestination
+from .transfer_destination_details_item import TransferDestinationDetailsItem
+from .transfer_info_response import TransferInfoResponse
+from .transfer_info_response_backfill_type_0 import TransferInfoResponseBackfillType0
+from .transfer_info_response_data_source_type_0 import TransferInfoResponseDataSourceType0
+from .transfer_info_response_destination_type_0 import TransferInfoResponseDestinationType0
+from .transfer_list_response import TransferListResponse
+from .transfer_options_response import TransferOptionsResponse
+from .transfer_options_response_accounts_item import TransferOptionsResponseAccountsItem
+from .transfer_options_response_data_source import TransferOptionsResponseDataSource
+from .transfer_options_response_data_source_settings_item import TransferOptionsResponseDataSourceSettingsItem
+from .transfer_options_response_license import TransferOptionsResponseLicense
+from .transfer_options_response_logins_item import TransferOptionsResponseLoginsItem
+from .transfer_options_response_schedule_options_item import TransferOptionsResponseScheduleOptionsItem
+from .transfer_options_response_schemas_item import TransferOptionsResponseSchemasItem
+from .transfer_options_response_segments_item import TransferOptionsResponseSegmentsItem
+from .transfer_run_detail import TransferRunDetail
+from .transfer_run_detail_response import TransferRunDetailResponse
+from .transfer_run_item import TransferRunItem
+from .transfer_run_item_type import TransferRunItemType
+from .transfer_run_list_response import TransferRunListResponse
+from .transfer_schedule import TransferSchedule
+from .transfer_schedule_run_interval import TransferScheduleRunInterval
+from .transfer_segment import TransferSegment
+from .transfer_state_update_response import TransferStateUpdateResponse
+from .transfer_updated_response import TransferUpdatedResponse
 from .update_backfill_status_body import UpdateBackfillStatusBody
 from .update_backfill_status_body_status import UpdateBackfillStatusBodyStatus
 from .update_backfill_status_response_400 import UpdateBackfillStatusResponse400
@@ -351,6 +504,20 @@ from .update_connector_secret_response_429_meta import UpdateConnectorSecretResp
 from .update_connector_secret_response_500 import UpdateConnectorSecretResponse500
 from .update_connector_secret_response_500_meta import UpdateConnectorSecretResponse500Meta
 from .update_secret_request import UpdateSecretRequest
+from .update_transfer_response_400 import UpdateTransferResponse400
+from .update_transfer_response_400_meta import UpdateTransferResponse400Meta
+from .update_transfer_response_401 import UpdateTransferResponse401
+from .update_transfer_response_401_meta import UpdateTransferResponse401Meta
+from .update_transfer_response_403 import UpdateTransferResponse403
+from .update_transfer_response_403_meta import UpdateTransferResponse403Meta
+from .update_transfer_response_404 import UpdateTransferResponse404
+from .update_transfer_response_404_meta import UpdateTransferResponse404Meta
+from .update_transfer_response_422 import UpdateTransferResponse422
+from .update_transfer_response_422_meta import UpdateTransferResponse422Meta
+from .update_transfer_response_429 import UpdateTransferResponse429
+from .update_transfer_response_429_meta import UpdateTransferResponse429Meta
+from .update_transfer_response_500 import UpdateTransferResponse500
+from .update_transfer_response_500_meta import UpdateTransferResponse500Meta
 from .upload_connector_logo_body import UploadConnectorLogoBody
 from .upload_connector_logo_response_201 import UploadConnectorLogoResponse201
 from .upload_connector_logo_response_400 import UploadConnectorLogoResponse400
@@ -367,12 +534,48 @@ from .upload_connector_logo_response_500 import UploadConnectorLogoResponse500
 from .upload_connector_logo_response_500_meta import UploadConnectorLogoResponse500Meta
 from .user import User
 from .user_type import UserType
+from .validate_transfer_response_401 import ValidateTransferResponse401
+from .validate_transfer_response_401_meta import ValidateTransferResponse401Meta
+from .validate_transfer_response_403 import ValidateTransferResponse403
+from .validate_transfer_response_403_meta import ValidateTransferResponse403Meta
+from .validate_transfer_response_429 import ValidateTransferResponse429
+from .validate_transfer_response_429_meta import ValidateTransferResponse429Meta
+from .validate_transfer_response_500 import ValidateTransferResponse500
+from .validate_transfer_response_500_meta import ValidateTransferResponse500Meta
+from .validate_transfer_update_response_401 import ValidateTransferUpdateResponse401
+from .validate_transfer_update_response_401_meta import ValidateTransferUpdateResponse401Meta
+from .validate_transfer_update_response_403 import ValidateTransferUpdateResponse403
+from .validate_transfer_update_response_403_meta import ValidateTransferUpdateResponse403Meta
+from .validate_transfer_update_response_404 import ValidateTransferUpdateResponse404
+from .validate_transfer_update_response_404_meta import ValidateTransferUpdateResponse404Meta
+from .validate_transfer_update_response_429 import ValidateTransferUpdateResponse429
+from .validate_transfer_update_response_429_meta import ValidateTransferUpdateResponse429Meta
+from .validate_transfer_update_response_500 import ValidateTransferUpdateResponse500
+from .validate_transfer_update_response_500_meta import ValidateTransferUpdateResponse500Meta
+from .validation_error import ValidationError
+from .validation_errors_response import ValidationErrorsResponse
 
 __all__ = (
+    "AbstractResponse",
+    "AvailableSourcesResponse",
     "Backfill",
     "BackfillResponse",
     "BackfillResponseMeta",
     "BackfillStatus",
+    "ChangeTransferStateRequest",
+    "ChangeTransferStateRequestTransferState",
+    "ChangeTransferStateResponse400",
+    "ChangeTransferStateResponse400Meta",
+    "ChangeTransferStateResponse401",
+    "ChangeTransferStateResponse401Meta",
+    "ChangeTransferStateResponse403",
+    "ChangeTransferStateResponse403Meta",
+    "ChangeTransferStateResponse404",
+    "ChangeTransferStateResponse404Meta",
+    "ChangeTransferStateResponse429",
+    "ChangeTransferStateResponse429Meta",
+    "ChangeTransferStateResponse500",
+    "ChangeTransferStateResponse500Meta",
     "CloseLoginLinkResponse401",
     "CloseLoginLinkResponse401Meta",
     "CloseLoginLinkResponse404",
@@ -428,6 +631,20 @@ __all__ = (
     "CreateConnectorSecretResponse429Meta",
     "CreateConnectorSecretResponse500",
     "CreateConnectorSecretResponse500Meta",
+    "CreateDataSourceConnectionRequest",
+    "CreateDataSourceConnectionResponse",
+    "CreateDataSourceConnectionResponse400",
+    "CreateDataSourceConnectionResponse400Meta",
+    "CreateDataSourceConnectionResponse401",
+    "CreateDataSourceConnectionResponse401Meta",
+    "CreateDataSourceConnectionResponse403",
+    "CreateDataSourceConnectionResponse403Meta",
+    "CreateDataSourceConnectionResponse422",
+    "CreateDataSourceConnectionResponse422Meta",
+    "CreateDataSourceConnectionResponse429",
+    "CreateDataSourceConnectionResponse429Meta",
+    "CreateDataSourceConnectionResponse500",
+    "CreateDataSourceConnectionResponse500Meta",
     "CreateLoginLinkBody",
     "CreateLoginLinkResponse401",
     "CreateLoginLinkResponse401Meta",
@@ -440,6 +657,20 @@ __all__ = (
     "CreateLoginLinkResponse500",
     "CreateLoginLinkResponse500Meta",
     "CreateSecretRequest",
+    "CreateTransferResponse400",
+    "CreateTransferResponse400Meta",
+    "CreateTransferResponse401",
+    "CreateTransferResponse401Meta",
+    "CreateTransferResponse403",
+    "CreateTransferResponse403Meta",
+    "CreateTransferResponse409",
+    "CreateTransferResponse409Meta",
+    "CreateTransferResponse422",
+    "CreateTransferResponse422Meta",
+    "CreateTransferResponse429",
+    "CreateTransferResponse429Meta",
+    "CreateTransferResponse500",
+    "CreateTransferResponse500Meta",
     "DataQuery",
     "DataQueryDsAccountsType2",
     "DataQueryFieldsType2Item",
@@ -452,12 +683,14 @@ __all__ = (
     "DataResponseMetaQuerySettings",
     "DataResponseMetaResult",
     "DataSource",
+    "DataSourceConnection",
     "DatasourceDetails",
     "DatasourceDetailsAccountLabelsType0",
     "DatasourceDetailsCategoriesItem",
     "DatasourceDetailsResponse",
     "DatasourceDetailsResponseMeta",
     "DatasourceDetailsStatus",
+    "DataSourceInfo",
     "DataSourceLogin",
     "DataSourceLoginType",
     "DatasourceOption",
@@ -488,6 +721,19 @@ __all__ = (
     "DeleteConnectorSecretResponse429Meta",
     "DeleteConnectorSecretResponse500",
     "DeleteConnectorSecretResponse500Meta",
+    "DeleteTransferResponse401",
+    "DeleteTransferResponse401Meta",
+    "DeleteTransferResponse403",
+    "DeleteTransferResponse403Meta",
+    "DeleteTransferResponse404",
+    "DeleteTransferResponse404Meta",
+    "DeleteTransferResponse429",
+    "DeleteTransferResponse429Meta",
+    "DeleteTransferResponse500",
+    "DeleteTransferResponse500Meta",
+    "DestinationTypeSettings",
+    "DestinationTypeSettingsAuthMethodsItem",
+    "DestinationTypeSettingsSettingsItem",
     "Error",
     "ErrorResponse",
     "ErrorResponseMeta",
@@ -509,6 +755,14 @@ __all__ = (
     "GetAccountsResponse429Meta",
     "GetAccountsResponse500",
     "GetAccountsResponse500Meta",
+    "GetAvailableSourcesResponse401",
+    "GetAvailableSourcesResponse401Meta",
+    "GetAvailableSourcesResponse403",
+    "GetAvailableSourcesResponse403Meta",
+    "GetAvailableSourcesResponse429",
+    "GetAvailableSourcesResponse429Meta",
+    "GetAvailableSourcesResponse500",
+    "GetAvailableSourcesResponse500Meta",
     "GetBackfillByIdResponse401",
     "GetBackfillByIdResponse401Meta",
     "GetBackfillByIdResponse403",
@@ -603,6 +857,34 @@ __all__ = (
     "GetLoginLinkResponse429Meta",
     "GetLoginLinkResponse500",
     "GetLoginLinkResponse500Meta",
+    "GetTransferOptionsResponse401",
+    "GetTransferOptionsResponse401Meta",
+    "GetTransferOptionsResponse403",
+    "GetTransferOptionsResponse403Meta",
+    "GetTransferOptionsResponse429",
+    "GetTransferOptionsResponse429Meta",
+    "GetTransferOptionsResponse500",
+    "GetTransferOptionsResponse500Meta",
+    "GetTransferResponse401",
+    "GetTransferResponse401Meta",
+    "GetTransferResponse403",
+    "GetTransferResponse403Meta",
+    "GetTransferResponse404",
+    "GetTransferResponse404Meta",
+    "GetTransferResponse429",
+    "GetTransferResponse429Meta",
+    "GetTransferResponse500",
+    "GetTransferResponse500Meta",
+    "GetTransferRunResponse401",
+    "GetTransferRunResponse401Meta",
+    "GetTransferRunResponse403",
+    "GetTransferRunResponse403Meta",
+    "GetTransferRunResponse404",
+    "GetTransferRunResponse404Meta",
+    "GetTransferRunResponse429",
+    "GetTransferRunResponse429Meta",
+    "GetTransferRunResponse500",
+    "GetTransferRunResponse500Meta",
     "ListConnectorLogsResponse200",
     "ListConnectorLogsResponse400",
     "ListConnectorLogsResponse400Meta",
@@ -661,14 +943,70 @@ __all__ = (
     "ListLoginLinksResponse429Meta",
     "ListLoginLinksResponse500",
     "ListLoginLinksResponse500Meta",
+    "ListTransferRunsResponse401",
+    "ListTransferRunsResponse401Meta",
+    "ListTransferRunsResponse403",
+    "ListTransferRunsResponse403Meta",
+    "ListTransferRunsResponse429",
+    "ListTransferRunsResponse429Meta",
+    "ListTransferRunsResponse500",
+    "ListTransferRunsResponse500Meta",
+    "ListTransferRunsSortDirection",
+    "ListTransferRunsSortField",
+    "ListTransfersResponse401",
+    "ListTransfersResponse401Meta",
+    "ListTransfersResponse403",
+    "ListTransfersResponse403Meta",
+    "ListTransfersResponse429",
+    "ListTransfersResponse429Meta",
+    "ListTransfersResponse500",
+    "ListTransfersResponse500Meta",
     "LogEntry",
     "LoginLink",
     "LoginLinkResponse",
     "LoginLinkResponseMeta",
     "LoginLinkStatusCode",
+    "Meta",
+    "QueryDetails",
     "ResponseMeta",
     "Secret",
+    "TransferAccount",
     "TransferBackfillRunError",
+    "TransferConfigurationRequest",
+    "TransferConfigurationResponse",
+    "TransferConfigurationResponseDataSource",
+    "TransferConfigurationResponseLicense",
+    "TransferConfigurationResponseLicenseFeatures",
+    "TransferConfigurationResponseNotificationRecipientsType0Item",
+    "TransferCreatedEnvelope",
+    "TransferCreatedResponse",
+    "TransferDataSourceSetting",
+    "TransferDestination",
+    "TransferDestinationDetailsItem",
+    "TransferInfoResponse",
+    "TransferInfoResponseBackfillType0",
+    "TransferInfoResponseDataSourceType0",
+    "TransferInfoResponseDestinationType0",
+    "TransferListResponse",
+    "TransferOptionsResponse",
+    "TransferOptionsResponseAccountsItem",
+    "TransferOptionsResponseDataSource",
+    "TransferOptionsResponseDataSourceSettingsItem",
+    "TransferOptionsResponseLicense",
+    "TransferOptionsResponseLoginsItem",
+    "TransferOptionsResponseScheduleOptionsItem",
+    "TransferOptionsResponseSchemasItem",
+    "TransferOptionsResponseSegmentsItem",
+    "TransferRunDetail",
+    "TransferRunDetailResponse",
+    "TransferRunItem",
+    "TransferRunItemType",
+    "TransferRunListResponse",
+    "TransferSchedule",
+    "TransferScheduleRunInterval",
+    "TransferSegment",
+    "TransferStateUpdateResponse",
+    "TransferUpdatedResponse",
     "UpdateBackfillStatusBody",
     "UpdateBackfillStatusBodyStatus",
     "UpdateBackfillStatusResponse400",
@@ -718,6 +1056,20 @@ __all__ = (
     "UpdateConnectorSecretResponse500",
     "UpdateConnectorSecretResponse500Meta",
     "UpdateSecretRequest",
+    "UpdateTransferResponse400",
+    "UpdateTransferResponse400Meta",
+    "UpdateTransferResponse401",
+    "UpdateTransferResponse401Meta",
+    "UpdateTransferResponse403",
+    "UpdateTransferResponse403Meta",
+    "UpdateTransferResponse404",
+    "UpdateTransferResponse404Meta",
+    "UpdateTransferResponse422",
+    "UpdateTransferResponse422Meta",
+    "UpdateTransferResponse429",
+    "UpdateTransferResponse429Meta",
+    "UpdateTransferResponse500",
+    "UpdateTransferResponse500Meta",
     "UploadConnectorLogoBody",
     "UploadConnectorLogoResponse201",
     "UploadConnectorLogoResponse400",
@@ -734,4 +1086,24 @@ __all__ = (
     "UploadConnectorLogoResponse500Meta",
     "User",
     "UserType",
+    "ValidateTransferResponse401",
+    "ValidateTransferResponse401Meta",
+    "ValidateTransferResponse403",
+    "ValidateTransferResponse403Meta",
+    "ValidateTransferResponse429",
+    "ValidateTransferResponse429Meta",
+    "ValidateTransferResponse500",
+    "ValidateTransferResponse500Meta",
+    "ValidateTransferUpdateResponse401",
+    "ValidateTransferUpdateResponse401Meta",
+    "ValidateTransferUpdateResponse403",
+    "ValidateTransferUpdateResponse403Meta",
+    "ValidateTransferUpdateResponse404",
+    "ValidateTransferUpdateResponse404Meta",
+    "ValidateTransferUpdateResponse429",
+    "ValidateTransferUpdateResponse429Meta",
+    "ValidateTransferUpdateResponse500",
+    "ValidateTransferUpdateResponse500Meta",
+    "ValidationError",
+    "ValidationErrorsResponse",
 )

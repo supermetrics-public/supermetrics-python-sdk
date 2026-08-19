@@ -70,6 +70,71 @@ endpoints:
     path: /management/connectors
 ```
 
+#### A1. Pin Already-Shipped Endpoints (`pin_baseline`)
+
+```yaml
+pin_baseline: openapi-spec.yaml
+```
+
+With this set, any filtered endpoint already present in the committed merged spec is taken
+**from that file** rather than re-read from `openapi-specs/`. Only genuinely new endpoints
+come from upstream, which makes a regeneration purely **additive**.
+
+This is not a nicety. The upstream specifications drift between publications, and the
+generator turns some of that drift into breaking changes:
+
+| Upstream drift | What it does to the SDK |
+|---|---|
+| An operation is retagged | The first tag *is* the generated API subpackage name, so the module moves and every adapter importing it fails |
+| A path is reparameterised | `GET /query/data/json` became `GET /query/data/{context_type}`; the old module disappears |
+| A shared schema is restructured | Regenerates a model that shipped adapters and their tests are written against |
+
+Absorbing any of that as a side effect of adding one new domain is how a working SDK
+becomes a broken one. Pinning makes each of those a deliberate, separately reviewable
+change instead.
+
+Components follow the same rule: for a name defined in both places, the baseline
+definition wins, so shared schemas such as `ErrorResponse` stay byte-identical.
+
+**To deliberately refresh a pinned endpoint**, delete its entry from `openapi-spec.yaml`,
+or drop `pin_baseline` for a full upstream refresh — then expect to update the affected
+adapters, and their tests, in the same change.
+
+**The acceptance check** after any regeneration:
+
+```bash
+git status --porcelain src/supermetrics/_generated | grep -v '^??'
+```
+
+Only new (`??`) files should appear. Anything modified or deleted means drift got in.
+
+#### A2. Rewrite an Endpoint's Path (`rewrite_path`)
+
+```yaml
+endpoints:
+  - method: GET
+    path: /v1/teams/{team_id}/transfers
+    rewrite_path: /teams/{team_id}/transfers
+```
+
+The endpoint is *matched* upstream by `path` and *written* into the merged spec under
+`rewrite_path`.
+
+This exists because the upstream specs split a shared prefix inconsistently. Data
+Warehouse transfers are declared as `/v1/teams/...` served from
+`https://dts-api.supermetrics.com`, while backfills and data source connections are
+`/teams/...` served from `https://dts-api.supermetrics.com/v1`. Both resolve to the same
+URL, but `openapi-python-client` **ignores path-level `servers`** and simply concatenates
+`base_url + path` — so under one base URL one of the two groups is always wrong, by a
+duplicated or a missing `/v1`. Rewriting normalises them onto a single convention.
+
+Two filter entries that would write to the same merged path is a hard error, so a rewrite
+cannot silently shadow another endpoint.
+
+> Rewriting a path changes the URL the generated client requests. Only use it to correct
+> where the spec puts a prefix that the server also puts in `servers` — never to invent a
+> route the API does not serve.
+
 #### B. Endpoint Patches (Merge & Replace)
 
 ```yaml

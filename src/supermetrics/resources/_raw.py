@@ -33,6 +33,8 @@ from supermetrics.resources.datasource_details import DatasourceDetailsAsyncReso
 from supermetrics.resources.login_links import LoginLinksAsyncResource, LoginLinksResource
 from supermetrics.resources.logins import LoginsAsyncResource, LoginsResource
 from supermetrics.resources.queries import QueriesAsyncResource, QueriesResource
+from supermetrics.resources.transfer_runs import TransferRunsAsyncResource, TransferRunsResource
+from supermetrics.resources.transfers import TransfersAsyncResource, TransfersResource
 from supermetrics.response import async_to_raw_response_wrapper, to_raw_response_wrapper
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
@@ -298,6 +300,76 @@ class QueriesAsyncResourceWithRawResponse:
         self.get_results = async_to_raw_response_wrapper(resource.get_results)
 
 
+class TransfersResourceWithRawResponse:
+    """Raw-response view over :class:`~supermetrics.resources.transfers.TransfersResource`.
+
+    Args:
+        resource: The synchronous resource adapter to mirror.
+    """
+
+    def __init__(self, resource: TransfersResource) -> None:
+        """Wrap every method of ``resource`` to return an ``ApiResponse``."""
+        self.list = to_raw_response_wrapper(resource.list)
+        self.get = to_raw_response_wrapper(resource.get)
+        self.create = to_raw_response_wrapper(resource.create)
+        self.update = to_raw_response_wrapper(resource.update)
+        self.delete = to_raw_response_wrapper(resource.delete)
+        self.set_state = to_raw_response_wrapper(resource.set_state)
+        self.validate = to_raw_response_wrapper(resource.validate)
+        self.validate_update = to_raw_response_wrapper(resource.validate_update)
+        self.list_available_sources = to_raw_response_wrapper(resource.list_available_sources)
+        self.get_available_options = to_raw_response_wrapper(resource.get_available_options)
+        self.list_runs = to_raw_response_wrapper(resource.list_runs)
+        self.create_datasource_connection = to_raw_response_wrapper(resource.create_datasource_connection)
+
+
+class TransfersAsyncResourceWithRawResponse:
+    """Raw-response view over :class:`~supermetrics.resources.transfers.TransfersAsyncResource`.
+
+    Args:
+        resource: The asynchronous resource adapter to mirror.
+    """
+
+    def __init__(self, resource: TransfersAsyncResource) -> None:
+        """Wrap every method of ``resource`` to return an ``ApiResponse``."""
+        self.list = async_to_raw_response_wrapper(resource.list)
+        self.get = async_to_raw_response_wrapper(resource.get)
+        self.create = async_to_raw_response_wrapper(resource.create)
+        self.update = async_to_raw_response_wrapper(resource.update)
+        self.delete = async_to_raw_response_wrapper(resource.delete)
+        self.set_state = async_to_raw_response_wrapper(resource.set_state)
+        self.validate = async_to_raw_response_wrapper(resource.validate)
+        self.validate_update = async_to_raw_response_wrapper(resource.validate_update)
+        self.list_available_sources = async_to_raw_response_wrapper(resource.list_available_sources)
+        self.get_available_options = async_to_raw_response_wrapper(resource.get_available_options)
+        self.list_runs = async_to_raw_response_wrapper(resource.list_runs)
+        self.create_datasource_connection = async_to_raw_response_wrapper(resource.create_datasource_connection)
+
+
+class TransferRunsResourceWithRawResponse:
+    """Raw-response view over :class:`~supermetrics.resources.transfer_runs.TransferRunsResource`.
+
+    Args:
+        resource: The synchronous resource adapter to mirror.
+    """
+
+    def __init__(self, resource: TransferRunsResource) -> None:
+        """Wrap every method of ``resource`` to return an ``ApiResponse``."""
+        self.get = to_raw_response_wrapper(resource.get)
+
+
+class TransferRunsAsyncResourceWithRawResponse:
+    """Raw-response view over :class:`~supermetrics.resources.transfer_runs.TransferRunsAsyncResource`.
+
+    Args:
+        resource: The asynchronous resource adapter to mirror.
+    """
+
+    def __init__(self, resource: TransferRunsAsyncResource) -> None:
+        """Wrap every method of ``resource`` to return an ``ApiResponse``."""
+        self.get = async_to_raw_response_wrapper(resource.get)
+
+
 class SupermetricsClientWithRawResponse:
     """Raw-response view over every resource of a synchronous client.
 
@@ -320,6 +392,8 @@ class SupermetricsClientWithRawResponse:
         )
         self.connector_builder_logs = ConnectorBuilderLogsResourceWithRawResponse(client.connector_builder_logs)
         self.datasource_details = DatasourceDetailsResourceWithRawResponse(client.datasource_details)
+        self.transfers = TransfersResourceWithRawResponse(client.transfers)
+        self.transfer_runs = TransferRunsResourceWithRawResponse(client.transfer_runs)
 
 
 class SupermetricsAsyncClientWithRawResponse:
@@ -344,6 +418,8 @@ class SupermetricsAsyncClientWithRawResponse:
         )
         self.connector_builder_logs = ConnectorBuilderLogsAsyncResourceWithRawResponse(client.connector_builder_logs)
         self.datasource_details = DatasourceDetailsAsyncResourceWithRawResponse(client.datasource_details)
+        self.transfers = TransfersAsyncResourceWithRawResponse(client.transfers)
+        self.transfer_runs = TransferRunsAsyncResourceWithRawResponse(client.transfer_runs)
 
 
 __all__ = [
@@ -367,4 +443,8 @@ __all__ = [
     "QueriesResourceWithRawResponse",
     "SupermetricsAsyncClientWithRawResponse",
     "SupermetricsClientWithRawResponse",
+    "TransferRunsAsyncResourceWithRawResponse",
+    "TransferRunsResourceWithRawResponse",
+    "TransfersAsyncResourceWithRawResponse",
+    "TransfersResourceWithRawResponse",
 ]

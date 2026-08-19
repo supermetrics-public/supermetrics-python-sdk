@@ -9,7 +9,7 @@ import httpx
 from supermetrics.__version__ import __version__
 from supermetrics._auth import AuthConfig, TokenProvider, resolve_auth_config
 from supermetrics._generated.supermetrics_api_client.client import Client as GeneratedClient
-from supermetrics._transport import build_default_headers, build_sync_event_hooks
+from supermetrics._transport import build_default_headers, build_sync_event_hooks, resolve_dts_base_url
 from supermetrics.resources._raw import SupermetricsClientWithRawResponse
 from supermetrics.resources.accounts import AccountsResource
 from supermetrics.resources.backfills import BackfillsResource
@@ -20,6 +20,8 @@ from supermetrics.resources.datasource_details import DatasourceDetailsResource
 from supermetrics.resources.login_links import LoginLinksResource
 from supermetrics.resources.logins import LoginsResource
 from supermetrics.resources.queries import QueriesResource
+from supermetrics.resources.transfer_runs import TransferRunsResource
+from supermetrics.resources.transfers import TransfersResource
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +58,7 @@ class SupermetricsClient:
         custom_headers: dict[str, str] | None = None,
         timeout: float = 30.0,
         base_url: str = "https://api.supermetrics.com",
+        dts_base_url: str | None = None,
     ) -> None:
         """Initialize Supermetrics client.
 
@@ -84,6 +87,13 @@ class SupermetricsClient:
                 calls can override this with their ``timeout`` argument.
             base_url: API base URL (default: production API at
                 https://api.supermetrics.com).
+            dts_base_url: Base URL for the Data Warehouse API, which serves transfers,
+                transfer runs, backfills, and data source connections from a different
+                host. Leave unset to route those calls to
+                https://dts-api.supermetrics.com/v1 automatically whenever ``base_url``
+                is the production default. If ``base_url`` is anything else, no routing
+                is inferred and every request goes to ``base_url``; pass this explicitly
+                to point Data Warehouse traffic somewhere specific.
 
         Raises:
             SupermetricsClientError: If zero or multiple credentials are supplied,
@@ -114,6 +124,9 @@ class SupermetricsClient:
             custom_headers=custom_headers,
         )
 
+        # Data Warehouse endpoints live on a different host; see resolve_dts_base_url.
+        self._dts_base_url = resolve_dts_base_url(base_url, dts_base_url)
+
         logger.debug(f"Initializing SupermetricsClient with base_url={base_url}")
 
         # Create internal generated client. Event hooks apply per-request
@@ -122,7 +135,7 @@ class SupermetricsClient:
             base_url=base_url,
             headers=headers,
             timeout=httpx.Timeout(timeout),
-            httpx_args={"event_hooks": build_sync_event_hooks(self._auth)},
+            httpx_args={"event_hooks": build_sync_event_hooks(self._auth, self._dts_base_url)},
         )
 
         # Attach resource adapters
@@ -135,6 +148,8 @@ class SupermetricsClient:
         self.connector_builder_secrets = ConnectorBuilderSecretsResource(self._client)
         self.connector_builder_logs = ConnectorBuilderLogsResource(self._client)
         self.datasource_details = DatasourceDetailsResource(self._client)
+        self.transfers = TransfersResource(self._client)
+        self.transfer_runs = TransferRunsResource(self._client)
 
         self._with_raw_response: SupermetricsClientWithRawResponse | None = None
 

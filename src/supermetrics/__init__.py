@@ -2,6 +2,12 @@
 
 from supermetrics.__version__ import __version__
 from supermetrics._auth import AsyncTokenProvider, TokenProvider
+from supermetrics._generated.supermetrics_api_client.models.transfer_account import TransferAccount
+from supermetrics._generated.supermetrics_api_client.models.transfer_data_source_setting import (
+    TransferDataSourceSetting,
+)
+from supermetrics._generated.supermetrics_api_client.models.transfer_schedule import TransferSchedule
+from supermetrics._generated.supermetrics_api_client.models.transfer_segment import TransferSegment
 from supermetrics._transport import (
     current_auth_token,
     current_request_headers,
@@ -44,6 +50,17 @@ __all__ = [
     "current_auth_token",
     "current_request_headers",
     "current_request_timeout",
+    # Request models a caller has to construct.
+    #
+    # The SDK does not otherwise re-export generated models: they are values you get
+    # back from a call, so there is nothing to import. These four are different —
+    # transfers.create / update / validate / validate_update cannot be called without
+    # building them, and a public signature that can only be satisfied by importing
+    # from a private, underscore-prefixed package is not a public signature.
+    "TransferSchedule",
+    "TransferAccount",
+    "TransferSegment",
+    "TransferDataSourceSetting",
     # Exceptions
     "SupermetricsError",
     "SupermetricsClientError",
