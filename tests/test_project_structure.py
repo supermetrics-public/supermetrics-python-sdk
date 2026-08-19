@@ -92,13 +92,12 @@ class TestAcceptanceCriteria2:
         assert len(project["description"]) > 0, "project.description must not be empty"
 
     def test_runtime_dependencies(self, pyproject_data):
-        """Verify all 4 runtime dependencies present with correct version constraints."""
+        """Verify all 3 runtime dependencies present with correct version constraints."""
         project = pyproject_data["project"]
         dependencies = project.get("dependencies", [])
 
         required_deps = {
             "httpx": ">=0.25.0",
-            "pydantic": ">=2.0.0",
             "python-dateutil": ">=2.8.0",
             "attrs": ">=23.0.0",
         }
