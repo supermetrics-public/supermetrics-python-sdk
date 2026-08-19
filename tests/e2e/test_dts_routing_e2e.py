@@ -1,7 +1,7 @@
 """End-to-end tests for Data Warehouse host routing.
 
-Transfers, transfer runs, backfills and data source connections are served from
-``dts-api.supermetrics.com``, not from the core API host. The SDK re-hosts those
+Transfers, transfer runs, backfills, data source connections and destinations are
+served from ``dts-api.supermetrics.com``, not from the core API host. The SDK re-hosts those
 requests from an ``httpx`` request event hook so one pooled client can serve both.
 
 That behaviour only exists on the wire, and only a *second* server can prove it: a test
@@ -128,6 +128,62 @@ class TestRequestsReachTheRightHost:
 
         assert api_server.requests == []
         assert dts_server.last_request.path == "/v1/teams/42/backfills"
+
+    def test_destinations_are_routed_too(self, api_server: MockAPIServer, dts_server: MockAPIServer) -> None:
+        """Destinations share the Data Warehouse host with transfers.
+
+        ``_DTS_PATH_PATTERN`` has to name every Data Warehouse segment explicitly, so a
+        new resource is only routed once it is added to it. Without that, every
+        destinations call resolves the DTS base URL, is never re-hosted, and 404s
+        against the core API.
+        """
+        dts_server.route(
+            "/v1/teams/42/destinations",
+            ScriptedResponse(
+                json_body={
+                    "meta": {"request_id": "req_0123456789ab"},
+                    "data": [{"id": 8, "display_name": "Analytics warehouse", "type": "DWH_SNOWFLAKE"}],
+                }
+            ),
+        )
+
+        with SupermetricsClient(
+            api_key="not-a-real-key",
+            base_url=api_server.base_url,
+            dts_base_url=f"{dts_server.base_url}/v1",
+        ) as client:
+            destinations = client.destinations.list(team_id=42)
+
+        assert len(destinations) == 1
+        assert api_server.requests == [], "the core server must not have seen this request"
+        assert dts_server.last_request.path == "/v1/teams/42/destinations"
+
+    def test_destination_usage_is_routed_too(self, api_server: MockAPIServer, dts_server: MockAPIServer) -> None:
+        """A sub-path of a destination item is routed as well, not only the collection.
+
+        The pattern matches on the segment after the team id and then anything below it,
+        so ``/destinations/{id}/usage`` has to travel to the same host.
+        """
+        dts_server.route(
+            "/v1/teams/42/destinations/8/usage",
+            ScriptedResponse(
+                json_body={
+                    "meta": {"request_id": "req_0123456789ab"},
+                    "data": {"is_used": False, "transfers": []},
+                }
+            ),
+        )
+
+        with SupermetricsClient(
+            api_key="not-a-real-key",
+            base_url=api_server.base_url,
+            dts_base_url=f"{dts_server.base_url}/v1",
+        ) as client:
+            usage = client.destinations.get_usage(team_id=42, destination_id=8)
+
+        assert usage.is_used is False
+        assert api_server.requests == [], "the core server must not have seen this request"
+        assert dts_server.last_request.path == "/v1/teams/42/destinations/8/usage"
 
     def test_datasource_details_is_not_routed(self, api_server: MockAPIServer, dts_server: MockAPIServer) -> None:
         """``/teams/{id}/datasource/...`` shares the prefix but is a core-API route.
@@ -282,3 +338,59 @@ class TestAsyncRouting:
         assert run.id == 12345
         assert api_server.last_request.path == "/ds/logins"
         assert dts_server.last_request.path == "/v1/teams/42/transfer_runs/12345"
+
+    @pytest.mark.asyncio
+    async def test_destinations_go_to_the_dts_server(
+        self, api_server: MockAPIServer, dts_server: MockAPIServer
+    ) -> None:
+        """The destinations collection is re-hosted on the async client too."""
+        dts_server.route(
+            "/v1/teams/42/destinations",
+            ScriptedResponse(
+                json_body={
+                    "meta": {"request_id": "req_0123456789ab"},
+                    "data": [{"id": 8, "display_name": "Analytics warehouse", "type": "DWH_SNOWFLAKE"}],
+                }
+            ),
+        )
+
+        async with SupermetricsAsyncClient(
+            api_key="not-a-real-key",
+            base_url=api_server.base_url,
+            dts_base_url=f"{dts_server.base_url}/v1",
+        ) as client:
+            destinations = await client.destinations.list(team_id=42)
+
+        assert len(destinations) == 1
+        assert api_server.requests == [], "the core server must not have seen this request"
+        assert dts_server.last_request.path == "/v1/teams/42/destinations"
+
+    @pytest.mark.asyncio
+    async def test_destination_usage_goes_to_the_dts_server(
+        self, api_server: MockAPIServer, dts_server: MockAPIServer
+    ) -> None:
+        """The usage sub-path is re-hosted by the async request hook as well."""
+        dts_server.route(
+            "/v1/teams/42/destinations/8/usage",
+            ScriptedResponse(
+                json_body={
+                    "meta": {"request_id": "req_0123456789ab"},
+                    "data": {
+                        "is_used": True,
+                        "transfers": [{"transfer_id": 36091, "transfer_name": "Google Ads to BigQuery"}],
+                    },
+                }
+            ),
+        )
+
+        async with SupermetricsAsyncClient(
+            api_key="not-a-real-key",
+            base_url=api_server.base_url,
+            dts_base_url=f"{dts_server.base_url}/v1",
+        ) as client:
+            usage = await client.destinations.get_usage(team_id=42, destination_id=8)
+
+        assert usage.is_used is True
+        assert usage.transfers[0].transfer_id == 36091
+        assert api_server.requests == [], "the core server must not have seen this request"
+        assert dts_server.last_request.path == "/v1/teams/42/destinations/8/usage"

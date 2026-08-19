@@ -34,7 +34,7 @@ test *ARGS:
 
 # Run only the end-to-end transport tests (real sockets, local HTTP server)
 e2e *ARGS:
-    uv run --extra dev pytest tests/e2e -m e2e -o addopts="" -v {{ARGS}}
+    uv run --extra dev pytest tests/e2e -m e2e -o addopts="" --strict-markers -v {{ARGS}}
 
 # Verify strict sync/async API parity
 parity:

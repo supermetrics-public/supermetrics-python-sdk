@@ -14,7 +14,7 @@ Official Python client for Supermetrics
 * Dual sync/async support via separate Client classes
 * Pydantic v2 models for request/response validation
 * Comprehensive API coverage: login links, logins, accounts, queries, DWH transfers and
-  transfer runs, DWH backfills, Connector Builder
+  transfer runs, DWH destinations, DWH backfills, Connector Builder
 * Custom exception hierarchy with HTTP status code mapping
 * Resource-based API organization
 * API key, OAuth bearer token, and dynamic token provider authentication
@@ -141,6 +141,68 @@ for run in runs:
 run = client.transfer_runs.get(team_id=12345, transfer_run_id=12345)
 for query in run.query_details:
     print(f"  query: {query.status}, {query.rows} rows")
+```
+
+### Data Warehouse Destinations
+
+Destinations are the warehouses and buckets transfers write into. They live on the same
+Data Warehouse host as transfers, and the same client reaches them.
+
+```python
+from supermetrics import SupermetricsClient
+
+client = SupermetricsClient(api_key="your_api_key")
+
+# What the team already has
+for destination in client.destinations.list(team_id=12345):
+    print(f"{destination.id}: {destination.display_name} ({destination.type_})")
+
+# Credentials are a plain dict — there is no request model to import, because the
+# generated *Fields classes cannot be constructed. Keys depend on the type.
+fields = {
+    "hostname": "any-domain.my-region.snowflakecomputing.com",
+    "warehouse": "DEMO_WH",
+    "database_name": "TEST_DB",
+    "schema": "PUBLIC",
+    "role": "ACCOUNTADMIN",
+    "username": "USER",
+    "private_key": "not-a-real-key",
+}
+
+# Try the credentials before committing to them. A connection that does not work is a
+# returned result with success=False, not an exception.
+result = client.destinations.test_connection(
+    team_id=12345,
+    type="DWH_SNOWFLAKE",
+    display_name="Snowflake (prod)",
+    fields=fields,
+    auth_method="AUTH_METHOD_KEY_PAIR",
+)
+if not result.success:
+    raise RuntimeError(f"Connection failed: {result.error}")
+
+destination = client.destinations.create(
+    team_id=12345,
+    type="DWH_SNOWFLAKE",
+    display_name="Snowflake (prod)",
+    fields=fields,
+    auth_method="AUTH_METHOD_KEY_PAIR",
+)
+print(f"Created destination {destination.id}")
+
+# get() answers with edit_settings, a list of UI form descriptors — not the flat fields
+# dict create() and update() take. The read shape and the write shape differ.
+stored = client.destinations.get(team_id=12345, destination_id=8)
+for setting in stored.edit_settings:
+    print(f"  {setting.id} ({setting.input_type}): {setting.value}")
+
+# Check what still depends on a destination before removing it
+usage = client.destinations.get_usage(team_id=12345, destination_id=8)
+if usage.is_used:
+    for transfer in usage.transfers:
+        print(f"still used by {transfer.transfer_id}: {transfer.transfer_name}")
+else:
+    client.destinations.delete(team_id=12345, destination_id=8)
 ```
 
 ### Data Warehouse Backfills
@@ -373,6 +435,13 @@ python scripts/filter_openapi_spec.py
 ```bash
 ./scripts/regenerate_client.sh
 ```
+
+`regenerate_client.sh` generates into a staging directory and replaces
+`src/supermetrics/_generated/` only once generation has succeeded, so a failed run leaves
+the committed client untouched. It runs the generator through `uvx` on a pinned Python
+3.12 — `openapi-python-client` cannot run on this project's default 3.14 interpreter —
+at the version read out of `pyproject.toml`. Set `GENERATOR_PYTHON` to override. See
+[docs/openapi-generation.md](docs/openapi-generation.md#step-4-regenerate-the-low-level-client).
 
 ### When to Regenerate
 
