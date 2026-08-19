@@ -2121,6 +2121,233 @@ asyncio.run(main())
 
 ---
 
+### AccountTagsResource
+
+Group data source accounts from across a team's connections under a reusable label, so a
+query or transfer can name the group instead of listing every account by hand. Upstream
+calls them *account groups*, which is why the generated operations are named `*_account_group`.
+
+> **Base URL:** Account tags are served by the core API host, not by the Data Warehouse
+> API, so nothing is re-hosted for them. The paths keep their `/v1` prefix:
+> `/v1/teams/{team_id}/account_tags`. A plain client reaches them with no `dts_base_url`
+> involvement at all.
+
+**Two names, and they are not interchangeable.** A tag has a `name` and a `display_name`,
+and mixing them up is the easiest mistake to make here:
+
+- `name` is the immutable slug the server assigns at creation, e.g. `"a1b2c3d"`. Every call
+  after `create()` addresses the tag by this slug, and it is never sent in a request body.
+- `display_name` is the human-readable label, e.g. `"EMEA paid media"`. It is what
+  `create()` and `update()` set, and it can change freely.
+
+**Membership is `data_sources`.** The upstream schema declares its elements as an open
+object with no fixed shape, so the SDK takes and returns plain `list[dict[str, Any]]` rather
+than a typed model — nothing new is re-exported from the top-level package for this domain.
+The documented element form is:
+
+```python
+{"data_source_id": "AW", "accounts": [{"account_id": "123-456-7890"}]}
+```
+
+**Response envelope.** `list()` and the five single-object methods are wrapped in
+`{"data": ...}` upstream, and the SDK unwraps `.data` for you. There is no `meta` and no
+pagination — `list()` returns the whole set (the API caps it at 500), so nothing is lost by
+unwrapping.
+
+**`list()` and `get()` return different types.** `list()` yields
+[`AccountTagOverview`](#accounttagoverview), which summarises membership as
+`data_source_count` and `account_count`; `get()` yields [`AccountTag`](#accounttag), which
+carries the `data_sources` membership itself but no counts.
+
+**Errors.** This domain documents 400, 401, 403, 429, and 500 on every operation, plus
+**409 on `create()` only** — the one 409 anywhere in the SDK, raised when a tag with that
+display name already exists. **There is no 404 in this domain at all**: an unknown tag comes
+back as a 400 (translated to `SupermetricsValidationError`), and deleting one that does not
+exist is a success — see [`delete()`](#delete-2).
+
+#### list()
+
+List the account tags defined for a team.
+
+```python
+tags = client.account_tags.list(team_id=936506)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+
+**Returns:** `list[AccountTagOverview]` — the team's account tags, each with its counts.
+Empty list when the team has none, including when the API omits `data` entirely.
+
+**Raises:** `SupermetricsAuthError`, `SupermetricsForbiddenError`, `SupermetricsValidationError` (400), `SupermetricsRateLimitError`, `SupermetricsServerError`, `NetworkError`
+
+**Example:**
+
+```python
+for tag in client.account_tags.list(team_id=936506):
+    print(f"{tag.name}: {tag.display_name} ({tag.account_count} accounts)")
+```
+
+#### get()
+
+Fetch a single account tag by its slug, including its `data_sources` membership.
+
+```python
+tag = client.account_tags.get(team_id=936506, name="a1b2c3d")
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `name` (str, required): The tag's server-assigned slug, e.g. `"a1b2c3d"` — this is
+  `AccountTagOverview.name`, not the display name
+
+**Returns:** [`AccountTag`](#accounttag) — the tag with its data source and account
+membership.
+
+**Raises:** `SupermetricsAuthError`, `SupermetricsForbiddenError`, `SupermetricsValidationError` (400 — an unknown tag arrives here, not as a 404), `SupermetricsRateLimitError`, `SupermetricsServerError`, `NetworkError`
+
+**Example:**
+
+```python
+tag = client.account_tags.get(team_id=936506, name="a1b2c3d")
+for selection in tag.data_sources:
+    print(selection["data_source_id"], selection["accounts"])
+```
+
+#### create()
+
+Create an account tag. The tag's `name` is assigned by the server and is **not** sent in the
+request — read it off the returned tag.
+
+```python
+tag = client.account_tags.create(
+    team_id=936506,
+    display_name="EMEA paid media",
+    color="#112233",
+    data_sources=[{"data_source_id": "AW", "accounts": [{"account_id": "123-456-7890"}]}],
+)
+print(tag.name)  # e.g. "a1b2c3d"
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `display_name` (str, required): The human-readable label, up to 255 characters
+- `color` (str, required): Display colour, e.g. `"#112233"`, up to 50 characters
+- `data_sources` (list[dict[str, Any]], required): The accounts to put in the tag, up to
+  100 entries; see the element shape above
+
+**Returns:** [`AccountTag`](#accounttag) — the created tag, carrying its server-assigned
+`name`.
+
+**Raises:** `SupermetricsAuthError`, `SupermetricsForbiddenError`, `SupermetricsValidationError` (400), `SupermetricsRateLimitError`, `SupermetricsServerError`, `NetworkError`, and `SupermetricsAPIError` with `status_code == 409` and `error_code == "CONFLICT_ERROR"` when a tag with that display name already exists
+
+#### update()
+
+Rename or recolour an account tag. This is the **whole** of what PUT can change — it does
+not touch membership. Both fields are required, so a call that means to change only the
+colour must resend the current display name.
+
+```python
+tag = client.account_tags.update(team_id=936506, name="a1b2c3d", display_name="EMEA paid", color="#445566")
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `name` (str, required): The tag's server-assigned slug
+- `display_name` (str, required): The new label, up to 255 characters
+- `color` (str, required): The new colour, up to 50 characters
+
+**Returns:** [`AccountTag`](#accounttag) — the updated tag.
+
+**Raises:** `SupermetricsAuthError`, `SupermetricsForbiddenError`, `SupermetricsValidationError` (400), `SupermetricsRateLimitError`, `SupermetricsServerError`, `NetworkError`
+
+> **Membership moves through the PATCH methods, not here.** To change which accounts a tag
+> holds, use [`add_accounts()`](#add_accounts) and [`remove_accounts()`](#remove_accounts).
+
+#### delete()
+
+Delete an account tag.
+
+```python
+existed = client.account_tags.delete(team_id=936506, name="a1b2c3d")
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `name` (str, required): The tag's server-assigned slug
+
+**Returns:** `bool` — `True` when a tag was deleted, `False` when no tag of that name
+existed.
+
+**Raises:** `SupermetricsAuthError`, `SupermetricsForbiddenError`, `SupermetricsValidationError` (400), `SupermetricsRateLimitError`, `SupermetricsServerError`, `NetworkError`
+
+> **`delete()` returns a `bool`, where every other `delete` in the SDK returns `None`.**
+> Deletion is idempotent upstream: removing a tag that does not exist is a success,
+> answering HTTP 200 with `result=false` rather than 404. The boolean is the only place that
+> distinction is recorded. A genuine failure — a bad request, a permission problem, a server
+> error — still raises.
+>
+> ```python
+> client.account_tags.delete(team_id=936506, name="a1b2c3d")  # True  — removed it
+> client.account_tags.delete(team_id=936506, name="a1b2c3d")  # False — already gone
+> ```
+
+#### add_accounts()
+
+Add data source accounts to a tag. Additive — accounts already in the tag stay in it.
+
+```python
+tag = client.account_tags.add_accounts(
+    team_id=936506,
+    name="a1b2c3d",
+    data_sources=[{"data_source_id": "FB", "accounts": [{"account_id": "act_99"}]}],
+)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `name` (str, required): The tag's server-assigned slug
+- `data_sources` (list[dict[str, Any]], required): The accounts to add, up to 100 entries
+
+**Returns:** [`AccountTag`](#accounttag) — the tag with its updated membership.
+
+**Raises:** `SupermetricsAuthError`, `SupermetricsForbiddenError`, `SupermetricsValidationError` (400), `SupermetricsRateLimitError`, `SupermetricsServerError`, `NetworkError`
+
+#### remove_accounts()
+
+Remove data source accounts from a tag. The tag itself survives even when its last account
+is removed; use [`delete()`](#delete-2) to get rid of it.
+
+```python
+tag = client.account_tags.remove_accounts(
+    team_id=936506,
+    name="a1b2c3d",
+    data_sources=[{"data_source_id": "AW", "accounts": [{"account_id": "123-456-7890"}]}],
+)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `name` (str, required): The tag's server-assigned slug
+- `data_sources` (list[dict[str, Any]], required): The accounts to remove, up to 100 entries
+
+**Returns:** [`AccountTag`](#accounttag) — the tag with its updated membership.
+
+**Raises:** `SupermetricsAuthError`, `SupermetricsForbiddenError`, `SupermetricsValidationError` (400), `SupermetricsRateLimitError`, `SupermetricsServerError`, `NetworkError`
+
+Every method above also accepts the standard per-request `auth_token`, `headers`, and
+`timeout` keyword-only overrides, and each is mirrored on `client.with_raw_response` and on
+the async client.
+
+---
+
 ## Models
 
 ### Backfill
@@ -3174,6 +3401,41 @@ sources = [
     CustomFieldCreateRequestDataSourceItem(data_source_id="AW", report_type="Default"),
 ]
 ```
+
+---
+
+### AccountTagOverview
+
+The list-item projection returned by [`account_tags.list()`](#list-5). It summarises a tag's
+membership as counts rather than listing it. Returned by the SDK, not constructed by callers.
+Every attribute is optional at the schema level.
+
+**Attributes:**
+
+- `name` (str | Unset): The tag's server-assigned slug (example: `"a1b2c3d"`)
+- `display_name` (str | Unset): The human-readable label (example: `"EMEA paid media"`)
+- `color` (str | Unset): Display colour (example: `"#112233"`)
+- `data_source_count` (int | Unset): Number of data sources represented in the tag
+- `account_count` (int | Unset): Number of accounts in the tag
+
+---
+
+### AccountTag
+
+The single-object model returned by [`account_tags.get()`](#get-7), `create()`, `update()`,
+`add_accounts()`, and `remove_accounts()`. Unlike [`AccountTagOverview`](#accounttagoverview)
+it carries the `data_sources` membership rather than counts. Returned by the SDK, not
+constructed by callers. Every attribute is optional at the schema level.
+
+**Attributes:**
+
+- `name` (str | Unset): The tag's server-assigned slug (example: `"a1b2c3d"`)
+- `display_name` (str | Unset): The human-readable label (example: `"EMEA paid media"`)
+- `color` (str | Unset): Display colour (example: `"#112233"`)
+- `data_sources` (list[AccountTagDataSourcesItem] | Unset): The data sources and accounts in
+  the tag. Each item is a generated open object; read fields off it by key
+  (`item["data_source_id"]`) or as a dict via `item.to_dict()`. The documented shape is
+  `{"data_source_id": "AW", "accounts": [{"account_id": "123-456-7890"}]}`.
 
 ---
 
