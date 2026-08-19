@@ -15,6 +15,7 @@ lint:
 # Run type checking with mypy
 typecheck:
     uv run --extra dev mypy src/supermetrics --ignore-missing-imports
+    uv run --extra dev basedpyright
 
 # Run all the formatting, linting, and testing commands
 qa: format lint typecheck

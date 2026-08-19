@@ -51,6 +51,13 @@ jobs:
       - name: Type check with mypy (strict)
         run: uv run mypy src/supermetrics --ignore-missing-imports
 
+      # A second checker, not a duplicate one: mypy is nominal and checks
+      # declarations, pyright infers aggressively and is better at narrowing,
+      # unreachable code and overload resolution. Scope and strictness are set
+      # in [tool.basedpyright] in pyproject.toml.
+      - name: Type check with basedpyright
+        run: uv run basedpyright
+
   test:
     runs-on: ubuntu-latest
     strategy:
