@@ -50,6 +50,11 @@ Complete documentation for the Supermetrics Python SDK – the Python client for
 - [LoginsResource](api-reference.md#loginsresource) - Retrieve login credentials
 - [AccountsResource](api-reference.md#accountsresource) - List data source accounts
 - [QueriesResource](api-reference.md#queriesresource) - Execute data queries
+- [BackfillsResource](api-reference.md#backfillsresource) - Backfill historical data
+- [DatasourceDetailsResource](api-reference.md#datasourcedetailsresource) - Inspect data source connections
+- [TransfersResource](api-reference.md#transfersresource) - Manage Data Warehouse transfers
+- [TransferRunsResource](api-reference.md#transferrunsresource) - Inspect individual transfer runs
+- [CustomFieldsResource](api-reference.md#customfieldsresource) - Define calculated dimensions and metrics
 
 ### Error Handling
 - [Exception Hierarchy](error-handling.md#exception-hierarchy)
