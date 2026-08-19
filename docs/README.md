@@ -46,8 +46,8 @@ Complete documentation for the Supermetrics Python SDK – the Python client for
 - [SupermetricsAsyncClient](api-reference.md#supermetricsasyncclient) - Asynchronous client
 
 ### Resources
-- [LoginLinksResource](api-reference.md#loginlinksresource) - Manage authentication links
-- [LoginsResource](api-reference.md#loginsresource) - Retrieve login credentials
+- [LoginLinksResource](api-reference.md#loginlinksresource) - Create, update, and close authentication links
+- [LoginsResource](api-reference.md#loginsresource) - Retrieve logins, list their accounts, and revoke them
 - [AccountsResource](api-reference.md#accountsresource) - List data source accounts
 - [QueriesResource](api-reference.md#queriesresource) - Execute data queries
 - [BackfillsResource](api-reference.md#backfillsresource) - Backfill historical data

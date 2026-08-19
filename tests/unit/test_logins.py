@@ -9,6 +9,10 @@ import pytest
 
 from supermetrics._generated.supermetrics_api_client.client import Client as GeneratedClient
 from supermetrics._generated.supermetrics_api_client.models.data_source import DataSource
+from supermetrics._generated.supermetrics_api_client.models.data_source_account import DataSourceAccount
+from supermetrics._generated.supermetrics_api_client.models.data_source_account_list_response import (
+    DataSourceAccountListResponse,
+)
 from supermetrics._generated.supermetrics_api_client.models.data_source_login import DataSourceLogin
 from supermetrics._generated.supermetrics_api_client.models.get_data_source_login_response_200 import (
     GetDataSourceLoginResponse200,
@@ -16,9 +20,18 @@ from supermetrics._generated.supermetrics_api_client.models.get_data_source_logi
 from supermetrics._generated.supermetrics_api_client.models.list_data_source_logins_response_200 import (
     ListDataSourceLoginsResponse200,
 )
+from supermetrics._generated.supermetrics_api_client.models.login_revoke_response import LoginRevokeResponse
+from supermetrics._generated.supermetrics_api_client.models.login_revoke_response_data import LoginRevokeResponseData
 from supermetrics._generated.supermetrics_api_client.models.user import User
 from supermetrics._generated.supermetrics_api_client.types import UNSET, Response
-from supermetrics.exceptions import APIError, AuthenticationError, NetworkError, ValidationError
+from supermetrics.exceptions import (
+    APIError,
+    AuthenticationError,
+    NetworkError,
+    SupermetricsNotFoundError,
+    SupermetricsServerError,
+    ValidationError,
+)
 from supermetrics.resources.logins import LoginsAsyncResource, LoginsResource
 
 
@@ -367,6 +380,239 @@ class TestLoginsResource:
         # Cleanup
         logins_module.get_data_source_login.sync_detailed = original_get
 
+    def test_get_accounts_success(self, logins_resource: LoginsResource, mock_client: MagicMock) -> None:
+        """Test get_accounts() returns a list of DataSourceAccount and forwards default paging."""
+        # Arrange
+        account = DataSourceAccount(
+            type_="ds_account",
+            account_id="acc_1",
+            name="Account One",
+            group="Group A",
+        )
+        mock_response_obj = DataSourceAccountListResponse(data=[account], meta=UNSET)
+
+        import supermetrics.resources.logins as logins_module
+
+        original = logins_module.list_data_source_login_accounts.sync_detailed
+        mock_call = MagicMock(return_value=_make_success_response(mock_response_obj))
+        logins_module.list_data_source_login_accounts.sync_detailed = mock_call
+
+        # Act
+        accounts = logins_resource.get_accounts("login_abc123")
+
+        # Assert
+        assert len(accounts) == 1
+        assert accounts[0].account_id == "acc_1"
+        assert accounts[0].name == "Account One"
+        assert accounts[0].group == "Group A"
+        assert accounts[0].type_ == "ds_account"
+        # offset/limit default to 0/100 and are always forwarded to the generated call
+        assert mock_call.call_args.kwargs["login_id"] == "login_abc123"
+        assert mock_call.call_args.kwargs["offset"] == 0
+        assert mock_call.call_args.kwargs["limit"] == 100
+
+        # Cleanup
+        logins_module.list_data_source_login_accounts.sync_detailed = original
+
+    def test_get_accounts_empty(self, logins_resource: LoginsResource, mock_client: MagicMock) -> None:
+        """Test get_accounts() returns an empty list when data is empty."""
+        # Arrange
+        mock_response_obj = DataSourceAccountListResponse(data=[], meta=UNSET)
+
+        import supermetrics.resources.logins as logins_module
+
+        original = logins_module.list_data_source_login_accounts.sync_detailed
+        logins_module.list_data_source_login_accounts.sync_detailed = MagicMock(
+            return_value=_make_success_response(mock_response_obj)
+        )
+
+        # Act
+        accounts = logins_resource.get_accounts("login_abc123")
+
+        # Assert
+        assert accounts == []
+
+        # Cleanup
+        logins_module.list_data_source_login_accounts.sync_detailed = original
+
+    def test_get_accounts_forwards_offset_and_limit(
+        self, logins_resource: LoginsResource, mock_client: MagicMock
+    ) -> None:
+        """Test get_accounts() forwards explicit offset and limit to the generated call."""
+        # Arrange
+        mock_response_obj = DataSourceAccountListResponse(data=[], meta=UNSET)
+
+        import supermetrics.resources.logins as logins_module
+
+        original = logins_module.list_data_source_login_accounts.sync_detailed
+        mock_call = MagicMock(return_value=_make_success_response(mock_response_obj))
+        logins_module.list_data_source_login_accounts.sync_detailed = mock_call
+
+        # Act
+        logins_resource.get_accounts("login_abc123", offset=25, limit=50)
+
+        # Assert
+        assert mock_call.call_args.kwargs["login_id"] == "login_abc123"
+        assert mock_call.call_args.kwargs["offset"] == 25
+        assert mock_call.call_args.kwargs["limit"] == 50
+
+        # Cleanup
+        logins_module.list_data_source_login_accounts.sync_detailed = original
+
+    @pytest.mark.parametrize(
+        ("status_code", "expected"),
+        [
+            (401, AuthenticationError),
+            (404, SupermetricsNotFoundError),
+            (500, SupermetricsServerError),
+        ],
+    )
+    def test_get_accounts_error_status_mapping(
+        self,
+        logins_resource: LoginsResource,
+        mock_client: MagicMock,
+        status_code: int,
+        expected: type[APIError],
+    ) -> None:
+        """Test get_accounts() maps error status codes to the correct SDK exceptions."""
+        # Arrange
+        mock_response = Mock()
+        mock_response.status_code = status_code
+        mock_response.text = "error body"
+
+        mock_request = Mock()
+        mock_request.url = "https://api.supermetrics.com/test"
+
+        error = httpx.HTTPStatusError(str(status_code), request=mock_request, response=mock_response)
+
+        import supermetrics.resources.logins as logins_module
+
+        original = logins_module.list_data_source_login_accounts.sync_detailed
+        logins_module.list_data_source_login_accounts.sync_detailed = MagicMock(side_effect=error)
+
+        # Act & Assert
+        with pytest.raises(expected) as exc_info:
+            logins_resource.get_accounts("login_123")
+
+        assert exc_info.value.status_code == status_code
+
+        # Cleanup
+        logins_module.list_data_source_login_accounts.sync_detailed = original
+
+    def test_get_accounts_network_error(self, logins_resource: LoginsResource, mock_client: MagicMock) -> None:
+        """Test get_accounts() raises NetworkError on a connection error."""
+        # Arrange
+        mock_request = Mock()
+        mock_request.url = "https://api.supermetrics.com/test"
+
+        error = httpx.ConnectError("Connection refused", request=mock_request)
+
+        import supermetrics.resources.logins as logins_module
+
+        original = logins_module.list_data_source_login_accounts.sync_detailed
+        logins_module.list_data_source_login_accounts.sync_detailed = MagicMock(side_effect=error)
+
+        # Act & Assert
+        with pytest.raises(NetworkError) as exc_info:
+            logins_resource.get_accounts("login_123")
+
+        assert "Network error" in str(exc_info.value)
+        assert exc_info.value.status_code is None
+
+        # Cleanup
+        logins_module.list_data_source_login_accounts.sync_detailed = original
+
+    def test_revoke_success(self, logins_resource: LoginsResource, mock_client: MagicMock) -> None:
+        """Test revoke() returns True when data.result is True."""
+        # Arrange
+        mock_response_obj = LoginRevokeResponse(data=LoginRevokeResponseData(result=True), meta=UNSET)
+
+        import supermetrics.resources.logins as logins_module
+
+        original = logins_module.revoke_data_source_login.sync_detailed
+        mock_call = MagicMock(return_value=_make_success_response(mock_response_obj))
+        logins_module.revoke_data_source_login.sync_detailed = mock_call
+
+        # Act
+        result = logins_resource.revoke("login_abc123")
+
+        # Assert
+        assert result is True
+        assert mock_call.call_args.kwargs["login_id"] == "login_abc123"
+
+        # Cleanup
+        logins_module.revoke_data_source_login.sync_detailed = original
+
+    def test_revoke_returns_result_boolean(self, logins_resource: LoginsResource, mock_client: MagicMock) -> None:
+        """Test revoke() returns the boolean carried in data.result."""
+        # Arrange
+        mock_response_obj = LoginRevokeResponse(data=LoginRevokeResponseData(result=False), meta=UNSET)
+
+        import supermetrics.resources.logins as logins_module
+
+        original = logins_module.revoke_data_source_login.sync_detailed
+        logins_module.revoke_data_source_login.sync_detailed = MagicMock(
+            return_value=_make_success_response(mock_response_obj)
+        )
+
+        # Act
+        result = logins_resource.revoke("login_abc123")
+
+        # Assert
+        assert result is False
+
+        # Cleanup
+        logins_module.revoke_data_source_login.sync_detailed = original
+
+    def test_revoke_not_found(self, logins_resource: LoginsResource, mock_client: MagicMock) -> None:
+        """Test revoke() raises SupermetricsNotFoundError on HTTP 404."""
+        # Arrange
+        mock_response = Mock()
+        mock_response.status_code = 404
+        mock_response.text = "Not Found"
+
+        mock_request = Mock()
+        mock_request.url = "https://api.supermetrics.com/test"
+
+        error = httpx.HTTPStatusError("404 Not Found", request=mock_request, response=mock_response)
+
+        import supermetrics.resources.logins as logins_module
+
+        original = logins_module.revoke_data_source_login.sync_detailed
+        logins_module.revoke_data_source_login.sync_detailed = MagicMock(side_effect=error)
+
+        # Act & Assert
+        with pytest.raises(SupermetricsNotFoundError) as exc_info:
+            logins_resource.revoke("login_123")
+
+        assert exc_info.value.status_code == 404
+
+        # Cleanup
+        logins_module.revoke_data_source_login.sync_detailed = original
+
+    def test_revoke_network_error(self, logins_resource: LoginsResource, mock_client: MagicMock) -> None:
+        """Test revoke() raises NetworkError on a connection error."""
+        # Arrange
+        mock_request = Mock()
+        mock_request.url = "https://api.supermetrics.com/test"
+
+        error = httpx.ConnectError("Connection refused", request=mock_request)
+
+        import supermetrics.resources.logins as logins_module
+
+        original = logins_module.revoke_data_source_login.sync_detailed
+        logins_module.revoke_data_source_login.sync_detailed = MagicMock(side_effect=error)
+
+        # Act & Assert
+        with pytest.raises(NetworkError) as exc_info:
+            logins_resource.revoke("login_123")
+
+        assert "Network error" in str(exc_info.value)
+        assert exc_info.value.status_code is None
+
+        # Cleanup
+        logins_module.revoke_data_source_login.sync_detailed = original
+
 
 class TestLoginsAsyncResource:
     """Test suite for LoginsAsyncResource (asynchronous)."""
@@ -528,3 +774,254 @@ class TestLoginsAsyncResource:
 
         # Cleanup
         logins_module.list_data_source_logins.asyncio_detailed = original_list
+
+    @pytest.mark.asyncio
+    async def test_get_accounts_async(self, logins_async_resource: LoginsAsyncResource, mock_client: MagicMock) -> None:
+        """Test async get_accounts() returns a list of DataSourceAccount and forwards default paging."""
+        # Arrange
+        account = DataSourceAccount(
+            type_="ds_account",
+            account_id="acc_1",
+            name="Account One",
+            group="Group A",
+        )
+        mock_response_obj = DataSourceAccountListResponse(data=[account], meta=UNSET)
+
+        import supermetrics.resources.logins as logins_module
+
+        original = logins_module.list_data_source_login_accounts.asyncio_detailed
+        mock_call = AsyncMock(return_value=_make_success_response(mock_response_obj))
+        logins_module.list_data_source_login_accounts.asyncio_detailed = mock_call
+
+        # Act
+        accounts = await logins_async_resource.get_accounts("login_abc123")
+
+        # Assert
+        assert len(accounts) == 1
+        assert accounts[0].account_id == "acc_1"
+        assert accounts[0].name == "Account One"
+        assert accounts[0].group == "Group A"
+        assert accounts[0].type_ == "ds_account"
+        assert mock_call.call_args.kwargs["login_id"] == "login_abc123"
+        assert mock_call.call_args.kwargs["offset"] == 0
+        assert mock_call.call_args.kwargs["limit"] == 100
+
+        # Cleanup
+        logins_module.list_data_source_login_accounts.asyncio_detailed = original
+
+    @pytest.mark.asyncio
+    async def test_get_accounts_empty_async(
+        self, logins_async_resource: LoginsAsyncResource, mock_client: MagicMock
+    ) -> None:
+        """Test async get_accounts() returns an empty list when data is empty."""
+        # Arrange
+        mock_response_obj = DataSourceAccountListResponse(data=[], meta=UNSET)
+
+        import supermetrics.resources.logins as logins_module
+
+        original = logins_module.list_data_source_login_accounts.asyncio_detailed
+        logins_module.list_data_source_login_accounts.asyncio_detailed = AsyncMock(
+            return_value=_make_success_response(mock_response_obj)
+        )
+
+        # Act
+        accounts = await logins_async_resource.get_accounts("login_abc123")
+
+        # Assert
+        assert accounts == []
+
+        # Cleanup
+        logins_module.list_data_source_login_accounts.asyncio_detailed = original
+
+    @pytest.mark.asyncio
+    async def test_get_accounts_forwards_offset_and_limit_async(
+        self, logins_async_resource: LoginsAsyncResource, mock_client: MagicMock
+    ) -> None:
+        """Test async get_accounts() forwards explicit offset and limit to the generated call."""
+        # Arrange
+        mock_response_obj = DataSourceAccountListResponse(data=[], meta=UNSET)
+
+        import supermetrics.resources.logins as logins_module
+
+        original = logins_module.list_data_source_login_accounts.asyncio_detailed
+        mock_call = AsyncMock(return_value=_make_success_response(mock_response_obj))
+        logins_module.list_data_source_login_accounts.asyncio_detailed = mock_call
+
+        # Act
+        await logins_async_resource.get_accounts("login_abc123", offset=25, limit=50)
+
+        # Assert
+        assert mock_call.call_args.kwargs["login_id"] == "login_abc123"
+        assert mock_call.call_args.kwargs["offset"] == 25
+        assert mock_call.call_args.kwargs["limit"] == 50
+
+        # Cleanup
+        logins_module.list_data_source_login_accounts.asyncio_detailed = original
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ("status_code", "expected"),
+        [
+            (401, AuthenticationError),
+            (404, SupermetricsNotFoundError),
+            (500, SupermetricsServerError),
+        ],
+    )
+    async def test_get_accounts_error_status_mapping_async(
+        self,
+        logins_async_resource: LoginsAsyncResource,
+        mock_client: MagicMock,
+        status_code: int,
+        expected: type[APIError],
+    ) -> None:
+        """Test async get_accounts() maps error status codes to the correct SDK exceptions."""
+        # Arrange
+        mock_response = Mock()
+        mock_response.status_code = status_code
+        mock_response.text = "error body"
+
+        mock_request = Mock()
+        mock_request.url = "https://api.supermetrics.com/test"
+
+        error = httpx.HTTPStatusError(str(status_code), request=mock_request, response=mock_response)
+
+        import supermetrics.resources.logins as logins_module
+
+        original = logins_module.list_data_source_login_accounts.asyncio_detailed
+        logins_module.list_data_source_login_accounts.asyncio_detailed = AsyncMock(side_effect=error)
+
+        # Act & Assert
+        with pytest.raises(expected) as exc_info:
+            await logins_async_resource.get_accounts("login_123")
+
+        assert exc_info.value.status_code == status_code
+
+        # Cleanup
+        logins_module.list_data_source_login_accounts.asyncio_detailed = original
+
+    @pytest.mark.asyncio
+    async def test_get_accounts_network_error_async(
+        self, logins_async_resource: LoginsAsyncResource, mock_client: MagicMock
+    ) -> None:
+        """Test async get_accounts() raises NetworkError on a connection error."""
+        # Arrange
+        mock_request = Mock()
+        mock_request.url = "https://api.supermetrics.com/test"
+
+        error = httpx.ConnectError("Connection refused", request=mock_request)
+
+        import supermetrics.resources.logins as logins_module
+
+        original = logins_module.list_data_source_login_accounts.asyncio_detailed
+        logins_module.list_data_source_login_accounts.asyncio_detailed = AsyncMock(side_effect=error)
+
+        # Act & Assert
+        with pytest.raises(NetworkError) as exc_info:
+            await logins_async_resource.get_accounts("login_123")
+
+        assert "Network error" in str(exc_info.value)
+        assert exc_info.value.status_code is None
+
+        # Cleanup
+        logins_module.list_data_source_login_accounts.asyncio_detailed = original
+
+    @pytest.mark.asyncio
+    async def test_revoke_async(self, logins_async_resource: LoginsAsyncResource, mock_client: MagicMock) -> None:
+        """Test async revoke() returns True when data.result is True."""
+        # Arrange
+        mock_response_obj = LoginRevokeResponse(data=LoginRevokeResponseData(result=True), meta=UNSET)
+
+        import supermetrics.resources.logins as logins_module
+
+        original = logins_module.revoke_data_source_login.asyncio_detailed
+        mock_call = AsyncMock(return_value=_make_success_response(mock_response_obj))
+        logins_module.revoke_data_source_login.asyncio_detailed = mock_call
+
+        # Act
+        result = await logins_async_resource.revoke("login_abc123")
+
+        # Assert
+        assert result is True
+        assert mock_call.call_args.kwargs["login_id"] == "login_abc123"
+
+        # Cleanup
+        logins_module.revoke_data_source_login.asyncio_detailed = original
+
+    @pytest.mark.asyncio
+    async def test_revoke_returns_result_boolean_async(
+        self, logins_async_resource: LoginsAsyncResource, mock_client: MagicMock
+    ) -> None:
+        """Test async revoke() returns the boolean carried in data.result."""
+        # Arrange
+        mock_response_obj = LoginRevokeResponse(data=LoginRevokeResponseData(result=False), meta=UNSET)
+
+        import supermetrics.resources.logins as logins_module
+
+        original = logins_module.revoke_data_source_login.asyncio_detailed
+        logins_module.revoke_data_source_login.asyncio_detailed = AsyncMock(
+            return_value=_make_success_response(mock_response_obj)
+        )
+
+        # Act
+        result = await logins_async_resource.revoke("login_abc123")
+
+        # Assert
+        assert result is False
+
+        # Cleanup
+        logins_module.revoke_data_source_login.asyncio_detailed = original
+
+    @pytest.mark.asyncio
+    async def test_revoke_not_found_async(
+        self, logins_async_resource: LoginsAsyncResource, mock_client: MagicMock
+    ) -> None:
+        """Test async revoke() raises SupermetricsNotFoundError on HTTP 404."""
+        # Arrange
+        mock_response = Mock()
+        mock_response.status_code = 404
+        mock_response.text = "Not Found"
+
+        mock_request = Mock()
+        mock_request.url = "https://api.supermetrics.com/test"
+
+        error = httpx.HTTPStatusError("404 Not Found", request=mock_request, response=mock_response)
+
+        import supermetrics.resources.logins as logins_module
+
+        original = logins_module.revoke_data_source_login.asyncio_detailed
+        logins_module.revoke_data_source_login.asyncio_detailed = AsyncMock(side_effect=error)
+
+        # Act & Assert
+        with pytest.raises(SupermetricsNotFoundError) as exc_info:
+            await logins_async_resource.revoke("login_123")
+
+        assert exc_info.value.status_code == 404
+
+        # Cleanup
+        logins_module.revoke_data_source_login.asyncio_detailed = original
+
+    @pytest.mark.asyncio
+    async def test_revoke_network_error_async(
+        self, logins_async_resource: LoginsAsyncResource, mock_client: MagicMock
+    ) -> None:
+        """Test async revoke() raises NetworkError on a connection error."""
+        # Arrange
+        mock_request = Mock()
+        mock_request.url = "https://api.supermetrics.com/test"
+
+        error = httpx.ConnectError("Connection refused", request=mock_request)
+
+        import supermetrics.resources.logins as logins_module
+
+        original = logins_module.revoke_data_source_login.asyncio_detailed
+        logins_module.revoke_data_source_login.asyncio_detailed = AsyncMock(side_effect=error)
+
+        # Act & Assert
+        with pytest.raises(NetworkError) as exc_info:
+            await logins_async_resource.revoke("login_123")
+
+        assert "Network error" in str(exc_info.value)
+        assert exc_info.value.status_code is None
+
+        # Cleanup
+        logins_module.revoke_data_source_login.asyncio_detailed = original

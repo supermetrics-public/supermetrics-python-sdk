@@ -444,6 +444,35 @@ client.login_links.close(link_id="abc123")
 print("Link closed successfully")
 ```
 
+#### update()
+
+Update a login link's description. This is the whole of what `PATCH` can change.
+
+```python
+link = client.login_links.update(link_id="abc123", description="Q4 Analytics setup")
+```
+
+**Parameters:**
+
+- `link_id` (str, required): The login link ID to update
+- `description` (str, required): The new internal description for the link
+
+**Returns:** `LoginLink` — the updated login link
+
+**Raises:** `SupermetricsAuthError`, `SupermetricsForbiddenError`, `SupermetricsNotFoundError`, `SupermetricsValidationError` (400/422), `SupermetricsRateLimitError`, `SupermetricsServerError`, `NetworkError`
+
+> **`update()` accepts only `description`.** A link's data source, expiry, redirect and
+> username requirements are fixed when it is created; the upstream `PATCH` body carries a
+> single `description` field and nothing else. Those other properties are set at creation,
+> through `create()`.
+
+**Example:**
+
+```python
+link = client.login_links.update("abc123", "Q4 Analytics setup")
+print(link.description)  # "Q4 Analytics setup"
+```
+
 ---
 
 ### LoginsResource
@@ -493,6 +522,65 @@ logins = client.logins.list()
 logins = client.logins.list()
 for login in logins:
     print(f"{login.ds_info.ds_name}: {login.username}")
+```
+
+#### get_accounts()
+
+List the data source accounts a login can reach.
+
+```python
+accounts = client.logins.get_accounts(login_id="login_abc123", offset=0, limit=100)
+```
+
+**Parameters:**
+
+- `login_id` (str, required): The Supermetrics login ID to list accounts for
+- `offset` (int, optional): Zero-based index of the first account to return. Defaults to `0`
+- `limit` (int, optional): Maximum number of accounts to return (1–1000). Defaults to `100`
+
+**Returns:** `list[DataSourceAccount]` — the accounts on this page of results
+
+**Raises:** `SupermetricsAuthError`, `SupermetricsForbiddenError`, `SupermetricsNotFoundError`, `SupermetricsValidationError` (422), `SupermetricsRateLimitError`, `SupermetricsServerError`, `NetworkError`
+
+> **Paginated.** `offset` and `limit` are always sent as query parameters, and the total
+> count rides in the response `meta`, not in the returned list. Reach it through the raw
+> response:
+> `client.with_raw_response.logins.get_accounts(...).json_body["meta"]["paginate"]["total"]`.
+
+**Example:**
+
+```python
+accounts = client.logins.get_accounts("login_abc123")
+for account in accounts:
+    print(f"{account.account_id}: {account.name} ({account.group})")
+```
+
+#### revoke()
+
+Revoke a login, invalidating its OAuth credentials.
+
+```python
+revoked = client.logins.revoke(login_id="login_abc123")
+```
+
+**Parameters:**
+
+- `login_id` (str, required): The Supermetrics login ID to revoke
+
+**Returns:** `bool` — `True` when the login was revoked
+
+**Raises:** `SupermetricsAuthError`, `SupermetricsForbiddenError`, `SupermetricsNotFoundError`, `SupermetricsValidationError` (422), `SupermetricsRateLimitError`, `SupermetricsServerError`, `NetworkError`
+
+> **`revoke()` returns a `bool`, not `None`.** It is a `DELETE`, but upstream answers HTTP
+> 200 with `{"data": {"result": true}}` rather than an empty 204, and the SDK returns that
+> `result`. A revoked login can no longer be used for queries or transfers; bind a fresh
+> login through a login link to restore access.
+
+**Example:**
+
+```python
+if client.logins.revoke("login_abc123"):
+    print("Login revoked")
 ```
 
 #### get_by_username()
@@ -3533,6 +3621,29 @@ for account in accounts:
     print(f"ID: {account.account_id}")
     print(f"Name: {account.account_name}")
     print(f"Group: {account.group_name}")
+```
+
+---
+
+### DataSourceAccount
+
+The account model returned by [`logins.get_accounts()`](#get_accounts) — a data source
+account reachable under a login. Returned by the SDK, not constructed by callers, and not
+re-exported from the top-level package. Every attribute is optional at the schema level.
+
+**Attributes:**
+
+- `type_` (str | Unset): The account object type, taken from the wire's `@type` field (example: `"ds_account"`)
+- `account_id` (str | Unset): Data source account ID, as used in the `ds_accounts` query parameter
+- `name` (str | Unset): Data source account name
+- `group` (str | Unset): Group name for the account in Supermetrics products
+
+**Example:**
+
+```python
+accounts = client.logins.get_accounts("login_abc123")
+for account in accounts:
+    print(account.account_id, account.name, account.group)
 ```
 
 ---

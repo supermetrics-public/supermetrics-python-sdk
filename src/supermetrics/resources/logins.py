@@ -11,7 +11,13 @@ from supermetrics._generated.supermetrics_api_client import AuthenticatedClient
 from supermetrics._generated.supermetrics_api_client import Client as GeneratedClient
 from supermetrics._generated.supermetrics_api_client.api.data_source_logins import (
     get_data_source_login,
+    list_data_source_login_accounts,
     list_data_source_logins,
+    revoke_data_source_login,
+)
+from supermetrics._generated.supermetrics_api_client.models.data_source_account import DataSourceAccount
+from supermetrics._generated.supermetrics_api_client.models.data_source_account_list_response import (
+    DataSourceAccountListResponse,
 )
 from supermetrics._generated.supermetrics_api_client.models.data_source_login import DataSourceLogin
 from supermetrics._generated.supermetrics_api_client.models.get_data_source_login_response_200 import (
@@ -20,11 +26,19 @@ from supermetrics._generated.supermetrics_api_client.models.get_data_source_logi
 from supermetrics._generated.supermetrics_api_client.models.list_data_source_logins_response_200 import (
     ListDataSourceLoginsResponse200,
 )
+from supermetrics._generated.supermetrics_api_client.models.login_revoke_response import LoginRevokeResponse
 from supermetrics._generated.supermetrics_api_client.types import Unset
 from supermetrics._transport import request_options
 from supermetrics.resources._error_handlers import _raise_for_status, api_error_handler
 
 logger = logging.getLogger(__name__)
+
+# The resource classes expose a method named ``list``, which binds ``list`` in the class
+# namespace and shadows the builtin for every annotation evaluated in the class body after
+# that point. Aliasing the collection type out here, at module scope, is what keeps
+# ``get_accounts``'s ``list[DataSourceAccount]`` return annotation meaning a list of
+# accounts rather than a subscript of ``LoginsResource.list``. Do not inline this back.
+DataSourceAccountList = list[DataSourceAccount]
 
 
 class LoginsResource:
@@ -165,6 +179,131 @@ class LoginsResource:
                 logins = parsed.data
                 logger.info(f"Retrieved {len(logins)} logins")
                 return logins
+            _raise_for_status(
+                response.status_code, response.parsed, endpoint, headers=response.headers, raw_body=response.content
+            )
+
+    def get_accounts(
+        self,
+        login_id: str,
+        *,
+        offset: int = 0,
+        limit: int = 100,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> DataSourceAccountList:
+        """List the data source accounts authorized under a login.
+
+        Returns the customer accounts (ad accounts, properties, profiles, ...) that a
+        specific data source login can access. This is the set of accounts you can pass
+        to a query or bind to a transfer for that login.
+
+        The endpoint is paginated: ``offset`` and ``limit`` select a window, and the
+        total count rides in the response ``meta`` (reachable via
+        ``client.with_raw_response.logins.get_accounts(...).json_body["meta"]["paginate"]``).
+
+        Args:
+            login_id: The Supermetrics login ID to list accounts for.
+            offset: Zero-based index of the first account to return. Defaults to 0.
+            limit: Maximum number of accounts to return (1-1000). Defaults to 100.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
+
+        Returns:
+            list[DataSourceAccount]: The accounts on this page of results.
+
+        Raises:
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            APIError: If the login is not found (HTTP 404) or the API returns a
+                server error (HTTP 5xx).
+            NetworkError: If a network-level error occurs (timeout, connection refused).
+
+        Example:
+            >>> accounts = client.logins.get_accounts("login_abc123")
+            >>> for account in accounts:
+            ...     print(f"{account.account_id}: {account.name}")
+        """
+        logger.debug(f"Listing accounts for login: login_id={login_id}, offset={offset}, limit={limit}")
+
+        endpoint = f"/ds/login/{login_id}/accounts"
+        with (
+            api_error_handler(endpoint, context_404="Login not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
+            response = list_data_source_login_accounts.sync_detailed(
+                login_id=login_id, client=cast(AuthenticatedClient, self._client), offset=offset, limit=limit
+            )
+            if response.status_code == 200:
+                parsed = cast(DataSourceAccountListResponse, response.parsed)
+                if parsed.data is None or isinstance(parsed.data, Unset):
+                    return []
+                accounts = parsed.data
+                logger.info(f"Retrieved {len(accounts)} accounts for login: id={login_id}")
+                return accounts
+            _raise_for_status(
+                response.status_code, response.parsed, endpoint, headers=response.headers, raw_body=response.content
+            )
+
+    def revoke(
+        self,
+        login_id: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> bool:
+        """Revoke a login, disconnecting and invalidating its OAuth credentials.
+
+        Permanently disconnects the data source login: its stored OAuth credentials are
+        invalidated and it can no longer be used for queries or transfers. Bind a fresh
+        login (via a login link) to restore access.
+
+        Args:
+            login_id: The Supermetrics login ID to revoke.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
+
+        Returns:
+            bool: ``True`` when the login was revoked.
+
+        Raises:
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            APIError: If the login is not found (HTTP 404) or the API returns a
+                server error (HTTP 5xx).
+            NetworkError: If a network-level error occurs (timeout, connection refused).
+
+        Example:
+            >>> client.logins.revoke("login_abc123")
+            True
+        """
+        logger.debug(f"Revoking login: login_id={login_id}")
+
+        endpoint = f"/ds/login/{login_id}"
+        with (
+            api_error_handler(endpoint, context_404="Login not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
+            response = revoke_data_source_login.sync_detailed(
+                login_id=login_id, client=cast(AuthenticatedClient, self._client)
+            )
+            if response.status_code == 200:
+                parsed = cast(LoginRevokeResponse, response.parsed)
+                data = parsed.data
+                result = data.result if data is not None and not isinstance(data, Unset) else None
+                revoked = result if isinstance(result, bool) else False
+                logger.info(f"Revoked login: id={login_id}, result={revoked}")
+                return revoked
             _raise_for_status(
                 response.status_code, response.parsed, endpoint, headers=response.headers, raw_body=response.content
             )
@@ -334,6 +473,114 @@ class LoginsAsyncResource:
                 logins = parsed.data
                 logger.info(f"Retrieved {len(logins)} logins (async)")
                 return logins
+            _raise_for_status(
+                response.status_code, response.parsed, endpoint, headers=response.headers, raw_body=response.content
+            )
+
+    async def get_accounts(
+        self,
+        login_id: str,
+        *,
+        offset: int = 0,
+        limit: int = 100,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> DataSourceAccountList:
+        """List the data source accounts authorized under a login.
+
+        Async version of get_accounts(). See LoginsResource.get_accounts() for full documentation.
+
+        Args:
+            login_id: The Supermetrics login ID to list accounts for.
+            offset: Zero-based index of the first account to return. Defaults to 0.
+            limit: Maximum number of accounts to return (1-1000). Defaults to 100.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
+
+        Returns:
+            list[DataSourceAccount]: The accounts on this page of results.
+
+        Raises:
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            APIError: If the login is not found (HTTP 404) or the API returns a
+                server error (HTTP 5xx).
+            NetworkError: If a network-level error occurs (timeout, connection refused).
+        """
+        logger.debug(f"Listing accounts for login (async): login_id={login_id}, offset={offset}, limit={limit}")
+
+        endpoint = f"/ds/login/{login_id}/accounts"
+        with (
+            api_error_handler(endpoint, context_404="Login not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
+            response = await list_data_source_login_accounts.asyncio_detailed(
+                login_id=login_id, client=cast(AuthenticatedClient, self._client), offset=offset, limit=limit
+            )
+            if response.status_code == 200:
+                parsed = cast(DataSourceAccountListResponse, response.parsed)
+                if parsed.data is None or isinstance(parsed.data, Unset):
+                    return []
+                accounts = parsed.data
+                logger.info(f"Retrieved {len(accounts)} accounts for login (async): id={login_id}")
+                return accounts
+            _raise_for_status(
+                response.status_code, response.parsed, endpoint, headers=response.headers, raw_body=response.content
+            )
+
+    async def revoke(
+        self,
+        login_id: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> bool:
+        """Revoke a login, disconnecting and invalidating its OAuth credentials.
+
+        Async version of revoke(). See LoginsResource.revoke() for full documentation.
+
+        Args:
+            login_id: The Supermetrics login ID to revoke.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
+
+        Returns:
+            bool: ``True`` when the login was revoked.
+
+        Raises:
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            APIError: If the login is not found (HTTP 404) or the API returns a
+                server error (HTTP 5xx).
+            NetworkError: If a network-level error occurs (timeout, connection refused).
+        """
+        logger.debug(f"Revoking login (async): login_id={login_id}")
+
+        endpoint = f"/ds/login/{login_id}"
+        with (
+            api_error_handler(endpoint, context_404="Login not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
+            response = await revoke_data_source_login.asyncio_detailed(
+                login_id=login_id, client=cast(AuthenticatedClient, self._client)
+            )
+            if response.status_code == 200:
+                parsed = cast(LoginRevokeResponse, response.parsed)
+                data = parsed.data
+                result = data.result if data is not None and not isinstance(data, Unset) else None
+                revoked = result if isinstance(result, bool) else False
+                logger.info(f"Revoked login (async): id={login_id}, result={revoked}")
+                return revoked
             _raise_for_status(
                 response.status_code, response.parsed, endpoint, headers=response.headers, raw_body=response.content
             )

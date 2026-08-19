@@ -345,6 +345,164 @@ class TestLoginLinksResource:
         # Cleanup
         login_links_module.create_login_link.sync_detailed = original_create
 
+    def test_update_login_link_success(
+        self, login_links_resource: LoginLinksResource, mock_client: MagicMock, sample_login_link: LoginLink
+    ) -> None:
+        """Test successful update returns the LoginLink and sends only the description."""
+        # Arrange
+        mock_response_obj = LoginLinkResponse(data=sample_login_link, meta=UNSET)
+
+        import supermetrics.resources.login_links as login_links_module
+
+        original_update = login_links_module.update_login_link.sync_detailed
+        mock_update = MagicMock(return_value=_make_success_response(mock_response_obj))
+        login_links_module.update_login_link.sync_detailed = mock_update
+
+        # Act
+        link = login_links_resource.update(link_id="link_123abc", description="Q4 Analytics Setup")
+
+        # Assert
+        assert link.link_id == "link_123abc"
+        assert link.status_code == "OPEN"
+        assert mock_update.called
+        # The API accepts ONLY the description; the request body carries exactly that.
+        body = mock_update.call_args.kwargs["body"]
+        assert body.to_dict() == {"description": "Q4 Analytics Setup"}
+        assert mock_update.call_args.kwargs["link_id"] == "link_123abc"
+
+        # Cleanup
+        login_links_module.update_login_link.sync_detailed = original_update
+
+    def test_update_raises_on_unset_response_data(
+        self, login_links_resource: LoginLinksResource, mock_client: MagicMock
+    ) -> None:
+        """Test that update raises APIError when the response data is Unset (status 200)."""
+        # Arrange
+        mock_response_obj = LoginLinkResponse(data=UNSET, meta=UNSET)
+
+        import supermetrics.resources.login_links as login_links_module
+
+        original_update = login_links_module.update_login_link.sync_detailed
+        login_links_module.update_login_link.sync_detailed = MagicMock(
+            return_value=_make_success_response(mock_response_obj)
+        )
+
+        # Act & Assert
+        with pytest.raises(APIError) as exc_info:
+            login_links_resource.update(link_id="link_123abc", description="New desc")
+
+        assert exc_info.value.status_code == 200
+        assert "missing login link data" in str(exc_info.value).lower()
+
+        # Cleanup
+        login_links_module.update_login_link.sync_detailed = original_update
+
+    def test_update_validation_error_on_400(
+        self, login_links_resource: LoginLinksResource, mock_client: MagicMock
+    ) -> None:
+        """Test 400 response raises ValidationError."""
+        import supermetrics.resources.login_links as login_links_module
+
+        original_update = login_links_module.update_login_link.sync_detailed
+        login_links_module.update_login_link.sync_detailed = MagicMock(
+            return_value=_make_error_response(HTTPStatus.BAD_REQUEST)
+        )
+
+        # Verify ValidationError is raised
+        with pytest.raises(ValidationError) as exc_info:
+            login_links_resource.update(link_id="link_123abc", description="New desc")
+
+        assert exc_info.value.status_code == 400
+        assert "Invalid" in str(exc_info.value)
+
+        # Cleanup
+        login_links_module.update_login_link.sync_detailed = original_update
+
+    def test_update_authentication_error_on_401(
+        self, login_links_resource: LoginLinksResource, mock_client: MagicMock
+    ) -> None:
+        """Test 401 response raises AuthenticationError."""
+        import supermetrics.resources.login_links as login_links_module
+
+        original_update = login_links_module.update_login_link.sync_detailed
+        login_links_module.update_login_link.sync_detailed = MagicMock(
+            return_value=_make_error_response(HTTPStatus.UNAUTHORIZED)
+        )
+
+        # Verify AuthenticationError is raised
+        with pytest.raises(AuthenticationError) as exc_info:
+            login_links_resource.update(link_id="link_123abc", description="New desc")
+
+        assert exc_info.value.status_code == 401
+        assert "Invalid or expired API key" in str(exc_info.value)
+
+        # Cleanup
+        login_links_module.update_login_link.sync_detailed = original_update
+
+    def test_update_api_error_on_404(self, login_links_resource: LoginLinksResource, mock_client: MagicMock) -> None:
+        """Test 404 response raises APIError."""
+        import supermetrics.resources.login_links as login_links_module
+
+        original_update = login_links_module.update_login_link.sync_detailed
+        login_links_module.update_login_link.sync_detailed = MagicMock(
+            return_value=_make_error_response(HTTPStatus.NOT_FOUND)
+        )
+
+        # Verify APIError is raised
+        with pytest.raises(APIError) as exc_info:
+            login_links_resource.update(link_id="link_123abc", description="New desc")
+
+        assert exc_info.value.status_code == 404
+        assert "not found" in str(exc_info.value).lower()
+
+        # Cleanup
+        login_links_module.update_login_link.sync_detailed = original_update
+
+    def test_update_api_error_on_500(self, login_links_resource: LoginLinksResource, mock_client: MagicMock) -> None:
+        """Test 500 response raises APIError."""
+        import supermetrics.resources.login_links as login_links_module
+
+        original_update = login_links_module.update_login_link.sync_detailed
+        login_links_module.update_login_link.sync_detailed = MagicMock(
+            return_value=_make_error_response(HTTPStatus.INTERNAL_SERVER_ERROR)
+        )
+
+        # Verify APIError is raised
+        with pytest.raises(APIError) as exc_info:
+            login_links_resource.update(link_id="link_123abc", description="New desc")
+
+        assert exc_info.value.status_code == 500
+        assert "Supermetrics API error" in str(exc_info.value) or "API error" in str(exc_info.value)
+
+        # Cleanup
+        login_links_module.update_login_link.sync_detailed = original_update
+
+    def test_update_network_error_on_timeout(
+        self, login_links_resource: LoginLinksResource, mock_client: MagicMock
+    ) -> None:
+        """Test network timeout raises NetworkError."""
+        # Mock httpx.RequestError (not HTTPStatusError)
+        mock_request = Mock()
+        mock_request.url = "https://api.supermetrics.com/test"
+
+        error = httpx.TimeoutException("Request timeout", request=mock_request)
+
+        # Mock the API method to raise the error
+        import supermetrics.resources.login_links as login_links_module
+
+        original_update = login_links_module.update_login_link.sync_detailed
+        login_links_module.update_login_link.sync_detailed = MagicMock(side_effect=error)
+
+        # Verify NetworkError is raised
+        with pytest.raises(NetworkError) as exc_info:
+            login_links_resource.update(link_id="link_123abc", description="New desc")
+
+        assert "Network error" in str(exc_info.value)
+        assert exc_info.value.status_code is None  # Network errors have no HTTP status
+
+        # Cleanup
+        login_links_module.update_login_link.sync_detailed = original_update
+
 
 class TestLoginLinksAsyncResource:
     """Test suite for LoginLinksAsyncResource (asynchronous)."""
@@ -490,3 +648,172 @@ class TestLoginLinksAsyncResource:
 
         # Cleanup
         login_links_module.create_login_link.asyncio_detailed = original_create
+
+    @pytest.mark.asyncio
+    async def test_update_login_link_async(
+        self, login_links_async_resource: LoginLinksAsyncResource, mock_client: MagicMock, sample_login_link: LoginLink
+    ) -> None:
+        """Test async update returns the LoginLink and sends only the description."""
+        # Arrange
+        mock_response_obj = LoginLinkResponse(data=sample_login_link, meta=UNSET)
+
+        import supermetrics.resources.login_links as login_links_module
+
+        original_update = login_links_module.update_login_link.asyncio_detailed
+        mock_update = AsyncMock(return_value=_make_success_response(mock_response_obj))
+        login_links_module.update_login_link.asyncio_detailed = mock_update
+
+        # Act
+        link = await login_links_async_resource.update(link_id="link_789xyz", description="Q4 Analytics Setup")
+
+        # Assert
+        assert link.link_id == "link_789xyz"
+        assert link.status_code == "OPEN"
+        assert mock_update.called
+        # The API accepts ONLY the description; the request body carries exactly that.
+        body = mock_update.call_args.kwargs["body"]
+        assert body.to_dict() == {"description": "Q4 Analytics Setup"}
+        assert mock_update.call_args.kwargs["link_id"] == "link_789xyz"
+
+        # Cleanup
+        login_links_module.update_login_link.asyncio_detailed = original_update
+
+    @pytest.mark.asyncio
+    async def test_update_raises_on_unset_response_data_async(
+        self, login_links_async_resource: LoginLinksAsyncResource, mock_client: MagicMock
+    ) -> None:
+        """Test that async update raises APIError when the response data is Unset (status 200)."""
+        # Arrange
+        mock_response_obj = LoginLinkResponse(data=UNSET, meta=UNSET)
+
+        import supermetrics.resources.login_links as login_links_module
+
+        original_update = login_links_module.update_login_link.asyncio_detailed
+        login_links_module.update_login_link.asyncio_detailed = AsyncMock(
+            return_value=_make_success_response(mock_response_obj)
+        )
+
+        # Act & Assert
+        with pytest.raises(APIError) as exc_info:
+            await login_links_async_resource.update(link_id="link_789xyz", description="New desc")
+
+        assert exc_info.value.status_code == 200
+        assert "missing login link data" in str(exc_info.value).lower()
+
+        # Cleanup
+        login_links_module.update_login_link.asyncio_detailed = original_update
+
+    @pytest.mark.asyncio
+    async def test_update_validation_error_on_400_async(
+        self, login_links_async_resource: LoginLinksAsyncResource, mock_client: MagicMock
+    ) -> None:
+        """Test async 400 response raises ValidationError."""
+        import supermetrics.resources.login_links as login_links_module
+
+        original_update = login_links_module.update_login_link.asyncio_detailed
+        login_links_module.update_login_link.asyncio_detailed = AsyncMock(
+            return_value=_make_error_response(HTTPStatus.BAD_REQUEST)
+        )
+
+        # Verify ValidationError is raised
+        with pytest.raises(ValidationError) as exc_info:
+            await login_links_async_resource.update(link_id="link_789xyz", description="New desc")
+
+        assert exc_info.value.status_code == 400
+        assert "Invalid" in str(exc_info.value)
+
+        # Cleanup
+        login_links_module.update_login_link.asyncio_detailed = original_update
+
+    @pytest.mark.asyncio
+    async def test_update_authentication_error_on_401_async(
+        self, login_links_async_resource: LoginLinksAsyncResource, mock_client: MagicMock
+    ) -> None:
+        """Test async 401 response raises AuthenticationError."""
+        import supermetrics.resources.login_links as login_links_module
+
+        original_update = login_links_module.update_login_link.asyncio_detailed
+        login_links_module.update_login_link.asyncio_detailed = AsyncMock(
+            return_value=_make_error_response(HTTPStatus.UNAUTHORIZED)
+        )
+
+        # Verify AuthenticationError is raised
+        with pytest.raises(AuthenticationError) as exc_info:
+            await login_links_async_resource.update(link_id="link_789xyz", description="New desc")
+
+        assert exc_info.value.status_code == 401
+        assert "Invalid or expired API key" in str(exc_info.value)
+
+        # Cleanup
+        login_links_module.update_login_link.asyncio_detailed = original_update
+
+    @pytest.mark.asyncio
+    async def test_update_api_error_on_404_async(
+        self, login_links_async_resource: LoginLinksAsyncResource, mock_client: MagicMock
+    ) -> None:
+        """Test async 404 response raises APIError."""
+        import supermetrics.resources.login_links as login_links_module
+
+        original_update = login_links_module.update_login_link.asyncio_detailed
+        login_links_module.update_login_link.asyncio_detailed = AsyncMock(
+            return_value=_make_error_response(HTTPStatus.NOT_FOUND)
+        )
+
+        # Verify APIError is raised
+        with pytest.raises(APIError) as exc_info:
+            await login_links_async_resource.update(link_id="link_789xyz", description="New desc")
+
+        assert exc_info.value.status_code == 404
+        assert "not found" in str(exc_info.value).lower()
+
+        # Cleanup
+        login_links_module.update_login_link.asyncio_detailed = original_update
+
+    @pytest.mark.asyncio
+    async def test_update_api_error_on_500_async(
+        self, login_links_async_resource: LoginLinksAsyncResource, mock_client: MagicMock
+    ) -> None:
+        """Test async 500 response raises APIError."""
+        import supermetrics.resources.login_links as login_links_module
+
+        original_update = login_links_module.update_login_link.asyncio_detailed
+        login_links_module.update_login_link.asyncio_detailed = AsyncMock(
+            return_value=_make_error_response(HTTPStatus.INTERNAL_SERVER_ERROR)
+        )
+
+        # Verify APIError is raised
+        with pytest.raises(APIError) as exc_info:
+            await login_links_async_resource.update(link_id="link_789xyz", description="New desc")
+
+        assert exc_info.value.status_code == 500
+        assert "Supermetrics API error" in str(exc_info.value) or "API error" in str(exc_info.value)
+
+        # Cleanup
+        login_links_module.update_login_link.asyncio_detailed = original_update
+
+    @pytest.mark.asyncio
+    async def test_update_network_error_on_timeout_async(
+        self, login_links_async_resource: LoginLinksAsyncResource, mock_client: MagicMock
+    ) -> None:
+        """Test async network timeout raises NetworkError."""
+        # Mock httpx.RequestError (not HTTPStatusError)
+        mock_request = Mock()
+        mock_request.url = "https://api.supermetrics.com/test"
+
+        error = httpx.TimeoutException("Request timeout", request=mock_request)
+
+        # Mock the API method to raise the error
+        import supermetrics.resources.login_links as login_links_module
+
+        original_update = login_links_module.update_login_link.asyncio_detailed
+        login_links_module.update_login_link.asyncio_detailed = AsyncMock(side_effect=error)
+
+        # Verify NetworkError is raised
+        with pytest.raises(NetworkError) as exc_info:
+            await login_links_async_resource.update(link_id="link_789xyz", description="New desc")
+
+        assert "Network error" in str(exc_info.value)
+        assert exc_info.value.status_code is None  # Network errors have no HTTP status
+
+        # Cleanup
+        login_links_module.update_login_link.asyncio_detailed = original_update

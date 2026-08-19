@@ -2,6 +2,49 @@
 
 ## 0.5.0 (unreleased)
 
+### Logins & Login Links (Phase 7)
+
+Three methods added to resources that already existed: `client.logins.get_accounts` and
+`client.logins.revoke`, and `client.login_links.update`, on both clients. Each appears under
+`client.with_raw_response` and takes the same keyword-only `auth_token`, `headers` and
+`timeout` overrides as every other resource. These close the plan's last read/write gaps in
+the Logins & Login Links domain — the one domain in the SDK that had shipped with no
+end-to-end coverage at all, and which now has full end-to-end coverage on both clients.
+
+Unlike every domain since Phase 2, these endpoints live on the **core API host** under the
+`/ds/...` paths — the same host `logins.get` and `login_links.create` already used — so
+nothing is re-hosted and no `team_id` is in play.
+
+Four behaviours of the upstream API are exposed as they actually are, rather than smoothed
+over:
+
+* **`revoke()` returns a `bool`, not `None`.** It is a `DELETE`, but upstream answers HTTP
+  200 with `{"data": {"result": true}}` rather than the empty 204 a delete usually is, and
+  the SDK returns that `result`. (`login_links.close()`, the other teardown in this domain,
+  is the ordinary shape and still returns `None`.)
+* **`get_accounts()` is paginated.** `offset` and `limit` are always sent as query params —
+  defaulting to `0` and `100` — and the total count rides in the response `meta`, not in the
+  returned list. Reach it through the raw response:
+  `client.with_raw_response.logins.get_accounts(...).json_body["meta"]["paginate"]["total"]`.
+* **`update()` accepts only `description`.** The plan expected it to change expiry and
+  redirect settings too, but the upstream `PATCH /ds/login/link/{link_id}` body carries a
+  single `description` field and nothing else. A link's data source, expiry, redirect and
+  username requirements are fixed at creation — those live on `create()`, not here.
+* **The `PATCH` had to be filed under `data_source_login_links` by hand.** Upstream leaves
+  `PATCH /ds/login/link/{link_id}` untagged, so the generator would have dropped it into a
+  default catch-all API module rather than alongside the other login-link operations. A tag
+  patch in `scripts/references/sdk-endpoint-filters.yaml` assigns it the
+  `data_source_login_links` tag, so `update_login_link` lands in the same generated
+  subpackage as `create_login_link`, `get_login_link`, `list_login_links` and
+  `close_login_link` (`get_accounts` and `revoke` sit under `data_source_logins` the same
+  way).
+
+`get_accounts()` returns a list of `DataSourceAccount`s — `type_` (from the wire's `@type`),
+`account_id`, `name` and `group` name each account the login can reach. Like every other
+response-only model it is not re-exported from the top-level package; you read it off the
+returned list. `get_accounts()` and `revoke()` document 401, 403, 404, 422, 429 and 500 and
+no 400; `update()` documents 400 as well.
+
 ### Account Tags (Phase 6)
 
 `client.account_tags`, on both clients — `list`, `get`, `create`, `update`, `delete`,

@@ -15,6 +15,7 @@ from supermetrics._generated.supermetrics_api_client.api.data_source_login_links
     create_login_link,
     get_login_link,
     list_login_links,
+    update_login_link,
 )
 from supermetrics._generated.supermetrics_api_client.models.create_login_link_body import CreateLoginLinkBody
 from supermetrics._generated.supermetrics_api_client.models.list_login_links_response_200 import (
@@ -22,6 +23,7 @@ from supermetrics._generated.supermetrics_api_client.models.list_login_links_res
 )
 from supermetrics._generated.supermetrics_api_client.models.login_link import LoginLink
 from supermetrics._generated.supermetrics_api_client.models.login_link_response import LoginLinkResponse
+from supermetrics._generated.supermetrics_api_client.models.update_login_link_body import UpdateLoginLinkBody
 from supermetrics._generated.supermetrics_api_client.types import UNSET, Unset
 from supermetrics._transport import request_options
 from supermetrics.exceptions import APIError
@@ -309,6 +311,73 @@ class LoginLinksResource:
                 raw_body=response.content,
             )
 
+    def update(
+        self,
+        link_id: str,
+        description: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> LoginLink:
+        """Update an existing login link.
+
+        Changes editable properties of a login link. The Supermetrics API allows only
+        the ``description`` to be updated after creation; a link's data source, expiry,
+        redirect and username requirements are fixed when it is created.
+
+        Args:
+            link_id: The login link ID to update.
+            description: The new internal description for the link.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
+
+        Returns:
+            LoginLink: The updated login link.
+
+        Raises:
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            ValidationError: If request parameters are invalid (HTTP 400).
+            APIError: If the login link is not found (HTTP 404) or the API returns a
+                server error (HTTP 5xx).
+            NetworkError: If a network-level error occurs (timeout, connection refused).
+
+        Example:
+            >>> link = client.login_links.update("link_123abc", "Q4 Analytics Setup")
+            >>> print(link.description)  # "Q4 Analytics Setup"
+        """
+        logger.debug(f"Updating login link: link_id={link_id}, description={description}")
+
+        body = UpdateLoginLinkBody(description=description)
+
+        endpoint = f"/ds/login/link/{link_id}"
+        with (
+            api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Login link not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
+            response = update_login_link.sync_detailed(
+                link_id=link_id, client=cast(AuthenticatedClient, self._client), body=body
+            )
+            if response.status_code == 200:
+                parsed = cast(LoginLinkResponse, response.parsed)
+                link = parsed.data
+                if isinstance(link, Unset):
+                    raise APIError("Response missing login link data", status_code=200, endpoint=endpoint)
+                logger.info(f"Updated login link: id={link.link_id}")
+                return link
+            _raise_for_status(
+                response.status_code,
+                str(response.parsed) if response.parsed else "",
+                endpoint,
+                headers=response.headers,
+                raw_body=response.content,
+            )
+
 
 class LoginLinksAsyncResource:
     """Asynchronous resource adapter for Login Links operations.
@@ -552,6 +621,67 @@ class LoginLinksAsyncResource:
             if response.status_code == 200:
                 logger.info(f"Closed login link (async): id={link_id}")
                 return
+            _raise_for_status(
+                response.status_code,
+                str(response.parsed) if response.parsed else "",
+                endpoint,
+                headers=response.headers,
+                raw_body=response.content,
+            )
+
+    async def update(
+        self,
+        link_id: str,
+        description: str,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> LoginLink:
+        """Update an existing login link.
+
+        Async version of update(). See LoginLinksResource.update() for full documentation.
+
+        Args:
+            link_id: The login link ID to update.
+            description: The new internal description for the link.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
+
+        Returns:
+            LoginLink: The updated login link.
+
+        Raises:
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            ValidationError: If request parameters are invalid (HTTP 400).
+            APIError: If the login link is not found (HTTP 404) or the API returns a
+                server error (HTTP 5xx).
+            NetworkError: If a network-level error occurs (timeout, connection refused).
+        """
+        logger.debug(f"Updating login link (async): link_id={link_id}, description={description}")
+
+        body = UpdateLoginLinkBody(description=description)
+
+        endpoint = f"/ds/login/link/{link_id}"
+        with (
+            api_error_handler(endpoint, context_400="Invalid request parameters", context_404="Login link not found"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
+            response = await update_login_link.asyncio_detailed(
+                link_id=link_id, client=cast(AuthenticatedClient, self._client), body=body
+            )
+            if response.status_code == 200:
+                parsed = cast(LoginLinkResponse, response.parsed)
+                link = parsed.data
+                if isinstance(link, Unset):
+                    raise APIError("Response missing login link data", status_code=200, endpoint=endpoint)
+                logger.info(f"Updated login link (async): id={link.link_id}")
+                return link
             _raise_for_status(
                 response.status_code,
                 str(response.parsed) if response.parsed else "",

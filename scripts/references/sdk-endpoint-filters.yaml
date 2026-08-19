@@ -45,6 +45,23 @@ endpoints:
   - method: GET
     path: /ds/login/{login_id}
 
+  # Revoke a login (Phase 7). Upstream (openap-management.yaml) leaves this operation
+  # untagged, which would place it in the generated `api/default/` subpackage; the tag
+  # patch keeps it beside get/list in `api/data_source_logins/`.
+  - method: DELETE
+    path: /ds/login/{login_id}
+    patches:
+      merge:
+        tags:
+          - Data Source Logins
+
+  - method: GET
+    path: /ds/login/{login_id}/accounts
+    patches:
+      merge:
+        tags:
+          - Data Source Logins
+
   # Data Source Login Links
   - method: GET
     path: /ds/login/links
@@ -54,6 +71,16 @@ endpoints:
 
   - method: GET
     path: /ds/login/link/{link_id}
+
+  # Update a login link (Phase 7). Upstream tags this operation `Data Source Logins`
+  # (in fact leaves it untagged), which would split it away from the other link
+  # operations; the tag patch keeps it in `api/data_source_login_links/`.
+  - method: PATCH
+    path: /ds/login/link/{link_id}
+    patches:
+      merge:
+        tags:
+          - Data Source Login Links
 
   - method: PUT
     path: /ds/login/link/{link_id}/close

@@ -281,6 +281,42 @@ class TestRequestsReachTheRightHost:
             BLENDS_ITEM,
         ]
 
+    def test_login_domain_is_not_routed(self, api_server: MockAPIServer, dts_server: MockAPIServer) -> None:
+        """The Phase 7 login operations are core-API calls and must never reach the DWH host.
+
+        ``logins.get_accounts`` (GET), ``logins.revoke`` (DELETE) and ``login_links.update``
+        (PATCH) all sit under ``/ds/login*``. ``_DTS_PATH_PATTERN`` is anchored ``^/teams/`` and
+        cannot match them, so the filter gives them no ``rewrite_path``. All three verbs are
+        exercised because the routing hook sees the request, not the method: a regression that
+        only mis-routed the DELETE or the PATCH would otherwise slip past a GET-only check.
+        """
+        accounts_body = {
+            "meta": {"request_id": "req_00000000", "paginate": {"offset": 0, "limit": 100, "total": 0}},
+            "data": [],
+        }
+        revoke_body = {"meta": {"request_id": "req_00000000"}, "data": {"result": True}}
+        link_body = {"data": {"link_id": "link_123", "status_code": "OPEN", "description": "Updated"}}
+
+        api_server.route("/ds/login/login_abc/accounts", ScriptedResponse(json_body=accounts_body))
+        api_server.route("/ds/login/login_abc", ScriptedResponse(json_body=revoke_body))
+        api_server.route("/ds/login/link/link_123", ScriptedResponse(json_body=link_body))
+
+        with SupermetricsClient(
+            api_key="api_k",
+            base_url=api_server.base_url,
+            dts_base_url=f"{dts_server.base_url}/v1",
+        ) as client:
+            client.logins.get_accounts("login_abc")
+            client.logins.revoke("login_abc")
+            client.login_links.update("link_123", "Updated")
+
+        assert dts_server.requests == [], "the DTS server must not have seen these requests"
+        assert [urlsplit(request.path).path for request in api_server.requests] == [
+            "/ds/login/login_abc/accounts",
+            "/ds/login/login_abc",
+            "/ds/login/link/link_123",
+        ]
+
     def test_unset_dts_base_url_sends_everything_to_base_url(
         self, api_server: MockAPIServer, dts_server: MockAPIServer
     ) -> None:
