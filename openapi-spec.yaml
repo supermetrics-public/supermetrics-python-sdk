@@ -3775,6 +3775,472 @@ paths:
         - custom_fields_write
       tags:
       - Custom Fields
+  /v1/teams/{team_id}/data-blending/blends:
+    get:
+      summary: List all blends
+      description: Returns all blends for a team, optionally filtered by type.
+      operationId: getTeamBlends
+      security:
+      - ApiKeyAuth:
+        - data_blending_read
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - name: type
+        in: query
+        required: false
+        description: Filter blends by type
+        example: union
+        schema:
+          type: string
+          enum:
+          - join
+          - union
+      responses:
+        '200':
+          description: Blends retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlendListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Data Blending
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
+    post:
+      summary: Create a blend
+      description: Create a new blend for a team. Returns the full blend resource.
+      operationId: createBlend
+      security:
+      - ApiKeyAuth:
+        - data_blending_write
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      requestBody:
+        required: true
+        description: Blend to create
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlendCreateRequest'
+            example:
+              type: union
+              display_name: Example Blend
+              description: Example blend description
+              blended_data_sources:
+              - data_source_id: GA4
+                blend_data_source_id: null
+                blend_data_source_key: abcd1234
+                display_name: Google Analytics 4
+                report_type: null
+                report_type_settings: []
+                data_source_settings: []
+                accounts: []
+                segments: []
+              config:
+                fields:
+                - blend_field_name: impressions
+                  blend_field_display_name: Impressions
+                  blend_datasource_fields:
+                  - blend_data_source_id: null
+                    blend_data_source_key: abcd1234
+                    datasource_field_name: Impressions
+                    datasource_field_display_name: Impressions
+                    datasource_field_type: met
+                    datasource_field_data_type: int.number.value
+                    field_source: standard
+                    meta: null
+      responses:
+        '201':
+          description: Blend created successfully
+          headers:
+            Location:
+              description: URL of the newly created blend
+              schema:
+                type: string
+                format: uri
+                maxLength: 2048
+            Access-Control-Allow-Origin:
+              description: Indicates which origins are allowed to access the resource
+              schema:
+                type: string
+                maxLength: 255
+                pattern: ^.+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlendResponse'
+              example:
+                meta:
+                  request_id: RfNUgKPReZtgmzkqAFe4ArjuCQXQuaRr
+                data:
+                  blend_id: 569
+                  blend_uuid: 71bc0582-31b5-11f1-a55c-4201ac182030
+                  type: union
+                  display_name: Example Blend
+                  description: Example blend description
+                  modified_time_utc: 2026-04-07T10:00:00+0000
+                  last_modify_user_email: user@supermetrics.com
+                  blended_data_sources:
+                    items:
+                    - blend_data_source_id: 1
+                      blend_id: 569
+                      data_source_id: GA4
+                      display_name: Google Analytics 4
+                      accounts:
+                        items: []
+                      segments:
+                        items: []
+                      data_source_settings:
+                        items: []
+                      report_type_settings:
+                        items: []
+                  config:
+                    fields:
+                      items:
+                      - blend_field_name: impressions
+                        blend_field_display_name: Impressions
+                        blend_field_type: met
+                        blend_field_data_type: int.number.value
+                        blend_datasource_fields:
+                          items:
+                          - blend_data_source_id: 1
+                            datasource_field_name: Impressions
+                            datasource_field_display_name: Impressions
+                            datasource_field_type: met
+                            datasource_field_data_type: int.number.value
+                            field_source: standard
+                            meta: null
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Data Blending
+  /v1/teams/{team_id}/data-blending/blends/{blend_id}:
+    delete:
+      summary: Delete a blend
+      description: Delete a blend by ID.
+      operationId: deleteBlend
+      security:
+      - ApiKeyAuth:
+        - data_blending_write
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - name: blend_id
+        in: path
+        required: true
+        description: ID of the blend to delete
+        example: 569
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+      responses:
+        '204':
+          description: Blend deleted successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Data Blending
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
+    get:
+      summary: Get a blend by ID
+      description: Returns a single blend by ID, including all active data sources.
+      operationId: getBlend
+      security:
+      - ApiKeyAuth:
+        - data_blending_read
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - name: blend_id
+        in: path
+        required: true
+        description: ID of the blend to retrieve
+        example: 569
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+      responses:
+        '200':
+          description: Blend retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlendResponse'
+              example:
+                meta:
+                  request_id: RWmTkuYcXdfdjvA7xaDnusTYu8u8AMXG
+                data:
+                  blend_id: 569
+                  blend_uuid: 71bc0582-31b5-11f1-a55c-4201ac182030
+                  type: join
+                  display_name: Example Blend
+                  description: Example blend description
+                  modified_time_utc: 2026-04-07T10:00:00+0000
+                  last_modify_user_email: user@supermetrics.com
+                  blended_data_sources:
+                    items:
+                    - blend_data_source_id: 1
+                      blend_id: 569
+                      data_source_id: GA4
+                      display_name: Google Analytics 4
+                      accounts:
+                        items: []
+                      segments:
+                        items: []
+                      data_source_settings:
+                        items: []
+                      report_type_settings:
+                        items: []
+                    - blend_data_source_id: 2
+                      blend_id: 569
+                      data_source_id: GADS
+                      display_name: Google Ads
+                      accounts:
+                        items: []
+                      segments:
+                        items: []
+                      data_source_settings:
+                        items: []
+                      report_type_settings:
+                        items: []
+                  config:
+                    query_table:
+                      blend_data_source_id: 1
+                    joins:
+                      items:
+                      - join_table:
+                          blend_data_source_id: 2
+                        type: left
+                        conditions:
+                          items:
+                          - operator: '='
+                            left:
+                              blend_data_source_id: 1
+                              datasource_field_name: Date
+                              datasource_field_display_name: Date
+                              datasource_field_type: dim
+                              datasource_field_data_type: string.time.date
+                              field_source: standard
+                              meta: null
+                            right:
+                              blend_data_source_id: 2
+                              datasource_field_name: Date
+                              datasource_field_display_name: Date
+                              datasource_field_type: dim
+                              datasource_field_data_type: string.time.date
+                              field_source: standard
+                              meta: null
+                    fields:
+                      items:
+                      - blend_field_name: impressions
+                        blend_field_display_name: Impressions
+                        blend_field_type: met
+                        blend_field_data_type: int.number.value
+                        blend_datasource_fields:
+                          items:
+                          - blend_data_source_id: 1
+                            datasource_field_name: Impressions
+                            datasource_field_display_name: Impressions
+                            datasource_field_type: met
+                            datasource_field_data_type: int.number.value
+                            field_source: standard
+                            meta: null
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Data Blending
+    put:
+      summary: Update a blend
+      description: Update an existing blend. Returns the full updated blend resource.
+      operationId: updateBlend
+      security:
+      - ApiKeyAuth:
+        - data_blending_write
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - name: blend_id
+        in: path
+        required: true
+        description: ID of the blend to update
+        example: 569
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+      requestBody:
+        required: true
+        description: Blend fields to update
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlendUpdateRequest'
+            example:
+              display_name: Example Blend Updated
+              description: Updated example blend description
+              blended_data_sources:
+              - data_source_id: GA4
+                blend_data_source_id: 1
+                blend_data_source_key: null
+                display_name: Google Analytics 4
+                report_type: null
+                report_type_settings: []
+                data_source_settings: []
+                accounts: []
+                segments: []
+              - data_source_id: GADS
+                blend_data_source_id: null
+                blend_data_source_key: efgh5678
+                display_name: Google Ads
+                report_type: null
+                report_type_settings: []
+                data_source_settings: []
+                accounts: []
+                segments: []
+              config:
+                query_table:
+                  blend_data_source_id: 1
+                joins:
+                - join_table:
+                    blend_data_source_key: efgh5678
+                  type: left
+                  conditions:
+                  - operator: '='
+                    left:
+                      blend_data_source_id: 1
+                      datasource_field_name: Date
+                      datasource_field_display_name: Date
+                      datasource_field_type: dim
+                      datasource_field_data_type: string.time.date
+                      field_source: standard
+                      meta: null
+                    right:
+                      blend_data_source_id: null
+                      blend_data_source_key: efgh5678
+                      datasource_field_name: Date
+                      datasource_field_display_name: Date
+                      datasource_field_type: dim
+                      datasource_field_data_type: string.time.date
+                      field_source: standard
+                      meta: null
+                fields:
+                - blend_field_name: impressions
+                  blend_field_display_name: Impressions
+                  blend_datasource_fields:
+                  - blend_data_source_id: 1
+                    datasource_field_name: Impressions
+                    datasource_field_display_name: Impressions
+                    datasource_field_type: met
+                    datasource_field_data_type: int.number.value
+                    field_source: standard
+                    meta: null
+      responses:
+        '200':
+          description: Blend updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlendResponse'
+              example:
+                meta:
+                  request_id: wmCedcnSca2ZZ8bJehrmeLBLq6SCSSeT
+                data:
+                  blend_id: 569
+                  blend_uuid: 71bc0582-31b5-11f1-a55c-4201ac182030
+                  type: union
+                  display_name: Example Blend Updated
+                  description: Updated example blend description
+                  modified_time_utc: 2026-04-07T10:00:00+0000
+                  last_modify_user_email: user@supermetrics.com
+                  blended_data_sources:
+                    items:
+                    - blend_data_source_id: 1
+                      blend_id: 569
+                      data_source_id: GA4
+                      display_name: Google Analytics 4
+                      accounts:
+                        items: []
+                      segments:
+                        items: []
+                      data_source_settings:
+                        items: []
+                      report_type_settings:
+                        items: []
+                  config:
+                    fields:
+                      items:
+                      - blend_field_name: impressions
+                        blend_field_display_name: Impressions
+                        blend_field_type: met
+                        blend_field_data_type: int.number.value
+                        blend_datasource_fields:
+                          items:
+                          - blend_data_source_id: 1
+                            datasource_field_name: Impressions
+                            datasource_field_display_name: Impressions
+                            datasource_field_type: met
+                            datasource_field_data_type: int.number.value
+                            field_source: standard
+                            meta: null
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Data Blending
 components:
   schemas:
     AbstractResponse:
@@ -4066,6 +4532,1006 @@ components:
           additionalProperties: false
         data:
           $ref: '#/components/schemas/Backfill'
+    BlendBaseRequest:
+      type: object
+      description: Fields shared by the blend create and update requests. Concrete
+        request schemas compose this via `allOf` and add their own required-field
+        constraints (and, for create, the `type` discriminator).
+      properties:
+        display_name:
+          type: string
+          maxLength: 300
+          pattern: ^.+
+          description: Display name of the blend.
+          example: My Blend
+        description:
+          type: string
+          maxLength: 300
+          nullable: true
+          pattern: ^.+
+          description: Optional free-text description of the blend.
+          example: Description of the blend
+        blended_data_sources:
+          type: array
+          maxItems: 50
+          description: Data sources to include in the blend.
+          example: []
+          items:
+            $ref: '#/components/schemas/BlendedDataSourceInput'
+        config:
+          type: object
+          description: Field mappings and join configuration for the blend.
+          allOf:
+          - $ref: '#/components/schemas/BlendConfig'
+          example: {}
+    BlendConfig:
+      type: object
+      description: Field mappings and join configuration for the blend (request).
+        Union blends contain only `fields`; join blends also include `query_table`
+        and `joins`.
+      properties:
+        query_table:
+          type: object
+          description: Primary (left-hand) data source — present for join blends only.
+            Provide `blend_data_source_key` when creating, `blend_data_source_id`
+            when updating with an existing data source.
+          properties:
+            blend_data_source_id:
+              type: integer
+              format: int64
+              nullable: true
+              minimum: 1
+              maximum: 9223372036854776000
+              description: Internal ID of the primary data source.
+              example: 146715
+            blend_data_source_key:
+              type: string
+              maxLength: 8
+              nullable: true
+              pattern: ^[a-z0-9]{8}$
+              description: Key of the primary data source (for new data sources).
+              example: abcd1234
+          example: {}
+        joins:
+          type: array
+          maxItems: 50
+          description: Join definitions — present for join blends only.
+          example: []
+          items:
+            $ref: '#/components/schemas/BlendJoin'
+        fields:
+          type: array
+          maxItems: 1000
+          description: Field definitions for the blend.
+          example: []
+          items:
+            $ref: '#/components/schemas/BlendField'
+      example: {}
+    BlendConfigOutput:
+      type: object
+      description: Field mappings and join configuration for the blend (response).
+        Union blends contain only `fields`; join blends also include `query_table`
+        and `joins`.
+      properties:
+        query_table:
+          type: object
+          description: Primary (left-hand) data source — present for join blends only.
+          properties:
+            blend_data_source_id:
+              type: integer
+              format: int64
+              nullable: true
+              minimum: 1
+              maximum: 9223372036854776000
+              description: Internal ID of the primary data source.
+              example: 146715
+          example: {}
+        joins:
+          type: object
+          description: Join definitions — present for join blends only.
+          properties:
+            items:
+              type: array
+              maxItems: 50
+              description: Join items.
+              example: []
+              items:
+                $ref: '#/components/schemas/BlendJoinOutput'
+        fields:
+          type: object
+          description: Field definitions for the blend.
+          properties:
+            items:
+              type: array
+              maxItems: 1000
+              description: Field items.
+              example: []
+              items:
+                $ref: '#/components/schemas/BlendFieldOutput'
+      example: {}
+    BlendCreateRequest:
+      description: Payload for creating a new blend. Extends BlendBaseRequest and
+        additionally requires the blend `type`. When creating, new data sources are
+        referenced by `blend_data_source_key` rather than `blend_data_source_id`.
+      allOf:
+      - $ref: '#/components/schemas/BlendBaseRequest'
+      - type: object
+        required:
+        - type
+        - display_name
+        - blended_data_sources
+        - config
+        properties:
+          type:
+            type: string
+            enum:
+            - join
+            - union
+            description: 'Blend type: `union` stacks rows, `join` joins data sources
+              on shared fields.'
+            example: union
+        example:
+          type: union
+          display_name: Example Blend
+          description: Example blend description
+          blended_data_sources:
+          - data_source_id: GA4
+            blend_data_source_id: null
+            blend_data_source_key: abcd1234
+            display_name: Google Analytics 4
+            report_type: null
+            report_type_settings: []
+            data_source_settings: []
+            accounts: []
+            segments: []
+          config:
+            fields:
+            - blend_field_name: impressions
+              blend_field_display_name: Impressions
+              blend_datasource_fields:
+              - blend_data_source_id: null
+                blend_data_source_key: abcd1234
+                datasource_field_name: Impressions
+                datasource_field_display_name: Impressions
+                datasource_field_type: met
+                datasource_field_data_type: int.number.value
+                field_source: standard
+                meta: null
+    BlendDatasourceFieldRef:
+      type: object
+      description: A field reference within a data source (request). At least one
+        of `blend_data_source_id` or `blend_data_source_key` must be non-null. When
+        creating a blend (POST), use `blend_data_source_key`. When updating (PUT),
+        use `blend_data_source_id` for existing data sources or `blend_data_source_key`
+        for newly added ones.
+      required:
+      - datasource_field_name
+      - field_source
+      properties:
+        blend_data_source_id:
+          type: integer
+          format: int64
+          nullable: true
+          minimum: 1
+          maximum: 9223372036854776000
+          description: Internal ID of the blended data source. Use for existing data
+            sources when updating a blend; null when referencing a new data source
+            by key.
+          example: 146715
+        blend_data_source_key:
+          type: string
+          maxLength: 8
+          nullable: true
+          pattern: ^[a-z0-9]{8}$
+          description: Temporary key linking a new data source to field/join references
+            within the same request. Required when creating a blend; used for new
+            data sources when updating. Must be exactly 8 lowercase alphanumeric characters.
+          example: abcd1234
+        datasource_field_name:
+          type: string
+          maxLength: 255
+          pattern: ^.+
+          description: Field name as defined by the data source.
+          example: Date
+        datasource_field_display_name:
+          type: string
+          maxLength: 255
+          pattern: ^.+
+          description: Display name of the field.
+          example: Date
+        datasource_field_type:
+          type: string
+          enum:
+          - dim
+          - met
+          description: 'Field type: `dim` (dimension) or `met` (metric).'
+          example: dim
+        datasource_field_data_type:
+          type: string
+          maxLength: 100
+          pattern: ^.+
+          description: Data type of the field (e.g. string.time.date, int.number.value).
+          example: string.text.value
+        field_source:
+          type: string
+          enum:
+          - standard
+          - transformation
+          - data_source_account_custom
+          description: 'Origin of the field: `standard` = from the data source, `transformation`
+            = computed field, `data_source_account_custom` = account-level custom
+            field.'
+          example: standard
+        meta:
+          type: object
+          nullable: true
+          description: Optional metadata, e.g. account-level overrides.
+          example: {}
+    BlendDatasourceFieldRefOutput:
+      type: object
+      description: A field reference within a data source (response).
+      properties:
+        blend_data_source_id:
+          type: integer
+          format: int64
+          nullable: true
+          minimum: 1
+          maximum: 9223372036854776000
+          description: Internal ID of the blended data source.
+          example: 146715
+        datasource_field_name:
+          type: string
+          maxLength: 255
+          pattern: ^.+
+          description: Field name as defined by the data source.
+          example: Date
+        datasource_field_display_name:
+          type: string
+          maxLength: 255
+          pattern: ^.+
+          description: Display name of the field.
+          example: Date
+        datasource_field_type:
+          type: string
+          enum:
+          - dim
+          - met
+          description: 'Field type: `dim` (dimension) or `met` (metric).'
+          example: dim
+        datasource_field_data_type:
+          type: string
+          maxLength: 100
+          pattern: ^.+
+          description: Data type of the field (e.g. string.time.date, int.number.value).
+          example: string.text.value
+        field_source:
+          type: string
+          enum:
+          - standard
+          - transformation
+          - data_source_account_custom
+          description: 'Origin of the field: `standard` = from the data source, `transformation`
+            = computed field, `data_source_account_custom` = account-level custom
+            field.'
+          example: standard
+        meta:
+          type: object
+          nullable: true
+          description: Optional metadata, e.g. account-level overrides.
+          example: {}
+    BlendField:
+      type: object
+      description: A blend field and its mapping to fields in each data source (request).
+      required:
+      - blend_field_name
+      - blend_datasource_fields
+      properties:
+        blend_field_name:
+          type: string
+          maxLength: 255
+          pattern: ^.+
+          description: Unique name of the blend field — cannot be changed once created.
+          example: impressions
+        blend_field_display_name:
+          type: string
+          maxLength: 255
+          pattern: ^.+
+          description: Display name of the blend field.
+          example: Impressions
+        blend_datasource_fields:
+          type: array
+          maxItems: 50
+          description: Per-data-source field mappings for this blend field.
+          example: []
+          items:
+            $ref: '#/components/schemas/BlendDatasourceFieldRef'
+    BlendFieldOutput:
+      type: object
+      description: A blend field and its mapping to fields in each data source (response).
+      properties:
+        blend_field_name:
+          type: string
+          maxLength: 255
+          pattern: ^.+
+          description: Unique name of the blend field — cannot be changed once created.
+          example: impressions
+        blend_field_display_name:
+          type: string
+          maxLength: 255
+          pattern: ^.+
+          description: Display name of the blend field.
+          example: Impressions
+        blend_field_type:
+          type: string
+          enum:
+          - dim
+          - met
+          description: 'Field type: `dim` (dimension) or `met` (metric).'
+          example: met
+        blend_field_data_type:
+          type: string
+          maxLength: 100
+          pattern: ^.+
+          description: Data type of the field (e.g. string.time.date, int.number.value).
+          example: int.number.value
+        blend_datasource_fields:
+          type: object
+          description: Per-data-source field mappings for this blend field.
+          properties:
+            items:
+              type: array
+              maxItems: 50
+              description: Datasource field items.
+              example: []
+              items:
+                $ref: '#/components/schemas/BlendDatasourceFieldRefOutput'
+    BlendJoin:
+      type: object
+      description: Join definition between the primary table and one other data source
+        (request).
+      required:
+      - join_table
+      - type
+      - conditions
+      properties:
+        join_table:
+          type: object
+          description: Data source to join with the primary table. Provide `blend_data_source_key`
+            when creating, `blend_data_source_id` when updating with an existing data
+            source.
+          properties:
+            blend_data_source_id:
+              type: integer
+              format: int64
+              nullable: true
+              minimum: 1
+              maximum: 9223372036854776000
+              description: Internal ID of the data source to join.
+              example: 146715
+            blend_data_source_key:
+              type: string
+              maxLength: 8
+              nullable: true
+              pattern: ^[a-z0-9]{8}$
+              description: Key of the data source to join (for new data sources).
+              example: abcd1234
+          example: {}
+        type:
+          type: string
+          enum:
+          - inner
+          - left
+          - right
+          - full outer
+          description: Join type.
+          example: left
+        conditions:
+          type: array
+          maxItems: 50
+          description: Conditions that define how the two data sources are joined.
+          example: []
+          items:
+            $ref: '#/components/schemas/BlendJoinCondition'
+    BlendJoinCondition:
+      type: object
+      description: A condition comparing one field from each data source (request).
+      required:
+      - operator
+      - left
+      - right
+      properties:
+        operator:
+          type: string
+          enum:
+          - '='
+          description: Comparison operator.
+          example: '='
+        left:
+          description: Field from the primary table.
+          allOf:
+          - $ref: '#/components/schemas/BlendDatasourceFieldRef'
+          example: {}
+        right:
+          description: Field from the join table.
+          allOf:
+          - $ref: '#/components/schemas/BlendDatasourceFieldRef'
+          example: {}
+    BlendJoinConditionOutput:
+      type: object
+      description: A condition comparing one field from each data source (response).
+      properties:
+        operator:
+          type: string
+          enum:
+          - '='
+          description: Comparison operator.
+          example: '='
+        left:
+          description: Field from the primary table.
+          allOf:
+          - $ref: '#/components/schemas/BlendDatasourceFieldRefOutput'
+          example: {}
+        right:
+          description: Field from the join table.
+          allOf:
+          - $ref: '#/components/schemas/BlendDatasourceFieldRefOutput'
+          example: {}
+    BlendJoinOutput:
+      type: object
+      description: Join definition between two data sources (response).
+      properties:
+        join_table:
+          type: object
+          description: Data source joined with the primary table.
+          properties:
+            blend_data_source_id:
+              type: integer
+              format: int64
+              nullable: true
+              minimum: 1
+              maximum: 9223372036854776000
+              description: Internal ID of the data source to join.
+              example: 146715
+          example: {}
+        type:
+          type: string
+          enum:
+          - inner
+          - left
+          - right
+          - full outer
+          description: Join type.
+          example: left
+        conditions:
+          type: object
+          description: Conditions that define how the two data sources are joined.
+          properties:
+            items:
+              type: array
+              maxItems: 50
+              description: Condition items.
+              example: []
+              items:
+                $ref: '#/components/schemas/BlendJoinConditionOutput'
+    BlendListDataSourceOutput:
+      type: object
+      description: Simplified data source info returned in blend list responses.
+      properties:
+        blend_data_source_id:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+          description: Internal ID of the blended data source.
+          example: 1
+        data_source_id:
+          type: string
+          maxLength: 100
+          pattern: ^[A-Za-z0-9_]+
+          description: Data source identifier.
+          example: GA4
+        display_name:
+          type: string
+          maxLength: 300
+          pattern: ^.+
+          description: Display name of the data source.
+          example: Google Analytics 4
+        logo_url:
+          type: string
+          format: uri
+          maxLength: 2048
+          description: Data source logo URL.
+          example: https://cdn.supermetrics.com/images/datasource-logos/GA4.png
+    BlendListItemOutput:
+      type: object
+      description: A blend summary returned in list responses (without the full config).
+      properties:
+        blend_id:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+          description: Blend ID.
+          example: 569
+        blend_uuid:
+          type: string
+          format: uuid
+          maxLength: 36
+          description: Blend UUID.
+          example: 71bc0582-31b5-11f1-a55c-4201ac182030
+        type:
+          type: string
+          enum:
+          - join
+          - union
+          description: Blend type.
+          example: union
+        display_name:
+          type: string
+          maxLength: 300
+          pattern: ^.+
+          description: Display name of the blend.
+          example: My Blend
+        description:
+          type: string
+          maxLength: 300
+          nullable: true
+          pattern: ^.+
+          description: Description of the blend.
+          example: Description of the blend
+        modified_time_utc:
+          type: string
+          format: date-time
+          maxLength: 32
+          description: Timestamp of the last modification, in UTC. Serialized with
+            a numeric offset (e.g. "+0000") rather than a trailing "Z".
+          example: 2026-04-07T10:00:00+0000
+        last_modify_user_email:
+          type: string
+          format: email
+          maxLength: 254
+          description: Email of the user who last modified the blend.
+          example: user@supermetrics.com
+        blended_data_sources:
+          type: object
+          description: Simplified data source list for this blend.
+          properties:
+            items:
+              type: array
+              maxItems: 50
+              description: Data source items.
+              example: []
+              items:
+                $ref: '#/components/schemas/BlendListDataSourceOutput'
+    BlendListResponse:
+      description: Success envelope wrapping the full list of blends for a team. The
+        list endpoint returns all matching blends in a single `data.items` array and
+        is not paginated, so it uses the base envelope rather than MetaWithPagination.
+      allOf:
+      - $ref: '#/components/schemas/AbstractResponse'
+      - type: object
+        properties:
+          data:
+            type: object
+            description: Container holding the list of blend summaries.
+            properties:
+              items:
+                type: array
+                maxItems: 1000
+                description: Blend summary items.
+                example: []
+                items:
+                  $ref: '#/components/schemas/BlendListItemOutput'
+        required:
+        - data
+    BlendOutput:
+      type: object
+      description: A blend with its fields and data sources, as returned for a single-blend
+        read.
+      properties:
+        blend_id:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+          description: Blend ID.
+          example: 569
+        blend_uuid:
+          type: string
+          format: uuid
+          maxLength: 36
+          description: Blend UUID.
+          example: 71bc0582-31b5-11f1-a55c-4201ac182030
+        type:
+          type: string
+          enum:
+          - join
+          - union
+          description: Blend type.
+          example: union
+        display_name:
+          type: string
+          maxLength: 300
+          pattern: ^.+
+          description: Display name of the blend.
+          example: My Blend
+        description:
+          type: string
+          maxLength: 300
+          nullable: true
+          pattern: ^.+
+          description: Description of the blend.
+          example: Description of the blend
+        modified_time_utc:
+          type: string
+          format: date-time
+          maxLength: 32
+          description: Timestamp of the last modification, in UTC. Serialized with
+            a numeric offset (e.g. "+0000") rather than a trailing "Z".
+          example: 2026-04-07T10:00:00+0000
+        last_modify_user_email:
+          type: string
+          format: email
+          maxLength: 254
+          description: Email of the user who last modified the blend.
+          example: user@supermetrics.com
+        blended_data_sources:
+          type: object
+          description: Data sources included in this blend.
+          properties:
+            items:
+              type: array
+              maxItems: 50
+              description: Data source items.
+              example: []
+              items:
+                $ref: '#/components/schemas/BlendedDataSourceOutput'
+        config:
+          $ref: '#/components/schemas/BlendConfigOutput'
+      example:
+        blend_id: 569
+        blend_uuid: 71bc0582-31b5-11f1-a55c-4201ac182030
+        type: union
+        display_name: My Blend
+        description: Description of the blend
+        modified_time_utc: 2026-04-07T10:00:00+0000
+        last_modify_user_email: user@supermetrics.com
+    BlendResponse:
+      description: Success envelope wrapping a single blend.
+      allOf:
+      - $ref: '#/components/schemas/AbstractResponse'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/BlendOutput'
+        required:
+        - data
+    BlendUpdateRequest:
+      description: Payload for updating an existing blend. Extends BlendBaseRequest.
+        The blend `type` cannot be changed and is therefore omitted. Existing data
+        sources are referenced by `blend_data_source_id`; newly added ones use `blend_data_source_key`.
+      allOf:
+      - $ref: '#/components/schemas/BlendBaseRequest'
+      - type: object
+        required:
+        - display_name
+        - blended_data_sources
+        - config
+        example:
+          display_name: Example Blend Updated
+          description: Updated example blend description
+          blended_data_sources:
+          - data_source_id: GA4
+            blend_data_source_id: 1
+            blend_data_source_key: null
+            display_name: Google Analytics 4
+            report_type: null
+            report_type_settings: []
+            data_source_settings: []
+            accounts: []
+            segments: []
+          - data_source_id: GADS
+            blend_data_source_id: null
+            blend_data_source_key: efgh5678
+            display_name: Google Ads
+            report_type: null
+            report_type_settings: []
+            data_source_settings: []
+            accounts: []
+            segments: []
+          config:
+            query_table:
+              blend_data_source_id: 1
+            joins:
+            - join_table:
+                blend_data_source_key: efgh5678
+              type: left
+              conditions:
+              - operator: '='
+                left:
+                  blend_data_source_id: 1
+                  datasource_field_name: Date
+                  datasource_field_display_name: Date
+                  datasource_field_type: dim
+                  datasource_field_data_type: string.time.date
+                  field_source: standard
+                  meta: null
+                right:
+                  blend_data_source_id: null
+                  blend_data_source_key: efgh5678
+                  datasource_field_name: Date
+                  datasource_field_display_name: Date
+                  datasource_field_type: dim
+                  datasource_field_data_type: string.time.date
+                  field_source: standard
+                  meta: null
+            fields:
+            - blend_field_name: impressions
+              blend_field_display_name: Impressions
+              blend_datasource_fields:
+              - blend_data_source_id: 1
+                datasource_field_name: Impressions
+                datasource_field_display_name: Impressions
+                datasource_field_type: met
+                datasource_field_data_type: int.number.value
+                field_source: standard
+                meta: null
+    BlendedDataSourceInput:
+      type: object
+      description: 'Data source to include in the blend. At least one of `blend_data_source_id`
+        or `blend_data_source_key` must be non-null: use `blend_data_source_key` when
+        creating a new data source, `blend_data_source_id` for an existing one.'
+      required:
+      - data_source_id
+      - blend_data_source_id
+      - blend_data_source_key
+      - report_type
+      - report_type_settings
+      properties:
+        data_source_id:
+          type: string
+          maxLength: 100
+          pattern: ^[A-Za-z0-9_]+
+          description: Data source identifier (e.g. the connector ID).
+          example: GA4
+        blend_data_source_id:
+          type: integer
+          format: int64
+          nullable: true
+          minimum: 1
+          maximum: 9223372036854776000
+          description: Internal ID of the blended data source. Use when updating an
+            existing data source in the blend; null when creating a new one.
+          example: 146715
+        blend_data_source_key:
+          type: string
+          maxLength: 8
+          nullable: true
+          pattern: ^[a-z0-9]{8}$
+          description: Temporary key linking a new data source to field/join references
+            within the same request. Required when creating a blend. Must be exactly
+            8 lowercase alphanumeric characters.
+          example: abcd1234
+        display_name:
+          type: string
+          maxLength: 300
+          pattern: ^.+
+          description: Display name of the data source. Defaults to the data source
+            name if omitted.
+          example: Google Analytics 4
+        data_source_settings:
+          type: array
+          maxItems: 100
+          description: Settings to apply when querying this data source.
+          example: []
+          items:
+            type: object
+            description: A single key/value setting applied to the data source query.
+            properties:
+              id:
+                type: string
+                maxLength: 100
+                pattern: ^.+
+                description: Setting ID.
+                example: currency
+              value:
+                description: Setting value — null, string, integer, or boolean.
+                anyOf:
+                - type: string
+                  maxLength: 1000
+                  pattern: ^.+
+                  nullable: true
+                - type: integer
+                  format: int32
+                  minimum: -2147483648
+                  maximum: 2147483647
+                - type: boolean
+        accounts:
+          type: array
+          maxItems: 1000
+          description: Accounts to query from this data source.
+          example: []
+          items:
+            type: object
+            description: An account selected for this data source.
+            properties:
+              account_id:
+                type: string
+                maxLength: 255
+                pattern: ^.+
+                description: Account identifier.
+                example: '1234567890'
+              account_name:
+                type: string
+                maxLength: 255
+                pattern: ^.+
+                description: Account display name.
+                example: Acme Corp
+              group_name:
+                type: string
+                maxLength: 255
+                nullable: true
+                pattern: ^.+
+                description: Group the account belongs to, if any.
+                example: EMEA
+              data_source_username:
+                type: string
+                maxLength: 255
+                pattern: ^.+
+                description: Username used to authenticate with the data source.
+                example: user@supermetrics.com
+              data_source_display_username:
+                type: string
+                maxLength: 255
+                pattern: ^.+
+                description: Display name of the data source username.
+                example: user@supermetrics.com
+        segments:
+          type: array
+          maxItems: 100
+          description: Segments to apply when querying this data source.
+          example: []
+          items:
+            type: object
+            description: A segment selected for this data source.
+            properties:
+              id:
+                type: string
+                maxLength: 255
+                pattern: ^.+
+                description: Segment identifier.
+                example: organic_traffic
+              name:
+                type: string
+                maxLength: 255
+                pattern: ^.+
+                description: Segment display name.
+                example: Organic Traffic
+        report_type:
+          type: string
+          maxLength: 100
+          nullable: true
+          pattern: ^.+
+          description: Report type ID, if the data source supports report types.
+          example: organic_search
+        report_type_settings:
+          type: array
+          maxItems: 100
+          description: Settings specific to the selected report type.
+          example: []
+          items:
+            type: object
+            description: A single key/value setting for the selected report type.
+            properties:
+              id:
+                type: string
+                maxLength: 100
+                pattern: ^.+
+                description: Report type setting ID.
+                example: date_range
+              value:
+                description: Setting value — null, string, integer, or boolean.
+                anyOf:
+                - type: string
+                  maxLength: 1000
+                  nullable: true
+                - type: integer
+                  format: int32
+                  minimum: -2147483648
+                  maximum: 2147483647
+                - type: boolean
+    BlendedDataSourceOutput:
+      type: object
+      description: A data source included in the blend response, with field mappings
+        and account details.
+      properties:
+        blend_data_source_id:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+          description: Internal ID of the blended data source.
+          example: 1
+        blend_id:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+          description: ID of the blend this data source belongs to.
+          example: 569
+        data_source_id:
+          type: string
+          maxLength: 100
+          pattern: ^[A-Za-z0-9_]+
+          description: Data source identifier.
+          example: GA4
+        display_name:
+          type: string
+          maxLength: 300
+          pattern: ^.+
+          description: Display name of the data source.
+          example: Google Analytics 4
+        data_source_settings:
+          type: object
+          description: Settings applied when querying this data source.
+          properties:
+            items:
+              type: array
+              maxItems: 100
+              description: Setting items.
+              example: []
+              items:
+                type: object
+                description: A single data source setting.
+        accounts:
+          type: object
+          description: Accounts queried from this data source.
+          properties:
+            items:
+              type: array
+              maxItems: 1000
+              description: Account items.
+              example: []
+              items:
+                type: object
+                description: An account queried from this data source.
+        segments:
+          type: object
+          description: Segments applied when querying this data source.
+          properties:
+            items:
+              type: array
+              maxItems: 100
+              description: Segment items.
+              example: []
+              items:
+                type: object
+                description: A segment applied when querying this data source.
+        report_type:
+          type: string
+          maxLength: 100
+          nullable: true
+          pattern: ^.+
+          description: Report type ID.
+          example: organic_search
+        report_type_settings:
+          type: object
+          description: Settings for the selected report type.
+          properties:
+            items:
+              type: array
+              maxItems: 100
+              description: Report type setting items.
+              example: []
+              items:
+                type: object
+                description: A single setting for the selected report type.
+        logo_url:
+          type: string
+          format: uri
+          maxLength: 2048
+          description: Data source logo URL.
+          example: https://cdn.supermetrics.com/images/datasource-logos/GA4.png
     ChangeTransferStateRequest:
       type: object
       required:

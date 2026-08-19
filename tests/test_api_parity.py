@@ -71,7 +71,7 @@ class TestResourceParity:
 
     def test_resource_set_is_not_empty(self, sync_client: SupermetricsClient) -> None:
         """Guard against the reflection helper silently matching nothing."""
-        assert len(_resource_names(sync_client)) >= 14
+        assert len(_resource_names(sync_client)) >= 15
 
     def test_sync_and_async_classes_are_distinct(
         self, sync_client: SupermetricsClient, async_client: SupermetricsAsyncClient
