@@ -13,6 +13,7 @@ from supermetrics._transport import build_async_event_hooks, build_default_heade
 from supermetrics.resources._raw import SupermetricsAsyncClientWithRawResponse
 from supermetrics.resources.accounts import AccountsAsyncResource
 from supermetrics.resources.backfills import BackfillsAsyncResource
+from supermetrics.resources.blends import BlendsAsyncResource
 from supermetrics.resources.connector_builder import ConnectorBuilderAsyncResource
 from supermetrics.resources.connector_builder_logs import ConnectorBuilderLogsAsyncResource
 from supermetrics.resources.connector_builder_secrets import ConnectorBuilderSecretsAsyncResource
@@ -153,6 +154,7 @@ class SupermetricsAsyncClient:
         self.transfers = TransfersAsyncResource(self._client)
         self.transfer_runs = TransferRunsAsyncResource(self._client)
         self.custom_fields = CustomFieldsAsyncResource(self._client)
+        self.blends = BlendsAsyncResource(self._client)
 
         self._with_raw_response: SupermetricsAsyncClientWithRawResponse | None = None
 

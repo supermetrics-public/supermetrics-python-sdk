@@ -21,6 +21,10 @@ from supermetrics import SupermetricsAsyncClient, SupermetricsClient
 from supermetrics._transport import DEFAULT_BASE_URL, DEFAULT_DTS_BASE_URL, resolve_dts_base_url
 
 from .conftest import (
+    BLEND_LIST_BODY,
+    BLEND_SINGLE_BODY,
+    BLENDS_COLLECTION,
+    BLENDS_ITEM,
     LOGINS_LIST_BODY,
     TRANSFER_RUN_DETAIL_BODY,
     TRANSFERS_LIST_BODY,
@@ -161,6 +165,41 @@ class TestRequestsReachTheRightHost:
         assert dts_server.requests == []
         assert api_server.last_request.path == "/teams/42/datasource/GAWA"
 
+    def test_blends_are_not_routed(self, api_server: MockAPIServer, dts_server: MockAPIServer) -> None:
+        """Blends are a core-API domain and must never reach the Data Warehouse host.
+
+        Their paths are ``/v1/teams/{id}/data-blending/...``. ``_DTS_PATH_PATTERN`` is
+        anchored ``^/teams/`` and so cannot match them, which is exactly why the spec
+        filter gives them no ``rewrite_path``. Rewriting them to ``/teams/...`` — the
+        shape transfers use — would drop the ``/v1`` the core API requires *and* hand the
+        call to the wrong origin. One server could not tell the difference; two can.
+
+        All three verbs are checked because the routing hook sees the request, not the
+        method, and a regression that only mis-routed writes would otherwise slip past.
+        """
+        api_server.route(BLENDS_COLLECTION, ScriptedResponse(json_body=BLEND_LIST_BODY))
+        api_server.route(
+            BLENDS_ITEM,
+            ScriptedResponse(json_body=BLEND_SINGLE_BODY),
+            ScriptedResponse(status=204, raw_body=b""),
+        )
+
+        with SupermetricsClient(
+            api_key="api_k",
+            base_url=api_server.base_url,
+            dts_base_url=f"{dts_server.base_url}/v1",
+        ) as client:
+            client.blends.list(team_id=42)
+            client.blends.get(team_id=42, blend_id=569)
+            client.blends.delete(team_id=42, blend_id=569)
+
+        assert dts_server.requests == []
+        assert [urlsplit(request.path).path for request in api_server.requests] == [
+            BLENDS_COLLECTION,
+            BLENDS_ITEM,
+            BLENDS_ITEM,
+        ]
+
     def test_unset_dts_base_url_sends_everything_to_base_url(
         self, api_server: MockAPIServer, dts_server: MockAPIServer
     ) -> None:
@@ -282,3 +321,18 @@ class TestAsyncRouting:
         assert run.id == 12345
         assert api_server.last_request.path == "/ds/logins"
         assert dts_server.last_request.path == "/v1/teams/42/transfer_runs/12345"
+
+    @pytest.mark.asyncio
+    async def test_blends_are_not_routed(self, api_server: MockAPIServer, dts_server: MockAPIServer) -> None:
+        """The async client keeps blends on the core host too."""
+        api_server.route(BLENDS_COLLECTION, ScriptedResponse(json_body=BLEND_LIST_BODY))
+
+        async with SupermetricsAsyncClient(
+            api_key="api_k",
+            base_url=api_server.base_url,
+            dts_base_url=f"{dts_server.base_url}/v1",
+        ) as client:
+            await client.blends.list(team_id=42)
+
+        assert dts_server.requests == []
+        assert urlsplit(api_server.last_request.path).path == BLENDS_COLLECTION

@@ -2,6 +2,74 @@
 
 ## 0.5.0 (unreleased)
 
+### Data Blending (Phase 5)
+
+`client.blends`, on both clients — `list`, `get`, `create`, `update` and `delete` over a
+team's blends: the combined tables that draw their rows from several data sources at once.
+It appears under `client.with_raw_response` and takes the same keyword-only `auth_token`,
+`headers` and `timeout` overrides as every other resource.
+
+A blend is one of two kinds. A `union` stacks rows from each source under a shared set of
+blend fields; a `join` joins the sources on shared fields, with one primary table and one
+join per additional source. Two things describe it: `blended_data_sources`, the sources it
+draws on, and `config`, which maps each source's native fields onto the blend's own fields
+and — for a join — says how they are joined. `BlendedDataSourceInput`, `BlendConfig`,
+`BlendField`, `BlendDatasourceFieldRef`, `BlendJoin`, `BlendJoinCondition` and the small
+types they nest are re-exported from the top-level package, because `create()` and
+`update()` cannot be called without constructing them.
+
+Five behaviours of the upstream API are exposed as they actually are, rather than smoothed
+over:
+
+* **`list()` returns summaries, not blends.** A `BlendListItemOutput` carries no `config`
+  at all and a reduced view of each data source, so a caller who wants a blend's fields has
+  to `get()` it. Annotating the list as returning whole blends would have been a lie that
+  surfaced only as an `Unset` attribute at runtime, on the caller's machine rather than on
+  ours.
+* **The list endpoint is not paginated.** It answers with every matching blend in one
+  array, so there is no page size to choose and no cursor to follow. That is why `list()`
+  returning a bare list costs nothing here, where the equivalent decision for custom fields
+  had to be justified by `with_raw_response` keeping the pagination reachable.
+* **Requests and responses are not the same shape.** Every collection is sent as a bare
+  list and comes back wrapped in an object with an `items` attribute — at every level, so a
+  read goes through `blend.blended_data_sources.items`, `blend.config.fields.items`,
+  `field.blend_datasource_fields.items` and `join.conditions.items`. The response also drops
+  `blend_data_source_key` everywhere and adds `blend_field_type` and
+  `blend_field_data_type`, which upstream infers and the request has no way to set. A blend
+  therefore cannot be read back and resent unchanged; a read-modify-write has to rebuild the
+  request objects. The SDK does not paper over this, and the end-to-end suite pins both
+  directions rather than assuming either.
+* **New data sources are named by a key, existing ones by an id.** A source being created
+  has no id yet, so it is given a `blend_data_source_key` — exactly eight lowercase
+  alphanumerics — that every field and join reference in the same request points at. On
+  update, sources that already exist are addressed by `blend_data_source_id` and newly added
+  ones by a fresh key, so one body legitimately carries both. `BlendedDataSourceInput` also
+  marks `blend_data_source_id`, `blend_data_source_key`, `report_type` and
+  `report_type_settings` required *but nullable*: all four must be passed even though three
+  of them are usually empty.
+* **`create()` takes the blend type, `update()` does not.** Upstream fixes a blend's kind at
+  creation and the update body does not carry it, so this is not `create()` with an id
+  attached. It is also a whole-object replace — there is no PATCH endpoint — so the required
+  fields are resent in full on every call and a source or field left out is dropped. The
+  success statuses differ as well: `create()` answers `201`, `update()` `200`, `delete()`
+  `204`. A rejected blend is an
+  HTTP **400**; this domain documents no 422 at all, and only the three by-id operations
+  document a 404. Nothing in the SDK checks that a `union` blend omits `joins` or that a
+  `join` blend supplies `query_table` — upstream is what rejects those, also with a 400.
+
+Like custom fields, **blends are served from the core API host** with their `/v1` prefix in
+the path, so nothing is re-hosted and no routing change was needed. That is a claim worth
+more than a comment: `tests/e2e/test_dts_routing_e2e.py` now runs a second local server and
+asserts the Data Warehouse origin receives nothing when a blend is listed, read or deleted,
+on both clients. A rewrite to the `/teams/...` shape transfers use would have dropped the
+`/v1` the core API requires *and* sent the call to the wrong host, and one server cannot
+tell those apart.
+
+Every method is covered end to end on both clients rather than only in unit tests — 83
+tests driving the real stack over a loopback socket, alongside 92 unit tests at the
+generated-client boundary. They run in CI in both the version matrix and the dedicated
+end-to-end job.
+
 ### Custom Fields (Phase 4)
 
 `client.custom_fields`, on both clients — `list`, `get`, `get_metadata`, `create`,

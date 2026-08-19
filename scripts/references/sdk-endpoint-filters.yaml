@@ -190,6 +190,24 @@ endpoints:
   - method: GET
     path: /v1/teams/{team_id}/custom-fields/metadata
 
+  # Data Blending
+  #
+  # Core-API paths, the same shape as Custom Fields: the upstream path-level server is
+  # https://api.supermetrics.com and the "/v1" already sits in the path key. No
+  # rewrite_path, for the same two reasons — rewriting to /teams/... would drop the /v1
+  # the core API requires, and it would move these paths into the shape
+  # _DTS_PATH_PATTERN matches, sending a core-API call to the Data Warehouse host.
+  - method: GET
+    path: /v1/teams/{team_id}/data-blending/blends
+  - method: POST
+    path: /v1/teams/{team_id}/data-blending/blends
+  - method: GET
+    path: /v1/teams/{team_id}/data-blending/blends/{blend_id}
+  - method: PUT
+    path: /v1/teams/{team_id}/data-blending/blends/{blend_id}
+  - method: DELETE
+    path: /v1/teams/{team_id}/data-blending/blends/{blend_id}
+
   # ==========================================
   # EXAMPLE: Endpoint with comprehensive patches
   # ==========================================

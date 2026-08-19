@@ -315,6 +315,219 @@ CUSTOM_FIELD_METADATA_BODY: dict[str, Any] = {
 }
 
 
+# --- Data blending ------------------------------------------------------------
+#
+# Blends live on the CORE api host under a "/v1" path prefix, the same shape as custom
+# fields and the opposite of transfers. Route strings here therefore include the "/v1" —
+# see docs.local/scratchpads/phase5-contract.md.
+#
+# Every collection in these bodies is wrapped in an {"items": [...]} object. Requests send
+# the same collections as bare arrays. That asymmetry is upstream's and the SDK does not
+# hide it, so the payloads below are written the way the API really answers.
+
+#: The two blend routes, for team 42 and blend 569.
+BLENDS_COLLECTION = "/v1/teams/42/data-blending/blends"
+BLENDS_ITEM = "/v1/teams/42/data-blending/blends/569"
+
+#: A field reference as a *response* carries it: addressed by `blend_data_source_id`, with
+#: no `blend_data_source_key` — the key is a request-scoped alias and never comes back.
+GA4_IMPRESSIONS_REF: dict[str, Any] = {
+    "blend_data_source_id": 1,
+    "datasource_field_name": "Impressions",
+    "datasource_field_display_name": "Impressions",
+    "datasource_field_type": "met",
+    "datasource_field_data_type": "int.number.value",
+    "field_source": "standard",
+    "meta": None,
+}
+
+#: The same shape for the second source in a join, and with a non-null `meta`. The
+#: generated model parses `meta` with a try/except cascade, so both the null and the
+#: object form need exercising.
+GADS_IMPRESSIONS_REF: dict[str, Any] = {
+    "blend_data_source_id": 2,
+    "datasource_field_name": "Impressions",
+    "datasource_field_display_name": "Impressions",
+    "datasource_field_type": "met",
+    "datasource_field_data_type": "int.number.value",
+    "field_source": "standard",
+    "meta": {"account_override": "1234567890"},
+}
+
+#: A dimension reference, used as a join key.
+GA4_DATE_REF: dict[str, Any] = {
+    "blend_data_source_id": 1,
+    "datasource_field_name": "Date",
+    "datasource_field_display_name": "Date",
+    "datasource_field_type": "dim",
+    "datasource_field_data_type": "string.time.date",
+    "field_source": "standard",
+    "meta": None,
+}
+
+#: The same dimension on the joined source.
+GADS_DATE_REF: dict[str, Any] = {
+    "blend_data_source_id": 2,
+    "datasource_field_name": "Date",
+    "datasource_field_display_name": "Date",
+    "datasource_field_type": "dim",
+    "datasource_field_data_type": "string.time.date",
+    "field_source": "standard",
+    "meta": None,
+}
+
+#: A data source as a response carries it. `data_source_settings` exercises all four value
+#: kinds the upstream anyOf allows — string, integer, boolean and null — because the
+#: generated layer types them as one union and nothing else would catch a regression there.
+GA4_SOURCE_OUTPUT: dict[str, Any] = {
+    "blend_data_source_id": 1,
+    "blend_id": 569,
+    "data_source_id": "GA4",
+    "display_name": "Google Analytics 4",
+    "data_source_settings": {
+        "items": [
+            {"id": "currency", "value": "EUR"},
+            {"id": "row_limit", "value": 1000},
+            {"id": "include_empty_rows", "value": True},
+            {"id": "sampling_level", "value": None},
+        ]
+    },
+    "accounts": {"items": [{"account_id": "1234567890", "account_name": "Acme Corp"}]},
+    "segments": {"items": [{"id": "organic_traffic", "name": "Organic Traffic"}]},
+    "report_type": None,
+    "report_type_settings": {"items": []},
+    "logo_url": "https://cdn.supermetrics.com/images/datasource-logos/GA4.png",
+}
+
+#: The second source, present only in the join blend.
+GADS_SOURCE_OUTPUT: dict[str, Any] = {
+    "blend_data_source_id": 2,
+    "blend_id": 569,
+    "data_source_id": "GADS",
+    "display_name": "Google Ads",
+    "data_source_settings": {"items": []},
+    "accounts": {"items": []},
+    "segments": {"items": []},
+    "report_type": "organic_search",
+    "report_type_settings": {"items": [{"id": "date_range", "value": "last_30_days"}]},
+    "logo_url": "https://cdn.supermetrics.com/images/datasource-logos/GADS.png",
+}
+
+#: A union blend: `config` carries `fields` and nothing else. Note `blend_field_type` and
+#: `blend_field_data_type`, which the response adds — a request has no way to set them.
+#: `modified_time_utc` uses a numeric "+0000" offset rather than a trailing "Z".
+UNION_BLEND_PAYLOAD: dict[str, Any] = {
+    "blend_id": 569,
+    "blend_uuid": "71bc0582-31b5-11f1-a55c-4201ac182030",
+    "type": "union",
+    "display_name": "GA4 impressions",
+    "description": "Example blend description",
+    "modified_time_utc": "2026-04-07T10:00:00+0000",
+    "last_modify_user_email": "user@supermetrics.com",
+    "blended_data_sources": {"items": [GA4_SOURCE_OUTPUT]},
+    "config": {
+        "fields": {
+            "items": [
+                {
+                    "blend_field_name": "impressions",
+                    "blend_field_display_name": "Impressions",
+                    "blend_field_type": "met",
+                    "blend_field_data_type": "int.number.value",
+                    "blend_datasource_fields": {"items": [GA4_IMPRESSIONS_REF]},
+                }
+            ]
+        }
+    },
+}
+
+#: A join blend: `config` additionally carries `query_table` and `joins`. Nothing in the
+#: spec discriminates the two kinds, so both shapes have to be round-tripped for real.
+JOIN_BLEND_PAYLOAD: dict[str, Any] = {
+    "blend_id": 569,
+    "blend_uuid": "71bc0582-31b5-11f1-a55c-4201ac182030",
+    "type": "join",
+    "display_name": "GA4 joined to Google Ads",
+    "description": None,
+    "modified_time_utc": "2026-04-07T10:00:00+0000",
+    "last_modify_user_email": "user@supermetrics.com",
+    "blended_data_sources": {"items": [GA4_SOURCE_OUTPUT, GADS_SOURCE_OUTPUT]},
+    "config": {
+        "query_table": {"blend_data_source_id": 1},
+        "joins": {
+            "items": [
+                {
+                    "join_table": {"blend_data_source_id": 2},
+                    "type": "left",
+                    "conditions": {"items": [{"operator": "=", "left": GA4_DATE_REF, "right": GADS_DATE_REF}]},
+                }
+            ]
+        },
+        "fields": {
+            "items": [
+                {
+                    "blend_field_name": "impressions",
+                    "blend_field_display_name": "Impressions",
+                    "blend_field_type": "met",
+                    "blend_field_data_type": "int.number.value",
+                    "blend_datasource_fields": {"items": [GA4_IMPRESSIONS_REF, GADS_IMPRESSIONS_REF]},
+                }
+            ]
+        },
+    },
+}
+
+#: GET/POST/PUT of a single blend — wrapped in {meta, data}.
+BLEND_SINGLE_BODY: dict[str, Any] = {"meta": META, "data": UNION_BLEND_PAYLOAD}
+
+#: The same envelope around the join blend.
+BLEND_JOIN_SINGLE_BODY: dict[str, Any] = {"meta": META, "data": JOIN_BLEND_PAYLOAD}
+
+#: One item of the list response. A summary has no `config` at all and a reduced data
+#: source shape, so a caller who wants a blend's fields has to GET it by id.
+BLEND_SUMMARY_PAYLOAD: dict[str, Any] = {
+    "blend_id": 569,
+    "blend_uuid": "71bc0582-31b5-11f1-a55c-4201ac182030",
+    "type": "union",
+    "display_name": "GA4 impressions",
+    "description": "Example blend description",
+    "modified_time_utc": "2026-04-07T10:00:00+0000",
+    "last_modify_user_email": "user@supermetrics.com",
+    "blended_data_sources": {
+        "items": [
+            {
+                "blend_data_source_id": 1,
+                "data_source_id": "GA4",
+                "display_name": "Google Analytics 4",
+                "logo_url": "https://cdn.supermetrics.com/images/datasource-logos/GA4.png",
+            }
+        ]
+    },
+}
+
+#: A second summary, of the other kind, so a `?type=` filter has something to filter.
+BLEND_JOIN_SUMMARY_PAYLOAD: dict[str, Any] = {
+    "blend_id": 570,
+    "blend_uuid": "8a2f1e64-31b5-11f1-a55c-4201ac182031",
+    "type": "join",
+    "display_name": "GA4 joined to Google Ads",
+    "description": None,
+    "modified_time_utc": "2026-04-08T09:30:00+0000",
+    "last_modify_user_email": "user@supermetrics.com",
+    "blended_data_sources": {"items": []},
+}
+
+#: GET the collection. Single-wrapped, unlike custom fields: this endpoint is not
+#: paginated, so `meta` carries a request id and nothing else.
+BLEND_LIST_BODY: dict[str, Any] = {
+    "meta": META,
+    "data": {"items": [BLEND_SUMMARY_PAYLOAD, BLEND_JOIN_SUMMARY_PAYLOAD]},
+}
+
+#: An empty collection. `data.items` is optional upstream and can be missing outright,
+#: so list() has to answer [] rather than fall over.
+BLEND_EMPTY_LIST_BODY: dict[str, Any] = {"meta": META, "data": {}}
+
+
 @dataclass(frozen=True)
 class RecordedRequest:
     """A request as the server actually received it.
@@ -596,4 +809,24 @@ def custom_fields_server(api_server: MockAPIServer) -> MockAPIServer:
     api_server.route(CUSTOM_FIELDS_COLLECTION, ScriptedResponse(json_body=CUSTOM_FIELD_LIST_BODY))
     api_server.route(CUSTOM_FIELDS_ITEM, ScriptedResponse(json_body=CUSTOM_FIELD_SINGLE_BODY))
     api_server.route(CUSTOM_FIELDS_METADATA, ScriptedResponse(json_body=CUSTOM_FIELD_METADATA_BODY))
+    return api_server
+
+
+@pytest.fixture
+def blends_server(api_server: MockAPIServer) -> MockAPIServer:
+    """A server with both blend routes wired to successful responses.
+
+    The paths carry the ``/v1`` prefix because blends are served from the core API host,
+    where the version lives in the path. Getting this wrong surfaces as a
+    ``SupermetricsNotFoundError`` from the server's default 404 route rather than as an
+    obvious fixture mistake.
+
+    Note:
+        The collection answers a two-item list and the item route answers the union
+        blend. Tests that need the join blend, a 201, or a 204 re-route the path
+        themselves — the last response passed to ``route`` repeats, so overriding one
+        route leaves the other intact.
+    """
+    api_server.route(BLENDS_COLLECTION, ScriptedResponse(json_body=BLEND_LIST_BODY))
+    api_server.route(BLENDS_ITEM, ScriptedResponse(json_body=BLEND_SINGLE_BODY))
     return api_server

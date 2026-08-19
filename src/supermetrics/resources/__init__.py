@@ -12,6 +12,7 @@ auto-generated code in _generated/ to provide:
 
 from supermetrics.resources.accounts import AccountsAsyncResource, AccountsResource
 from supermetrics.resources.backfills import BackfillsAsyncResource, BackfillsResource
+from supermetrics.resources.blends import BlendsAsyncResource, BlendsResource
 from supermetrics.resources.connector_builder import ConnectorBuilderAsyncResource, ConnectorBuilderResource
 from supermetrics.resources.connector_builder_logs import (
     ConnectorBuilderLogsAsyncResource,
@@ -34,6 +35,8 @@ __all__ = [
     "AccountsAsyncResource",
     "BackfillsResource",
     "BackfillsAsyncResource",
+    "BlendsResource",
+    "BlendsAsyncResource",
     "ConnectorBuilderResource",
     "ConnectorBuilderAsyncResource",
     "ConnectorBuilderSecretsResource",

@@ -36,7 +36,11 @@ MARKER_EXEMPT: frozenset[str] = frozenset({"test_live_smoke.py"})
 #: Floor on how many modules discovery must find. Without it, a glob that stops
 #: matching anything would make the marker check pass vacuously — the same trap
 #: ``tests/test_api_parity.py`` guards against with its resource-count floor.
-MINIMUM_MODULES = 8
+#:
+#: Keep this at the real module count. A floor left trailing well behind it still
+#: catches a glob that matches *nothing*, but not one that has quietly stopped
+#: matching half the directory — which is the same blind spot in a smaller size.
+MINIMUM_MODULES = 16
 
 #: The directory this guard polices: the one it lives in.
 E2E_DIR = Path(__file__).parent
