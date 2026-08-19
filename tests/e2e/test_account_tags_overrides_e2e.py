@@ -119,6 +119,25 @@ class TestAccountTagsAuthTokenOverrideResource:
         assert account_tags_server.last_request.path == ACCOUNT_TAGS_ADD
         assert account_tags_server.last_request.json() == {"data_sources": DATA_SOURCES}
 
+    def test_auth_token_override_on_remove_accounts(self, account_tags_server: MockAPIServer) -> None:
+        """`remove_accounts` is a *second*, separately generated PATCH endpoint (`/remove`).
+
+        `add_accounts` shares neither its URL nor its generated module, so the override is
+        asserted here too rather than assumed to carry over from `add_accounts`.
+        """
+        api_server = account_tags_server
+        remove_route = f"{ACCOUNT_TAGS_ITEM}/remove"
+        api_server.route(remove_route, ScriptedResponse(json_body=ACCOUNT_TAG_SINGLE_BODY))
+
+        with SupermetricsClient(api_key="api_k", base_url=api_server.base_url) as client:
+            client.account_tags.remove_accounts(TEAM_ID, TAG_NAME, DATA_SOURCES, auth_token="otok_scoped")
+            client.account_tags.remove_accounts(TEAM_ID, TAG_NAME, DATA_SOURCES)
+
+        assert [r.bearer_token for r in api_server.requests] == ["otok_scoped", "api_k"]
+        assert [r.method for r in api_server.requests] == ["PATCH", "PATCH"]
+        assert api_server.last_request.path == remove_route
+        assert api_server.last_request.json() == {"data_sources": DATA_SOURCES}
+
 
 class TestAccountTagsHeaderOverrideResource:
     """`headers=` reaches the wire and outranks the client's own defaults."""
@@ -194,6 +213,24 @@ class TestAccountTagsHeaderOverrideResource:
         assert request.method == "PATCH"
         assert request.headers["x-span-id"] == "span-patch-1"
         assert request.json() == {"data_sources": DATA_SOURCES}
+
+    def test_headers_on_update(self, account_tags_server: MockAPIServer) -> None:
+        """`update` is a PUT with a body — its own wire shape — so headers are proven on it.
+
+        The other body-carrying tests use `create` (POST); `update` is generated
+        separately and sends only `display_name`/`color`, so its header plumbing is
+        asserted directly rather than by analogy to `create`.
+        """
+        with SupermetricsClient(api_key="api_k", base_url=account_tags_server.base_url) as client:
+            client.account_tags.update(
+                TEAM_ID, TAG_NAME, "EMEA paid", "#445566", headers={"X-Span-Id": "span-update-1"}
+            )
+
+        request = account_tags_server.last_request
+        assert request.method == "PUT"
+        assert request.path == ACCOUNT_TAGS_ITEM
+        assert request.headers["x-span-id"] == "span-update-1"
+        assert request.json() == {"display_name": "EMEA paid", "color": "#445566"}
 
 
 class TestAccountTagsTimeoutOverrideResource:

@@ -73,6 +73,7 @@ callable, or if an `async def` provider is given — use `SupermetricsAsyncClien
 - `transfers`: Access to TransfersResource
 - `transfer_runs`: Access to TransferRunsResource
 - `custom_fields`: Access to CustomFieldsResource
+- `account_tags`: Access to AccountTagsResource
 
 **Other Properties:**
 
@@ -155,6 +156,7 @@ not callable.
 - `transfers`: Access to TransfersAsyncResource
 - `transfer_runs`: Access to TransferRunsAsyncResource
 - `custom_fields`: Access to CustomFieldsAsyncResource
+- `account_tags`: Access to AccountTagsAsyncResource
 
 **Other Properties:**
 
@@ -2149,10 +2151,10 @@ The documented element form is:
 {"data_source_id": "AW", "accounts": [{"account_id": "123-456-7890"}]}
 ```
 
-**Response envelope.** `list()` and the five single-object methods are wrapped in
-`{"data": ...}` upstream, and the SDK unwraps `.data` for you. There is no `meta` and no
-pagination — `list()` returns the whole set (the API caps it at 500), so nothing is lost by
-unwrapping.
+**Response envelope.** Every response in this domain is wrapped in `{"data": ...}` upstream
+— the list, the five single-object methods, and `delete()` (whose `data` is `{"result":
+bool}`) — and the SDK unwraps `.data` for you. There is no `meta` and no pagination —
+`list()` returns the whole set (the API caps it at 500), so nothing is lost by unwrapping.
 
 **`list()` and `get()` return different types.** `list()` yields
 [`AccountTagOverview`](#accounttagoverview), which summarises membership as

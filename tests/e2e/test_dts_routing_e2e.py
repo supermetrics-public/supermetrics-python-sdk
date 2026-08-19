@@ -161,6 +161,31 @@ class TestRequestsReachTheRightHost:
         assert dts_server.requests == []
         assert api_server.last_request.path == "/teams/42/datasource/GAWA"
 
+    def test_account_tags_are_not_routed(self, api_server: MockAPIServer, dts_server: MockAPIServer) -> None:
+        """``/v1/teams/{id}/account_tags`` is a core-API route, not a Data Warehouse one.
+
+        Account tags live on the core host with ``/v1`` in the path, like custom fields.
+        The DTS pattern is anchored ``^/teams/`` and its alternation is
+        ``transfers|transfer_runs|backfills|data-source-connections`` — so a
+        ``/v1/teams/…/account_tags`` path cannot match on either count. This asserts that
+        positively, the way transfers assert the opposite, rather than leaving it to
+        "there is only one server."
+        """
+        api_server.route(
+            "/v1/teams/42/account_tags",
+            ScriptedResponse(json_body={"data": []}),
+        )
+
+        with SupermetricsClient(
+            api_key="api_k",
+            base_url=api_server.base_url,
+            dts_base_url=f"{dts_server.base_url}/v1",
+        ) as client:
+            client.account_tags.list(team_id=42)
+
+        assert dts_server.requests == [], "the DTS server must not have seen this request"
+        assert api_server.last_request.path == "/v1/teams/42/account_tags"
+
     def test_unset_dts_base_url_sends_everything_to_base_url(
         self, api_server: MockAPIServer, dts_server: MockAPIServer
     ) -> None:

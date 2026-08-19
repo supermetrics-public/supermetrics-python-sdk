@@ -22,6 +22,7 @@ Error mapping lives in ``test_account_tags_errors_e2e.py`` and per-request overr
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -223,6 +224,72 @@ class TestAccountTagsResource:
         assert "%2F" in path
         # The name is one path segment, not two: the slash inside it never separates.
         assert path.split("/")[1:] == ["v1", "teams", "936506", "account_tags", "a%20b%2Fc"]
+
+    @pytest.mark.parametrize(
+        ("method_name", "route", "expected_method", "expected_path", "call"),
+        [
+            (
+                "update",
+                ACCOUNT_TAGS_AWKWARD_ITEM,
+                "PUT",
+                "/v1/teams/936506/account_tags/a%20b%2Fc",
+                lambda client: client.account_tags.update(
+                    team_id=TEAM_ID, name=AWKWARD_NAME, display_name="EMEA paid", color="#445566"
+                ),
+            ),
+            (
+                "delete",
+                ACCOUNT_TAGS_AWKWARD_ITEM,
+                "DELETE",
+                "/v1/teams/936506/account_tags/a%20b%2Fc",
+                lambda client: client.account_tags.delete(team_id=TEAM_ID, name=AWKWARD_NAME),
+            ),
+            (
+                "add_accounts",
+                ACCOUNT_TAGS_AWKWARD_ITEM + "/add",
+                "PATCH",
+                "/v1/teams/936506/account_tags/a%20b%2Fc/add",
+                lambda client: client.account_tags.add_accounts(
+                    team_id=TEAM_ID, name=AWKWARD_NAME, data_sources=[DATA_SOURCE_SELECTION]
+                ),
+            ),
+            (
+                "remove_accounts",
+                ACCOUNT_TAGS_AWKWARD_ITEM + "/remove",
+                "PATCH",
+                "/v1/teams/936506/account_tags/a%20b%2Fc/remove",
+                lambda client: client.account_tags.remove_accounts(
+                    team_id=TEAM_ID, name=AWKWARD_NAME, data_sources=[DATA_SOURCE_SELECTION]
+                ),
+            ),
+        ],
+    )
+    def test_every_name_bearing_method_percent_encodes_the_name(
+        self,
+        api_server: MockAPIServer,
+        method_name: str,
+        route: str,
+        expected_method: str,
+        expected_path: str,
+        call: Callable[[SupermetricsClient], object],
+    ) -> None:
+        """All five name-bearing methods quote the name the same way ``get`` does.
+
+        ``get`` proves the shared ``quote(str(name), safe="")`` codepath, but ``update``,
+        ``delete``, ``add_accounts`` and ``remove_accounts`` each embed ``name`` in their
+        own generated URL. A hand-edit to any one of those generated files would slip past
+        a ``get``-only check, so each is asserted independently here.
+        """
+        body = DELETED_BODY if method_name == "delete" else ACCOUNT_TAG_SINGLE_BODY
+        api_server.route(route, ScriptedResponse(json_body=body))
+
+        with SupermetricsClient(api_key="api_k", base_url=api_server.base_url) as client:
+            call(client)
+
+        request = api_server.last_request
+        assert request.method == expected_method
+        assert request.path == expected_path
+        assert "%2F" in request.path
 
     def test_create_returns_the_tag_and_sends_no_name(self, api_server: MockAPIServer) -> None:
         """Creation answers 200 — not 201 — and the slug comes back rather than going out.
