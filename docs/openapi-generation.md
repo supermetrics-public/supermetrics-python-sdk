@@ -25,7 +25,7 @@ The SDK uses a multi-stage pipeline to generate type-safe client code from upstr
                          └──────────────┬───────────────┘
                                         │
                          scripts/regenerate_client.sh
-                         (uv run openapi-python-client)
+                         (uvx openapi-python-client, pinned)
                                         │
                                         ▼
                          ┌──────────────────────────────┐
@@ -122,11 +122,12 @@ The endpoint is *matched* upstream by `path` and *written* into the merged spec 
 
 This exists because the upstream specs split a shared prefix inconsistently. Data
 Warehouse transfers are declared as `/v1/teams/...` served from
-`https://dts-api.supermetrics.com`, while backfills and data source connections are
-`/teams/...` served from `https://dts-api.supermetrics.com/v1`. Both resolve to the same
-URL, but `openapi-python-client` **ignores path-level `servers`** and simply concatenates
-`base_url + path` — so under one base URL one of the two groups is always wrong, by a
-duplicated or a missing `/v1`. Rewriting normalises them onto a single convention.
+`https://dts-api.supermetrics.com`, while backfills, data source connections and
+destinations are `/teams/...` served from `https://dts-api.supermetrics.com/v1`. Both
+resolve to the same URL, but `openapi-python-client` **ignores path-level `servers`**
+and simply concatenates `base_url + path` — so under one base URL one of the two groups
+is always wrong, by a duplicated or a missing `/v1`. Rewriting normalises them onto a
+single convention.
 
 Two filter entries that would write to the same merged path is a hard error, so a rewrite
 cannot silently shadow another endpoint.
@@ -189,17 +190,53 @@ Run the regeneration script:
 ./scripts/regenerate_client.sh
 ```
 
-Or run the generator command directly:
+Two things it does are load-bearing, and are the reason to use it rather than calling the
+generator yourself:
+
+**It generates into a staging directory and swaps only on success.** The committed tree at
+`src/supermetrics/_generated/` is replaced *after* the generator has produced a complete
+`supermetrics_api_client` package, not before. An earlier version deleted the tree first
+and generated second, so any generator failure left the repository with no client at all.
+If generation fails now, the script exits non-zero and the committed tree is untouched.
+(The redundant `pyproject.toml` the generator emits is removed from the staging directory
+before the swap.)
+
+**It runs the generator on a pinned interpreter, outside the project virtualenv.**
+`openapi-python-client` 0.29.0 pulls in a pydantic that raises `AssertionError` in
+`_typing_extra.eval_type_backport` under Python 3.14 — which is this project's default
+interpreter — so running the generator through `uv run` in the project environment fails
+before it writes anything. The script instead invokes it with `uvx` on Python 3.12 in a
+throwaway environment, at the version read out of the `openapi-python-client==` pin in
+`pyproject.toml` so the generator and the dev dependency cannot drift. The interpreter
+defaults to `3.12` and is overridable — `GENERATOR_PYTHON=3.13 ./scripts/regenerate_client.sh`
+— should a future generator release need a different one.
+
+Running the generator by hand is discouraged for both reasons above. If you must, mirror
+what the script does — pin the interpreter and stage the output rather than pointing
+`--output-path` at the committed tree:
 
 ```bash
-uv run openapi-python-client generate \
+# mktemp -d guarantees the parent directory exists. The generator calls
+# `mkdir()` without `parents=True`, so pointing --output-path at a path whose
+# parent is missing fails with FileNotFoundError before it writes anything.
+STAGING="$(mktemp -d)"
+
+uvx --python 3.12 --from "openapi-python-client==0.29.0" \
+  openapi-python-client generate \
   --path openapi-spec.yaml \
-  --output-path src/supermetrics/_generated \
+  --output-path "$STAGING/_generated" \
   --config openapi-python-client-config.yaml
 
-# Clean up redundant generated pyproject.toml
-rm -f src/supermetrics/_generated/pyproject.toml
+# The generated project scaffolding is not part of the SDK.
+rm -f "$STAGING/_generated/pyproject.toml"
+
+# Swap only once the generator has succeeded.
+rm -rf src/supermetrics/_generated
+mv "$STAGING/_generated" src/supermetrics/_generated
 ```
+
+The version in the `--from` pin has to be kept in step with `pyproject.toml` by hand,
+which is the other reason to prefer the script: it reads the pin instead.
 
 > **Warning:** Never hand-edit files in `src/supermetrics/_generated/`. Any changes will be overwritten on the next regeneration.
 
@@ -232,6 +269,8 @@ For real-world reference, see the following PRs in the repository:
 
 - **[PR #25](https://github.com/supermetrics-public/supermetrics-python-sdk/pull/25):** Migrated SDK to upstream OpenAPI specifications, resolved external `$ref` file dependencies in the filter script, and regenerated low-level clients.
 - **[PR #34](https://github.com/supermetrics-public/supermetrics-python-sdk/pull/34) & [PR #35](https://github.com/supermetrics-public/supermetrics-python-sdk/pull/35):** Added Connector Builder resources (Connectors, Secrets, Logs), filtered upstream endpoints, regenerated generated models/APIs, and added resource adapters with comprehensive unit tests.
+- **[PR #61](https://github.com/supermetrics-public/supermetrics-python-sdk/pull/61):** Phase 2 — Data Transfers and Transfer Runs. Introduced `pin_baseline` and `rewrite_path` in the filter script so a regeneration stays additive and the Data Warehouse families can share one base URL.
+- **Phase 3 — Storage & Warehouse Destinations** (branch `feat/phase3-destinations`): added the seven `/teams/{team_id}/destinations*` endpoints to the filter config, regenerated purely additively on top of the pinned baseline, wrapped them in `src/supermetrics/resources/destinations.py`, and fixed `scripts/regenerate_client.sh` as described in Step 4.
 
 ---
 
@@ -242,4 +281,6 @@ For real-world reference, see the following PRs in the repository:
 | `Missing endpoint` warning during filter | Endpoint path or HTTP method does not match spec | Check path syntax and casing in `sdk-endpoint-filters.yaml` |
 | Unresolved `$ref` error | Schema references external file or missing definition | Ensure referenced spec files are present in `openapi-specs/` |
 | Pydantic/typing errors on `None` values | API returns `null` for a non-nullable field in spec | Add a `component_patches` entry to set `nullable: true` |
-| `pyproject.toml` generated inside `_generated/` | `openapi-python-client` creates standalone package by default | The script automatically removes it; ensure `rm -f src/supermetrics/_generated/pyproject.toml` runs |
+| `pyproject.toml` generated inside `_generated/` | `openapi-python-client` creates standalone package by default | The script removes it from the staging directory before the swap, so it never reaches `src/supermetrics/_generated/` |
+| `AssertionError` in `_typing_extra.eval_type_backport` while generating | The pinned `openapi-python-client` pulls a pydantic that breaks under Python 3.14, the project's default interpreter | Use `./scripts/regenerate_client.sh`, which runs the generator on Python 3.12 through `uvx`; set `GENERATOR_PYTHON` to pick a different one |
+| Generation failed and `src/supermetrics/_generated/` is gone | An older version of the script deleted the tree before generating | Restore it with `git checkout -- src/supermetrics/_generated`, then re-run the current script, which stages and swaps |

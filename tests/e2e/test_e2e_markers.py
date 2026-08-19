@@ -40,7 +40,7 @@ MARKER_EXEMPT: frozenset[str] = frozenset({"test_live_smoke.py"})
 #: Keep this at the real module count. A floor left trailing well behind it still
 #: catches a glob that matches *nothing*, but not one that has quietly stopped
 #: matching half the directory — which is the same blind spot in a smaller size.
-MINIMUM_MODULES = 16
+MINIMUM_MODULES = 17
 
 #: The directory this guard polices: the one it lives in.
 E2E_DIR = Path(__file__).parent

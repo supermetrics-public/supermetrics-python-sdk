@@ -32,6 +32,7 @@ from supermetrics.resources.connector_builder_secrets import (
 )
 from supermetrics.resources.custom_fields import CustomFieldsAsyncResource, CustomFieldsResource
 from supermetrics.resources.datasource_details import DatasourceDetailsAsyncResource, DatasourceDetailsResource
+from supermetrics.resources.destinations import DestinationsAsyncResource, DestinationsResource
 from supermetrics.resources.login_links import LoginLinksAsyncResource, LoginLinksResource
 from supermetrics.resources.logins import LoginsAsyncResource, LoginsResource
 from supermetrics.resources.queries import QueriesAsyncResource, QueriesResource
@@ -216,6 +217,42 @@ class DatasourceDetailsAsyncResourceWithRawResponse:
     def __init__(self, resource: DatasourceDetailsAsyncResource) -> None:
         """Wrap every method of ``resource`` to return an ``ApiResponse``."""
         self.get = async_to_raw_response_wrapper(resource.get)
+
+
+class DestinationsResourceWithRawResponse:
+    """Raw-response view over :class:`~supermetrics.resources.destinations.DestinationsResource`.
+
+    Args:
+        resource: The synchronous resource adapter to mirror.
+    """
+
+    def __init__(self, resource: DestinationsResource) -> None:
+        """Wrap every method of ``resource`` to return an ``ApiResponse``."""
+        self.list = to_raw_response_wrapper(resource.list)
+        self.get = to_raw_response_wrapper(resource.get)
+        self.create = to_raw_response_wrapper(resource.create)
+        self.update = to_raw_response_wrapper(resource.update)
+        self.delete = to_raw_response_wrapper(resource.delete)
+        self.test_connection = to_raw_response_wrapper(resource.test_connection)
+        self.get_usage = to_raw_response_wrapper(resource.get_usage)
+
+
+class DestinationsAsyncResourceWithRawResponse:
+    """Raw-response view over :class:`~supermetrics.resources.destinations.DestinationsAsyncResource`.
+
+    Args:
+        resource: The asynchronous resource adapter to mirror.
+    """
+
+    def __init__(self, resource: DestinationsAsyncResource) -> None:
+        """Wrap every method of ``resource`` to return an ``ApiResponse``."""
+        self.list = async_to_raw_response_wrapper(resource.list)
+        self.get = async_to_raw_response_wrapper(resource.get)
+        self.create = async_to_raw_response_wrapper(resource.create)
+        self.update = async_to_raw_response_wrapper(resource.update)
+        self.delete = async_to_raw_response_wrapper(resource.delete)
+        self.test_connection = async_to_raw_response_wrapper(resource.test_connection)
+        self.get_usage = async_to_raw_response_wrapper(resource.get_usage)
 
 
 class LoginLinksResourceWithRawResponse:
@@ -460,6 +497,7 @@ class SupermetricsClientWithRawResponse:
         )
         self.connector_builder_logs = ConnectorBuilderLogsResourceWithRawResponse(client.connector_builder_logs)
         self.datasource_details = DatasourceDetailsResourceWithRawResponse(client.datasource_details)
+        self.destinations = DestinationsResourceWithRawResponse(client.destinations)
         self.transfers = TransfersResourceWithRawResponse(client.transfers)
         self.transfer_runs = TransferRunsResourceWithRawResponse(client.transfer_runs)
         self.custom_fields = CustomFieldsResourceWithRawResponse(client.custom_fields)
@@ -488,6 +526,7 @@ class SupermetricsAsyncClientWithRawResponse:
         )
         self.connector_builder_logs = ConnectorBuilderLogsAsyncResourceWithRawResponse(client.connector_builder_logs)
         self.datasource_details = DatasourceDetailsAsyncResourceWithRawResponse(client.datasource_details)
+        self.destinations = DestinationsAsyncResourceWithRawResponse(client.destinations)
         self.transfers = TransfersAsyncResourceWithRawResponse(client.transfers)
         self.transfer_runs = TransferRunsAsyncResourceWithRawResponse(client.transfer_runs)
         self.custom_fields = CustomFieldsAsyncResourceWithRawResponse(client.custom_fields)
@@ -511,6 +550,8 @@ __all__ = [
     "CustomFieldsResourceWithRawResponse",
     "DatasourceDetailsAsyncResourceWithRawResponse",
     "DatasourceDetailsResourceWithRawResponse",
+    "DestinationsAsyncResourceWithRawResponse",
+    "DestinationsResourceWithRawResponse",
     "LoginLinksAsyncResourceWithRawResponse",
     "LoginLinksResourceWithRawResponse",
     "LoginsAsyncResourceWithRawResponse",

@@ -209,7 +209,9 @@ class TestTransferRunsAsyncResource:
         ("status", "code", "expected"),
         [
             (401, "UNAUTHORIZED", SupermetricsAuthError),
+            (403, "FORBIDDEN", SupermetricsForbiddenError),
             (404, "NOT_FOUND", SupermetricsNotFoundError),
+            (429, "TOO_MANY_REQUESTS", SupermetricsRateLimitError),
             (500, "INTERNAL_SERVER_ERROR", SupermetricsServerError),
         ],
     )
@@ -224,3 +226,21 @@ class TestTransferRunsAsyncResource:
                 await client.transfer_runs.get(team_id=42, transfer_run_id=12345)
 
         assert exc_info.value.status_code == status
+
+    @pytest.mark.asyncio
+    async def test_rate_limit_preserves_retry_after(self, api_server: MockAPIServer) -> None:
+        """The async client reads Retry-After off the response as well."""
+        api_server.route(
+            ENDPOINT,
+            ScriptedResponse(
+                status=429,
+                json_body=_error_envelope("TOO_MANY_REQUESTS", "slow down"),
+                headers={"Retry-After": "42"},
+            ),
+        )
+
+        async with SupermetricsAsyncClient(api_key="api_k", base_url=api_server.base_url) as client:
+            with pytest.raises(SupermetricsRateLimitError) as exc_info:
+                await client.transfer_runs.get(team_id=42, transfer_run_id=12345)
+
+        assert exc_info.value.retry_after == 42
