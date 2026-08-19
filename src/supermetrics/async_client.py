@@ -11,6 +11,7 @@ from supermetrics._auth import AsyncTokenProvider, AuthConfig, resolve_auth_conf
 from supermetrics._generated.supermetrics_api_client.client import Client as GeneratedClient
 from supermetrics._transport import build_async_event_hooks, build_default_headers, resolve_dts_base_url
 from supermetrics.resources._raw import SupermetricsAsyncClientWithRawResponse
+from supermetrics.resources.account_tags import AccountTagsAsyncResource
 from supermetrics.resources.accounts import AccountsAsyncResource
 from supermetrics.resources.backfills import BackfillsAsyncResource
 from supermetrics.resources.blends import BlendsAsyncResource
@@ -156,6 +157,7 @@ class SupermetricsAsyncClient:
         self.transfers = TransfersAsyncResource(self._client)
         self.transfer_runs = TransferRunsAsyncResource(self._client)
         self.custom_fields = CustomFieldsAsyncResource(self._client)
+        self.account_tags = AccountTagsAsyncResource(self._client)
         self.blends = BlendsAsyncResource(self._client)
 
         self._with_raw_response: SupermetricsAsyncClientWithRawResponse | None = None

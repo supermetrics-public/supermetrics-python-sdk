@@ -10,6 +10,7 @@ auto-generated code in _generated/ to provide:
 - Complete type safety with IDE autocomplete support
 """
 
+from supermetrics.resources.account_tags import AccountTagsAsyncResource, AccountTagsResource
 from supermetrics.resources.accounts import AccountsAsyncResource, AccountsResource
 from supermetrics.resources.backfills import BackfillsAsyncResource, BackfillsResource
 from supermetrics.resources.blends import BlendsAsyncResource, BlendsResource
@@ -32,6 +33,8 @@ from supermetrics.resources.transfer_runs import TransferRunsAsyncResource, Tran
 from supermetrics.resources.transfers import TransfersAsyncResource, TransfersResource
 
 __all__ = [
+    "AccountTagsResource",
+    "AccountTagsAsyncResource",
     "AccountsResource",
     "AccountsAsyncResource",
     "BackfillsResource",

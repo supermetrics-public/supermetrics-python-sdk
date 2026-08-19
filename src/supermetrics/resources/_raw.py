@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from supermetrics.resources.account_tags import AccountTagsAsyncResource, AccountTagsResource
 from supermetrics.resources.accounts import AccountsAsyncResource, AccountsResource
 from supermetrics.resources.backfills import BackfillsAsyncResource, BackfillsResource
 from supermetrics.resources.blends import BlendsAsyncResource, BlendsResource
@@ -443,6 +444,42 @@ class CustomFieldsAsyncResourceWithRawResponse:
         self.delete = async_to_raw_response_wrapper(resource.delete)
 
 
+class AccountTagsResourceWithRawResponse:
+    """Raw-response view over :class:`~supermetrics.resources.account_tags.AccountTagsResource`.
+
+    Args:
+        resource: The synchronous resource adapter to mirror.
+    """
+
+    def __init__(self, resource: AccountTagsResource) -> None:
+        """Wrap every method of ``resource`` to return an ``ApiResponse``."""
+        self.list = to_raw_response_wrapper(resource.list)
+        self.get = to_raw_response_wrapper(resource.get)
+        self.create = to_raw_response_wrapper(resource.create)
+        self.update = to_raw_response_wrapper(resource.update)
+        self.delete = to_raw_response_wrapper(resource.delete)
+        self.add_accounts = to_raw_response_wrapper(resource.add_accounts)
+        self.remove_accounts = to_raw_response_wrapper(resource.remove_accounts)
+
+
+class AccountTagsAsyncResourceWithRawResponse:
+    """Raw-response view over :class:`~supermetrics.resources.account_tags.AccountTagsAsyncResource`.
+
+    Args:
+        resource: The asynchronous resource adapter to mirror.
+    """
+
+    def __init__(self, resource: AccountTagsAsyncResource) -> None:
+        """Wrap every method of ``resource`` to return an ``ApiResponse``."""
+        self.list = async_to_raw_response_wrapper(resource.list)
+        self.get = async_to_raw_response_wrapper(resource.get)
+        self.create = async_to_raw_response_wrapper(resource.create)
+        self.update = async_to_raw_response_wrapper(resource.update)
+        self.delete = async_to_raw_response_wrapper(resource.delete)
+        self.add_accounts = async_to_raw_response_wrapper(resource.add_accounts)
+        self.remove_accounts = async_to_raw_response_wrapper(resource.remove_accounts)
+
+
 class BlendsResourceWithRawResponse:
     """Raw-response view over :class:`~supermetrics.resources.blends.BlendsResource`.
 
@@ -501,6 +538,7 @@ class SupermetricsClientWithRawResponse:
         self.transfers = TransfersResourceWithRawResponse(client.transfers)
         self.transfer_runs = TransferRunsResourceWithRawResponse(client.transfer_runs)
         self.custom_fields = CustomFieldsResourceWithRawResponse(client.custom_fields)
+        self.account_tags = AccountTagsResourceWithRawResponse(client.account_tags)
         self.blends = BlendsResourceWithRawResponse(client.blends)
 
 
@@ -530,10 +568,13 @@ class SupermetricsAsyncClientWithRawResponse:
         self.transfers = TransfersAsyncResourceWithRawResponse(client.transfers)
         self.transfer_runs = TransferRunsAsyncResourceWithRawResponse(client.transfer_runs)
         self.custom_fields = CustomFieldsAsyncResourceWithRawResponse(client.custom_fields)
+        self.account_tags = AccountTagsAsyncResourceWithRawResponse(client.account_tags)
         self.blends = BlendsAsyncResourceWithRawResponse(client.blends)
 
 
 __all__ = [
+    "AccountTagsAsyncResourceWithRawResponse",
+    "AccountTagsResourceWithRawResponse",
     "AccountsAsyncResourceWithRawResponse",
     "AccountsResourceWithRawResponse",
     "BackfillsAsyncResourceWithRawResponse",

@@ -56,6 +56,8 @@ Complete documentation for the Supermetrics Python SDK – the Python client for
 - [TransfersResource](api-reference.md#transfersresource) - Manage Data Warehouse transfers
 - [TransferRunsResource](api-reference.md#transferrunsresource) - Inspect individual transfer runs
 - [CustomFieldsResource](api-reference.md#customfieldsresource) - Define calculated dimensions and metrics
+- [BlendsResource](api-reference.md#blendsresource) - Combine data sources into blended tables
+- [AccountTagsResource](api-reference.md#accounttagsresource) - Group data source accounts into reusable tags
 
 ### Error Handling
 - [Exception Hierarchy](error-handling.md#exception-hierarchy)

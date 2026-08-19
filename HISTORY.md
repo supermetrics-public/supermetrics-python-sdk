@@ -2,6 +2,59 @@
 
 ## 0.5.0 (unreleased)
 
+### Account Tags (Phase 6)
+
+`client.account_tags`, on both clients — `list`, `get`, `create`, `update`, `delete`,
+`add_accounts` and `remove_accounts` over a team's account tags, the reusable labels that
+group data source accounts from across its connections so a query or a transfer can name
+the group instead of listing every account by hand. It appears under
+`client.with_raw_response` and takes the same keyword-only `auth_token`, `headers` and
+`timeout` overrides as every other resource.
+
+Two names identify a tag and they are not interchangeable. `name` is the slug the server
+assigns at creation, `"a1b2c3d"`, and it is what every later call addresses the tag by;
+`display_name` is the human label, `"EMEA paid media"`. So `create()` takes no `name` at
+all — you read it off the tag that comes back.
+
+Five behaviours of the upstream API are exposed as they actually are, rather than smoothed
+over:
+
+* **`delete()` returns a `bool`, not `None`.** Every other delete in the SDK is a 204 and
+  returns nothing. This one is a 200 whose entire body answers "did anything actually get
+  deleted?", because upstream made deletion idempotent: removing a tag that does not exist
+  is a success carrying `result=false` rather than a 404. Returning `None` would have
+  discarded the one thing the endpoint exists to say. A `False` is not a failure — a
+  genuine failure still raises, as everywhere else.
+* **Nothing in this domain answers 404.** Not `get`, not `update`, not `delete`, not the
+  two membership calls. An unknown tag arrives as an HTTP 400 and is translated to
+  `SupermetricsValidationError`, exactly as a 422 would be elsewhere. There is no 422 here
+  either.
+* **`create()` answers 200, not 201, and it is the only endpoint in the SDK that can
+  answer 409.** A conflict stays a plain `SupermetricsAPIError` with `status_code == 409`
+  and `error_code == "CONFLICT_ERROR"`; giving one endpoint its own exception class would
+  have meant widening the public error taxonomy for a single status.
+* **`update()` renames and recolours; it cannot move accounts.** The PUT body carries
+  `display_name` and `color` and nothing else, and both are required, so changing only the
+  colour means resending the current label. Membership moves through `add_accounts()` and
+  `remove_accounts()`, two PATCH endpoints whose body is `{"data_sources": [...]}`.
+* **`list()` and `get()` return different types.** `AccountTagOverview` summarises
+  membership as `data_source_count` and `account_count`; `AccountTag` carries the
+  membership itself and no counts. They are not two projections of one model and the SDK
+  does not pretend otherwise, so reading accounts off a listing means a `get()` per tag.
+
+Membership is a list of plain dicts shaped like
+`{"data_source_id": "AW", "accounts": [{"account_id": "123-456-7890"}]}`, and that example
+is the only place the shape is written down. Upstream declares the array elements as a
+bare `type: object`, so the generator emits classes holding nothing but an
+`additional_properties` dict declared `init=False` — which a caller cannot construct. The
+public signature takes `list[dict[str, Any]]` and converts at the call site, and no new
+name is re-exported from the top-level package: four unconstructable aliases of one open
+shape would be four names nobody could call.
+
+Like custom fields, **account tags are served from the core API host**, with their `/v1`
+prefix in the path — `/v1/teams/{team_id}/account_tags`. Nothing is re-hosted for them and
+no routing change was needed.
+
 ### Data Blending (Phase 5)
 
 `client.blends`, on both clients — `list`, `get`, `create`, `update` and `delete` over a
