@@ -269,6 +269,7 @@ class LoginLinksResourceWithRawResponse:
         self.get = to_raw_response_wrapper(resource.get)
         self.list = to_raw_response_wrapper(resource.list)
         self.close = to_raw_response_wrapper(resource.close)
+        self.update = to_raw_response_wrapper(resource.update)
 
 
 class LoginLinksAsyncResourceWithRawResponse:
@@ -284,6 +285,7 @@ class LoginLinksAsyncResourceWithRawResponse:
         self.get = async_to_raw_response_wrapper(resource.get)
         self.list = async_to_raw_response_wrapper(resource.list)
         self.close = async_to_raw_response_wrapper(resource.close)
+        self.update = async_to_raw_response_wrapper(resource.update)
 
 
 class LoginsResourceWithRawResponse:
@@ -297,6 +299,8 @@ class LoginsResourceWithRawResponse:
         """Wrap every method of ``resource`` to return an ``ApiResponse``."""
         self.get = to_raw_response_wrapper(resource.get)
         self.list = to_raw_response_wrapper(resource.list)
+        self.get_accounts = to_raw_response_wrapper(resource.get_accounts)
+        self.revoke = to_raw_response_wrapper(resource.revoke)
         self.get_by_username = to_raw_response_wrapper(resource.get_by_username)
 
 
@@ -311,6 +315,8 @@ class LoginsAsyncResourceWithRawResponse:
         """Wrap every method of ``resource`` to return an ``ApiResponse``."""
         self.get = async_to_raw_response_wrapper(resource.get)
         self.list = async_to_raw_response_wrapper(resource.list)
+        self.get_accounts = async_to_raw_response_wrapper(resource.get_accounts)
+        self.revoke = async_to_raw_response_wrapper(resource.revoke)
         self.get_by_username = async_to_raw_response_wrapper(resource.get_by_username)
 
 

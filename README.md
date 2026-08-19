@@ -13,9 +13,9 @@ Official Python client for Supermetrics
 * Type-safe Python client generated from OpenAPI specification
 * Dual sync/async support via separate Client classes
 * Fully typed request and response models, generated from the spec as `attrs` classes
-* Comprehensive API coverage: login links, logins, accounts, queries, DWH transfers and
-  transfer runs, DWH destinations, DWH backfills, custom fields, data blending,
-  account tags, Connector Builder
+* Comprehensive API coverage: login links (including update), logins (including account
+  listing and revocation), accounts, queries, DWH transfers and transfer runs, DWH
+  destinations, DWH backfills, custom fields, data blending, account tags, Connector Builder
 * Custom exception hierarchy with HTTP status code mapping
 * Resource-based API organization
 * API key, OAuth bearer token, and dynamic token provider authentication
@@ -58,6 +58,36 @@ result = client.queries.execute(
 )
 
 print(f"Retrieved {len(result.data)} rows")
+```
+
+### Logins & Login Links
+
+A login link starts the OAuth flow; once someone completes it a login exists, and that login
+can reach a set of data source accounts. Beyond `create`, `get`, `list` and `close`, the SDK
+lists a login's accounts, revokes a login, and updates a link's description.
+
+```python
+from supermetrics import SupermetricsClient
+
+client = SupermetricsClient(api_key="your_api_key")
+
+# The accounts a login can reach. Paginated: offset and limit are always sent (0 and 100 by
+# default), and the total rides in meta on the raw response, not in the returned list.
+accounts = client.logins.get_accounts("login_abc123", offset=0, limit=100)
+for account in accounts:
+    print(account.account_id, account.name, account.group)
+
+response = client.with_raw_response.logins.get_accounts("login_abc123")
+print(response.json_body["meta"]["paginate"]["total"])
+
+# update() changes only the description — a link's data source, expiry and redirect are
+# fixed at creation, so those are set through create(), not here.
+link = client.login_links.update("link_123", "Q4 Analytics setup")
+print(link.description)  # "Q4 Analytics setup"
+
+# revoke() is a DELETE that answers 200 with a bool, not an empty 204. True means the
+# login's OAuth credentials were invalidated; bind a fresh login to restore access.
+print(client.logins.revoke("login_abc123"))  # True
 ```
 
 ### Account Tags

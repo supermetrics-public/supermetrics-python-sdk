@@ -259,6 +259,9 @@ from .data_response_meta_query_fields_item import DataResponseMetaQueryFieldsIte
 from .data_response_meta_query_settings import DataResponseMetaQuerySettings
 from .data_response_meta_result import DataResponseMetaResult
 from .data_source import DataSource
+from .data_source_account import DataSourceAccount
+from .data_source_account_list_response import DataSourceAccountListResponse
+from .data_source_account_type import DataSourceAccountType
 from .data_source_connection import DataSourceConnection
 from .data_source_info import DataSourceInfo
 from .data_source_login import DataSourceLogin
@@ -630,6 +633,18 @@ from .list_connectors_response_429 import ListConnectorsResponse429
 from .list_connectors_response_429_meta import ListConnectorsResponse429Meta
 from .list_connectors_response_500 import ListConnectorsResponse500
 from .list_connectors_response_500_meta import ListConnectorsResponse500Meta
+from .list_data_source_login_accounts_response_401 import ListDataSourceLoginAccountsResponse401
+from .list_data_source_login_accounts_response_401_meta import ListDataSourceLoginAccountsResponse401Meta
+from .list_data_source_login_accounts_response_403 import ListDataSourceLoginAccountsResponse403
+from .list_data_source_login_accounts_response_403_meta import ListDataSourceLoginAccountsResponse403Meta
+from .list_data_source_login_accounts_response_404 import ListDataSourceLoginAccountsResponse404
+from .list_data_source_login_accounts_response_404_meta import ListDataSourceLoginAccountsResponse404Meta
+from .list_data_source_login_accounts_response_422 import ListDataSourceLoginAccountsResponse422
+from .list_data_source_login_accounts_response_422_meta import ListDataSourceLoginAccountsResponse422Meta
+from .list_data_source_login_accounts_response_429 import ListDataSourceLoginAccountsResponse429
+from .list_data_source_login_accounts_response_429_meta import ListDataSourceLoginAccountsResponse429Meta
+from .list_data_source_login_accounts_response_500 import ListDataSourceLoginAccountsResponse500
+from .list_data_source_login_accounts_response_500_meta import ListDataSourceLoginAccountsResponse500Meta
 from .list_data_source_logins_response_200 import ListDataSourceLoginsResponse200
 from .list_data_source_logins_response_401 import ListDataSourceLoginsResponse401
 from .list_data_source_logins_response_401_meta import ListDataSourceLoginsResponse401Meta
@@ -688,6 +703,8 @@ from .login_link import LoginLink
 from .login_link_response import LoginLinkResponse
 from .login_link_response_meta import LoginLinkResponseMeta
 from .login_link_status_code import LoginLinkStatusCode
+from .login_revoke_response import LoginRevokeResponse
+from .login_revoke_response_data import LoginRevokeResponseData
 from .lookup_step import LookupStep
 from .lookup_step_map import LookupStepMap
 from .lookup_step_type import LookupStepType
@@ -718,6 +735,20 @@ from .remove_accounts_from_group_response_500 import RemoveAccountsFromGroupResp
 from .remove_accounts_from_group_response_500_meta import RemoveAccountsFromGroupResponse500Meta
 from .resource_url import ResourceUrl
 from .response_meta import ResponseMeta
+from .response_meta_with_pagination import ResponseMetaWithPagination
+from .response_meta_with_pagination_paginate import ResponseMetaWithPaginationPaginate
+from .revoke_data_source_login_response_401 import RevokeDataSourceLoginResponse401
+from .revoke_data_source_login_response_401_meta import RevokeDataSourceLoginResponse401Meta
+from .revoke_data_source_login_response_403 import RevokeDataSourceLoginResponse403
+from .revoke_data_source_login_response_403_meta import RevokeDataSourceLoginResponse403Meta
+from .revoke_data_source_login_response_404 import RevokeDataSourceLoginResponse404
+from .revoke_data_source_login_response_404_meta import RevokeDataSourceLoginResponse404Meta
+from .revoke_data_source_login_response_422 import RevokeDataSourceLoginResponse422
+from .revoke_data_source_login_response_422_meta import RevokeDataSourceLoginResponse422Meta
+from .revoke_data_source_login_response_429 import RevokeDataSourceLoginResponse429
+from .revoke_data_source_login_response_429_meta import RevokeDataSourceLoginResponse429Meta
+from .revoke_data_source_login_response_500 import RevokeDataSourceLoginResponse500
+from .revoke_data_source_login_response_500_meta import RevokeDataSourceLoginResponse500Meta
 from .rule_output import RuleOutput
 from .secret import Secret
 from .setup_setting import SetupSetting
@@ -868,6 +899,19 @@ from .update_destination_response_429 import UpdateDestinationResponse429
 from .update_destination_response_429_meta import UpdateDestinationResponse429Meta
 from .update_destination_response_500 import UpdateDestinationResponse500
 from .update_destination_response_500_meta import UpdateDestinationResponse500Meta
+from .update_login_link_body import UpdateLoginLinkBody
+from .update_login_link_response_400 import UpdateLoginLinkResponse400
+from .update_login_link_response_400_meta import UpdateLoginLinkResponse400Meta
+from .update_login_link_response_401 import UpdateLoginLinkResponse401
+from .update_login_link_response_401_meta import UpdateLoginLinkResponse401Meta
+from .update_login_link_response_404 import UpdateLoginLinkResponse404
+from .update_login_link_response_404_meta import UpdateLoginLinkResponse404Meta
+from .update_login_link_response_422 import UpdateLoginLinkResponse422
+from .update_login_link_response_422_meta import UpdateLoginLinkResponse422Meta
+from .update_login_link_response_429 import UpdateLoginLinkResponse429
+from .update_login_link_response_429_meta import UpdateLoginLinkResponse429Meta
+from .update_login_link_response_500 import UpdateLoginLinkResponse500
+from .update_login_link_response_500_meta import UpdateLoginLinkResponse500Meta
 from .update_secret_request import UpdateSecretRequest
 from .update_transfer_response_400 import UpdateTransferResponse400
 from .update_transfer_response_400_meta import UpdateTransferResponse400Meta
@@ -1186,6 +1230,9 @@ __all__ = (
     "DataResponseMetaQuerySettings",
     "DataResponseMetaResult",
     "DataSource",
+    "DataSourceAccount",
+    "DataSourceAccountListResponse",
+    "DataSourceAccountType",
     "DataSourceConnection",
     "DatasourceDetails",
     "DatasourceDetailsAccountLabelsType0",
@@ -1557,6 +1604,18 @@ __all__ = (
     "ListConnectorsResponse429Meta",
     "ListConnectorsResponse500",
     "ListConnectorsResponse500Meta",
+    "ListDataSourceLoginAccountsResponse401",
+    "ListDataSourceLoginAccountsResponse401Meta",
+    "ListDataSourceLoginAccountsResponse403",
+    "ListDataSourceLoginAccountsResponse403Meta",
+    "ListDataSourceLoginAccountsResponse404",
+    "ListDataSourceLoginAccountsResponse404Meta",
+    "ListDataSourceLoginAccountsResponse422",
+    "ListDataSourceLoginAccountsResponse422Meta",
+    "ListDataSourceLoginAccountsResponse429",
+    "ListDataSourceLoginAccountsResponse429Meta",
+    "ListDataSourceLoginAccountsResponse500",
+    "ListDataSourceLoginAccountsResponse500Meta",
     "ListDataSourceLoginsResponse200",
     "ListDataSourceLoginsResponse401",
     "ListDataSourceLoginsResponse401Meta",
@@ -1615,6 +1674,8 @@ __all__ = (
     "LoginLinkResponse",
     "LoginLinkResponseMeta",
     "LoginLinkStatusCode",
+    "LoginRevokeResponse",
+    "LoginRevokeResponseData",
     "LookupStep",
     "LookupStepMap",
     "LookupStepType",
@@ -1645,6 +1706,20 @@ __all__ = (
     "RemoveAccountsFromGroupResponse500Meta",
     "ResourceUrl",
     "ResponseMeta",
+    "ResponseMetaWithPagination",
+    "ResponseMetaWithPaginationPaginate",
+    "RevokeDataSourceLoginResponse401",
+    "RevokeDataSourceLoginResponse401Meta",
+    "RevokeDataSourceLoginResponse403",
+    "RevokeDataSourceLoginResponse403Meta",
+    "RevokeDataSourceLoginResponse404",
+    "RevokeDataSourceLoginResponse404Meta",
+    "RevokeDataSourceLoginResponse422",
+    "RevokeDataSourceLoginResponse422Meta",
+    "RevokeDataSourceLoginResponse429",
+    "RevokeDataSourceLoginResponse429Meta",
+    "RevokeDataSourceLoginResponse500",
+    "RevokeDataSourceLoginResponse500Meta",
     "RuleOutput",
     "Secret",
     "SetupSetting",
@@ -1791,6 +1866,19 @@ __all__ = (
     "UpdateDestinationResponse429Meta",
     "UpdateDestinationResponse500",
     "UpdateDestinationResponse500Meta",
+    "UpdateLoginLinkBody",
+    "UpdateLoginLinkResponse400",
+    "UpdateLoginLinkResponse400Meta",
+    "UpdateLoginLinkResponse401",
+    "UpdateLoginLinkResponse401Meta",
+    "UpdateLoginLinkResponse404",
+    "UpdateLoginLinkResponse404Meta",
+    "UpdateLoginLinkResponse422",
+    "UpdateLoginLinkResponse422Meta",
+    "UpdateLoginLinkResponse429",
+    "UpdateLoginLinkResponse429Meta",
+    "UpdateLoginLinkResponse500",
+    "UpdateLoginLinkResponse500Meta",
     "UpdateSecretRequest",
     "UpdateTransferResponse400",
     "UpdateTransferResponse400Meta",

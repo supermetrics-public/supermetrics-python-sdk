@@ -173,6 +173,63 @@ paths:
         maxLength: 50
         pattern: ^[A-Za-z0-9_-]+$
       description: Supermetrics login link ID
+    patch:
+      summary: Update login link
+      description: Change given properties for specified data source login link
+      operationId: updateLoginLink
+      security:
+      - ApiKeyAuth:
+        - ds_login_links_write
+      parameters:
+      - name: link_id
+        in: path
+        required: true
+        description: Entity link ID
+        schema:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+      requestBody:
+        description: Login link update parameters for modifying link properties
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  maxLength: 1000
+                  description: Description for the link
+            example:
+              description: Updated login link description
+      responses:
+        '200':
+          description: Login link updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginLinkResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Data Source Login Links
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
   /ds/login/link/{link_id}/close:
     put:
       summary: Close login link
@@ -308,6 +365,111 @@ paths:
         maxLength: 50
         pattern: ^[A-Za-z0-9_-]+$
       description: Supermetrics login ID
+    delete:
+      summary: Revoke login
+      description: Revoke an existing data source login
+      operationId: revokeDataSourceLogin
+      security:
+      - ApiKeyAuth:
+        - ds_logins_write
+      parameters:
+      - name: login_id
+        in: path
+        required: true
+        description: Entity login ID
+        schema:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+      responses:
+        '200':
+          description: Data source login revoked successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginRevokeResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Data Source Logins
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
+  /ds/login/{login_id}/accounts:
+    get:
+      summary: List login accounts
+      description: List stored data source accounts for specified data source login
+      operationId: listDataSourceLoginAccounts
+      security:
+      - ApiKeyAuth:
+        - ds_accounts_read
+      parameters:
+      - name: login_id
+        in: path
+        description: Entity login ID
+        required: true
+        schema:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+      - name: offset
+        in: query
+        description: Pagination offset for the number of items to return. Defaults
+          to 0.
+        required: false
+        schema:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 1000000
+          default: 0
+      - name: limit
+        in: query
+        description: Maximum number of items to return. Defaults to 100, maximum of
+          1000 is enforced.
+        required: false
+        schema:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 1000
+          default: 100
+      responses:
+        '200':
+          description: List of data source accounts retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSourceAccountListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Data Source Logins
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
   /ds/logins:
     get:
       summary: List logins
@@ -2478,6 +2640,70 @@ paths:
       tags:
       - Account Tags
   /v1/teams/{team_id}/account_tags/{name}:
+    delete:
+      summary: Delete an account tag
+      description: Delete an account tag
+      operationId: deleteAccountGroup
+      security:
+      - ApiKeyAuth:
+        - account_tags_write
+      x-validate_role:
+      - owner
+      - admin
+      parameters:
+      - name: team_id
+        in: path
+        required: true
+        description: The ID of the team
+        example: 936506
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+      - name: name
+        in: path
+        required: true
+        description: The unique name of the account tag
+        example: a1b2c3d
+        schema:
+          type: string
+          maxLength: 100
+      responses:
+        '200':
+          description: 'Account tag deletion result. Deletion is idempotent: deleting
+            a tag that does not exist returns 200 with result=false rather than 404.'
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  data:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      result:
+                        type: boolean
+                        description: True when the account tag was deleted; false
+                          when no tag with that name existed
+                        example: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Account Tags
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
     get:
       summary: Fetch a single account tag by name
       description: Fetch a single account tag by name
@@ -2523,10 +2749,6 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       tags:
       - Account Tags
-    servers:
-    - url: https://api.supermetrics.com
-      description: production server
-      x-internal: false
     put:
       summary: Update an account tag
       description: Update an account tag
@@ -2586,66 +2808,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AccountTagResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/PermissionDenied'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-      tags:
-      - Account Tags
-    delete:
-      summary: Delete an account tag
-      description: Delete an account tag
-      operationId: deleteAccountGroup
-      security:
-      - ApiKeyAuth:
-        - account_tags_write
-      x-validate_role:
-      - owner
-      - admin
-      parameters:
-      - name: team_id
-        in: path
-        required: true
-        description: The ID of the team
-        example: 936506
-        schema:
-          type: integer
-          format: int64
-          minimum: 1
-          maximum: 9223372036854776000
-      - name: name
-        in: path
-        required: true
-        description: The unique name of the account tag
-        example: a1b2c3d
-        schema:
-          type: string
-          maxLength: 100
-      responses:
-        '200':
-          description: 'Account tag deletion result. Deletion is idempotent: deleting
-            a tag that does not exist returns 200 with result=false rather than 404.'
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: false
-                properties:
-                  data:
-                    type: object
-                    additionalProperties: false
-                    properties:
-                      result:
-                        type: boolean
-                        description: True when the account tag was deleted; false
-                          when no tag with that name existed
-                        example: true
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -6297,6 +6459,38 @@ components:
           type: string
           maxLength: 255
           description: Data source name
+    DataSourceAccount:
+      type: object
+      properties:
+        '@type':
+          type: string
+          enum:
+          - ds_account
+        account_id:
+          type: string
+          maxLength: 255
+          description: Data source account ID, as used in ds_accounts parameter
+        name:
+          type: string
+          maxLength: 255
+          description: Data source account name
+        group:
+          type: string
+          maxLength: 255
+          description: Group name for account in Supermetrics products
+    DataSourceAccountListResponse:
+      type: object
+      description: Paginated response envelope containing a list of stored data source
+        accounts for a login
+      properties:
+        meta:
+          $ref: '#/components/schemas/ResponseMetaWithPagination'
+        data:
+          type: array
+          maxItems: 1000
+          description: List of stored data source accounts
+          items:
+            $ref: '#/components/schemas/DataSourceAccount'
     DataSourceConnection:
       type: object
       description: A created data source connection.
@@ -7230,6 +7424,20 @@ components:
           additionalProperties: false
         data:
           $ref: '#/components/schemas/LoginLink'
+    LoginRevokeResponse:
+      type: object
+      description: Response envelope for a data source login revoke operation
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+        data:
+          type: object
+          description: Result payload for the revoke operation
+          properties:
+            result:
+              type: boolean
+              description: Whether the revoke operation was successful
+              example: true
     LookupStep:
       type: object
       description: A transformation step that maps input values to output values using
@@ -7566,6 +7774,35 @@ components:
       required:
       - request_id
       additionalProperties: false
+    ResponseMetaWithPagination:
+      type: object
+      properties:
+        request_id:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+          description: API request ID
+        paginate:
+          type: object
+          properties:
+            offset:
+              type: integer
+              format: int32
+              minimum: 0
+              maximum: 1000000
+              description: Used pagination offset
+            limit:
+              type: integer
+              format: int32
+              minimum: 1
+              maximum: 1000
+              description: Used pagination limit
+            total:
+              type: integer
+              format: int64
+              minimum: 0
+              maximum: 10000000
+              description: Total number of accounts available
     RuleOutput:
       type: object
       description: A matching rule available for condition or lookup steps.
