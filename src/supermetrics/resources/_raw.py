@@ -29,6 +29,7 @@ from supermetrics.resources.connector_builder_secrets import (
     ConnectorBuilderSecretsAsyncResource,
     ConnectorBuilderSecretsResource,
 )
+from supermetrics.resources.custom_fields import CustomFieldsAsyncResource, CustomFieldsResource
 from supermetrics.resources.datasource_details import DatasourceDetailsAsyncResource, DatasourceDetailsResource
 from supermetrics.resources.destinations import DestinationsAsyncResource, DestinationsResource
 from supermetrics.resources.login_links import LoginLinksAsyncResource, LoginLinksResource
@@ -407,6 +408,40 @@ class TransferRunsAsyncResourceWithRawResponse:
         self.get = async_to_raw_response_wrapper(resource.get)
 
 
+class CustomFieldsResourceWithRawResponse:
+    """Raw-response view over :class:`~supermetrics.resources.custom_fields.CustomFieldsResource`.
+
+    Args:
+        resource: The synchronous resource adapter to mirror.
+    """
+
+    def __init__(self, resource: CustomFieldsResource) -> None:
+        """Wrap every method of ``resource`` to return an ``ApiResponse``."""
+        self.list = to_raw_response_wrapper(resource.list)
+        self.get = to_raw_response_wrapper(resource.get)
+        self.get_metadata = to_raw_response_wrapper(resource.get_metadata)
+        self.create = to_raw_response_wrapper(resource.create)
+        self.update = to_raw_response_wrapper(resource.update)
+        self.delete = to_raw_response_wrapper(resource.delete)
+
+
+class CustomFieldsAsyncResourceWithRawResponse:
+    """Raw-response view over :class:`~supermetrics.resources.custom_fields.CustomFieldsAsyncResource`.
+
+    Args:
+        resource: The asynchronous resource adapter to mirror.
+    """
+
+    def __init__(self, resource: CustomFieldsAsyncResource) -> None:
+        """Wrap every method of ``resource`` to return an ``ApiResponse``."""
+        self.list = async_to_raw_response_wrapper(resource.list)
+        self.get = async_to_raw_response_wrapper(resource.get)
+        self.get_metadata = async_to_raw_response_wrapper(resource.get_metadata)
+        self.create = async_to_raw_response_wrapper(resource.create)
+        self.update = async_to_raw_response_wrapper(resource.update)
+        self.delete = async_to_raw_response_wrapper(resource.delete)
+
+
 class SupermetricsClientWithRawResponse:
     """Raw-response view over every resource of a synchronous client.
 
@@ -432,6 +467,7 @@ class SupermetricsClientWithRawResponse:
         self.destinations = DestinationsResourceWithRawResponse(client.destinations)
         self.transfers = TransfersResourceWithRawResponse(client.transfers)
         self.transfer_runs = TransferRunsResourceWithRawResponse(client.transfer_runs)
+        self.custom_fields = CustomFieldsResourceWithRawResponse(client.custom_fields)
 
 
 class SupermetricsAsyncClientWithRawResponse:
@@ -459,6 +495,7 @@ class SupermetricsAsyncClientWithRawResponse:
         self.destinations = DestinationsAsyncResourceWithRawResponse(client.destinations)
         self.transfers = TransfersAsyncResourceWithRawResponse(client.transfers)
         self.transfer_runs = TransferRunsAsyncResourceWithRawResponse(client.transfer_runs)
+        self.custom_fields = CustomFieldsAsyncResourceWithRawResponse(client.custom_fields)
 
 
 __all__ = [
@@ -472,6 +509,8 @@ __all__ = [
     "ConnectorBuilderResourceWithRawResponse",
     "ConnectorBuilderSecretsAsyncResourceWithRawResponse",
     "ConnectorBuilderSecretsResourceWithRawResponse",
+    "CustomFieldsAsyncResourceWithRawResponse",
+    "CustomFieldsResourceWithRawResponse",
     "DatasourceDetailsAsyncResourceWithRawResponse",
     "DatasourceDetailsResourceWithRawResponse",
     "DestinationsAsyncResourceWithRawResponse",

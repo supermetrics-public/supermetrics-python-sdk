@@ -72,6 +72,60 @@ conflict subclass, so a 409 arrives as a generic `SupermetricsAPIError` with
 `status_code == 409` — adding a dedicated subclass is a change to the public taxonomy and
 belongs in its own release, not behind a new resource.
 
+### Custom Fields (Phase 4)
+
+`client.custom_fields`, on both clients — `list`, `get`, `get_metadata`, `create`,
+`update` and `delete` over a team's calculated dimensions and metrics, which the API calls
+*field transformations*. It appears under `client.with_raw_response` and takes the same
+keyword-only `auth_token`, `headers` and `timeout` overrides as every other resource.
+
+A field's `definition` is an ordered pipeline of `FunctionStep`, `LookupStep` and
+`ConditionStep`. Those three, and the value types they nest — `DefinitionValue`,
+`FunctionArgument`, `ConditionCase`, `ConditionCaseCondition`, `LookupStepMap`,
+`CustomFieldCreateRequestDataSourceItem` — are re-exported from the top-level package,
+because `create()` and `update()` cannot be called without constructing them.
+`get_metadata()` returns the functions, rules and data types a team is actually allowed to
+use, which is the only way to find out short of a rejected `create()`.
+
+Four behaviours of the upstream API are exposed as they actually are, rather than smoothed
+over:
+
+* **`list()` returns the page, not the pagination.** The response is double-wrapped: the
+  page sits at `data.items` and `total_count` / `limit` / `offset` / next-page links ride
+  in `meta`. Returning a page object would have made the common case — iterate the fields
+  — go through a wrapper for no reason, and would have been the only resource on the
+  client to do so. The metadata is not lost: `client.with_raw_response.custom_fields.list(...)`
+  carries it in `.json_body["meta"]["pagination"]`, alongside the same parsed page in
+  `.data`. `total_count` appears there only when `include_total_count=True` is passed —
+  the API omits it by default because counting costs time, so reading it unconditionally
+  raises `KeyError` rather than returning a wrong number.
+* **Only the query parameters the caller supplied are sent.** With no optional arguments
+  the query string is empty. In particular `limit` is not sent, even though the generated
+  layer defaults it to 25; the server applies its own default instead, so the SDK never
+  silently pins a page size nobody asked for.
+* **`update()` is not `create()` with an id attached.** It takes no `field_type` and no
+  `data_source`: upstream states the field kind is fixed at creation, and the request body
+  does not carry it. It is also a whole-object replace — there is no PATCH endpoint, so
+  every field is resent on every call and anything omitted reverts to unset. The success
+  statuses differ too: `create()` answers `201`, `update()` `200`, `delete()` `204`.
+* **A rejected definition is an HTTP 400.** This domain documents no 422 at all, so an
+  unknown function name or a malformed step arrives as a 400 and is translated to
+  `SupermetricsValidationError`, exactly as a 422 would be elsewhere. `list()` and
+  `get_metadata()` document no 404 either.
+
+The `definition` is also asymmetric between request and response — sent as a bare list of
+steps, returned wrapped in an object with an `items` attribute. That is upstream's shape
+and the SDK does not paper over it, so a read-modify-write reads `field.definition.items`
+and passes that list straight back to `update()`. Two generated names follow from the wire
+format rather than from taste: `ConditionCase`'s field is `return_`, because `return` is a
+Python keyword, and `LookupStepMap` holds its mapping in `additional_properties` (declared
+`init=False`), so it is built empty and assigned into rather than constructed from a dict.
+
+Unlike transfers and backfills, **custom fields are served from the core API host**, with
+their `/v1` prefix in the path — `/v1/teams/{team_id}/custom-fields`. Nothing is re-hosted
+for them and no routing change was needed; a plain client reaches them as it does queries
+and logins.
+
 ### Data Warehouse calls are routed automatically
 
 Transfers, transfer runs, destinations, backfills and data source connections are

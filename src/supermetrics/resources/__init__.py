@@ -21,6 +21,7 @@ from supermetrics.resources.connector_builder_secrets import (
     ConnectorBuilderSecretsAsyncResource,
     ConnectorBuilderSecretsResource,
 )
+from supermetrics.resources.custom_fields import CustomFieldsAsyncResource, CustomFieldsResource
 from supermetrics.resources.datasource_details import DatasourceDetailsAsyncResource, DatasourceDetailsResource
 from supermetrics.resources.destinations import DestinationsAsyncResource, DestinationsResource
 from supermetrics.resources.login_links import LoginLinksAsyncResource, LoginLinksResource
@@ -40,6 +41,8 @@ __all__ = [
     "ConnectorBuilderSecretsAsyncResource",
     "ConnectorBuilderLogsResource",
     "ConnectorBuilderLogsAsyncResource",
+    "CustomFieldsResource",
+    "CustomFieldsAsyncResource",
     "DatasourceDetailsResource",
     "DatasourceDetailsAsyncResource",
     "DestinationsResource",

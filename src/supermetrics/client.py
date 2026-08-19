@@ -16,6 +16,7 @@ from supermetrics.resources.backfills import BackfillsResource
 from supermetrics.resources.connector_builder import ConnectorBuilderResource
 from supermetrics.resources.connector_builder_logs import ConnectorBuilderLogsResource
 from supermetrics.resources.connector_builder_secrets import ConnectorBuilderSecretsResource
+from supermetrics.resources.custom_fields import CustomFieldsResource
 from supermetrics.resources.datasource_details import DatasourceDetailsResource
 from supermetrics.resources.destinations import DestinationsResource
 from supermetrics.resources.login_links import LoginLinksResource
@@ -152,6 +153,7 @@ class SupermetricsClient:
         self.destinations = DestinationsResource(self._client)
         self.transfers = TransfersResource(self._client)
         self.transfer_runs = TransferRunsResource(self._client)
+        self.custom_fields = CustomFieldsResource(self._client)
 
         self._with_raw_response: SupermetricsClientWithRawResponse | None = None
 

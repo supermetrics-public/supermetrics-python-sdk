@@ -189,6 +189,26 @@ endpoints:
   - method: POST
     path: /v1/teams/{team_id}/connector_builder/connectors/{connector_identifier}/logo
 
+  # Custom Fields
+  #
+  # Core-API paths, the same shape as Connector Builder: the upstream path-level server
+  # is https://api.supermetrics.com and the "/v1" lives in the path. No rewrite_path —
+  # rewriting these to /teams/... would drop the /v1 the core API requires *and* move
+  # them into the shape _DTS_PATH_PATTERN inspects, which is how you accidentally send
+  # a core-API call to the Data Warehouse host.
+  - method: GET
+    path: /v1/teams/{team_id}/custom-fields
+  - method: POST
+    path: /v1/teams/{team_id}/custom-fields
+  - method: GET
+    path: /v1/teams/{team_id}/custom-fields/{custom_field_id}
+  - method: PUT
+    path: /v1/teams/{team_id}/custom-fields/{custom_field_id}
+  - method: DELETE
+    path: /v1/teams/{team_id}/custom-fields/{custom_field_id}
+  - method: GET
+    path: /v1/teams/{team_id}/custom-fields/metadata
+
   # ==========================================
   # EXAMPLE: Endpoint with comprehensive patches
   # ==========================================
