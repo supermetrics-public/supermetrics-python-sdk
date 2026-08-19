@@ -22,6 +22,7 @@ client = SupermetricsClient(
     custom_headers=None,
     timeout=30.0,
     base_url="https://api.supermetrics.com",
+    dts_base_url=None,
 )
 ```
 
@@ -47,6 +48,12 @@ Every parameter except `api_key` is keyword-only.
 - `timeout` (float, optional): Default request timeout in seconds (default: 30.0).
   Individual calls override it with their own `timeout`
 - `base_url` (str, optional): API base URL
+- `dts_base_url` (str, optional): Base URL for the Data Warehouse API, which serves
+  transfers, transfer runs, backfills, and data source connections from a different host.
+  Leave it unset to route those calls to `https://dts-api.supermetrics.com/v1`
+  automatically whenever `base_url` is the production default. If `base_url` is anything
+  else, no routing is inferred and every request goes to `base_url`; pass this explicitly
+  to point Data Warehouse traffic somewhere specific
 
 **Raises:** `SupermetricsClientError` (which is also a `ValueError`) if zero or more than
 one credential is supplied, if the supplied credential is empty, if `token_provider` is not
@@ -66,6 +73,7 @@ callable, or if an `async def` provider is given — use `SupermetricsAsyncClien
 - `destinations`: Access to DestinationsResource
 - `transfers`: Access to TransfersResource
 - `transfer_runs`: Access to TransferRunsResource
+- `custom_fields`: Access to CustomFieldsResource
 
 **Other Properties:**
 
@@ -119,6 +127,7 @@ client = SupermetricsAsyncClient(
     custom_headers=None,
     timeout=30.0,
     base_url="https://api.supermetrics.com",
+    dts_base_url=None,
 )
 ```
 
@@ -147,6 +156,7 @@ not callable.
 - `destinations`: Access to DestinationsAsyncResource
 - `transfers`: Access to TransfersAsyncResource
 - `transfer_runs`: Access to TransferRunsAsyncResource
+- `custom_fields`: Access to CustomFieldsAsyncResource
 
 **Other Properties:**
 

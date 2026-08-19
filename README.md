@@ -12,7 +12,7 @@ Official Python client for Supermetrics
 
 * Type-safe Python client generated from OpenAPI specification
 * Dual sync/async support via separate Client classes
-* Pydantic v2 models for request/response validation
+* Fully typed request and response models, generated from the spec as `attrs` classes
 * Comprehensive API coverage: login links, logins, accounts, queries, DWH transfers and
   transfer runs, DWH destinations, DWH backfills, custom fields, Connector Builder
 * Custom exception hierarchy with HTTP status code mapping

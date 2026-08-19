@@ -216,7 +216,7 @@ tests on a schedule and self-skips without a configured secret.
    - Do not reformat unrelated files or introduce drive-by refactorings.
 3. **Strict Typing & Type Hints:**
    - All public interfaces, methods, and adapters must have full Python type annotations.
-   - Respect Pydantic v2 schemas and models.
+   - Respect the generated `attrs` models and their `to_dict()` / `from_dict()` contract.
 4. **Testing Requirements:**
    - Unit tests live under `tests/unit/`; end-to-end tests under `tests/e2e/`. See
      [section 4a](#4a-running-the-end-to-end-tests).

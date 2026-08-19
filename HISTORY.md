@@ -192,6 +192,17 @@ credential — as well as the response. `tests/e2e/test_dts_routing_e2e.py` runs
 local servers, which is the only way to tell "sent to the right host" apart from "sent to
 the only host there is".
 
+### Pydantic is no longer a dependency
+
+`pydantic>=2.0.0` has been dropped from `project.dependencies`. Nothing in the SDK ever
+imported it: `openapi-python-client` generates `attrs` classes, not Pydantic models, so
+the declaration only forced every installation to pull `pydantic` and its compiled
+`pydantic-core` wheel for nothing. The README's "Pydantic v2 models for request/response
+validation" line described the same thing that was never true and has been corrected.
+
+Nothing in the public API changes. Code that imported `pydantic` and happened to get it
+transitively through this package now has to depend on it directly.
+
 ---
 
 ## 0.4.0 (2026-08-18)
