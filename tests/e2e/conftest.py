@@ -189,6 +189,131 @@ DATA_SOURCE_CONNECTION_BODY: dict[str, Any] = {
     },
 }
 
+# --- Custom fields ------------------------------------------------------------
+#
+# Custom fields live on the CORE api host under a "/v1" path prefix, unlike transfers.
+# Route strings for these tests therefore include the "/v1" — see
+# docs.local/scratchpads/phase4-contract.md.
+
+#: The three custom-field routes, for team 42 and custom field 42.
+CUSTOM_FIELDS_COLLECTION = "/v1/teams/42/custom-fields"
+CUSTOM_FIELDS_ITEM = "/v1/teams/42/custom-fields/42"
+CUSTOM_FIELDS_METADATA = "/v1/teams/42/custom-fields/metadata"
+
+#: A "function" definition step: apply a named function to its arguments.
+FUNCTION_STEP: dict[str, Any] = {
+    "type": "function",
+    "name": "upper_case",
+    "arguments": [{"name": "value", "value": {"type": "data_source_field", "value": "platform"}}],
+    "description": None,
+}
+
+#: A "lookup" definition step. `map` is an open-ended object upstream, so the generated
+#: model holds it in `additional_properties` rather than as a declared field.
+LOOKUP_STEP: dict[str, Any] = {
+    "type": "lookup",
+    "rule": "equals",
+    "map": {"1": "2", "a": "b"},
+    "source": {"type": "output_from_previous"},
+    "default": {"type": "static", "value": "other"},
+    "description": None,
+}
+
+#: A "condition" definition step. Note `default` is itself a oneOf — a DefinitionValue
+#: here, but it is equally allowed to be a whole nested FunctionStep.
+CONDITION_STEP: dict[str, Any] = {
+    "type": "condition",
+    "default": {"type": "static", "value": "none"},
+    "cases": [
+        {
+            "return": {"type": "output_from_previous"},
+            "condition": {
+                "type": "rule",
+                "rule": "equals",
+                "source": {"type": "output_from_previous"},
+                "target": {"type": "static", "value": "1"},
+            },
+        }
+    ],
+    "description": None,
+}
+
+#: All three step kinds in one definition. The generated layer discriminates the
+#: `oneOf` with a try/except cascade rather than by reading the `type` discriminator,
+#: so every kind has to be round-tripped rather than assumed to work.
+ALL_STEP_KINDS: list[dict[str, Any]] = [FUNCTION_STEP, LOOKUP_STEP, CONDITION_STEP]
+
+#: One custom field as read operations return it. `definition` is an object with an
+#: `items` array here, while requests send a bare array — the asymmetry is upstream's.
+#: `modified_time_utc` uses a numeric "+0000" offset rather than a trailing "Z".
+CUSTOM_FIELD_PAYLOAD: dict[str, Any] = {
+    "id": 42,
+    "name": "spec_example_field",
+    "data_source_id": "GAWA",
+    "display_name": "Spec Example Field",
+    "description": "Temporary transformation for spec examples",
+    "field_type": "dim",
+    "data_type": "string.text.value",
+    "modified_time_utc": "2026-04-06T10:59:04+0000",
+    "modified_user": {"email": "user@supermetrics.com", "first_name": "John", "last_name": "Doe"},
+    "definition": {"items": ALL_STEP_KINDS},
+    "report_types": ["Default"],
+}
+
+#: GET/PUT/POST of a single custom field — wrapped in {meta, data}.
+CUSTOM_FIELD_SINGLE_BODY: dict[str, Any] = {"meta": META, "data": CUSTOM_FIELD_PAYLOAD}
+
+#: GET the collection — double-wrapped: the page is at data.items and the pagination
+#: metadata rides in meta, which is why list() drops it and with_raw_response keeps it.
+CUSTOM_FIELD_LIST_BODY: dict[str, Any] = {
+    "meta": {
+        "request_id": META["request_id"],
+        "pagination": {
+            "total_count": 137,
+            "limit": 25,
+            "offset": 0,
+            "links": {"next": {"href": "https://api.supermetrics.com/v1/teams/42/custom-fields?offset=25&limit=25"}},
+        },
+    },
+    "data": {"items": [CUSTOM_FIELD_PAYLOAD]},
+}
+
+#: An empty page. Upstream marks `data` and `data.items` optional, so both can be
+#: missing outright — list() has to answer [] rather than fall over.
+CUSTOM_FIELD_EMPTY_LIST_BODY: dict[str, Any] = {
+    "meta": {
+        "request_id": META["request_id"],
+        "pagination": {"total_count": 0, "limit": 25, "offset": 0},
+    },
+    "data": {},
+}
+
+#: GET .../custom-fields/metadata — wrapped, and every field inside `data` is optional.
+CUSTOM_FIELD_METADATA_BODY: dict[str, Any] = {
+    "meta": META,
+    "data": {
+        "rules": {
+            "condition": {"items": [{"name": "equals", "display_name": "EQUALS"}]},
+            "lookup": {"items": [{"name": "equals", "display_name": "EQUALS"}]},
+        },
+        "functions": {
+            "items": [
+                {
+                    "name": "upper_case",
+                    "display_name": "Upper Case",
+                    "description": "Converts text to upper case",
+                    "group_name": "String",
+                    "arguments": [{"name": "value"}],
+                    "return_types": ["string.text.value"],
+                }
+            ]
+        },
+        "field_data_types": ["string.text.value"],
+        "output_data_types": {"items": [{"output_type": "string.text.value", "label": "STRING"}]},
+        "data_transformation_steps_limit": 10,
+    },
+}
+
 
 @dataclass(frozen=True)
 class RecordedRequest:
@@ -451,4 +576,24 @@ def transfers_server(api_server: MockAPIServer) -> MockAPIServer:
     api_server.route("/teams/42/transfers", ScriptedResponse(json_body=TRANSFERS_LIST_BODY))
     api_server.route("/teams/42/transfers/36091", ScriptedResponse(json_body=TRANSFER_DETAIL_BODY))
     api_server.route("/teams/42/transfer_runs/12345", ScriptedResponse(json_body=TRANSFER_RUN_DETAIL_BODY))
+    return api_server
+
+
+@pytest.fixture
+def custom_fields_server(api_server: MockAPIServer) -> MockAPIServer:
+    """A server with the three custom-field routes wired to successful responses.
+
+    The paths carry the ``/v1`` prefix because custom fields are served from the core
+    API host, where the version lives in the path. Getting this wrong surfaces as a
+    ``SupermetricsNotFoundError`` from the server's default 404 route rather than as an
+    obvious fixture mistake.
+
+    Note:
+        ``/metadata`` and ``/{custom_field_id}`` are distinct routes here, so a
+        ``get_metadata`` call that wrongly hit the by-id path would 404 rather than
+        silently return a custom field.
+    """
+    api_server.route(CUSTOM_FIELDS_COLLECTION, ScriptedResponse(json_body=CUSTOM_FIELD_LIST_BODY))
+    api_server.route(CUSTOM_FIELDS_ITEM, ScriptedResponse(json_body=CUSTOM_FIELD_SINGLE_BODY))
+    api_server.route(CUSTOM_FIELDS_METADATA, ScriptedResponse(json_body=CUSTOM_FIELD_METADATA_BODY))
     return api_server

@@ -30,6 +30,11 @@ from .close_login_link_response_429 import CloseLoginLinkResponse429
 from .close_login_link_response_429_meta import CloseLoginLinkResponse429Meta
 from .close_login_link_response_500 import CloseLoginLinkResponse500
 from .close_login_link_response_500_error import CloseLoginLinkResponse500Error
+from .condition_case import ConditionCase
+from .condition_case_condition import ConditionCaseCondition
+from .condition_case_condition_type import ConditionCaseConditionType
+from .condition_step import ConditionStep
+from .condition_step_type import ConditionStepType
 from .connector import Connector
 from .connector_configuration import ConnectorConfiguration
 from .connector_configuration_configuration_json import ConnectorConfigurationConfigurationJson
@@ -115,6 +120,20 @@ from .create_transfer_response_429 import CreateTransferResponse429
 from .create_transfer_response_429_meta import CreateTransferResponse429Meta
 from .create_transfer_response_500 import CreateTransferResponse500
 from .create_transfer_response_500_meta import CreateTransferResponse500Meta
+from .create_transformation_response_400 import CreateTransformationResponse400
+from .create_transformation_response_400_meta import CreateTransformationResponse400Meta
+from .create_transformation_response_401 import CreateTransformationResponse401
+from .create_transformation_response_401_meta import CreateTransformationResponse401Meta
+from .create_transformation_response_404 import CreateTransformationResponse404
+from .create_transformation_response_404_meta import CreateTransformationResponse404Meta
+from .create_transformation_response_429 import CreateTransformationResponse429
+from .create_transformation_response_429_meta import CreateTransformationResponse429Meta
+from .create_transformation_response_500 import CreateTransformationResponse500
+from .create_transformation_response_500_meta import CreateTransformationResponse500Meta
+from .custom_field_create_request import CustomFieldCreateRequest
+from .custom_field_create_request_data_source_item import CustomFieldCreateRequestDataSourceItem
+from .custom_field_create_request_field_type import CustomFieldCreateRequestFieldType
+from .custom_field_update_request import CustomFieldUpdateRequest
 from .data_query import DataQuery
 from .data_query_ds_accounts_type_2 import DataQueryDsAccountsType2
 from .data_query_fields_type_2_item import DataQueryFieldsType2Item
@@ -143,6 +162,8 @@ from .datasource_report_type import DatasourceReportType
 from .datasource_setting import DatasourceSetting
 from .datasource_setting_context import DatasourceSettingContext
 from .datasource_setting_type import DatasourceSettingType
+from .definition_value import DefinitionValue
+from .definition_value_type import DefinitionValueType
 from .delete_connector_response_400 import DeleteConnectorResponse400
 from .delete_connector_response_400_meta import DeleteConnectorResponse400Meta
 from .delete_connector_response_401 import DeleteConnectorResponse401
@@ -175,12 +196,53 @@ from .delete_transfer_response_429 import DeleteTransferResponse429
 from .delete_transfer_response_429_meta import DeleteTransferResponse429Meta
 from .delete_transfer_response_500 import DeleteTransferResponse500
 from .delete_transfer_response_500_meta import DeleteTransferResponse500Meta
+from .delete_transformation_response_400 import DeleteTransformationResponse400
+from .delete_transformation_response_400_meta import DeleteTransformationResponse400Meta
+from .delete_transformation_response_401 import DeleteTransformationResponse401
+from .delete_transformation_response_401_meta import DeleteTransformationResponse401Meta
+from .delete_transformation_response_404 import DeleteTransformationResponse404
+from .delete_transformation_response_404_meta import DeleteTransformationResponse404Meta
+from .delete_transformation_response_429 import DeleteTransformationResponse429
+from .delete_transformation_response_429_meta import DeleteTransformationResponse429Meta
+from .delete_transformation_response_500 import DeleteTransformationResponse500
+from .delete_transformation_response_500_meta import DeleteTransformationResponse500Meta
 from .destination_type_settings import DestinationTypeSettings
 from .destination_type_settings_auth_methods_item import DestinationTypeSettingsAuthMethodsItem
 from .destination_type_settings_settings_item import DestinationTypeSettingsSettingsItem
 from .error import Error
 from .error_response import ErrorResponse
 from .error_response_meta import ErrorResponseMeta
+from .fetch_metadata_response_400 import FetchMetadataResponse400
+from .fetch_metadata_response_400_meta import FetchMetadataResponse400Meta
+from .fetch_metadata_response_401 import FetchMetadataResponse401
+from .fetch_metadata_response_401_meta import FetchMetadataResponse401Meta
+from .fetch_metadata_response_429 import FetchMetadataResponse429
+from .fetch_metadata_response_429_meta import FetchMetadataResponse429Meta
+from .fetch_metadata_response_500 import FetchMetadataResponse500
+from .fetch_metadata_response_500_meta import FetchMetadataResponse500Meta
+from .fetch_transformation_list_response_400 import FetchTransformationListResponse400
+from .fetch_transformation_list_response_400_meta import FetchTransformationListResponse400Meta
+from .fetch_transformation_list_response_401 import FetchTransformationListResponse401
+from .fetch_transformation_list_response_401_meta import FetchTransformationListResponse401Meta
+from .fetch_transformation_list_response_429 import FetchTransformationListResponse429
+from .fetch_transformation_list_response_429_meta import FetchTransformationListResponse429Meta
+from .fetch_transformation_list_response_500 import FetchTransformationListResponse500
+from .fetch_transformation_list_response_500_meta import FetchTransformationListResponse500Meta
+from .fetch_transformation_response_400 import FetchTransformationResponse400
+from .fetch_transformation_response_400_meta import FetchTransformationResponse400Meta
+from .fetch_transformation_response_401 import FetchTransformationResponse401
+from .fetch_transformation_response_401_meta import FetchTransformationResponse401Meta
+from .fetch_transformation_response_404 import FetchTransformationResponse404
+from .fetch_transformation_response_404_meta import FetchTransformationResponse404Meta
+from .fetch_transformation_response_429 import FetchTransformationResponse429
+from .fetch_transformation_response_429_meta import FetchTransformationResponse429Meta
+from .fetch_transformation_response_500 import FetchTransformationResponse500
+from .fetch_transformation_response_500_meta import FetchTransformationResponse500Meta
+from .function_argument import FunctionArgument
+from .function_specification_output import FunctionSpecificationOutput
+from .function_specification_output_arguments_item import FunctionSpecificationOutputArgumentsItem
+from .function_step import FunctionStep
+from .function_step_type import FunctionStepType
 from .get_accounts_json import GetAccountsJson
 from .get_accounts_response_200 import GetAccountsResponse200
 from .get_accounts_response_200_data_item import GetAccountsResponse200DataItem
@@ -410,10 +472,32 @@ from .login_link import LoginLink
 from .login_link_response import LoginLinkResponse
 from .login_link_response_meta import LoginLinkResponseMeta
 from .login_link_status_code import LoginLinkStatusCode
+from .lookup_step import LookupStep
+from .lookup_step_map import LookupStepMap
+from .lookup_step_type import LookupStepType
 from .meta import Meta
+from .meta_with_pagination import MetaWithPagination
+from .metadata_output import MetadataOutput
+from .metadata_output_data import MetadataOutputData
+from .metadata_output_data_functions import MetadataOutputDataFunctions
+from .metadata_output_data_output_data_types import MetadataOutputDataOutputDataTypes
+from .metadata_output_data_rules import MetadataOutputDataRules
+from .metadata_output_data_rules_condition import MetadataOutputDataRulesCondition
+from .metadata_output_data_rules_lookup import MetadataOutputDataRulesLookup
+from .output_data_type_output import OutputDataTypeOutput
+from .paginated_transformations_output import PaginatedTransformationsOutput
+from .paginated_transformations_output_data import PaginatedTransformationsOutputData
+from .pagination import Pagination
+from .pagination_links import PaginationLinks
 from .query_details import QueryDetails
+from .resource_url import ResourceUrl
 from .response_meta import ResponseMeta
+from .rule_output import RuleOutput
 from .secret import Secret
+from .single_transformation_output import SingleTransformationOutput
+from .team_transformation_output import TeamTransformationOutput
+from .team_transformation_output_definition import TeamTransformationOutputDefinition
+from .team_transformation_output_field_type import TeamTransformationOutputFieldType
 from .transfer_account import TransferAccount
 from .transfer_backfill_run_error import TransferBackfillRunError
 from .transfer_configuration_request import TransferConfigurationRequest
@@ -453,6 +537,7 @@ from .transfer_schedule_run_interval import TransferScheduleRunInterval
 from .transfer_segment import TransferSegment
 from .transfer_state_update_response import TransferStateUpdateResponse
 from .transfer_updated_response import TransferUpdatedResponse
+from .transformation_user_output import TransformationUserOutput
 from .update_backfill_status_body import UpdateBackfillStatusBody
 from .update_backfill_status_body_status import UpdateBackfillStatusBodyStatus
 from .update_backfill_status_response_400 import UpdateBackfillStatusResponse400
@@ -518,6 +603,16 @@ from .update_transfer_response_429 import UpdateTransferResponse429
 from .update_transfer_response_429_meta import UpdateTransferResponse429Meta
 from .update_transfer_response_500 import UpdateTransferResponse500
 from .update_transfer_response_500_meta import UpdateTransferResponse500Meta
+from .update_transformation_response_400 import UpdateTransformationResponse400
+from .update_transformation_response_400_meta import UpdateTransformationResponse400Meta
+from .update_transformation_response_401 import UpdateTransformationResponse401
+from .update_transformation_response_401_meta import UpdateTransformationResponse401Meta
+from .update_transformation_response_404 import UpdateTransformationResponse404
+from .update_transformation_response_404_meta import UpdateTransformationResponse404Meta
+from .update_transformation_response_429 import UpdateTransformationResponse429
+from .update_transformation_response_429_meta import UpdateTransformationResponse429Meta
+from .update_transformation_response_500 import UpdateTransformationResponse500
+from .update_transformation_response_500_meta import UpdateTransformationResponse500Meta
 from .upload_connector_logo_body import UploadConnectorLogoBody
 from .upload_connector_logo_response_201 import UploadConnectorLogoResponse201
 from .upload_connector_logo_response_400 import UploadConnectorLogoResponse400
@@ -586,6 +681,11 @@ __all__ = (
     "CloseLoginLinkResponse429Meta",
     "CloseLoginLinkResponse500",
     "CloseLoginLinkResponse500Error",
+    "ConditionCase",
+    "ConditionCaseCondition",
+    "ConditionCaseConditionType",
+    "ConditionStep",
+    "ConditionStepType",
     "Connector",
     "ConnectorConfiguration",
     "ConnectorConfigurationConfigurationJson",
@@ -671,6 +771,20 @@ __all__ = (
     "CreateTransferResponse429Meta",
     "CreateTransferResponse500",
     "CreateTransferResponse500Meta",
+    "CreateTransformationResponse400",
+    "CreateTransformationResponse400Meta",
+    "CreateTransformationResponse401",
+    "CreateTransformationResponse401Meta",
+    "CreateTransformationResponse404",
+    "CreateTransformationResponse404Meta",
+    "CreateTransformationResponse429",
+    "CreateTransformationResponse429Meta",
+    "CreateTransformationResponse500",
+    "CreateTransformationResponse500Meta",
+    "CustomFieldCreateRequest",
+    "CustomFieldCreateRequestDataSourceItem",
+    "CustomFieldCreateRequestFieldType",
+    "CustomFieldUpdateRequest",
     "DataQuery",
     "DataQueryDsAccountsType2",
     "DataQueryFieldsType2Item",
@@ -699,6 +813,8 @@ __all__ = (
     "DatasourceSettingContext",
     "DatasourceSettingType",
     "DataSourceType",
+    "DefinitionValue",
+    "DefinitionValueType",
     "DeleteConnectorResponse400",
     "DeleteConnectorResponse400Meta",
     "DeleteConnectorResponse401",
@@ -731,12 +847,53 @@ __all__ = (
     "DeleteTransferResponse429Meta",
     "DeleteTransferResponse500",
     "DeleteTransferResponse500Meta",
+    "DeleteTransformationResponse400",
+    "DeleteTransformationResponse400Meta",
+    "DeleteTransformationResponse401",
+    "DeleteTransformationResponse401Meta",
+    "DeleteTransformationResponse404",
+    "DeleteTransformationResponse404Meta",
+    "DeleteTransformationResponse429",
+    "DeleteTransformationResponse429Meta",
+    "DeleteTransformationResponse500",
+    "DeleteTransformationResponse500Meta",
     "DestinationTypeSettings",
     "DestinationTypeSettingsAuthMethodsItem",
     "DestinationTypeSettingsSettingsItem",
     "Error",
     "ErrorResponse",
     "ErrorResponseMeta",
+    "FetchMetadataResponse400",
+    "FetchMetadataResponse400Meta",
+    "FetchMetadataResponse401",
+    "FetchMetadataResponse401Meta",
+    "FetchMetadataResponse429",
+    "FetchMetadataResponse429Meta",
+    "FetchMetadataResponse500",
+    "FetchMetadataResponse500Meta",
+    "FetchTransformationListResponse400",
+    "FetchTransformationListResponse400Meta",
+    "FetchTransformationListResponse401",
+    "FetchTransformationListResponse401Meta",
+    "FetchTransformationListResponse429",
+    "FetchTransformationListResponse429Meta",
+    "FetchTransformationListResponse500",
+    "FetchTransformationListResponse500Meta",
+    "FetchTransformationResponse400",
+    "FetchTransformationResponse400Meta",
+    "FetchTransformationResponse401",
+    "FetchTransformationResponse401Meta",
+    "FetchTransformationResponse404",
+    "FetchTransformationResponse404Meta",
+    "FetchTransformationResponse429",
+    "FetchTransformationResponse429Meta",
+    "FetchTransformationResponse500",
+    "FetchTransformationResponse500Meta",
+    "FunctionArgument",
+    "FunctionSpecificationOutput",
+    "FunctionSpecificationOutputArgumentsItem",
+    "FunctionStep",
+    "FunctionStepType",
     "GetAccountsJson",
     "GetAccountsResponse200",
     "GetAccountsResponse200DataItem",
@@ -966,10 +1123,32 @@ __all__ = (
     "LoginLinkResponse",
     "LoginLinkResponseMeta",
     "LoginLinkStatusCode",
+    "LookupStep",
+    "LookupStepMap",
+    "LookupStepType",
     "Meta",
+    "MetadataOutput",
+    "MetadataOutputData",
+    "MetadataOutputDataFunctions",
+    "MetadataOutputDataOutputDataTypes",
+    "MetadataOutputDataRules",
+    "MetadataOutputDataRulesCondition",
+    "MetadataOutputDataRulesLookup",
+    "MetaWithPagination",
+    "OutputDataTypeOutput",
+    "PaginatedTransformationsOutput",
+    "PaginatedTransformationsOutputData",
+    "Pagination",
+    "PaginationLinks",
     "QueryDetails",
+    "ResourceUrl",
     "ResponseMeta",
+    "RuleOutput",
     "Secret",
+    "SingleTransformationOutput",
+    "TeamTransformationOutput",
+    "TeamTransformationOutputDefinition",
+    "TeamTransformationOutputFieldType",
     "TransferAccount",
     "TransferBackfillRunError",
     "TransferConfigurationRequest",
@@ -1007,6 +1186,7 @@ __all__ = (
     "TransferSegment",
     "TransferStateUpdateResponse",
     "TransferUpdatedResponse",
+    "TransformationUserOutput",
     "UpdateBackfillStatusBody",
     "UpdateBackfillStatusBodyStatus",
     "UpdateBackfillStatusResponse400",
@@ -1070,6 +1250,16 @@ __all__ = (
     "UpdateTransferResponse429Meta",
     "UpdateTransferResponse500",
     "UpdateTransferResponse500Meta",
+    "UpdateTransformationResponse400",
+    "UpdateTransformationResponse400Meta",
+    "UpdateTransformationResponse401",
+    "UpdateTransformationResponse401Meta",
+    "UpdateTransformationResponse404",
+    "UpdateTransformationResponse404Meta",
+    "UpdateTransformationResponse429",
+    "UpdateTransformationResponse429Meta",
+    "UpdateTransformationResponse500",
+    "UpdateTransformationResponse500Meta",
     "UploadConnectorLogoBody",
     "UploadConnectorLogoResponse201",
     "UploadConnectorLogoResponse400",

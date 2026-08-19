@@ -1635,6 +1635,478 @@ asyncio.run(main())
 
 ---
 
+### CustomFieldsResource
+
+Define, inspect, and remove a team's custom fields — the calculated dimensions and metrics
+that Supermetrics evaluates alongside a data source's native fields. Upstream calls them
+*field transformations*, which is why the models are named `TeamTransformationOutput` and
+the generated operations `*_transformation`.
+
+> **Base URL:** Custom fields are served by the core API host, not by the Data Warehouse
+> API, so nothing is re-hosted for them. The paths keep their `/v1` prefix:
+> `/v1/teams/{team_id}/custom-fields`. A plain client reaches them with no
+> `dts_base_url` involvement at all.
+
+Each field carries a **definition**: an ordered pipeline of steps evaluated top to bottom.
+A step is one of three kinds, discriminated by its `type`:
+
+- [`FunctionStep`](#functionstep) — applies a named function to its arguments
+- [`LookupStep`](#lookupstep) — maps input values to output values through a lookup table
+- [`ConditionStep`](#conditionstep) — evaluates ordered cases and returns the first match
+
+Call [`get_metadata()`](#get_metadata) to discover which functions, rules, and data types
+the team may actually use before building one.
+
+**Request models.** Unlike the transfer models, the definition-step types *are*
+re-exported from the top-level package — `create()` and `update()` cannot be called
+without constructing them:
+
+```python
+from supermetrics import (
+    ConditionCase,
+    ConditionCaseCondition,
+    ConditionStep,
+    CustomFieldCreateRequestDataSourceItem,
+    DefinitionValue,
+    FunctionArgument,
+    FunctionStep,
+    LookupStep,
+    LookupStepMap,
+)
+```
+
+> **The definition is asymmetric between request and response.** You *send* a bare list of
+> steps and you *get back* an object with an `items` attribute. A read-modify-write cycle
+> therefore reads `field.definition.items` and passes that list straight to `update()` —
+> see the [`update()` example](#update-1). This is upstream's shape, not the SDK's.
+
+**Response envelope.** All five reading and writing methods are wrapped in
+`{"meta": ..., "data": ...}` upstream, and the SDK unwraps `.data` for you. `list()` is
+double-wrapped — the page sits at `data.items` and the pagination metadata rides in `meta`
+— which is why `list()` returns only the page. See the note under
+[`list()`](#list-4) for how to read the pagination.
+
+**Errors.** This domain documents 400, 401, 403, 404, 429, and 500. **There is no 422 in
+it**: a rejected definition comes back as HTTP 400, which the SDK translates to
+`SupermetricsValidationError` exactly as it does a 422 elsewhere. `list()` and
+`get_metadata()` document no 404 at all.
+
+#### list()
+
+List the custom fields defined for a team.
+
+```python
+fields = client.custom_fields.list(team_id=12345)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `data_source_id` (str, optional): Only return fields belonging to this data source, e.g.
+  `"GAWA"`
+- `display_name` (str, optional): Only return fields with this user-facing name
+- `page` (int, optional): 1-based page number to fetch
+- `limit` (int, optional): Maximum number of fields to return, 1 to 100
+- `include_total_count` (bool, optional): Ask the API to report the total number of
+  matching fields
+
+Everything from `data_source_id` onwards is keyword-only.
+
+**Returns:** `list[TeamTransformationOutput]` — the custom fields on this page. Empty list
+when the page has no results, including when the API omits `data` or `data.items`
+entirely.
+
+**Raises:** `SupermetricsAuthError`, `SupermetricsForbiddenError`, `SupermetricsValidationError` (400 on an invalid query), `SupermetricsRateLimitError`, `SupermetricsServerError`, `NetworkError`
+
+> **Only the parameters you pass are sent.** With no optional arguments the query string
+> is empty — `limit` in particular is *not* sent, even though the generated layer has a
+> default of 25. The server applies its own default instead, so the SDK never silently
+> pins a page size you did not ask for.
+
+> **`list()` returns the page, not the pagination.** The `total_count`, `limit`, `offset`,
+> and next/previous links the API sends alongside the page are dropped by the typed
+> method. Read them through the raw-response accessor:
+>
+> ```python
+> response = client.with_raw_response.custom_fields.list(team_id=12345, include_total_count=True)
+>
+> fields = response.data  # list[TeamTransformationOutput], same as list() returns
+> pagination = response.json_body["meta"]["pagination"]
+>
+> print(f"{len(fields)} of {pagination['total_count']} fields")
+> print(f"limit={pagination['limit']} offset={pagination['offset']}")
+> ```
+>
+> **`total_count` is only present when `include_total_count=True`.** The API omits it by
+> default because counting costs time, so reading it unconditionally will `KeyError` on a
+> plain call.
+
+**Example:**
+
+```python
+from supermetrics import SupermetricsClient
+
+with SupermetricsClient(api_key="your_key") as client:
+    fields = client.custom_fields.list(team_id=12345, data_source_id="GAWA", limit=50)
+
+    for field in fields:
+        print(f"{field.id}: {field.display_name} ({field.field_type}, {field.data_type})")
+        print(f"  last modified {field.modified_time_utc} by {field.modified_user.email}")
+```
+
+Paging through everything, using the total to know when to stop:
+
+```python
+page = 1
+seen = 0
+
+while True:
+    response = client.with_raw_response.custom_fields.list(
+        team_id=12345, page=page, limit=100, include_total_count=True
+    )
+    if not response.data:
+        break
+
+    for field in response.data:
+        print(field.display_name)
+
+    seen += len(response.data)
+    if seen >= response.json_body["meta"]["pagination"]["total_count"]:
+        break
+    page += 1
+```
+
+#### get()
+
+Retrieve a single custom field by ID.
+
+```python
+field = client.custom_fields.get(team_id=12345, custom_field_id=42)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `custom_field_id` (int, required): Unique identifier of the custom field
+
+**Returns:** `TeamTransformationOutput` — the field with its definition, data type, and
+last-modified metadata
+
+**Raises:** `SupermetricsAuthError`, `SupermetricsForbiddenError`, `SupermetricsNotFoundError` (404 if not found), `SupermetricsValidationError` (400), `SupermetricsRateLimitError`, `SupermetricsServerError`, `NetworkError`
+
+**Example:**
+
+```python
+from supermetrics import SupermetricsClient
+
+with SupermetricsClient(api_key="your_key") as client:
+    field = client.custom_fields.get(team_id=12345, custom_field_id=42)
+
+    print(f"{field.display_name} [{field.name}] -> {field.data_type}")
+    print(f"Applies to {field.data_source_id}, report types {field.report_types}")
+
+    # Note `.definition.items`, not `.definition` — the read shape wraps the list
+    for step in field.definition.items:
+        print(f"  {step.type_}: {type(step).__name__}")
+```
+
+#### get_metadata()
+
+Retrieve the building blocks available for custom field definitions.
+
+```python
+metadata = client.custom_fields.get_metadata(team_id=12345)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+
+**Returns:** `MetadataOutputData` — the functions the team may call, the rules available to
+condition and lookup steps, the field data types that can be referenced, the output data
+types a field may declare, and the team's cap on steps per definition
+
+**Raises:** `SupermetricsAuthError`, `SupermetricsForbiddenError`, `SupermetricsValidationError` (400), `SupermetricsRateLimitError`, `SupermetricsServerError`, `NetworkError`
+
+Call this before constructing a `definition` rather than guessing at function and rule
+names — an unknown name is rejected on `create()` as a 400.
+
+**Example:**
+
+```python
+from supermetrics import SupermetricsClient
+
+with SupermetricsClient(api_key="your_key") as client:
+    metadata = client.custom_fields.get_metadata(team_id=12345)
+
+    print(f"Up to {metadata.data_transformation_steps_limit} steps per definition")
+
+    for function in metadata.functions.items:
+        args = ", ".join(argument["name"] for argument in function.arguments)
+        print(f"  [{function.group_name}] {function.name}({args}) -> {function.return_types}")
+
+    print(f"Condition rules: {[rule.name for rule in metadata.rules.condition.items]}")
+    print(f"Lookup rules:    {[rule.name for rule in metadata.rules.lookup.items]}")
+    print(f"Output types:    {[t.output_type for t in metadata.output_data_types.items]}")
+```
+
+Every attribute on `MetadataOutputData` is optional upstream, so guard the ones you read
+if you cannot rely on the team having them.
+
+#### create()
+
+Create a custom field.
+
+```python
+field = client.custom_fields.create(
+    team_id=12345,
+    display_name="Platform (normalised)",
+    field_type="dim",
+    data_type="string.text.value",
+    definition=[step],
+)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `display_name` (str, required): User-facing name shown in the UI
+- `field_type` (`"dim"` | `"met"`, required): `"dim"` for a dimension, `"met"` for a
+  metric. **This cannot be changed later** — `update()` does not accept it
+- `data_type` (str, required): Data type of the field, e.g. `"string.text.value"`,
+  `"float.number.value"`, `"int.number.value"`, or `"bool"`. The legal values come from
+  `get_metadata().output_data_types.items`
+- `definition` (list[FunctionStep | LookupStep | ConditionStep], required): The ordered
+  pipeline, sent as a **bare list**
+- `description` (str, optional): Free-text description of the field
+- `data_source` (list[CustomFieldCreateRequestDataSourceItem], optional): Data sources the
+  field applies to, each pairing a `data_source_id` with an optional `report_type`
+
+`description` and `data_source` are keyword-only.
+
+**Returns:** `TeamTransformationOutput` — the persisted field, including the `id` and
+machine `name` the API assigned. The API answers **HTTP 201** on success.
+
+**Raises:** `SupermetricsAuthError`, `SupermetricsForbiddenError`, `SupermetricsValidationError` (**400** — an invalid definition is a 400, not a 422), `SupermetricsNotFoundError`, `SupermetricsRateLimitError`, `SupermetricsServerError`, `NetworkError`
+
+**Example** — a three-step pipeline using all three step kinds: upper-case the platform
+field, map the result to a friendly name, then classify what came out.
+
+```python
+from supermetrics import (
+    ConditionCase,
+    ConditionCaseCondition,
+    ConditionStep,
+    CustomFieldCreateRequestDataSourceItem,
+    DefinitionValue,
+    FunctionArgument,
+    FunctionStep,
+    LookupStep,
+    LookupStepMap,
+    SupermetricsClient,
+)
+
+upper = FunctionStep(
+    type_="function",
+    name="upper_case",
+    arguments=[FunctionArgument(name="value", value=DefinitionValue(type_="data_source_field", value="platform"))],
+)
+
+# LookupStepMap takes no mapping in its constructor: `additional_properties` is
+# declared init=False, so build it empty and assign the entries.
+mapping = LookupStepMap()
+mapping["GOOGLE"] = "Google Ads"
+mapping["FACEBOOK"] = "Meta Ads"
+
+rename = LookupStep(
+    type_="lookup",
+    rule="equals",
+    map_=mapping,
+    source=DefinitionValue(type_="output_from_previous"),
+    default=DefinitionValue(type_="static", value="Other"),
+)
+
+# ConditionCase's field is `return_` in Python; it serialises to "return", which is a
+# Python keyword and so cannot be an attribute name.
+classify = ConditionStep(
+    type_="condition",
+    default=DefinitionValue(type_="static", value="Unclassified"),
+    cases=[
+        ConditionCase(
+            return_=DefinitionValue(type_="static", value="Search"),
+            condition=ConditionCaseCondition(
+                type_="rule",
+                rule="equals",
+                source=DefinitionValue(type_="output_from_previous"),
+                target=DefinitionValue(type_="static", value="Google Ads"),
+            ),
+        )
+    ],
+)
+
+with SupermetricsClient(api_key="your_key") as client:
+    field = client.custom_fields.create(
+        team_id=12345,
+        display_name="Platform (normalised)",
+        field_type="dim",
+        data_type="string.text.value",
+        definition=[upper, rename, classify],
+        description="Upper-cases the platform, maps it to a friendly name, then classifies it",
+        data_source=[CustomFieldCreateRequestDataSourceItem(data_source_id="GAWA")],
+    )
+    print(f"Created {field.id} ({field.name})")
+```
+
+#### update()
+
+Replace an existing custom field.
+
+```python
+field = client.custom_fields.update(
+    team_id=12345,
+    custom_field_id=42,
+    display_name="Platform (normalised, v2)",
+    data_type="string.text.value",
+    definition=[step],
+)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `custom_field_id` (int, required): Unique identifier of the custom field to replace
+- `display_name` (str, required): User-facing name shown in the UI
+- `data_type` (str, required): Data type of the field
+- `definition` (list[FunctionStep | LookupStep | ConditionStep], required): The ordered
+  pipeline, sent as a **bare list**
+- `description` (str, optional, keyword-only): Free-text description of the field
+
+**Returns:** `TeamTransformationOutput` — the updated field
+
+**Raises:** `SupermetricsAuthError`, `SupermetricsForbiddenError`, `SupermetricsNotFoundError` (404 if not found), `SupermetricsValidationError` (**400** on an invalid definition), `SupermetricsRateLimitError`, `SupermetricsServerError`, `NetworkError`
+
+> **`update()` is not `create()` with an id attached.** Two differences, both upstream's:
+>
+> 1. **There is no `field_type` parameter.** The field kind cannot be changed after
+>    creation, so the request body does not carry it at all. `data_source` is absent for
+>    the same reason.
+> 2. **It is a whole-object replace.** There is no PATCH endpoint, so every field listed
+>    above is resent on every call and anything you omit reverts to unset — passing no
+>    `description` clears the existing one.
+
+**Example** — the read-modify-write cycle, which is where the definition asymmetry bites:
+
+```python
+from supermetrics import DefinitionValue, FunctionArgument, FunctionStep, SupermetricsClient
+
+with SupermetricsClient(api_key="your_key") as client:
+    current = client.custom_fields.get(team_id=12345, custom_field_id=42)
+
+    # Read: the response wraps the pipeline, so unwrap `.items` to get the list.
+    steps = list(current.definition.items)
+
+    # Modify: append a step.
+    steps.append(
+        FunctionStep(
+            type_="function",
+            name="trim",
+            arguments=[FunctionArgument(name="value", value=DefinitionValue(type_="output_from_previous"))],
+        )
+    )
+
+    # Write: send the bare list back, and resend everything you want to keep.
+    updated = client.custom_fields.update(
+        team_id=12345,
+        custom_field_id=42,
+        display_name=current.display_name,
+        data_type=current.data_type,
+        definition=steps,
+        description=current.description,
+    )
+    print(f"{updated.display_name} now has {len(updated.definition.items)} steps")
+```
+
+#### delete()
+
+Delete a custom field.
+
+```python
+client.custom_fields.delete(team_id=12345, custom_field_id=42)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `custom_field_id` (int, required): Unique identifier of the custom field to delete
+
+**Returns:** `None`. The API answers **HTTP 204 No Content** on success, so there is no
+body to return and nothing to inspect.
+
+**Raises:** `SupermetricsAuthError`, `SupermetricsForbiddenError`, `SupermetricsNotFoundError` (404 if not found), `SupermetricsValidationError` (400), `SupermetricsRateLimitError`, `SupermetricsServerError`, `NetworkError`
+
+**Example:**
+
+```python
+from supermetrics import SupermetricsClient
+from supermetrics.exceptions import SupermetricsNotFoundError
+
+with SupermetricsClient(api_key="your_key") as client:
+    try:
+        client.custom_fields.delete(team_id=12345, custom_field_id=42)
+    except SupermetricsNotFoundError:
+        print("Already gone")
+```
+
+Deletion is not idempotent from the caller's point of view: a second call 404s. Use
+`with_raw_response` if you want to assert on the 204 itself.
+
+```python
+response = client.with_raw_response.custom_fields.delete(team_id=12345, custom_field_id=42)
+assert response.status_code == 204
+assert response.data is None
+```
+
+**Async usage** (all six methods above are also available on `CustomFieldsAsyncResource`):
+
+```python
+import asyncio
+
+from supermetrics import DefinitionValue, FunctionArgument, FunctionStep, SupermetricsAsyncClient
+
+
+async def main():
+    async with SupermetricsAsyncClient(api_key="your_key") as client:
+        metadata, fields = await asyncio.gather(
+            client.custom_fields.get_metadata(team_id=12345),
+            client.custom_fields.list(team_id=12345, data_source_id="GAWA"),
+        )
+        print(f"{len(fields)} fields, step limit {metadata.data_transformation_steps_limit}")
+
+        created = await client.custom_fields.create(
+            team_id=12345,
+            display_name="Platform (upper)",
+            field_type="dim",
+            data_type="string.text.value",
+            definition=[
+                FunctionStep(
+                    type_="function",
+                    name="upper_case",
+                    arguments=[
+                        FunctionArgument(
+                            name="value", value=DefinitionValue(type_="data_source_field", value="platform")
+                        )
+                    ],
+                )
+            ],
+        )
+        await client.custom_fields.delete(team_id=12345, custom_field_id=created.id)
+
+
+asyncio.run(main())
+```
+
+---
+
 ## Models
 
 ### Backfill
@@ -2289,6 +2761,404 @@ Request-side model. One entry in the optional `data_source_settings` list, and w
 from supermetrics._generated.supermetrics_api_client.models import TransferDataSourceSetting
 
 setting = TransferDataSourceSetting(field_id="BRAND_KEYWORDS", value="", group="Default")
+```
+
+---
+
+### TeamTransformationOutput
+
+A persisted custom field, as every read and write on `client.custom_fields` returns it.
+Named after the upstream term: a custom field is a *field transformation*.
+
+Every attribute is optional upstream, so each is typed `... | Unset`.
+
+**Attributes:**
+
+- `id` (int | Unset): Unique identifier of the custom field. Pass this to `get()`,
+  `update()`, and `delete()`
+- `name` (str | Unset): Machine name the API assigned (example: `"spec_example_field"`).
+  This is what appears in a query's field list; `display_name` is what appears in the UI
+- `data_source_id` (str | Unset): ID of the data source the field belongs to (example:
+  `"GAWA"`)
+- `display_name` (str | Unset): User-facing name shown in the UI
+- `description` (str | Unset): Free-text description
+- `field_type` (`"dim"` | `"met"` | Unset): Field kind — dimension or metric. Fixed at
+  creation
+- `data_type` (str | Unset): Data type of the transformed field (example:
+  `"string.text.value"`)
+- `modified_time_utc` (datetime | Unset): Timestamp of the last modification. Serialized
+  with a numeric offset (`"+0000"`) rather than a trailing `"Z"`, and parsed into a
+  **timezone-aware** `datetime`
+- `modified_user` (TransformationUserOutput | Unset): Who last modified it — `email`,
+  `first_name`, `last_name`
+- `definition` (TeamTransformationOutputDefinition | Unset): Wrapper holding the ordered
+  pipeline. **The steps are at `.definition.items`**, not at `.definition`
+- `report_types` (list[str] | Unset): Report types associated with the field (example:
+  `["Default"]`)
+
+**Example:**
+
+```python
+import datetime
+
+field = client.custom_fields.get(team_id=12345, custom_field_id=42)
+
+print(f"{field.display_name} ({field.name}) -> {field.data_type}")
+print(f"{'Dimension' if field.field_type == 'dim' else 'Metric'} on {field.data_source_id}")
+
+# modified_time_utc is tz-aware, so it compares directly against an aware datetime
+age = datetime.datetime.now(datetime.UTC) - field.modified_time_utc
+print(f"Last touched {age.days} days ago by {field.modified_user.email}")
+
+for step in field.definition.items:
+    print(f"  {step.type_}")
+```
+
+---
+
+### TeamTransformationOutputDefinition
+
+The read-side wrapper around a definition. Its only reason to exist is that the response
+nests the pipeline in an object while the request takes a bare list — which is why a
+read-modify-write reads `.items` and passes that straight back to `update()`.
+
+**Attributes:**
+
+- `items` (list[FunctionStep | LookupStep | ConditionStep] | Unset): The ordered pipeline
+
+The union is a `oneOf` upstream and is discriminated correctly on parse: a definition
+holding all three kinds comes back as `[FunctionStep, LookupStep, ConditionStep]`, in the
+order the API sent them. Branch on `type(step)` or on `step.type_`.
+
+**Example:**
+
+```python
+from supermetrics import ConditionStep, FunctionStep, LookupStep
+
+field = client.custom_fields.get(team_id=12345, custom_field_id=42)
+
+for step in field.definition.items:
+    if isinstance(step, FunctionStep):
+        print(f"call {step.name} with {len(step.arguments)} argument(s)")
+    elif isinstance(step, LookupStep):
+        print(f"lookup by {step.rule} over {len(step.map_.additional_properties)} entries")
+    elif isinstance(step, ConditionStep):
+        print(f"{len(step.cases)} case(s), default {step.default}")
+```
+
+---
+
+### MetadataOutputData
+
+What `custom_fields.get_metadata()` returns: the building blocks a team is allowed to use
+in a definition. Every attribute is optional upstream.
+
+**Attributes:**
+
+- `rules` (MetadataOutputDataRules | Unset): Matching rules, split into
+  `rules.condition.items` and `rules.lookup.items` — each a `list[RuleOutput]` with `name`
+  and `display_name`
+- `functions` (MetadataOutputDataFunctions | Unset): Available functions at
+  `functions.items`, a `list[FunctionSpecificationOutput]` with `name`, `display_name`,
+  `description`, `group_name`, `arguments`, and `return_types`
+- `field_data_types` (list[str] | Unset): Field data types that can be referenced in a
+  definition (example: `["string.text.value"]`)
+- `output_data_types` (MetadataOutputDataOutputDataTypes | Unset): Legal `data_type` values
+  at `output_data_types.items`, a `list[OutputDataTypeOutput]` with `output_type` and
+  `label`
+- `data_transformation_steps_limit` (int | Unset): Maximum number of steps the team may put
+  in one definition
+
+Note the repeated `.items` indirection — `functions`, `output_data_types`,
+`rules.condition`, and `rules.lookup` are each a wrapper object, not a list. Only
+`field_data_types` is a bare list.
+
+An argument inside `FunctionSpecificationOutput.arguments` is an open-ended object with no
+declared fields, so read it by key (`argument["name"]`), not by attribute.
+
+**Example:**
+
+```python
+metadata = client.custom_fields.get_metadata(team_id=12345)
+
+by_group: dict[str, list[str]] = {}
+for function in metadata.functions.items:
+    by_group.setdefault(function.group_name, []).append(function.name)
+
+for group, names in sorted(by_group.items()):
+    print(f"{group}: {', '.join(sorted(names))}")
+
+print(f"Legal data_type values: {[t.output_type for t in metadata.output_data_types.items]}")
+print(f"Lookup rules: {[rule.name for rule in metadata.rules.lookup.items]}")
+print(f"At most {metadata.data_transformation_steps_limit} steps per definition")
+```
+
+---
+
+### FunctionStep
+
+A definition step that applies a named function to its arguments. Importable from
+`supermetrics`.
+
+**Attributes:**
+
+- `type_` (str, required): Always `"function"`. Serializes to `"type"`
+- `name` (str, required): Name of the function to apply. Must be one of the names in
+  `get_metadata().functions.items`
+- `arguments` (list[FunctionArgument], required): Arguments passed to the function
+- `description` (str | None | Unset): Optional free-text description of the step
+
+**Example:**
+
+```python
+from supermetrics import DefinitionValue, FunctionArgument, FunctionStep
+
+step = FunctionStep(
+    type_="function",
+    name="upper_case",
+    arguments=[FunctionArgument(name="value", value=DefinitionValue(type_="data_source_field", value="platform"))],
+    description="Normalise casing before the lookup",
+)
+```
+
+---
+
+### LookupStep
+
+A definition step that maps input values to output values through a lookup table and a
+matching rule. Importable from `supermetrics`.
+
+**Attributes:**
+
+- `type_` (str, required): Always `"lookup"`. Serializes to `"type"`
+- `rule` (str, required): The matching rule applied when looking a value up (example:
+  `"equals"`). Legal values come from `get_metadata().rules.lookup.items`
+- `map_` (LookupStepMap, required): The key/value table. Serializes to `"map"`
+- `source` (DefinitionValue | Unset): Where the input value comes from
+- `default` (DefinitionValue | Unset): Value produced when nothing matches
+- `description` (str | None | Unset): Optional free-text description of the step
+
+**Example:**
+
+```python
+from supermetrics import DefinitionValue, LookupStep, LookupStepMap
+
+mapping = LookupStepMap()
+mapping["GOOGLE"] = "Google Ads"
+mapping["FACEBOOK"] = "Meta Ads"
+
+step = LookupStep(
+    type_="lookup",
+    rule="equals",
+    map_=mapping,
+    source=DefinitionValue(type_="output_from_previous"),
+    default=DefinitionValue(type_="static", value="Other"),
+)
+```
+
+---
+
+### LookupStepMap
+
+The key/value table inside a [`LookupStep`](#lookupstep). Importable from `supermetrics`.
+
+Upstream declares it as an open-ended object with no fixed properties, so the generated
+model has **no declared attributes at all** — the mapping lives in
+`additional_properties`, which is declared `init=False`.
+
+> **The constructor takes no mapping.** `LookupStepMap({"a": "b"})` is a `TypeError`.
+> Build it empty and assign the entries, either through the item accessors or by replacing
+> `additional_properties` wholesale.
+
+**Example:**
+
+```python
+from supermetrics import LookupStepMap
+
+# Item assignment
+mapping = LookupStepMap()
+mapping["GOOGLE"] = "Google Ads"
+mapping["FACEBOOK"] = "Meta Ads"
+
+# Or assign the whole dict at once
+bulk = LookupStepMap()
+bulk.additional_properties = {"GOOGLE": "Google Ads", "FACEBOOK": "Meta Ads"}
+
+# Reading one back
+print(mapping["GOOGLE"])  # "Google Ads"
+print("TIKTOK" in mapping)  # False
+print(mapping.additional_properties)  # {'GOOGLE': 'Google Ads', 'FACEBOOK': 'Meta Ads'}
+```
+
+---
+
+### ConditionStep
+
+A definition step that evaluates an ordered list of cases and produces the result of the
+first match, falling back to `default` when none match. Importable from `supermetrics`.
+
+**Attributes:**
+
+- `type_` (str, required): Always `"condition"`. Serializes to `"type"`
+- `default` (DefinitionValue | FunctionStep, required): Value produced when no case
+  matches. This is itself a `oneOf` — a plain value *or* a whole nested function step
+- `cases` (list[ConditionCase], required): Cases evaluated in order; the first match wins
+- `description` (str | None | Unset): Optional free-text description of the step
+
+**Example:**
+
+```python
+from supermetrics import ConditionCase, ConditionCaseCondition, ConditionStep, DefinitionValue
+
+step = ConditionStep(
+    type_="condition",
+    default=DefinitionValue(type_="static", value="Unclassified"),
+    cases=[
+        ConditionCase(
+            return_=DefinitionValue(type_="static", value="Search"),
+            condition=ConditionCaseCondition(
+                type_="rule",
+                rule="equals",
+                source=DefinitionValue(type_="output_from_previous"),
+                target=DefinitionValue(type_="static", value="Google Ads"),
+            ),
+        )
+    ],
+)
+```
+
+---
+
+### ConditionCase
+
+One case inside a [`ConditionStep`](#conditionstep): when `condition` evaluates true, the
+return value is produced. Importable from `supermetrics`.
+
+**Attributes:**
+
+- `return_` (DefinitionValue, required): The value produced when this case matches
+- `condition` (ConditionCaseCondition, required): The rule evaluated for this case
+
+> **The field is `return_`, with a trailing underscore.** It serializes to `"return"` on
+> the wire, which cannot be a Python attribute name because `return` is a keyword. This is
+> the same convention as `type_` and `map_` elsewhere in these models.
+
+**Example:**
+
+```python
+from supermetrics import ConditionCase, ConditionCaseCondition, DefinitionValue
+
+case = ConditionCase(
+    return_=DefinitionValue(type_="static", value="Paid"),
+    condition=ConditionCaseCondition(
+        type_="rule",
+        rule="equals",
+        source=DefinitionValue(type_="data_source_field", value="medium"),
+        target=DefinitionValue(type_="static", value="cpc"),
+    ),
+)
+```
+
+---
+
+### ConditionCaseCondition
+
+The rule-based comparison inside a [`ConditionCase`](#conditioncase). Importable from
+`supermetrics`.
+
+**Attributes:**
+
+- `type_` (str, required): Always `"rule"`. Serializes to `"type"`
+- `rule` (str, required): The comparison operator applied between `source` and `target`
+  (example: `"equals"`). Legal values come from `get_metadata().rules.condition.items`
+- `source` (DefinitionValue, required): Left-hand side of the comparison
+- `target` (DefinitionValue, required): Right-hand side of the comparison
+
+**Example:**
+
+```python
+from supermetrics import ConditionCaseCondition, DefinitionValue
+
+condition = ConditionCaseCondition(
+    type_="rule",
+    rule="equals",
+    source=DefinitionValue(type_="output_from_previous"),
+    target=DefinitionValue(type_="static", value="1"),
+)
+```
+
+---
+
+### DefinitionValue
+
+A value reference used throughout a definition — as a function argument, a lookup source
+or default, and both sides of a condition. Importable from `supermetrics`.
+
+**Attributes:**
+
+- `type_` (str, required): Where the value comes from. Serializes to `"type"`:
+  - `"data_source_field"` — a named field on the data source
+  - `"output_from_previous"` — the result of the preceding step
+  - `"static"` — a literal value
+- `value` (str | Unset): The value itself — the field name for `"data_source_field"`, the
+  literal for `"static"`, and **omitted** for `"output_from_previous"`
+
+**Example:**
+
+```python
+from supermetrics import DefinitionValue
+
+from_field = DefinitionValue(type_="data_source_field", value="platform")
+from_previous = DefinitionValue(type_="output_from_previous")  # no value
+literal = DefinitionValue(type_="static", value="cpc")
+```
+
+---
+
+### FunctionArgument
+
+A named argument supplied to a [`FunctionStep`](#functionstep). Importable from
+`supermetrics`.
+
+**Attributes:**
+
+- `name` (str, required): Argument name as the function expects it. The names a given
+  function takes are listed in `get_metadata().functions.items[*].arguments`
+- `value` (DefinitionValue, required): The argument's value reference
+
+**Example:**
+
+```python
+from supermetrics import DefinitionValue, FunctionArgument
+
+argument = FunctionArgument(name="value", value=DefinitionValue(type_="data_source_field", value="platform"))
+```
+
+---
+
+### CustomFieldCreateRequestDataSourceItem
+
+One entry in the optional `data_source` list on `custom_fields.create()`, scoping the field
+to a data source and optionally to a report type within it. Importable from
+`supermetrics`. Both attributes are optional.
+
+**Attributes:**
+
+- `data_source_id` (str | Unset): ID of the data source (example: `"GAWA"`)
+- `report_type` (str | None | Unset): Report type within that data source, if any
+
+`update()` does not accept this — the data sources a field applies to are fixed at
+creation, like `field_type`.
+
+**Example:**
+
+```python
+from supermetrics import CustomFieldCreateRequestDataSourceItem
+
+sources = [
+    CustomFieldCreateRequestDataSourceItem(data_source_id="GAWA"),
+    CustomFieldCreateRequestDataSourceItem(data_source_id="AW", report_type="Default"),
+]
 ```
 
 ---
