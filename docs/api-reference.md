@@ -2505,6 +2505,616 @@ asyncio.run(main())
 
 ---
 
+### BlendsResource
+
+Define, inspect, and remove a team's blends — the combined tables that draw their rows from
+several data sources at once. A blend has one of two kinds, fixed at creation and named by
+`blend_type`:
+
+- `"union"` stacks rows from each source under a shared set of blend fields
+- `"join"` joins the sources on shared fields, with one primary table
+  (`config.query_table`) and one [`BlendJoin`](#blendjoin) per additional source
+
+> **Base URL:** Blends are served by the core API host, not by the Data Warehouse API, so
+> nothing is re-hosted for them. The paths keep their `/v1` prefix:
+> `/v1/teams/{team_id}/data-blending/blends`. A plain client reaches them with no
+> `dts_base_url` involvement at all.
+
+Two things describe a blend. [`blended_data_sources`](#blendeddatasourceinput) lists the
+sources it draws on, and [`config`](#blendconfig) maps each source's native fields onto the
+blend's own fields — and, for a join blend, says how the sources are joined.
+
+**Request models.** As with custom fields, the request types *are* re-exported from the
+top-level package — `create()` and `update()` cannot be called without constructing them:
+
+```python
+from supermetrics import (
+    BlendConfig,
+    BlendConfigQueryTable,
+    BlendDatasourceFieldRef,
+    BlendDatasourceFieldRefMetaType0,
+    BlendField,
+    BlendJoin,
+    BlendJoinCondition,
+    BlendJoinJoinTable,
+    BlendedDataSourceInput,
+    BlendedDataSourceInputAccountsItem,
+    BlendedDataSourceInputDataSourceSettingsItem,
+    BlendedDataSourceInputReportTypeSettingsItem,
+    BlendedDataSourceInputSegmentsItem,
+)
+```
+
+> **`BlendedDataSourceInput` takes five required arguments, three of which are routinely
+> empty.** `data_source_id`, `blend_data_source_id`, `blend_data_source_key`,
+> `report_type`, and `report_type_settings` are all *required but nullable* upstream: they
+> have to be present in the JSON even when there is nothing to say. On a create that means
+> `blend_data_source_id=None`, and usually `report_type=None` and
+> `report_type_settings=[]`. Leaving any of the five out is a `TypeError` before a request
+> is ever built.
+
+> **Requests and responses are not the same shape.** Every collection is sent as a bare
+> list and comes back wrapped in an object with an `items` attribute — at every level, so a
+> read goes through `blend.blended_data_sources.items`, `blend.config.fields.items`,
+> `field.blend_datasource_fields.items`, and `join.conditions.items`. The response also
+> drops `blend_data_source_key` everywhere, and adds `blend_field_type` and
+> `blend_field_data_type`, which upstream infers from the mapped fields and the request has
+> no way to set. **A blend cannot be read back and resent unchanged**; a read-modify-write
+> has to rebuild the request objects from the response. This is upstream's shape, not the
+> SDK's.
+
+> **`blend_data_source_key` is a create-time alias for a source that has no id yet.** It is
+> exactly eight lowercase alphanumerics (`^[a-z0-9]{8}$`), and every field and join
+> reference in the same request points at it instead of at an id. On
+> [`update()`](#update-3), sources that already exist are addressed by
+> `blend_data_source_id` and sources being added in the same call by a fresh key, so one
+> body legitimately carries both.
+
+> **`list()` returns summaries, `get()` returns whole blends.** A
+> [`BlendListItemOutput`](#blendlistitemoutput) has no `config` at all, and a reduced view
+> of each data source. Call [`get()`](#get-8) for a blend's fields and joins.
+
+**Response envelope.** The four methods that return a body are wrapped in
+`{"meta": ..., "data": ...}` upstream, and the SDK unwraps `.data` for you. `list()` is
+double-wrapped — the blends sit at `data.items` — but unlike custom fields there is no
+pagination to lose here: **this endpoint is not paginated**, so one call returns every
+matching blend and returning a bare list drops nothing. `with_raw_response` still earns its
+place for the status code, the headers, and `meta.request_id`.
+
+**Errors.** This domain documents 400, 401, 403, 429, and 500 on every operation, plus 404
+on the three by-id operations — `get()`, `update()`, and `delete()`. `list()` and `create()`
+document no 404 at all; one that arrives anyway is still translated to
+`SupermetricsNotFoundError` through the generic path. **There is no 422 anywhere in this
+domain**: a rejected blend definition comes back as HTTP 400, which the SDK turns into
+`SupermetricsValidationError` exactly as it does a 422 elsewhere. Nothing in the SDK checks
+that a `union` blend omits `joins` or that a `join` blend supplies `query_table` — upstream
+is what rejects those, and it does so with a 400.
+
+#### list()
+
+List the blends defined for a team.
+
+```python
+blends = client.blends.list(team_id=12345)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `blend_type` (`"join"` | `"union"`, optional): Only return blends of this kind. Sent as
+  the `type` query parameter, and omitted entirely when not given, which returns both kinds
+
+`blend_type` is keyword-only.
+
+**Returns:** `list[BlendListItemOutput]` — the team's blends. Empty list when the team has
+none, including when the API omits `data` or `data.items` entirely.
+
+**Raises:** `SupermetricsAuthError`, `SupermetricsForbiddenError`, `SupermetricsValidationError` (400 on an invalid query), `SupermetricsRateLimitError`, `SupermetricsServerError`, `NetworkError`
+
+> **There is no pagination here.** Upstream returns every matching blend in a single
+> `data.items` array and documents no page, limit, or cursor — the response uses the plain
+> envelope, whose `meta` carries only a request id. So there is nothing to page through and
+> nothing for `with_raw_response` to recover, unlike
+> [`custom_fields.list()`](#list-4).
+
+> **The summaries carry no `config`.** A list item has `blend_id`, `blend_uuid`, `type_`,
+> `display_name`, `description`, `modified_time_utc`, `last_modify_user_email`, and a
+> four-attribute view of each data source. Fields and joins exist only on
+> [`get()`](#get-8).
+
+**Example:**
+
+```python
+from supermetrics import SupermetricsClient
+
+with SupermetricsClient(api_key="your_key") as client:
+    for summary in client.blends.list(team_id=12345, blend_type="join"):
+        sources = summary.blended_data_sources.items
+        print(f"{summary.blend_id} [{summary.blend_uuid}] {summary.display_name} ({summary.type_})")
+        print(f"  {len(sources)} sources: {', '.join(source.data_source_id for source in sources)}")
+        print(f"  modified {summary.modified_time_utc} by {summary.last_modify_user_email}")
+```
+
+#### get()
+
+Retrieve a single blend, including its full configuration.
+
+```python
+blend = client.blends.get(team_id=12345, blend_id=569)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `blend_id` (int, required): Unique identifier of the blend
+
+**Returns:** `BlendOutput` — the blend, with its data sources and its field and join
+configuration
+
+**Raises:** `SupermetricsAuthError`, `SupermetricsForbiddenError`, `SupermetricsNotFoundError` (404 if not found), `SupermetricsValidationError` (400), `SupermetricsRateLimitError`, `SupermetricsServerError`, `NetworkError`
+
+> **Everything nested here is wrapped.** The sources are at
+> `blend.blended_data_sources.items`, the fields at `blend.config.fields.items`, a field's
+> mappings at `field.blend_datasource_fields.items`, and a join's conditions at
+> `join.conditions.items`.
+
+> **On a union blend, `config.query_table` and `config.joins` are `Unset`, not `None`.**
+> Test them with `isinstance(value, Unset)`. `value is None` is false for the sentinel, so
+> that check passes silently and the attribute access after it raises.
+
+**Example:**
+
+```python
+from supermetrics import SupermetricsClient
+from supermetrics._generated.supermetrics_api_client.types import Unset
+
+with SupermetricsClient(api_key="your_key") as client:
+    blend = client.blends.get(team_id=12345, blend_id=569)
+
+    print(f"{blend.display_name} [{blend.blend_uuid}] is a {blend.type_} blend")
+
+    for source in blend.blended_data_sources.items:
+        print(f"  source {source.blend_data_source_id}: {source.data_source_id} ({source.display_name})")
+
+    for field in blend.config.fields.items:
+        # blend_field_type and blend_field_data_type are response-only — upstream infers
+        # them from the mapped fields, and the request has no way to set them.
+        print(f"  {field.blend_field_name} ({field.blend_field_type}, {field.blend_field_data_type})")
+        for ref in field.blend_datasource_fields.items:
+            print(f"    <- {ref.blend_data_source_id}.{ref.datasource_field_name}")
+
+    # A union blend has no joins at all, and the attribute is Unset rather than None.
+    if not isinstance(blend.config.joins, Unset):
+        for join in blend.config.joins.items:
+            print(f"  {join.type_} join on {len(join.conditions.items)} condition(s)")
+```
+
+#### create()
+
+Create a blend.
+
+```python
+blend = client.blends.create(
+    team_id=12345,
+    display_name="GA4 + Google Ads",
+    blend_type="join",
+    blended_data_sources=[ga4, ads],
+    config=config,
+)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `display_name` (str, required): User-facing name shown in the UI
+- `blend_type` (`"join"` | `"union"`, required): `"union"` to stack rows, `"join"` to join
+  the sources on shared fields. Sent as `type` and returned as `.type_`. **This cannot be
+  changed later** — `update()` does not accept it
+- `blended_data_sources` (list[BlendedDataSourceInput], required): The data sources the
+  blend draws on, sent as a **bare list**
+- `config` (BlendConfig, required): Field mappings, and for a join blend the primary table
+  and the joins. A union blend sets `fields` only
+- `description` (str, optional): Free-text description of the blend. Left out of the request
+  body entirely when not passed, rather than sent as `null`
+
+`description` is keyword-only.
+
+**Returns:** `BlendOutput` — the persisted blend, including the `blend_id` and `blend_uuid`
+the API assigned and the `blend_data_source_id` it gave each source. The API answers
+**HTTP 201** on success.
+
+**Raises:** `SupermetricsAuthError`, `SupermetricsForbiddenError`, `SupermetricsValidationError` (**400** — a rejected blend is a 400, not a 422), `SupermetricsRateLimitError`, `SupermetricsServerError`, `NetworkError`
+
+> **Every source is new here, so every source needs a `blend_data_source_key`.** Nothing has
+> an id yet. Pick eight lowercase alphanumerics per source, pass
+> `blend_data_source_id=None`, and point each
+> [`BlendDatasourceFieldRef`](#blenddatasourcefieldref),
+> [`BlendConfigQueryTable`](#blendconfigquerytable), and
+> [`BlendJoinJoinTable`](#blendjoinjointable) at that key. The API assigns real ids and
+> answers in those; the keys never appear in a response.
+
+**Example** — a join blend over two sources, joined on the date:
+
+```python
+from supermetrics import (
+    BlendConfig,
+    BlendConfigQueryTable,
+    BlendDatasourceFieldRef,
+    BlendField,
+    BlendJoin,
+    BlendJoinCondition,
+    BlendJoinJoinTable,
+    BlendedDataSourceInput,
+    BlendedDataSourceInputAccountsItem,
+    BlendedDataSourceInputDataSourceSettingsItem,
+    SupermetricsClient,
+)
+
+# One key per new source: exactly eight lowercase alphanumerics, unique in the request.
+GA4_KEY = "ga4a0001"
+ADS_KEY = "gawa0001"
+
+ga4 = BlendedDataSourceInput(
+    data_source_id="GA4",
+    blend_data_source_id=None,  # new source: no id yet, so it is named by the key below
+    blend_data_source_key=GA4_KEY,
+    report_type=None,  # required but nullable, like the two above
+    report_type_settings=[],  # required but nullable
+    display_name="Google Analytics 4",
+    accounts=[BlendedDataSourceInputAccountsItem(account_id="1234567890", account_name="Acme Corp")],
+    data_source_settings=[BlendedDataSourceInputDataSourceSettingsItem(id="currency", value="EUR")],
+)
+
+ads = BlendedDataSourceInput(
+    data_source_id="GAWA",
+    blend_data_source_id=None,
+    blend_data_source_key=ADS_KEY,
+    report_type=None,
+    report_type_settings=[],
+    display_name="Google Ads",
+)
+
+date = BlendField(
+    blend_field_name="date",
+    blend_field_display_name="Date",
+    blend_datasource_fields=[
+        BlendDatasourceFieldRef(
+            datasource_field_name="Date",
+            field_source="standard",
+            blend_data_source_key=GA4_KEY,
+            datasource_field_type="dim",
+            datasource_field_data_type="string.time.date",
+        ),
+        BlendDatasourceFieldRef(
+            datasource_field_name="Date",
+            field_source="standard",
+            blend_data_source_key=ADS_KEY,
+            datasource_field_type="dim",
+            datasource_field_data_type="string.time.date",
+        ),
+    ],
+)
+
+impressions = BlendField(
+    blend_field_name="impressions",
+    blend_field_display_name="Impressions",
+    blend_datasource_fields=[
+        BlendDatasourceFieldRef(
+            datasource_field_name="Impressions",
+            field_source="standard",
+            blend_data_source_key=ADS_KEY,
+            datasource_field_type="met",
+            datasource_field_data_type="int.number.value",
+        )
+    ],
+)
+
+config = BlendConfig(
+    # A join blend names its primary (left-hand) table and one join per other source.
+    query_table=BlendConfigQueryTable(blend_data_source_key=GA4_KEY),
+    joins=[
+        BlendJoin(
+            join_table=BlendJoinJoinTable(blend_data_source_key=ADS_KEY),
+            type_="left",
+            conditions=[
+                BlendJoinCondition(
+                    operator="=",
+                    left=BlendDatasourceFieldRef(
+                        datasource_field_name="Date", field_source="standard", blend_data_source_key=GA4_KEY
+                    ),
+                    right=BlendDatasourceFieldRef(
+                        datasource_field_name="Date", field_source="standard", blend_data_source_key=ADS_KEY
+                    ),
+                )
+            ],
+        )
+    ],
+    fields=[date, impressions],
+)
+
+with SupermetricsClient(api_key="your_key") as client:
+    blend = client.blends.create(
+        team_id=12345,
+        display_name="GA4 + Google Ads",
+        blend_type="join",
+        blended_data_sources=[ga4, ads],
+        config=config,
+        description="GA4 joined to Google Ads impressions on the date",
+    )
+
+    print(f"Created blend {blend.blend_id} ({blend.blend_uuid})")
+    for source in blend.blended_data_sources.items:
+        # The keys are gone from the response; the API answers in ids from here on.
+        print(f"  {source.data_source_id} -> blend_data_source_id={source.blend_data_source_id}")
+```
+
+A union blend is the same call with less in it — no `query_table`, no `joins`, and one
+`BlendField` per column of the stacked table:
+
+```python
+from supermetrics import (
+    BlendConfig,
+    BlendDatasourceFieldRef,
+    BlendField,
+    BlendedDataSourceInput,
+    SupermetricsClient,
+)
+
+GA4_KEY = "ga4a0001"
+ADS_KEY = "gawa0001"
+
+sources = [
+    BlendedDataSourceInput(
+        data_source_id=data_source_id,
+        blend_data_source_id=None,
+        blend_data_source_key=key,
+        report_type=None,
+        report_type_settings=[],
+    )
+    for data_source_id, key in (("GA4", GA4_KEY), ("GAWA", ADS_KEY))
+]
+
+config = BlendConfig(
+    fields=[
+        BlendField(
+            blend_field_name="clicks",
+            blend_field_display_name="Clicks",
+            blend_datasource_fields=[
+                BlendDatasourceFieldRef(
+                    datasource_field_name="Clicks", field_source="standard", blend_data_source_key=GA4_KEY
+                ),
+                BlendDatasourceFieldRef(
+                    datasource_field_name="Clicks", field_source="standard", blend_data_source_key=ADS_KEY
+                ),
+            ],
+        )
+    ]
+)
+
+with SupermetricsClient(api_key="your_key") as client:
+    blend = client.blends.create(
+        team_id=12345,
+        display_name="Clicks, everywhere",
+        blend_type="union",
+        blended_data_sources=sources,
+        config=config,
+    )
+    print(blend.blend_id)
+```
+
+#### update()
+
+Replace an existing blend.
+
+```python
+blend = client.blends.update(
+    team_id=12345,
+    blend_id=569,
+    display_name="GA4 + Google Ads, revised",
+    blended_data_sources=[ga4, ads],
+    config=config,
+)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `blend_id` (int, required): Unique identifier of the blend to replace
+- `display_name` (str, required): User-facing name shown in the UI
+- `blended_data_sources` (list[BlendedDataSourceInput], required): The complete set of
+  sources the blend draws on, sent as a **bare list**. A source left out of it is removed
+  from the blend
+- `config` (BlendConfig, required): Field mappings, and for a join blend the primary table
+  and the joins
+- `description` (str, optional): Free-text description of the blend
+
+`description` is keyword-only.
+
+**Returns:** `BlendOutput` — the updated blend. The API answers **HTTP 200** on success.
+
+**Raises:** `SupermetricsAuthError`, `SupermetricsForbiddenError`, `SupermetricsNotFoundError` (404 if not found), `SupermetricsValidationError` (**400** on a rejected definition), `SupermetricsRateLimitError`, `SupermetricsServerError`, `NetworkError`
+
+> **`update()` is not `create()` with an id attached.** Two differences, both upstream's:
+>
+> 1. **There is no `blend_type` parameter.** A blend's kind is fixed at creation, so the
+>    request body does not carry it at all.
+> 2. **It is a whole-object replace.** There is no PATCH endpoint. `display_name`,
+>    `blended_data_sources` and `config` are required and resent in full on every call, so
+>    a source left out of `blended_data_sources` or a field left out of `config` is dropped
+>    from the blend. `description` is the only optional parameter; omit it and no
+>    `description` key is sent.
+
+> **One update body may carry both ids and keys.** A source that already exists is addressed
+> by `blend_data_source_id`, with `blend_data_source_key=None`; a source being added in the
+> same call has no id yet and takes a fresh eight-character key. Field and join references
+> follow the same rule, one attribute or the other per reference.
+
+**Example** — the read-modify-write cycle, which is where the request/response asymmetry
+bites: the response objects are a different type from the request objects, so they have to
+be rebuilt rather than handed back.
+
+```python
+from supermetrics import (
+    BlendConfig,
+    BlendDatasourceFieldRef,
+    BlendField,
+    BlendedDataSourceInput,
+    SupermetricsClient,
+)
+from supermetrics._generated.supermetrics_api_client.types import Unset
+
+with SupermetricsClient(api_key="your_key") as client:
+    current = client.blends.get(team_id=12345, blend_id=569)
+
+    # Read: rebuild the request objects out of the wrapped response. These sources all
+    # exist already, so each is addressed by its id and its key is None.
+    sources = [
+        BlendedDataSourceInput(
+            data_source_id=source.data_source_id,
+            blend_data_source_id=source.blend_data_source_id,
+            blend_data_source_key=None,
+            report_type=None if isinstance(source.report_type, Unset) else source.report_type,
+            report_type_settings=[],
+            display_name=source.display_name,
+        )
+        for source in current.blended_data_sources.items
+    ]
+
+    # blend_field_type and blend_field_data_type come back on every field but have no
+    # place in the request, so they are dropped here and re-inferred upstream.
+    fields = [
+        BlendField(
+            blend_field_name=field.blend_field_name,
+            blend_field_display_name=field.blend_field_display_name,
+            blend_datasource_fields=[
+                BlendDatasourceFieldRef(
+                    datasource_field_name=ref.datasource_field_name,
+                    field_source=ref.field_source,
+                    blend_data_source_id=ref.blend_data_source_id,
+                    datasource_field_type=ref.datasource_field_type,
+                    datasource_field_data_type=ref.datasource_field_data_type,
+                )
+                for ref in field.blend_datasource_fields.items
+            ],
+        )
+        for field in current.config.fields.items
+    ]
+
+    # Modify: rename the blend and keep everything else.
+    updated = client.blends.update(
+        team_id=12345,
+        blend_id=569,
+        display_name=f"{current.display_name} (revised)",
+        blended_data_sources=sources,
+        config=BlendConfig(fields=fields),
+        description=current.description,
+    )
+    print(f"{updated.display_name} now has {len(updated.config.fields.items)} field(s)")
+```
+
+The rebuild above assumes a union blend. A join blend also needs `query_table` and `joins`
+reconstructed, from `current.config.query_table` and `current.config.joins.items`, again by
+id rather than by key.
+
+#### delete()
+
+Delete a blend.
+
+```python
+client.blends.delete(team_id=12345, blend_id=569)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `blend_id` (int, required): Unique identifier of the blend to delete
+
+**Returns:** `None`. The API answers **HTTP 204 No Content** on success, so there is no body
+to return and nothing to inspect.
+
+**Raises:** `SupermetricsAuthError`, `SupermetricsForbiddenError`, `SupermetricsNotFoundError` (404 if not found), `SupermetricsValidationError` (400), `SupermetricsRateLimitError`, `SupermetricsServerError`, `NetworkError`
+
+**Example:**
+
+```python
+from supermetrics import SupermetricsClient
+from supermetrics.exceptions import SupermetricsNotFoundError
+
+with SupermetricsClient(api_key="your_key") as client:
+    try:
+        client.blends.delete(team_id=12345, blend_id=569)
+    except SupermetricsNotFoundError:
+        print("Already gone")
+```
+
+Deletion is not idempotent from the caller's point of view: a second call 404s. Use
+`with_raw_response` if you want to assert on the 204 itself.
+
+```python
+response = client.with_raw_response.blends.delete(team_id=12345, blend_id=569)
+assert response.status_code == 204
+assert response.data is None
+```
+
+**Async usage** (all five methods above are also available on `BlendsAsyncResource`):
+
+```python
+import asyncio
+
+from supermetrics import (
+    BlendConfig,
+    BlendDatasourceFieldRef,
+    BlendField,
+    BlendedDataSourceInput,
+    SupermetricsAsyncClient,
+)
+
+
+async def main():
+    async with SupermetricsAsyncClient(api_key="your_key") as client:
+        joins, unions = await asyncio.gather(
+            client.blends.list(team_id=12345, blend_type="join"),
+            client.blends.list(team_id=12345, blend_type="union"),
+        )
+        print(f"{len(joins)} join blends, {len(unions)} union blends")
+
+        created = await client.blends.create(
+            team_id=12345,
+            display_name="Clicks, everywhere",
+            blend_type="union",
+            blended_data_sources=[
+                BlendedDataSourceInput(
+                    data_source_id="GA4",
+                    blend_data_source_id=None,
+                    blend_data_source_key="ga4a0001",
+                    report_type=None,
+                    report_type_settings=[],
+                )
+            ],
+            config=BlendConfig(
+                fields=[
+                    BlendField(
+                        blend_field_name="clicks",
+                        blend_field_display_name="Clicks",
+                        blend_datasource_fields=[
+                            BlendDatasourceFieldRef(
+                                datasource_field_name="Clicks",
+                                field_source="standard",
+                                blend_data_source_key="ga4a0001",
+                            )
+                        ],
+                    )
+                ]
+            ),
+        )
+        await client.blends.delete(team_id=12345, blend_id=created.blend_id)
+
+
+asyncio.run(main())
+```
+
+---
+
 ## Models
 
 ### Backfill
@@ -3744,6 +4354,674 @@ One transfer in a `DestinationUsage` report.
 
 - `transfer_id` (int, required): Identifier of the transfer
 - `transfer_name` (str, required): Display name of the transfer
+
+---
+
+### BlendOutput
+
+A whole blend, as `blends.get()`, `blends.create()`, and `blends.update()` return it. Every
+attribute is optional upstream, so each is typed `... | Unset`.
+
+**Attributes:**
+
+- `blend_id` (int | Unset): Unique identifier of the blend. Pass this to `get()`,
+  `update()`, and `delete()`
+- `blend_uuid` (UUID | Unset): Stable UUID of the blend, parsed into a **`uuid.UUID`** and
+  not left as a string
+- `type_` (`"join"` | `"union"` | Unset): Blend kind, fixed at creation. Serialized as
+  `"type"`
+- `display_name` (str | Unset): User-facing name shown in the UI
+- `description` (str | None | Unset): Free-text description
+- `modified_time_utc` (datetime | Unset): Timestamp of the last modification. Serialized
+  with a numeric offset (`"+0000"`) rather than a trailing `"Z"`, and parsed into a
+  **timezone-aware** `datetime`
+- `last_modify_user_email` (str | Unset): Email of the user who last modified the blend
+- `blended_data_sources` (BlendOutputBlendedDataSources | Unset): Wrapper holding the
+  sources. **They are at `.blended_data_sources.items`**, a
+  `list[`[`BlendedDataSourceOutput`](#blendeddatasourceoutput)`]`
+- `config` (BlendConfigOutput | Unset): The field mappings and, on a join blend, the primary
+  table and joins. See [`BlendConfigOutput`](#blendconfigoutput)
+
+> **This object cannot be handed back to `update()`.** It is a different type from the
+> request models at every level: collections are wrapped instead of bare,
+> `blend_data_source_key` is gone, and `blend_field_type` / `blend_field_data_type` have
+> been added. A read-modify-write rebuilds
+> [`BlendedDataSourceInput`](#blendeddatasourceinput) and [`BlendConfig`](#blendconfig)
+> objects from it — see the [`update()` example](#update-3).
+
+**Example:**
+
+```python
+import datetime
+
+blend = client.blends.get(team_id=12345, blend_id=569)
+
+print(f"{blend.display_name} ({blend.type_}) — {blend.blend_uuid}")
+
+# modified_time_utc is tz-aware, so it compares directly against an aware datetime
+age = datetime.datetime.now(datetime.UTC) - blend.modified_time_utc
+print(f"Last touched {age.days} days ago by {blend.last_modify_user_email}")
+
+for source in blend.blended_data_sources.items:
+    print(f"  {source.data_source_id} (blend_data_source_id={source.blend_data_source_id})")
+```
+
+---
+
+### BlendListItemOutput
+
+A blend summary, as `blends.list()` returns them. Every attribute is optional upstream.
+
+**Attributes:**
+
+- `blend_id` (int | Unset): Unique identifier of the blend
+- `blend_uuid` (UUID | Unset): Stable UUID of the blend, parsed into a `uuid.UUID`
+- `type_` (`"join"` | `"union"` | Unset): Blend kind. Serialized as `"type"`
+- `display_name` (str | Unset): User-facing name shown in the UI
+- `description` (str | None | Unset): Free-text description
+- `modified_time_utc` (datetime | Unset): Timestamp of the last modification, timezone-aware
+- `last_modify_user_email` (str | Unset): Email of the user who last modified the blend
+- `blended_data_sources` (BlendListItemOutputBlendedDataSources | Unset): Wrapper holding
+  the sources at `.items`, a `list[`[`BlendListDataSourceOutput`](#blendlistdatasourceoutput)`]`
+
+> **A summary is not a small `BlendOutput`.** It has **no `config`** — no fields, no joins,
+> no query table — and its data sources carry four attributes rather than ten. Anything
+> beyond the list above requires a [`get()`](#get-8) per blend.
+
+**Example:**
+
+```python
+summaries = client.blends.list(team_id=12345)
+
+# The summary is enough to pick one; the fields need a second call.
+for summary in summaries:
+    print(f"{summary.blend_id}: {summary.display_name} ({summary.type_})")
+
+blend = client.blends.get(team_id=12345, blend_id=summaries[0].blend_id)
+print([field.blend_field_name for field in blend.config.fields.items])
+```
+
+---
+
+### BlendListDataSourceOutput
+
+The reduced view of a data source that appears inside a
+[`BlendListItemOutput`](#blendlistitemoutput). Every attribute is optional upstream.
+
+**Attributes:**
+
+- `blend_data_source_id` (int | Unset): Internal ID of the source within the blend
+- `data_source_id` (str | Unset): Data source identifier (example: `"GA4"`)
+- `display_name` (str | Unset): Display name of the data source
+- `logo_url` (str | Unset): URL of the data source's logo
+
+Settings, accounts, segments, and report type are absent here; they are on
+[`BlendedDataSourceOutput`](#blendeddatasourceoutput), which only `get()`, `create()`, and
+`update()` return.
+
+**Example:**
+
+```python
+for summary in client.blends.list(team_id=12345):
+    names = [source.display_name for source in summary.blended_data_sources.items]
+    print(f"{summary.display_name}: {', '.join(names)}")
+```
+
+---
+
+### BlendConfigOutput
+
+The read side of a blend's configuration. Every attribute is optional upstream.
+
+**Attributes:**
+
+- `fields` (BlendConfigOutputFields | Unset): Wrapper holding the blend's fields at
+  `.fields.items`, a `list[`[`BlendFieldOutput`](#blendfieldoutput)`]`
+- `query_table` (BlendConfigOutputQueryTable | Unset): The primary (left-hand) source of a
+  join blend, carrying only `blend_data_source_id`
+- `joins` (BlendConfigOutputJoins | Unset): Wrapper holding the joins at `.joins.items`, a
+  `list[`[`BlendJoinOutput`](#blendjoinoutput)`]`
+
+> **On a union blend, `query_table` and `joins` are `Unset`, not `None`.** They are absent
+> from the JSON rather than null, so the generated model leaves the sentinel in place. Guard
+> them with `isinstance(config.joins, Unset)`; `config.joins is None` is false and the
+> `.items` access after it raises `AttributeError`.
+
+**Example:**
+
+```python
+from supermetrics._generated.supermetrics_api_client.types import Unset
+
+config = client.blends.get(team_id=12345, blend_id=569).config
+
+for field in config.fields.items:
+    print(field.blend_field_name)
+
+if isinstance(config.joins, Unset):
+    print("union blend: no joins, no query table")
+else:
+    print(f"join blend on source {config.query_table.blend_data_source_id}")
+    for join in config.joins.items:
+        print(f"  {join.type_} join with {join.join_table.blend_data_source_id}")
+```
+
+---
+
+### BlendFieldOutput
+
+One field of a blend, on the read side: the blend's own column plus the per-source fields
+that feed it. Every attribute is optional upstream.
+
+**Attributes:**
+
+- `blend_field_name` (str | Unset): Machine name of the blend field (example:
+  `"impressions"`). Fixed once created
+- `blend_field_display_name` (str | Unset): User-facing name shown in the UI
+- `blend_field_type` (`"dim"` | `"met"` | Unset): Dimension or metric. **Response-only** —
+  upstream infers it from the mapped fields
+- `blend_field_data_type` (str | Unset): Data type of the field (example:
+  `"int.number.value"`). **Response-only**, inferred the same way
+- `blend_datasource_fields` (BlendFieldOutputBlendDatasourceFields | Unset): Wrapper holding
+  the per-source mappings at `.items`, a
+  `list[`[`BlendDatasourceFieldRefOutput`](#blenddatasourcefieldrefoutput)`]`
+
+> **Two of these five attributes have no request counterpart.** [`BlendField`](#blendfield)
+> has `blend_field_name`, `blend_field_display_name`, and `blend_datasource_fields` and
+> nothing else, so `blend_field_type` and `blend_field_data_type` are dropped when rebuilding
+> a field for `update()` and re-inferred upstream.
+
+**Example:**
+
+```python
+blend = client.blends.get(team_id=12345, blend_id=569)
+
+for field in blend.config.fields.items:
+    kind = "dimension" if field.blend_field_type == "dim" else "metric"
+    print(f"{field.blend_field_display_name} — {kind}, {field.blend_field_data_type}")
+    for ref in field.blend_datasource_fields.items:
+        print(f"  source {ref.blend_data_source_id}: {ref.datasource_field_name}")
+```
+
+---
+
+### BlendDatasourceFieldRefOutput
+
+The read side of a per-source field reference. Every attribute is optional upstream.
+
+**Attributes:**
+
+- `blend_data_source_id` (int | None | Unset): The source this field comes from
+- `datasource_field_name` (str | Unset): Field name as the data source defines it
+- `datasource_field_display_name` (str | Unset): Display name of that field
+- `datasource_field_type` (`"dim"` | `"met"` | Unset): Dimension or metric
+- `datasource_field_data_type` (str | Unset): Data type of the field
+- `field_source` (`"standard"` | `"transformation"` | `"data_source_account_custom"` | Unset):
+  Where the field comes from — the data source itself, a custom field, or an account-level
+  custom field
+- `meta` (BlendDatasourceFieldRefOutputMetaType0 | None | Unset): Free-form metadata, whose
+  contents live in `.additional_properties`
+
+> **There is no `blend_data_source_key` here.** The key is a request-scoped alias, so the
+> response only ever speaks in `blend_data_source_id`. This is the read counterpart of
+> [`BlendDatasourceFieldRef`](#blenddatasourcefieldref), which has both.
+
+**Example:**
+
+```python
+from supermetrics._generated.supermetrics_api_client.types import Unset
+
+field = client.blends.get(team_id=12345, blend_id=569).config.fields.items[0]
+
+for ref in field.blend_datasource_fields.items:
+    print(f"{ref.datasource_field_name} ({ref.field_source}) from {ref.blend_data_source_id}")
+    if ref.meta is not None and not isinstance(ref.meta, Unset):
+        print(f"  meta: {ref.meta.additional_properties}")
+```
+
+---
+
+### BlendJoinOutput
+
+The read side of one join between the primary table and another source. Every attribute is
+optional upstream.
+
+**Attributes:**
+
+- `join_table` (BlendJoinOutputJoinTable | Unset): The joined source, carrying only
+  `blend_data_source_id`
+- `type_` (`"inner"` | `"left"` | `"right"` | `"full outer"` | Unset): Join type. Serialized
+  as `"type"`
+- `conditions` (BlendJoinOutputConditions | Unset): Wrapper holding the conditions at
+  `.conditions.items`, a `list[BlendJoinConditionOutput]` — each with `operator`, `left`,
+  and `right`, the last two being
+  [`BlendDatasourceFieldRefOutput`](#blenddatasourcefieldrefoutput)
+
+**Example:**
+
+```python
+config = client.blends.get(team_id=12345, blend_id=569).config
+
+for join in config.joins.items:
+    print(f"{join.type_} join with source {join.join_table.blend_data_source_id}")
+    for condition in join.conditions.items:
+        left, right = condition.left, condition.right
+        print(
+            f"  {left.blend_data_source_id}.{left.datasource_field_name}"
+            f" {condition.operator} "
+            f"{right.blend_data_source_id}.{right.datasource_field_name}"
+        )
+```
+
+---
+
+### BlendedDataSourceOutput
+
+The read side of one data source in a blend, as it appears at
+`blend.blended_data_sources.items`. Every attribute is optional upstream.
+
+**Attributes:**
+
+- `blend_data_source_id` (int | Unset): Internal ID of the source within the blend. This is
+  what field and join references point at on the read side
+- `blend_id` (int | Unset): ID of the blend this source belongs to
+- `data_source_id` (str | Unset): Data source identifier (example: `"GA4"`)
+- `display_name` (str | Unset): Display name of the data source
+- `data_source_settings` (BlendedDataSourceOutputDataSourceSettings | Unset): Wrapper whose
+  `.items` are **untyped** objects
+- `accounts` (BlendedDataSourceOutputAccounts | Unset): Wrapper whose `.items` are
+  **untyped** objects
+- `segments` (BlendedDataSourceOutputSegments | Unset): Wrapper whose `.items` are
+  **untyped** objects
+- `report_type` (str | None | Unset): Report type ID, if the source has one
+- `report_type_settings` (BlendedDataSourceOutputReportTypeSettings | Unset): Wrapper whose
+  `.items` are **untyped** objects
+- `logo_url` (str | Unset): URL of the data source's logo
+
+> **The settings, accounts, and segments items have no declared attributes.** Upstream
+> models them as free-form objects on the response side only, so the generated classes
+> expose nothing but `additional_properties` — read them by key, not by attribute:
+> `source.accounts.items[0].additional_properties["account_id"]`. The *request* side is
+> typed: [`BlendedDataSourceInput`](#blendeddatasourceinput) takes real
+> `BlendedDataSourceInputAccountsItem` objects with `.account_id` and `.account_name`.
+
+**Example:**
+
+```python
+blend = client.blends.get(team_id=12345, blend_id=569)
+
+for source in blend.blended_data_sources.items:
+    print(f"{source.display_name} ({source.data_source_id}), report type {source.report_type}")
+
+    for setting in source.data_source_settings.items:
+        # Untyped on the way out: everything is in additional_properties.
+        properties = setting.additional_properties
+        print(f"  {properties['id']} = {properties['value']!r}")
+
+    for account in source.accounts.items:
+        print(f"  account {account.additional_properties['account_id']}")
+```
+
+---
+
+### BlendedDataSourceInput
+
+One data source in a `create()` or `update()` request. Importable from `supermetrics`.
+
+**Attributes:**
+
+- `data_source_id` (str, required): Data source identifier, i.e. the connector ID (example:
+  `"GA4"`)
+- `blend_data_source_id` (int | None, required): Internal ID of an **existing** source in
+  the blend. `None` when creating a new one
+- `blend_data_source_key` (None | str, required): Temporary alias for a **new** source,
+  exactly eight lowercase alphanumerics. `None` when addressing an existing one by id
+- `report_type` (None | str, required): Report type ID, if the source supports report types
+- `report_type_settings` (list[BlendedDataSourceInputReportTypeSettingsItem], required):
+  Settings for the selected report type, each an `id` and a `value` that may be a string,
+  an integer, a boolean, or `None`
+- `display_name` (str | Unset): Display name of the source. Defaults upstream to the data
+  source's own name
+- `data_source_settings` (list[BlendedDataSourceInputDataSourceSettingsItem] | Unset):
+  Settings applied when querying the source, same `id`/`value` shape
+- `accounts` (list[BlendedDataSourceInputAccountsItem] | Unset): Accounts to query, each
+  with `account_id`, `account_name`, `group_name`, `data_source_username`, and
+  `data_source_display_username`
+- `segments` (list[BlendedDataSourceInputSegmentsItem] | Unset): Segments to apply, each
+  with `id` and `name`
+
+> **The first five arguments are required but nullable, and three of them are usually
+> empty.** Upstream marks them `required` *and* `nullable`: they must appear in the JSON
+> even when there is nothing to say. So a create typically reads
+> `blend_data_source_id=None, blend_data_source_key="abcd1234", report_type=None,
+> report_type_settings=[]`. They have no defaults in the generated model, so omitting one is
+> a `TypeError`, not a silently absent key.
+
+> **Exactly one of the id and the key identifies the source.** A new source has a key and a
+> `None` id; an existing one has an id and a `None` key. Field and join references in the
+> same request must point at whichever of the two the source was given.
+
+**Example:**
+
+```python
+from supermetrics import (
+    BlendedDataSourceInput,
+    BlendedDataSourceInputAccountsItem,
+    BlendedDataSourceInputDataSourceSettingsItem,
+    BlendedDataSourceInputSegmentsItem,
+)
+
+# New source, named by a key for the rest of the request
+new_source = BlendedDataSourceInput(
+    data_source_id="GA4",
+    blend_data_source_id=None,
+    blend_data_source_key="abcd1234",
+    report_type=None,
+    report_type_settings=[],
+    display_name="Google Analytics 4",
+    data_source_settings=[
+        BlendedDataSourceInputDataSourceSettingsItem(id="currency", value="EUR"),
+        BlendedDataSourceInputDataSourceSettingsItem(id="row_limit", value=1000),
+        BlendedDataSourceInputDataSourceSettingsItem(id="include_empty", value=False),
+        BlendedDataSourceInputDataSourceSettingsItem(id="timezone", value=None),
+    ],
+    accounts=[BlendedDataSourceInputAccountsItem(account_id="1234567890", account_name="Acme Corp")],
+    segments=[BlendedDataSourceInputSegmentsItem(id="organic_traffic", name="Organic Traffic")],
+)
+
+# Existing source on an update, addressed by its id
+existing_source = BlendedDataSourceInput(
+    data_source_id="GAWA",
+    blend_data_source_id=146715,
+    blend_data_source_key=None,
+    report_type=None,
+    report_type_settings=[],
+)
+```
+
+---
+
+### BlendConfig
+
+The write side of a blend's configuration, passed to `create()` and `update()`. Importable
+from `supermetrics`. Every attribute is optional.
+
+**Attributes:**
+
+- `fields` (list[BlendField] | Unset): The blend's fields, sent as a **bare list**
+- `query_table` (BlendConfigQueryTable | Unset): The primary (left-hand) source. Join blends
+  only
+- `joins` (list[BlendJoin] | Unset): The joins, sent as a **bare list**. Join blends only
+
+> **Nothing here enforces the union/join distinction.** Upstream models this as one loose
+> object with all three attributes optional rather than as a discriminated union, so the
+> generated layer will happily send `joins` on a union blend or a `join` blend with no
+> `query_table`. The API is what rejects those, with an HTTP 400.
+
+**Example:**
+
+```python
+from supermetrics import BlendConfig, BlendConfigQueryTable, BlendField
+
+# Union blend: fields only
+union_config = BlendConfig(fields=[BlendField(blend_field_name="clicks", blend_datasource_fields=[])])
+
+# Join blend: fields, plus a primary table and one join per other source
+join_config = BlendConfig(
+    fields=[BlendField(blend_field_name="clicks", blend_datasource_fields=[])],
+    query_table=BlendConfigQueryTable(blend_data_source_key="abcd1234"),
+    joins=[],
+)
+```
+
+---
+
+### BlendField
+
+The write side of one blend field: the blend's own column and the per-source fields that
+feed it. Importable from `supermetrics`.
+
+**Attributes:**
+
+- `blend_field_name` (str, required): Machine name of the field (example: `"impressions"`).
+  Cannot be changed once created
+- `blend_datasource_fields` (list[BlendDatasourceFieldRef], required): The per-source
+  mappings, sent as a **bare list**
+- `blend_field_display_name` (str | Unset): User-facing name shown in the UI
+
+There is no way to set the field's type or data type. Upstream infers both from the mapped
+source fields and returns them on [`BlendFieldOutput`](#blendfieldoutput).
+
+**Example:**
+
+```python
+from supermetrics import BlendDatasourceFieldRef, BlendField
+
+# A union blend maps the same logical column across every source
+clicks = BlendField(
+    blend_field_name="clicks",
+    blend_field_display_name="Clicks",
+    blend_datasource_fields=[
+        BlendDatasourceFieldRef(
+            datasource_field_name="Clicks", field_source="standard", blend_data_source_key="abcd1234"
+        ),
+        BlendDatasourceFieldRef(
+            datasource_field_name="Clicks", field_source="standard", blend_data_source_key="efgh5678"
+        ),
+    ],
+)
+```
+
+---
+
+### BlendDatasourceFieldRef
+
+A reference to one field inside one data source, used both in a [`BlendField`](#blendfield)
+mapping and on each side of a [`BlendJoinCondition`](#blendjoincondition). Importable from
+`supermetrics`.
+
+**Attributes:**
+
+- `datasource_field_name` (str, required): Field name as the data source defines it
+  (example: `"Date"`)
+- `field_source` (`"standard"` | `"transformation"` | `"data_source_account_custom"`, required):
+  Where the field comes from — `"standard"` for a native field, `"transformation"` for a
+  custom field, `"data_source_account_custom"` for an account-level custom field
+- `blend_data_source_id` (int | None | Unset): The existing source this field comes from
+- `blend_data_source_key` (None | str | Unset): The new source this field comes from, by its
+  eight-character request key
+- `datasource_field_display_name` (str | Unset): Display name of the field
+- `datasource_field_type` (`"dim"` | `"met"` | Unset): Dimension or metric
+- `datasource_field_data_type` (str | Unset): Data type of the field (example:
+  `"string.time.date"`)
+- `meta` (BlendDatasourceFieldRefMetaType0 | None | Unset): Free-form metadata, e.g.
+  account-level overrides
+
+> **Set the id or the key, never neither.** At least one of `blend_data_source_id` and
+> `blend_data_source_key` must be non-null, and it has to match how the source itself was
+> identified in `blended_data_sources`. Both default to `UNSET`, so a reference that names
+> no source is constructible and is rejected upstream with a 400.
+
+**Example:**
+
+```python
+from supermetrics import BlendDatasourceFieldRef
+
+# On create, every source is new, so references point at keys
+by_key = BlendDatasourceFieldRef(
+    datasource_field_name="Date",
+    field_source="standard",
+    blend_data_source_key="abcd1234",
+    datasource_field_type="dim",
+    datasource_field_data_type="string.time.date",
+)
+
+# On update, a source that already exists is pointed at by id
+by_id = BlendDatasourceFieldRef(
+    datasource_field_name="Date",
+    field_source="standard",
+    blend_data_source_id=146715,
+)
+```
+
+---
+
+### BlendDatasourceFieldRefMetaType0
+
+The optional `meta` object on a [`BlendDatasourceFieldRef`](#blenddatasourcefieldref).
+Importable from `supermetrics`.
+
+Upstream declares it as an open-ended object with no fixed properties, so the generated
+model has **no declared attributes at all** — the contents live in `additional_properties`,
+which is declared `init=False`.
+
+> **The constructor takes no mapping.** `BlendDatasourceFieldRefMetaType0({"a": "b"})` is a
+> `TypeError`. Build it empty and assign the entries, either through the item accessors or
+> by replacing `additional_properties` wholesale — the same shape as
+> [`LookupStepMap`](#lookupstepmap).
+
+On the read side, `meta` is parsed by a try/except cascade: a JSON `null` becomes `None` and
+an object becomes a `BlendDatasourceFieldRefOutputMetaType0`, again with everything in
+`.additional_properties`.
+
+**Example:**
+
+```python
+from supermetrics import BlendDatasourceFieldRef, BlendDatasourceFieldRefMetaType0
+
+meta = BlendDatasourceFieldRefMetaType0()
+meta["account_id"] = "1234567890"
+
+ref = BlendDatasourceFieldRef(
+    datasource_field_name="Custom Conversion",
+    field_source="data_source_account_custom",
+    blend_data_source_key="abcd1234",
+    meta=meta,
+)
+```
+
+---
+
+### BlendJoin
+
+One join between the primary table and another source, in a join blend's
+[`BlendConfig`](#blendconfig). Importable from `supermetrics`. All three attributes are
+required.
+
+**Attributes:**
+
+- `join_table` (BlendJoinJoinTable, required): The source being joined in
+- `type_` (`"inner"` | `"left"` | `"right"` | `"full outer"`, required): Join type.
+  Serializes to `"type"`
+- `conditions` (list[BlendJoinCondition], required): How the two sources are matched, sent
+  as a **bare list**
+
+A join blend needs one `BlendJoin` per source beyond the primary table. Union blends have
+none, and sending one is an upstream 400.
+
+**Example:**
+
+```python
+from supermetrics import BlendDatasourceFieldRef, BlendJoin, BlendJoinCondition, BlendJoinJoinTable
+
+join = BlendJoin(
+    join_table=BlendJoinJoinTable(blend_data_source_key="efgh5678"),
+    type_="left",
+    conditions=[
+        BlendJoinCondition(
+            operator="=",
+            left=BlendDatasourceFieldRef(
+                datasource_field_name="Date", field_source="standard", blend_data_source_key="abcd1234"
+            ),
+            right=BlendDatasourceFieldRef(
+                datasource_field_name="Date", field_source="standard", blend_data_source_key="efgh5678"
+            ),
+        )
+    ],
+)
+```
+
+---
+
+### BlendJoinCondition
+
+One equality between a field on each side of a [`BlendJoin`](#blendjoin). Importable from
+`supermetrics`. All three attributes are required.
+
+**Attributes:**
+
+- `operator` (`"="`, required): Comparison operator. `"="` is the only value upstream
+  accepts
+- `left` (BlendDatasourceFieldRef, required): The field on the primary table
+- `right` (BlendDatasourceFieldRef, required): The field on the joined table
+
+Both sides are full [`BlendDatasourceFieldRef`](#blenddatasourcefieldref) objects, so each
+names its own source by id or by key.
+
+**Example:**
+
+```python
+from supermetrics import BlendDatasourceFieldRef, BlendJoinCondition
+
+condition = BlendJoinCondition(
+    operator="=",
+    left=BlendDatasourceFieldRef(
+        datasource_field_name="Campaign ID", field_source="standard", blend_data_source_key="abcd1234"
+    ),
+    right=BlendDatasourceFieldRef(
+        datasource_field_name="Campaign ID", field_source="standard", blend_data_source_key="efgh5678"
+    ),
+)
+```
+
+---
+
+### BlendJoinJoinTable
+
+Names the source on the right-hand side of a [`BlendJoin`](#blendjoin). Importable from
+`supermetrics`. Both attributes are optional, but one of them has to be set.
+
+**Attributes:**
+
+- `blend_data_source_id` (int | None | Unset): The existing source being joined in
+- `blend_data_source_key` (None | str | Unset): The new source being joined in, by its
+  eight-character request key
+
+**Example:**
+
+```python
+from supermetrics import BlendJoinJoinTable
+
+on_create = BlendJoinJoinTable(blend_data_source_key="efgh5678")
+on_update = BlendJoinJoinTable(blend_data_source_id=146715)
+```
+
+---
+
+### BlendConfigQueryTable
+
+Names the primary (left-hand) source of a join blend, at `config.query_table`. Importable
+from `supermetrics`. Both attributes are optional, but one of them has to be set.
+
+**Attributes:**
+
+- `blend_data_source_id` (int | None | Unset): The existing source used as the primary table
+- `blend_data_source_key` (None | str | Unset): The new source used as the primary table, by
+  its eight-character request key
+
+Union blends leave `config.query_table` out entirely, and it comes back `Unset` on the read
+side rather than `None`.
+
+**Example:**
+
+```python
+from supermetrics import BlendConfig, BlendConfigQueryTable, BlendField
+
+config = BlendConfig(
+    query_table=BlendConfigQueryTable(blend_data_source_key="abcd1234"),
+    joins=[],
+    fields=[BlendField(blend_field_name="clicks", blend_datasource_fields=[])],
+)
+```
 
 ---
 

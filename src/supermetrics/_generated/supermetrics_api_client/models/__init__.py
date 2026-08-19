@@ -7,6 +7,67 @@ from .backfill import Backfill
 from .backfill_response import BackfillResponse
 from .backfill_response_meta import BackfillResponseMeta
 from .backfill_status import BackfillStatus
+from .blend_base_request import BlendBaseRequest
+from .blend_config import BlendConfig
+from .blend_config_output import BlendConfigOutput
+from .blend_config_output_fields import BlendConfigOutputFields
+from .blend_config_output_joins import BlendConfigOutputJoins
+from .blend_config_output_query_table import BlendConfigOutputQueryTable
+from .blend_config_query_table import BlendConfigQueryTable
+from .blend_create_request import BlendCreateRequest
+from .blend_create_request_type import BlendCreateRequestType
+from .blend_datasource_field_ref import BlendDatasourceFieldRef
+from .blend_datasource_field_ref_datasource_field_type import BlendDatasourceFieldRefDatasourceFieldType
+from .blend_datasource_field_ref_field_source import BlendDatasourceFieldRefFieldSource
+from .blend_datasource_field_ref_meta_type_0 import BlendDatasourceFieldRefMetaType0
+from .blend_datasource_field_ref_output import BlendDatasourceFieldRefOutput
+from .blend_datasource_field_ref_output_datasource_field_type import BlendDatasourceFieldRefOutputDatasourceFieldType
+from .blend_datasource_field_ref_output_field_source import BlendDatasourceFieldRefOutputFieldSource
+from .blend_datasource_field_ref_output_meta_type_0 import BlendDatasourceFieldRefOutputMetaType0
+from .blend_field import BlendField
+from .blend_field_output import BlendFieldOutput
+from .blend_field_output_blend_datasource_fields import BlendFieldOutputBlendDatasourceFields
+from .blend_field_output_blend_field_type import BlendFieldOutputBlendFieldType
+from .blend_join import BlendJoin
+from .blend_join_condition import BlendJoinCondition
+from .blend_join_condition_operator import BlendJoinConditionOperator
+from .blend_join_condition_output import BlendJoinConditionOutput
+from .blend_join_condition_output_operator import BlendJoinConditionOutputOperator
+from .blend_join_join_table import BlendJoinJoinTable
+from .blend_join_output import BlendJoinOutput
+from .blend_join_output_conditions import BlendJoinOutputConditions
+from .blend_join_output_join_table import BlendJoinOutputJoinTable
+from .blend_join_output_type import BlendJoinOutputType
+from .blend_join_type import BlendJoinType
+from .blend_list_data_source_output import BlendListDataSourceOutput
+from .blend_list_item_output import BlendListItemOutput
+from .blend_list_item_output_blended_data_sources import BlendListItemOutputBlendedDataSources
+from .blend_list_item_output_type import BlendListItemOutputType
+from .blend_list_response import BlendListResponse
+from .blend_list_response_data import BlendListResponseData
+from .blend_output import BlendOutput
+from .blend_output_blended_data_sources import BlendOutputBlendedDataSources
+from .blend_output_type import BlendOutputType
+from .blend_response import BlendResponse
+from .blend_update_request import BlendUpdateRequest
+from .blended_data_source_input import BlendedDataSourceInput
+from .blended_data_source_input_accounts_item import BlendedDataSourceInputAccountsItem
+from .blended_data_source_input_data_source_settings_item import BlendedDataSourceInputDataSourceSettingsItem
+from .blended_data_source_input_report_type_settings_item import BlendedDataSourceInputReportTypeSettingsItem
+from .blended_data_source_input_segments_item import BlendedDataSourceInputSegmentsItem
+from .blended_data_source_output import BlendedDataSourceOutput
+from .blended_data_source_output_accounts import BlendedDataSourceOutputAccounts
+from .blended_data_source_output_accounts_items_item import BlendedDataSourceOutputAccountsItemsItem
+from .blended_data_source_output_data_source_settings import BlendedDataSourceOutputDataSourceSettings
+from .blended_data_source_output_data_source_settings_items_item import (
+    BlendedDataSourceOutputDataSourceSettingsItemsItem,
+)
+from .blended_data_source_output_report_type_settings import BlendedDataSourceOutputReportTypeSettings
+from .blended_data_source_output_report_type_settings_items_item import (
+    BlendedDataSourceOutputReportTypeSettingsItemsItem,
+)
+from .blended_data_source_output_segments import BlendedDataSourceOutputSegments
+from .blended_data_source_output_segments_items_item import BlendedDataSourceOutputSegmentsItemsItem
 from .change_transfer_state_request import ChangeTransferStateRequest
 from .change_transfer_state_request_transfer_state import ChangeTransferStateRequestTransferState
 from .change_transfer_state_response_400 import ChangeTransferStateResponse400
@@ -53,6 +114,14 @@ from .create_backfill_response_429 import CreateBackfillResponse429
 from .create_backfill_response_429_meta import CreateBackfillResponse429Meta
 from .create_backfill_response_500 import CreateBackfillResponse500
 from .create_backfill_response_500_meta import CreateBackfillResponse500Meta
+from .create_blend_response_400 import CreateBlendResponse400
+from .create_blend_response_400_meta import CreateBlendResponse400Meta
+from .create_blend_response_401 import CreateBlendResponse401
+from .create_blend_response_401_meta import CreateBlendResponse401Meta
+from .create_blend_response_429 import CreateBlendResponse429
+from .create_blend_response_429_meta import CreateBlendResponse429Meta
+from .create_blend_response_500 import CreateBlendResponse500
+from .create_blend_response_500_meta import CreateBlendResponse500Meta
 from .create_connector_body import CreateConnectorBody
 from .create_connector_response_401 import CreateConnectorResponse401
 from .create_connector_response_401_meta import CreateConnectorResponse401Meta
@@ -181,6 +250,16 @@ from .datasource_setting_context import DatasourceSettingContext
 from .datasource_setting_type import DatasourceSettingType
 from .definition_value import DefinitionValue
 from .definition_value_type import DefinitionValueType
+from .delete_blend_response_400 import DeleteBlendResponse400
+from .delete_blend_response_400_meta import DeleteBlendResponse400Meta
+from .delete_blend_response_401 import DeleteBlendResponse401
+from .delete_blend_response_401_meta import DeleteBlendResponse401Meta
+from .delete_blend_response_404 import DeleteBlendResponse404
+from .delete_blend_response_404_meta import DeleteBlendResponse404Meta
+from .delete_blend_response_429 import DeleteBlendResponse429
+from .delete_blend_response_429_meta import DeleteBlendResponse429Meta
+from .delete_blend_response_500 import DeleteBlendResponse500
+from .delete_blend_response_500_meta import DeleteBlendResponse500Meta
 from .delete_connector_response_400 import DeleteConnectorResponse400
 from .delete_connector_response_400_meta import DeleteConnectorResponse400Meta
 from .delete_connector_response_401 import DeleteConnectorResponse401
@@ -316,6 +395,16 @@ from .get_backfill_by_id_response_429 import GetBackfillByIdResponse429
 from .get_backfill_by_id_response_429_meta import GetBackfillByIdResponse429Meta
 from .get_backfill_by_id_response_500 import GetBackfillByIdResponse500
 from .get_backfill_by_id_response_500_meta import GetBackfillByIdResponse500Meta
+from .get_blend_response_400 import GetBlendResponse400
+from .get_blend_response_400_meta import GetBlendResponse400Meta
+from .get_blend_response_401 import GetBlendResponse401
+from .get_blend_response_401_meta import GetBlendResponse401Meta
+from .get_blend_response_404 import GetBlendResponse404
+from .get_blend_response_404_meta import GetBlendResponse404Meta
+from .get_blend_response_429 import GetBlendResponse429
+from .get_blend_response_429_meta import GetBlendResponse429Meta
+from .get_blend_response_500 import GetBlendResponse500
+from .get_blend_response_500_meta import GetBlendResponse500Meta
 from .get_connector_log_response_401 import GetConnectorLogResponse401
 from .get_connector_log_response_401_meta import GetConnectorLogResponse401Meta
 from .get_connector_log_response_403 import GetConnectorLogResponse403
@@ -420,6 +509,15 @@ from .get_login_link_response_429 import GetLoginLinkResponse429
 from .get_login_link_response_429_meta import GetLoginLinkResponse429Meta
 from .get_login_link_response_500 import GetLoginLinkResponse500
 from .get_login_link_response_500_meta import GetLoginLinkResponse500Meta
+from .get_team_blends_response_400 import GetTeamBlendsResponse400
+from .get_team_blends_response_400_meta import GetTeamBlendsResponse400Meta
+from .get_team_blends_response_401 import GetTeamBlendsResponse401
+from .get_team_blends_response_401_meta import GetTeamBlendsResponse401Meta
+from .get_team_blends_response_429 import GetTeamBlendsResponse429
+from .get_team_blends_response_429_meta import GetTeamBlendsResponse429Meta
+from .get_team_blends_response_500 import GetTeamBlendsResponse500
+from .get_team_blends_response_500_meta import GetTeamBlendsResponse500Meta
+from .get_team_blends_type import GetTeamBlendsType
 from .get_transfer_options_response_401 import GetTransferOptionsResponse401
 from .get_transfer_options_response_401_meta import GetTransferOptionsResponse401Meta
 from .get_transfer_options_response_403 import GetTransferOptionsResponse403
@@ -638,6 +736,16 @@ from .update_backfill_status_response_429 import UpdateBackfillStatusResponse429
 from .update_backfill_status_response_429_meta import UpdateBackfillStatusResponse429Meta
 from .update_backfill_status_response_500 import UpdateBackfillStatusResponse500
 from .update_backfill_status_response_500_meta import UpdateBackfillStatusResponse500Meta
+from .update_blend_response_400 import UpdateBlendResponse400
+from .update_blend_response_400_meta import UpdateBlendResponse400Meta
+from .update_blend_response_401 import UpdateBlendResponse401
+from .update_blend_response_401_meta import UpdateBlendResponse401Meta
+from .update_blend_response_404 import UpdateBlendResponse404
+from .update_blend_response_404_meta import UpdateBlendResponse404Meta
+from .update_blend_response_429 import UpdateBlendResponse429
+from .update_blend_response_429_meta import UpdateBlendResponse429Meta
+from .update_blend_response_500 import UpdateBlendResponse500
+from .update_blend_response_500_meta import UpdateBlendResponse500Meta
 from .update_connector_request import UpdateConnectorRequest
 from .update_connector_request_configuration import UpdateConnectorRequestConfiguration
 from .update_connector_request_configuration_configuration_json import (
@@ -758,6 +866,63 @@ __all__ = (
     "BackfillResponse",
     "BackfillResponseMeta",
     "BackfillStatus",
+    "BlendBaseRequest",
+    "BlendConfig",
+    "BlendConfigOutput",
+    "BlendConfigOutputFields",
+    "BlendConfigOutputJoins",
+    "BlendConfigOutputQueryTable",
+    "BlendConfigQueryTable",
+    "BlendCreateRequest",
+    "BlendCreateRequestType",
+    "BlendDatasourceFieldRef",
+    "BlendDatasourceFieldRefDatasourceFieldType",
+    "BlendDatasourceFieldRefFieldSource",
+    "BlendDatasourceFieldRefMetaType0",
+    "BlendDatasourceFieldRefOutput",
+    "BlendDatasourceFieldRefOutputDatasourceFieldType",
+    "BlendDatasourceFieldRefOutputFieldSource",
+    "BlendDatasourceFieldRefOutputMetaType0",
+    "BlendedDataSourceInput",
+    "BlendedDataSourceInputAccountsItem",
+    "BlendedDataSourceInputDataSourceSettingsItem",
+    "BlendedDataSourceInputReportTypeSettingsItem",
+    "BlendedDataSourceInputSegmentsItem",
+    "BlendedDataSourceOutput",
+    "BlendedDataSourceOutputAccounts",
+    "BlendedDataSourceOutputAccountsItemsItem",
+    "BlendedDataSourceOutputDataSourceSettings",
+    "BlendedDataSourceOutputDataSourceSettingsItemsItem",
+    "BlendedDataSourceOutputReportTypeSettings",
+    "BlendedDataSourceOutputReportTypeSettingsItemsItem",
+    "BlendedDataSourceOutputSegments",
+    "BlendedDataSourceOutputSegmentsItemsItem",
+    "BlendField",
+    "BlendFieldOutput",
+    "BlendFieldOutputBlendDatasourceFields",
+    "BlendFieldOutputBlendFieldType",
+    "BlendJoin",
+    "BlendJoinCondition",
+    "BlendJoinConditionOperator",
+    "BlendJoinConditionOutput",
+    "BlendJoinConditionOutputOperator",
+    "BlendJoinJoinTable",
+    "BlendJoinOutput",
+    "BlendJoinOutputConditions",
+    "BlendJoinOutputJoinTable",
+    "BlendJoinOutputType",
+    "BlendJoinType",
+    "BlendListDataSourceOutput",
+    "BlendListItemOutput",
+    "BlendListItemOutputBlendedDataSources",
+    "BlendListItemOutputType",
+    "BlendListResponse",
+    "BlendListResponseData",
+    "BlendOutput",
+    "BlendOutputBlendedDataSources",
+    "BlendOutputType",
+    "BlendResponse",
+    "BlendUpdateRequest",
     "ChangeTransferStateRequest",
     "ChangeTransferStateRequestTransferState",
     "ChangeTransferStateResponse400",
@@ -804,6 +969,14 @@ __all__ = (
     "CreateBackfillResponse429Meta",
     "CreateBackfillResponse500",
     "CreateBackfillResponse500Meta",
+    "CreateBlendResponse400",
+    "CreateBlendResponse400Meta",
+    "CreateBlendResponse401",
+    "CreateBlendResponse401Meta",
+    "CreateBlendResponse429",
+    "CreateBlendResponse429Meta",
+    "CreateBlendResponse500",
+    "CreateBlendResponse500Meta",
     "CreateConnectorBody",
     "CreateConnectorResponse401",
     "CreateConnectorResponse401Meta",
@@ -932,6 +1105,16 @@ __all__ = (
     "DataSourceType",
     "DefinitionValue",
     "DefinitionValueType",
+    "DeleteBlendResponse400",
+    "DeleteBlendResponse400Meta",
+    "DeleteBlendResponse401",
+    "DeleteBlendResponse401Meta",
+    "DeleteBlendResponse404",
+    "DeleteBlendResponse404Meta",
+    "DeleteBlendResponse429",
+    "DeleteBlendResponse429Meta",
+    "DeleteBlendResponse500",
+    "DeleteBlendResponse500Meta",
     "DeleteConnectorResponse400",
     "DeleteConnectorResponse400Meta",
     "DeleteConnectorResponse401",
@@ -1067,6 +1250,16 @@ __all__ = (
     "GetBackfillByIdResponse429Meta",
     "GetBackfillByIdResponse500",
     "GetBackfillByIdResponse500Meta",
+    "GetBlendResponse400",
+    "GetBlendResponse400Meta",
+    "GetBlendResponse401",
+    "GetBlendResponse401Meta",
+    "GetBlendResponse404",
+    "GetBlendResponse404Meta",
+    "GetBlendResponse429",
+    "GetBlendResponse429Meta",
+    "GetBlendResponse500",
+    "GetBlendResponse500Meta",
     "GetConnectorLogoResponse200",
     "GetConnectorLogoResponse401",
     "GetConnectorLogoResponse401Meta",
@@ -1171,6 +1364,15 @@ __all__ = (
     "GetLoginLinkResponse429Meta",
     "GetLoginLinkResponse500",
     "GetLoginLinkResponse500Meta",
+    "GetTeamBlendsResponse400",
+    "GetTeamBlendsResponse400Meta",
+    "GetTeamBlendsResponse401",
+    "GetTeamBlendsResponse401Meta",
+    "GetTeamBlendsResponse429",
+    "GetTeamBlendsResponse429Meta",
+    "GetTeamBlendsResponse500",
+    "GetTeamBlendsResponse500Meta",
+    "GetTeamBlendsType",
     "GetTransferOptionsResponse401",
     "GetTransferOptionsResponse401Meta",
     "GetTransferOptionsResponse403",
@@ -1387,6 +1589,16 @@ __all__ = (
     "UpdateBackfillStatusResponse429Meta",
     "UpdateBackfillStatusResponse500",
     "UpdateBackfillStatusResponse500Meta",
+    "UpdateBlendResponse400",
+    "UpdateBlendResponse400Meta",
+    "UpdateBlendResponse401",
+    "UpdateBlendResponse401Meta",
+    "UpdateBlendResponse404",
+    "UpdateBlendResponse404Meta",
+    "UpdateBlendResponse429",
+    "UpdateBlendResponse429Meta",
+    "UpdateBlendResponse500",
+    "UpdateBlendResponse500Meta",
     "UpdateConnectorRequest",
     "UpdateConnectorRequestConfiguration",
     "UpdateConnectorRequestConfigurationConfigurationJson",

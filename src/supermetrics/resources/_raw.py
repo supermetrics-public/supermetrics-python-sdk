@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING
 
 from supermetrics.resources.accounts import AccountsAsyncResource, AccountsResource
 from supermetrics.resources.backfills import BackfillsAsyncResource, BackfillsResource
+from supermetrics.resources.blends import BlendsAsyncResource, BlendsResource
 from supermetrics.resources.connector_builder import ConnectorBuilderAsyncResource, ConnectorBuilderResource
 from supermetrics.resources.connector_builder_logs import (
     ConnectorBuilderLogsAsyncResource,
@@ -442,6 +443,38 @@ class CustomFieldsAsyncResourceWithRawResponse:
         self.delete = async_to_raw_response_wrapper(resource.delete)
 
 
+class BlendsResourceWithRawResponse:
+    """Raw-response view over :class:`~supermetrics.resources.blends.BlendsResource`.
+
+    Args:
+        resource: The synchronous resource adapter to mirror.
+    """
+
+    def __init__(self, resource: BlendsResource) -> None:
+        """Wrap every method of ``resource`` to return an ``ApiResponse``."""
+        self.list = to_raw_response_wrapper(resource.list)
+        self.get = to_raw_response_wrapper(resource.get)
+        self.create = to_raw_response_wrapper(resource.create)
+        self.update = to_raw_response_wrapper(resource.update)
+        self.delete = to_raw_response_wrapper(resource.delete)
+
+
+class BlendsAsyncResourceWithRawResponse:
+    """Raw-response view over :class:`~supermetrics.resources.blends.BlendsAsyncResource`.
+
+    Args:
+        resource: The asynchronous resource adapter to mirror.
+    """
+
+    def __init__(self, resource: BlendsAsyncResource) -> None:
+        """Wrap every method of ``resource`` to return an ``ApiResponse``."""
+        self.list = async_to_raw_response_wrapper(resource.list)
+        self.get = async_to_raw_response_wrapper(resource.get)
+        self.create = async_to_raw_response_wrapper(resource.create)
+        self.update = async_to_raw_response_wrapper(resource.update)
+        self.delete = async_to_raw_response_wrapper(resource.delete)
+
+
 class SupermetricsClientWithRawResponse:
     """Raw-response view over every resource of a synchronous client.
 
@@ -468,6 +501,7 @@ class SupermetricsClientWithRawResponse:
         self.transfers = TransfersResourceWithRawResponse(client.transfers)
         self.transfer_runs = TransferRunsResourceWithRawResponse(client.transfer_runs)
         self.custom_fields = CustomFieldsResourceWithRawResponse(client.custom_fields)
+        self.blends = BlendsResourceWithRawResponse(client.blends)
 
 
 class SupermetricsAsyncClientWithRawResponse:
@@ -496,6 +530,7 @@ class SupermetricsAsyncClientWithRawResponse:
         self.transfers = TransfersAsyncResourceWithRawResponse(client.transfers)
         self.transfer_runs = TransferRunsAsyncResourceWithRawResponse(client.transfer_runs)
         self.custom_fields = CustomFieldsAsyncResourceWithRawResponse(client.custom_fields)
+        self.blends = BlendsAsyncResourceWithRawResponse(client.blends)
 
 
 __all__ = [
@@ -503,6 +538,8 @@ __all__ = [
     "AccountsResourceWithRawResponse",
     "BackfillsAsyncResourceWithRawResponse",
     "BackfillsResourceWithRawResponse",
+    "BlendsAsyncResourceWithRawResponse",
+    "BlendsResourceWithRawResponse",
     "ConnectorBuilderAsyncResourceWithRawResponse",
     "ConnectorBuilderLogsAsyncResourceWithRawResponse",
     "ConnectorBuilderLogsResourceWithRawResponse",

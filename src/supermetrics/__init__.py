@@ -2,6 +2,29 @@
 
 from supermetrics.__version__ import __version__
 from supermetrics._auth import AsyncTokenProvider, TokenProvider
+from supermetrics._generated.supermetrics_api_client.models.blend_config import BlendConfig
+from supermetrics._generated.supermetrics_api_client.models.blend_config_query_table import BlendConfigQueryTable
+from supermetrics._generated.supermetrics_api_client.models.blend_datasource_field_ref import BlendDatasourceFieldRef
+from supermetrics._generated.supermetrics_api_client.models.blend_datasource_field_ref_meta_type_0 import (
+    BlendDatasourceFieldRefMetaType0,
+)
+from supermetrics._generated.supermetrics_api_client.models.blend_field import BlendField
+from supermetrics._generated.supermetrics_api_client.models.blend_join import BlendJoin
+from supermetrics._generated.supermetrics_api_client.models.blend_join_condition import BlendJoinCondition
+from supermetrics._generated.supermetrics_api_client.models.blend_join_join_table import BlendJoinJoinTable
+from supermetrics._generated.supermetrics_api_client.models.blended_data_source_input import BlendedDataSourceInput
+from supermetrics._generated.supermetrics_api_client.models.blended_data_source_input_accounts_item import (
+    BlendedDataSourceInputAccountsItem,
+)
+from supermetrics._generated.supermetrics_api_client.models.blended_data_source_input_data_source_settings_item import (
+    BlendedDataSourceInputDataSourceSettingsItem,
+)
+from supermetrics._generated.supermetrics_api_client.models.blended_data_source_input_report_type_settings_item import (
+    BlendedDataSourceInputReportTypeSettingsItem,
+)
+from supermetrics._generated.supermetrics_api_client.models.blended_data_source_input_segments_item import (
+    BlendedDataSourceInputSegmentsItem,
+)
 from supermetrics._generated.supermetrics_api_client.models.condition_case import ConditionCase
 from supermetrics._generated.supermetrics_api_client.models.condition_case_condition import ConditionCaseCondition
 from supermetrics._generated.supermetrics_api_client.models.condition_step import ConditionStep
@@ -84,6 +107,21 @@ __all__ = [
     "ConditionCaseCondition",
     "LookupStepMap",
     "CustomFieldCreateRequestDataSourceItem",
+    # Blend request models. `blends.create` and `blends.update` take the data
+    # sources and the config as objects, and each of those nests the next.
+    "BlendConfig",
+    "BlendConfigQueryTable",
+    "BlendDatasourceFieldRef",
+    "BlendDatasourceFieldRefMetaType0",
+    "BlendField",
+    "BlendJoin",
+    "BlendJoinCondition",
+    "BlendJoinJoinTable",
+    "BlendedDataSourceInput",
+    "BlendedDataSourceInputAccountsItem",
+    "BlendedDataSourceInputDataSourceSettingsItem",
+    "BlendedDataSourceInputReportTypeSettingsItem",
+    "BlendedDataSourceInputSegmentsItem",
     # Exceptions
     "SupermetricsError",
     "SupermetricsClientError",

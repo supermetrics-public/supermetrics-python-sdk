@@ -14,7 +14,7 @@ Official Python client for Supermetrics
 * Dual sync/async support via separate Client classes
 * Fully typed request and response models, generated from the spec as `attrs` classes
 * Comprehensive API coverage: login links, logins, accounts, queries, DWH transfers and
-  transfer runs, DWH destinations, DWH backfills, custom fields, Connector Builder
+  transfer runs, DWH destinations, DWH backfills, custom fields, data blending, Connector Builder
 * Custom exception hierarchy with HTTP status code mapping
 * Resource-based API organization
 * API key, OAuth bearer token, and dynamic token provider authentication
@@ -134,6 +134,105 @@ response = client.with_raw_response.custom_fields.list(team_id=12345, include_to
 print(f"{len(response.data)} of {response.json_body['meta']['pagination']['total_count']} fields")
 
 client.custom_fields.delete(team_id=12345, custom_field_id=field.id)
+```
+
+### Data Blending
+
+A blend combines several data sources into one queryable table — `"union"` stacks their
+rows, `"join"` joins them on shared fields. Sources being created have no id yet, so each
+is named by a temporary eight-character `blend_data_source_key` that the field and join
+references point at.
+
+```python
+from supermetrics import (
+    BlendConfig,
+    BlendDatasourceFieldRef,
+    BlendedDataSourceInput,
+    BlendField,
+    SupermetricsClient,
+)
+
+client = SupermetricsClient(api_key="your_api_key")
+
+# All five of these arguments are required, even though three are usually empty:
+# upstream marks them required-but-nullable.
+source = BlendedDataSourceInput(
+    data_source_id="GA4",
+    blend_data_source_id=None,
+    blend_data_source_key="abcd1234",
+    report_type=None,
+    report_type_settings=[],
+    display_name="Google Analytics 4",
+)
+
+# Collections go out as bare lists. They come back wrapped in `.items` — at every level.
+config = BlendConfig(
+    fields=[
+        BlendField(
+            blend_field_name="impressions",
+            blend_field_display_name="Impressions",
+            blend_datasource_fields=[
+                BlendDatasourceFieldRef(
+                    blend_data_source_key="abcd1234",
+                    datasource_field_name="Impressions",
+                    field_source="standard",
+                )
+            ],
+        )
+    ],
+)
+
+# create() answers 201 and assigns the ids. blend_type is fixed here and forever.
+blend = client.blends.create(
+    team_id=12345,
+    display_name="GA4 impressions",
+    blend_type="union",
+    blended_data_sources=[source],
+    config=config,
+)
+print(blend.blend_id, blend.type_)
+
+# list() returns summaries: no config, and a reduced source shape. This endpoint is not
+# paginated, so one call returns every matching blend.
+for summary in client.blends.list(team_id=12345, blend_type="union"):
+    print(summary.blend_id, summary.display_name)
+
+# A read-modify-write has to rebuild the request objects: the response wraps its
+# collections and drops blend_data_source_key, so it cannot be resent as-is. Existing
+# sources are addressed by blend_data_source_id from here on. update() takes no
+# blend_type and replaces the whole object: the required fields are resent in full, so a
+# source or field you leave out is dropped.
+current = client.blends.get(team_id=12345, blend_id=blend.blend_id)
+existing = BlendedDataSourceInput(
+    data_source_id=current.blended_data_sources.items[0].data_source_id,
+    blend_data_source_id=current.blended_data_sources.items[0].blend_data_source_id,
+    blend_data_source_key=None,
+    report_type=None,
+    report_type_settings=[],
+)
+client.blends.update(
+    team_id=12345,
+    blend_id=blend.blend_id,
+    display_name="GA4 impressions, revised",
+    blended_data_sources=[existing],
+    config=BlendConfig(
+        fields=[
+            BlendField(
+                blend_field_name="impressions",
+                blend_field_display_name="Impressions",
+                blend_datasource_fields=[
+                    BlendDatasourceFieldRef(
+                        blend_data_source_id=existing.blend_data_source_id,
+                        datasource_field_name="Impressions",
+                        field_source="standard",
+                    )
+                ],
+            )
+        ],
+    ),
+)
+
+client.blends.delete(team_id=12345, blend_id=blend.blend_id)
 ```
 
 ### Data Warehouse Transfers

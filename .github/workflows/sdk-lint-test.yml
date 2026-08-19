@@ -87,12 +87,12 @@ jobs:
     # overrides, the raw-response envelope, the error taxonomy, and concurrency
     # isolation on a shared connection pool. Nothing here is mocked or patched.
     #
-    # Also covers every Data Transfers, Transfer Runs, Custom Fields and Destinations
-    # method on both the sync and async clients, and — using a second local server —
-    # proves that Data Warehouse calls are re-hosted to the DTS origin while core API
-    # calls are not. Host routing, request bodies, and query strings exist only on the
-    # wire, so the unit suite cannot observe them and would stay green while the SDK
-    # called the wrong host.
+    # Also covers every Data Transfers, Transfer Runs, Custom Fields, Destinations and
+    # Data Blending method on both the sync and async clients, and — using a second local
+    # server — proves that Data Warehouse calls are re-hosted to the DTS origin while core
+    # API calls, blends included, are not. Host routing, request bodies, and query strings
+    # exist only on the wire, so the unit suite cannot observe them and would stay green
+    # while the SDK called the wrong host.
     #
     # This job's own coverage is guarded twice over, because an e2e module that lost
     # its marker would be silently deselected here while still passing under `test` —
