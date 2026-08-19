@@ -217,10 +217,19 @@ class TestAcceptanceCriteria5:
     """AC5: Git repository initialized with initial commit."""
 
     def test_git_directory_exists(self):
-        """Verify .git directory exists."""
+        """Verify the project root is a git working tree.
+
+        ``.git`` is a directory in an ordinary clone, but a *file* holding a
+        ``gitdir:`` pointer in a linked worktree, so both shapes are valid.
+        """
         git_path = PROJECT_ROOT / ".git"
-        assert git_path.exists(), ".git directory must exist"
-        assert git_path.is_dir(), ".git must be a directory"
+        assert git_path.exists(), ".git must exist"
+
+        if git_path.is_file():
+            pointer = git_path.read_text()
+            assert pointer.startswith("gitdir:"), f".git file must point at a git dir, got: {pointer!r}"
+        else:
+            assert git_path.is_dir(), ".git must be a directory or a gitdir pointer file"
 
     def test_git_has_commits(self):
         """Verify git log shows at least one commit."""
