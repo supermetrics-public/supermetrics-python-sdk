@@ -525,6 +525,26 @@ class TestTransfersAsyncResource:
         assert request.bearer_token == "api_k"
 
     @pytest.mark.asyncio
+    async def test_create_sends_the_optional_fields_when_given(self, api_server: MockAPIServer) -> None:
+        """Optional arguments are serialised by the async builder too, and only those."""
+        api_server.route(TRANSFERS, ScriptedResponse(status=201, json_body=TRANSFER_CREATED_BODY))
+
+        async with SupermetricsAsyncClient(api_key="api_k", base_url=api_server.base_url) as client:
+            created = await client.transfers.create(
+                team_id=TEAM_ID,
+                **_configuration(),
+                notification_recipients=["ops@example.com"],
+                transfer_type=1,
+            )
+
+        assert created.transfer_id == TRANSFER_ID
+        body = api_server.last_request.json()
+        assert body["notification_recipients"] == ["ops@example.com"]
+        assert body["transfer_type"] == 1
+        assert "segments" not in body
+        assert "data_source_settings" not in body
+
+    @pytest.mark.asyncio
     async def test_update_sends_a_put_with_the_whole_configuration(self, api_server: MockAPIServer) -> None:
         """Update replaces wholesale on the async surface as well."""
         api_server.route(TRANSFER, ScriptedResponse(json_body=TRANSFER_UPDATED_BODY))
@@ -565,6 +585,35 @@ class TestTransfersAsyncResource:
         assert request.method == "PUT"
         assert request.path == STATE
         assert request.json() == {"transfer_state": "pause"}
+
+    @pytest.mark.asyncio
+    async def test_set_state_unpause_sends_the_other_verb(self, api_server: MockAPIServer) -> None:
+        """The second half of the enum reaches the wire unchanged on the async path."""
+        api_server.route(STATE, ScriptedResponse(json_body={"result": True, "state": "ACTIVE"}))
+
+        async with SupermetricsAsyncClient(api_key="api_k", base_url=api_server.base_url) as client:
+            state = await client.transfers.set_state(team_id=TEAM_ID, transfer_id=TRANSFER_ID, state="unpause")
+
+        assert state.state == "ACTIVE"
+        request = api_server.last_request
+        assert request.method == "PUT"
+        assert request.path == STATE
+        assert request.json() == {"transfer_state": "unpause"}
+
+    @pytest.mark.asyncio
+    async def test_validate_accepts_a_valid_configuration(self, api_server: MockAPIServer) -> None:
+        """A clean dry run returns is_valid True on the async path as well."""
+        api_server.route(VALIDATIONS, ScriptedResponse(json_body=VALIDATION_OK_BODY))
+
+        async with SupermetricsAsyncClient(api_key="api_k", base_url=api_server.base_url) as client:
+            result = await client.transfers.validate(team_id=TEAM_ID, **_configuration())
+
+        assert result.is_valid is True
+        assert result.errors == []
+        request = api_server.last_request
+        assert request.method == "POST"
+        assert request.path == VALIDATIONS
+        assert request.json() == EXPECTED_CONFIG_BODY
 
     @pytest.mark.asyncio
     async def test_validate_reports_failure_without_raising(self, api_server: MockAPIServer) -> None:
@@ -651,6 +700,19 @@ class TestTransfersAsyncResource:
             "limit": ["10"],
             "offset": ["5"],
         }
+
+    @pytest.mark.asyncio
+    async def test_list_runs_omits_the_optional_params(self, api_server: MockAPIServer) -> None:
+        """Only the two required dates go out when nothing else is asked for."""
+        api_server.route(RUNS, ScriptedResponse(json_body=TRANSFER_RUNS_LIST_BODY))
+
+        async with SupermetricsAsyncClient(api_key="api_k", base_url=api_server.base_url) as client:
+            runs = await client.transfers.list_runs(
+                team_id=TEAM_ID, transfer_id=TRANSFER_ID, start_date=START_DATE, end_date=END_DATE
+            )
+
+        assert runs[0].id == 12345
+        assert set(_query(api_server.last_request.path)) == {"start_date", "end_date"}
 
     @pytest.mark.asyncio
     async def test_create_datasource_connection_never_sends_an_api_key(self, api_server: MockAPIServer) -> None:
@@ -743,6 +805,15 @@ class TestTransfersRequestOptions:
         assert request.headers["x-span-id"] == "span-async"
 
     @pytest.mark.asyncio
+    async def test_async_timeout_override_fires_against_a_slow_transfer_route(self, api_server: MockAPIServer) -> None:
+        """A tight per-request timeout beats a generous client-level one on the async client too."""
+        api_server.route(TRANSFERS, ScriptedResponse(json_body=TRANSFERS_LIST_BODY, delay=1.5))
+
+        async with SupermetricsAsyncClient(api_key="api_k", base_url=api_server.base_url, timeout=30.0) as client:
+            with pytest.raises(NetworkError):
+                await client.transfers.list(team_id=TEAM_ID, timeout=0.3)
+
+    @pytest.mark.asyncio
     async def test_async_raw_response_exposes_transport_metadata(self, api_server: MockAPIServer) -> None:
         """with_raw_response works on the async mirror of the resource."""
         api_server.route(
@@ -832,6 +903,8 @@ class TestTransfersErrorTaxonomy:
         [
             (401, "UNAUTHORIZED", SupermetricsAuthError),
             (403, "FORBIDDEN", SupermetricsForbiddenError),
+            (404, "NOT_FOUND", SupermetricsNotFoundError),
+            (429, "TOO_MANY_REQUESTS", SupermetricsRateLimitError),
             (500, "INTERNAL_SERVER_ERROR", SupermetricsServerError),
         ],
     )

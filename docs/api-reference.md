@@ -70,6 +70,7 @@ callable, or if an `async def` provider is given — use `SupermetricsAsyncClien
 - `connector_builder_secrets`: Access to ConnectorBuilderSecretsResource
 - `connector_builder_logs`: Access to ConnectorBuilderLogsResource
 - `datasource_details`: Access to DatasourceDetailsResource
+- `destinations`: Access to DestinationsResource
 - `transfers`: Access to TransfersResource
 - `transfer_runs`: Access to TransferRunsResource
 - `custom_fields`: Access to CustomFieldsResource
@@ -153,6 +154,7 @@ not callable.
 - `connector_builder_secrets`: Access to ConnectorBuilderSecretsAsyncResource
 - `connector_builder_logs`: Access to ConnectorBuilderLogsAsyncResource
 - `datasource_details`: Access to DatasourceDetailsAsyncResource
+- `destinations`: Access to DestinationsAsyncResource
 - `transfers`: Access to TransfersAsyncResource
 - `transfer_runs`: Access to TransferRunsAsyncResource
 - `custom_fields`: Access to CustomFieldsAsyncResource
@@ -2123,6 +2125,388 @@ asyncio.run(main())
 
 ---
 
+### DestinationsResource
+
+Manage the warehouse and storage destinations that Data Warehouse transfers write into —
+listing and inspecting them, creating, updating and deleting them, testing a set of
+credentials before committing to it, and checking which transfers still depend on one.
+
+> **Base URL:** Destination endpoints are served by the Data Warehouse API at
+> `https://dts-api.supermetrics.com/v1`, not by the core API host. The SDK routes them
+> there for you, exactly as it does for transfers and backfills. See the base-URL note
+> under [BackfillsResource](#backfillsresource) for how `base_url` and `dts_base_url`
+> interact — in particular, setting `base_url` yourself disables the automatic routing.
+
+**Request models.** There are none to import. `create()`, `update()`, and
+`test_connection()` take the destination-specific configuration as a plain
+`dict[str, Any]` in their `fields` argument, and the SDK converts it for you. The generated
+`CreateDestinationRequestFields`, `UpdateDestinationRequestFields`, and
+`TestConnectionRequestFields` classes exist, but they are **not constructible**: each keeps
+its storage in an attrs attribute declared `init=False`, so neither `Fields({...})` nor
+`Fields(additional_properties={...})` works. A public signature has to be satisfiable, so
+the adapter takes the dict and calls `.from_dict()` internally. Do not go hunting for an
+import — pass a mapping.
+
+**Response envelope.** Every method in this resource unwraps a
+`{"meta": ..., "data": ...}` envelope and returns the payload itself. Unlike transfers,
+there is no bare-body case here. The envelope is still visible through
+`client.with_raw_response`, which is also the only way to reach `meta.request_id`.
+
+#### list()
+
+List the destinations belonging to a team.
+
+```python
+destinations = client.destinations.list(team_id=12345)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+
+**Returns:** `list[DestinationListItem]` — every destination configured for the team, each
+carrying `id`, `display_name`, and `type_`. Empty list if the team has none. The endpoint
+declares no pagination and no filtering parameters, so the whole set arrives in one call.
+
+**Raises:** `SupermetricsAuthError` (401), `SupermetricsForbiddenError` (403), `SupermetricsRateLimitError` (429), `SupermetricsServerError` (500), `NetworkError`
+
+**Example:**
+
+```python
+from supermetrics import SupermetricsClient
+
+with SupermetricsClient(api_key="your_key") as client:
+    for destination in client.destinations.list(team_id=12345):
+        print(f"{destination.id}: {destination.display_name} ({destination.type_})")
+```
+
+#### get()
+
+Retrieve a destination and its editable form settings by ID.
+
+```python
+destination = client.destinations.get(team_id=12345, destination_id=8)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `destination_id` (int, required): Unique identifier of the destination
+
+**Returns:** `DestinationInfo` — `display_name`, a `destination_type` descriptor
+(`type_`, `title`, `icon_url`, and the type's own settings and auth methods),
+`edit_settings`, and an optional `id`
+
+**Raises:** `SupermetricsAuthError` (401), `SupermetricsForbiddenError` (403), `SupermetricsNotFoundError` (404), `SupermetricsRateLimitError` (429), `SupermetricsServerError` (500), `NetworkError`
+
+> **The read shape and the write shape are not the same.** `get()` does not hand back the
+> configuration you posted. It returns `edit_settings`, a list of `SetupSetting` **UI form
+> descriptors** — each one an `id` / `label` / `value` / `input_type` / `is_required`
+> record describing a single control — and *not* the flat `fields` mapping that `create()`
+> and `update()` accept. The SDK surfaces the API's own model rather than inventing a
+> symmetrical one, so a `DestinationInfo` cannot be handed straight to `update()`. To feed
+> an edit back, project the settings yourself, for example with
+> `{setting.id: setting.value for setting in destination.edit_settings}`, and re-supply
+> anything the API does not hand back.
+
+**Example:**
+
+```python
+destination = client.destinations.get(team_id=12345, destination_id=8)
+
+print(destination.display_name, destination.destination_type.title)
+for setting in destination.edit_settings:
+    print(f"  {setting.id} ({setting.input_type}): {setting.value}")
+```
+
+#### create()
+
+Create a new destination.
+
+```python
+destination = client.destinations.create(
+    team_id=12345,
+    type="DWH_SNOWFLAKE",
+    display_name="My Snowflake Destination",
+    fields={"hostname": "any-domain.my-region.snowflakecomputing.com", "warehouse": "DEMO_WH"},
+)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `type` (str, required): Destination type identifier, e.g. `"DWH_SNOWFLAKE"` or
+  `"DWH_BIGQUERY"`. A free-form string on the wire, not an enum
+- `display_name` (str, required): Human-readable name for the destination
+- `fields` (dict[str, Any], required): Destination-specific configuration, as a flat
+  mapping of setting name to value. The accepted keys vary by `type` — for Snowflake they
+  include `hostname`, `warehouse`, `database_name`, `schema`, `role`, `username`, and the
+  credential fields
+- `auth_method` (str, optional): Authentication method, e.g. `"AUTH_METHOD_KEY_PAIR"`.
+  Omitted from the request body when not passed
+
+**Returns:** `DestinationInfo` — the created destination, in the *read* shape described
+under `get()` above, with `edit_settings` rather than `fields`. The API answers
+**HTTP 201 Created** on success.
+
+**Raises:** `SupermetricsAuthError` (401), `SupermetricsValidationError` (400 / 422), `SupermetricsForbiddenError` (403), `SupermetricsRateLimitError` (429), `SupermetricsServerError` (500), `NetworkError`
+
+**Notes:**
+- Call [`test_connection()`](#test_connection) first with the same `type`, `display_name`,
+  and `fields`; it exercises the credentials without storing anything
+- The API documents **HTTP 409 Conflict** here. The error taxonomy has no dedicated
+  conflict subclass, so a 409 surfaces as a generic `SupermetricsAPIError` carrying
+  `status_code == 409`
+- The destination becomes available to transfers immediately
+
+**Example:**
+
+```python
+destination = client.destinations.create(
+    team_id=12345,
+    type="DWH_SNOWFLAKE",
+    display_name="My Snowflake Destination",
+    fields={
+        "hostname": "any-domain.my-region.snowflakecomputing.com",
+        "warehouse": "DEMO_WH",
+        "database_name": "TEST_DB",
+        "schema": "PUBLIC",
+        "role": "ACCOUNTADMIN",
+        "username": "USER",
+        "private_key": "not-a-real-key",
+    },
+    auth_method="AUTH_METHOD_KEY_PAIR",
+)
+print(destination.id)
+```
+
+#### update()
+
+Update an existing destination.
+
+```python
+destination = client.destinations.update(
+    team_id=12345,
+    destination_id=8,
+    type="DWH_SNOWFLAKE",
+    display_name="Renamed destination",
+    fields={"warehouse": "PROD_WH", "database_name": "PROD_DB"},
+)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `destination_id` (int, required): Unique identifier of the destination to update
+- `type` (str, required): Destination type identifier, e.g. `"DWH_SNOWFLAKE"`
+- `display_name` (str, required): Human-readable name for the destination
+- `fields` (dict[str, Any], required): Destination-specific configuration, in the same flat
+  write shape `create()` takes
+- `auth_method` (str, optional): Authentication method, e.g. `"AUTH_METHOD_KEY_PAIR"`
+- `new_password` (str, optional): New secret value, for rotating a credential. The wire
+  field the API applies it to depends on the authentication method — under key-pair auth it
+  stands in for a new private key
+
+**Returns:** `DestinationInfo`, in the read shape described under `get()`
+
+**Raises:** `SupermetricsAuthError` (401), `SupermetricsValidationError` (400 / 422), `SupermetricsForbiddenError` (403), `SupermetricsNotFoundError` (404), `SupermetricsRateLimitError` (429), `SupermetricsServerError` (500), `NetworkError`
+
+**Notes:**
+- This is a full replacement of the configuration, so `type`, `display_name`, and `fields`
+  are all required even when only one of them changes
+- `fields` is *not* what `get()` returns; see the read/write note under `get()` before
+  trying to round-trip one into the other
+
+**Example:**
+
+```python
+destination = client.destinations.update(
+    team_id=12345,
+    destination_id=8,
+    type="DWH_SNOWFLAKE",
+    display_name="Renamed destination",
+    fields={"warehouse": "PROD_WH", "database_name": "PROD_DB"},
+    new_password="not-a-real-key",
+)
+print(destination.display_name)
+```
+
+#### delete()
+
+Delete a destination.
+
+```python
+client.destinations.delete(team_id=12345, destination_id=8)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `destination_id` (int, required): Unique identifier of the destination to delete
+
+**Returns:** `None`. The API answers **HTTP 204 No Content** on success.
+
+**Raises:** `SupermetricsAuthError` (401), `SupermetricsForbiddenError` (403), `SupermetricsNotFoundError` (404), `SupermetricsRateLimitError` (429), `SupermetricsServerError` (500), `NetworkError`
+
+**Notes:**
+- A destination that transfers still depend on may not be removable. The API documents
+  **HTTP 409 Conflict** here, and as on `create()` it surfaces as a generic
+  `SupermetricsAPIError` with `status_code == 409` rather than a dedicated subclass
+- Call [`get_usage()`](#get_usage) first to see what is attached to it
+
+**Example:**
+
+```python
+from supermetrics import SupermetricsAPIError, SupermetricsNotFoundError
+
+usage = client.destinations.get_usage(team_id=12345, destination_id=8)
+if usage.is_used:
+    print(f"Still used by {len(usage.transfers)} transfers")
+else:
+    try:
+        client.destinations.delete(team_id=12345, destination_id=8)
+    except SupermetricsNotFoundError:
+        print("Already gone")
+    except SupermetricsAPIError as exc:
+        if exc.status_code == 409:
+            print("Conflict: something still depends on it")
+        else:
+            raise
+```
+
+#### test_connection()
+
+Test destination credentials without saving them.
+
+```python
+result = client.destinations.test_connection(
+    team_id=12345,
+    type="DWH_SNOWFLAKE",
+    display_name="Test Connection",
+    fields={"hostname": "any-domain.my-region.snowflakecomputing.com", "username": "USER"},
+)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `type` (str, required): Destination type identifier to test, e.g. `"DWH_SNOWFLAKE"`
+- `display_name` (str, required): Display name for the connection being tested
+- `fields` (dict[str, Any], required): Connection settings and credentials to test, in the
+  same flat shape `create()` takes
+- `auth_method` (str, optional): Authentication method to test, e.g.
+  `"AUTH_METHOD_KEY_PAIR"`
+- `destination_id` (int, optional): Identifier of an existing destination to test these
+  credentials against, for example before rotating a secret with `update()`
+- `new_password` (str, optional): New secret value to test before rotating it
+
+**Returns:** `TestConnectionResult` with `success` (bool) and `error` (`str | None`)
+
+**Raises:** `SupermetricsAuthError` (401), `SupermetricsValidationError` (400 / 422), `SupermetricsForbiddenError` (403), `SupermetricsRateLimitError` (429), `SupermetricsServerError` (500), `NetworkError`. A connection that simply does not work is **not** one of
+these — see below.
+
+> **A failed connection test is a returned result, not an exception.** The API answers
+> **HTTP 200 with `success: false`** and an `error` message for credentials that do not
+> work; that is a successful call reporting a negative outcome, and `test_connection()`
+> returns it. Branch on `result.success`, do not wrap the call in
+> `try` / `except SupermetricsValidationError`. This mirrors
+> [`transfers.validate()`](#validate). The exceptions listed above are for the call itself
+> failing — bad credential, no access, malformed payload, upstream fault.
+
+**Notes:**
+- Nothing is stored. This is a dry run for `create()`, and takes the same `type`,
+  `display_name`, and `fields`
+
+**Example:**
+
+```python
+result = client.destinations.test_connection(
+    team_id=12345,
+    type="DWH_SNOWFLAKE",
+    display_name="Test Connection",
+    fields={
+        "hostname": "any-domain.my-region.snowflakecomputing.com",
+        "warehouse": "DEMO_WH",
+        "username": "USER",
+        "private_key": "not-a-real-key",
+    },
+    auth_method="AUTH_METHOD_KEY_PAIR",
+)
+
+if result.success:
+    print("Credentials work")
+else:
+    print(f"Connection failed: {result.error}")
+```
+
+#### get_usage()
+
+Report which transfers still use a destination.
+
+```python
+usage = client.destinations.get_usage(team_id=12345, destination_id=8)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `destination_id` (int, required): Unique identifier of the destination
+
+**Returns:** `DestinationUsage` with `is_used` (bool) and `transfers`, a list of items
+carrying `transfer_id` and `transfer_name`
+
+**Raises:** `SupermetricsAuthError` (401), `SupermetricsForbiddenError` (403), `SupermetricsNotFoundError` (404), `SupermetricsRateLimitError` (429), `SupermetricsServerError` (500), `NetworkError`
+
+**Example:**
+
+```python
+usage = client.destinations.get_usage(team_id=12345, destination_id=8)
+
+if usage.is_used:
+    for transfer in usage.transfers:
+        print(f"{transfer.transfer_id}: {transfer.transfer_name}")
+else:
+    client.destinations.delete(team_id=12345, destination_id=8)
+```
+
+**Async usage** (all seven methods above are also available on
+`DestinationsAsyncResource`):
+
+```python
+import asyncio
+
+from supermetrics import SupermetricsAsyncClient
+
+
+async def main():
+    async with SupermetricsAsyncClient(api_key="your_key") as client:
+        destinations = await client.destinations.list(team_id=12345)
+        print(f"{len(destinations)} destinations")
+
+        result = await client.destinations.test_connection(
+            team_id=12345,
+            type="DWH_SNOWFLAKE",
+            display_name="Test Connection",
+            fields={"hostname": "any-domain.my-region.snowflakecomputing.com", "username": "USER"},
+        )
+        if not result.success:
+            print(f"Connection failed: {result.error}")
+            return
+
+        created = await client.destinations.create(
+            team_id=12345,
+            type="DWH_SNOWFLAKE",
+            display_name="My Snowflake Destination",
+            fields={"hostname": "any-domain.my-region.snowflakecomputing.com", "username": "USER"},
+        )
+        print(f"Created {created.id}")
+
+
+asyncio.run(main())
+```
+
+---
+
 ### AccountTagsResource
 
 Group data source accounts from across a team's connections under a reusable label, so a
@@ -2165,7 +2549,7 @@ carries the `data_sources` membership itself but no counts.
 **409 on `create()` only** — the one 409 anywhere in the SDK, raised when a tag with that
 display name already exists. **There is no 404 in this domain at all**: an unknown tag comes
 back as a 400 (translated to `SupermetricsValidationError`), and deleting one that does not
-exist is a success — see [`delete()`](#delete-2).
+exist is a success — see [`delete()`](#delete-3).
 
 #### list()
 
@@ -2324,7 +2708,7 @@ tag = client.account_tags.add_accounts(
 #### remove_accounts()
 
 Remove data source accounts from a tag. The tag itself survives even when its last account
-is removed; use [`delete()`](#delete-2) to get rid of it.
+is removed; use [`delete()`](#delete-3) to get rid of it.
 
 ```python
 tag = client.account_tags.remove_accounts(
@@ -3406,9 +3790,195 @@ sources = [
 
 ---
 
+### DestinationListItem
+
+One destination as it appears in `destinations.list()`. Deliberately thin: the list
+endpoint returns an index, not a configuration. Call `destinations.get()` for the rest.
+
+**Attributes:**
+
+- `id` (int, required): Unique identifier of the destination
+- `display_name` (str, required): Human-readable name (example: `"My Snowflake Destination"`)
+- `type_` (str, required): Destination type identifier (example: `"DWH_SNOWFLAKE"`)
+
+> **The attribute is `type_`, with a trailing underscore.** The wire field is `type`, and the
+> SDK method parameter is `type`, but `type` is a Python builtin so the generated model renames
+> the attribute. You write `type=`, you read `.type_`.
+
+**Example:**
+
+```python
+for destination in client.destinations.list(team_id=12345):
+    print(f"{destination.id}: {destination.display_name} ({destination.type_})")
+```
+
+---
+
+### DestinationInfo
+
+A single destination, as returned by `destinations.get()`, `destinations.create()` and
+`destinations.update()`.
+
+**Attributes:**
+
+- `display_name` (str, required): Human-readable name
+- `destination_type` (DestinationType, required): The type, with its settings schema and
+  supported authentication methods
+- `edit_settings` (list[SetupSetting], required): The destination's configuration, one
+  descriptor per setting
+- `id` (int | None | Unset): Unique identifier. Absent when the API omits it
+
+> **This is the read shape, and it is not the write shape.** `create()` and `update()` take a
+> flat `fields` mapping; what comes back is `edit_settings`, a list of form descriptors. You
+> cannot round-trip a `DestinationInfo` straight back into `update()` — project it first, with
+> something like `{s.id: s.value for s in info.edit_settings}`. Secret settings come back with
+> `value` null.
+
+**Example:**
+
+```python
+info = client.destinations.get(team_id=12345, destination_id=8)
+
+print(f"{info.display_name} ({info.destination_type.title})")
+for setting in info.edit_settings:
+    print(f"  {setting.label or setting.id} = {setting.value}")
+```
+
+---
+
+### DestinationType
+
+Describes a kind of destination — Snowflake, BigQuery and so on — including the settings it
+accepts and the authentication methods it supports. Reached through
+`DestinationInfo.destination_type`.
+
+**Attributes:**
+
+- `type_` (str, required): Type identifier (example: `"DWH_SNOWFLAKE"`)
+- `title` (str, required): Display name (example: `"Snowflake"`)
+- `icon_url` (str, required): URL of the type's icon
+- `connection_check_url` (str | Unset): URL used for connection testing
+- `create_url` (str | Unset): URL for creating a destination of this type
+- `update_url_template` (str | Unset): URL template for updating one
+- `app_id` (str | Unset): Application identifier
+- `is_internal` (bool | Unset): Whether the type is internal. Defaults to `False`
+- `settings` (list[SetupSetting] | Unset): The settings this type accepts
+- `auth_methods` (list[AuthMethod] | Unset): The authentication methods it supports
+
+---
+
+### SetupSetting
+
+One configuration setting, described rather than merely valued: enough to render an input for
+it and to know whether it is required. Appears in `DestinationInfo.edit_settings` and in
+`DestinationType.settings`.
+
+**Attributes:**
+
+- `id` (str, required): Setting identifier — this is the key you use in the `fields` mapping
+  passed to `create()` / `update()` (example: `"hostname"`)
+- `input_type` (str, required): Kind of input control (example: `"text"`)
+- `is_required` (bool, required): Whether the setting must be supplied
+- `label` (str | None | Unset): Display label
+- `value` (bool | int | str | None | Unset): Current value. The Python type follows
+  `input_type`. Secrets come back null
+- `options` (list[SetupSettingOptionsItem] | Unset): Choices for select and radio inputs
+- `help_text` (str | None | Unset): Help text
+- `help_url` (str | None | Unset): Link to further documentation
+- `note` (str | None | Unset): Additional note
+- `group` (str | Unset): Group identifier, for organising related settings
+- `group_label` (str | Unset): Display label of the group
+- `show_for` (list[SetupSettingShowForItem] | Unset): Conditional display rules — each has an
+  `id` and the `values` of that other setting for which this one applies
+
+**Example:**
+
+```python
+info = client.destinations.get(team_id=12345, destination_id=8)
+
+required_but_empty = [s.id for s in info.edit_settings if s.is_required and s.value in (None, "")]
+```
+
+---
+
+### AuthMethod
+
+An authentication method supported by a destination type. Reached through
+`DestinationType.auth_methods`. Its `id` is what you pass as `auth_method`.
+
+**Attributes:**
+
+- `id` (str, required): Identifier (example: `"AUTH_METHOD_KEY_PAIR"`)
+- `label` (str, required): Display label (example: `"Key Pair Authentication"`)
+- `is_default` (bool | Unset): Whether this is the default. Defaults to `False`
+
+---
+
+### TestConnectionResult
+
+The verdict from `destinations.test_connection()`.
+
+**Attributes:**
+
+- `success` (bool, required): Whether the connection test succeeded
+- `error` (str | None, required): Why it failed, or `None` on success
+
+> **A failed test is a return value, not an exception.** The API answers HTTP 200 with
+> `success` set to `False`, so `test_connection()` returns the result rather than raising.
+> Check `success` — an exception here means the request itself failed.
+
+**Example:**
+
+```python
+result = client.destinations.test_connection(
+    team_id=12345,
+    type="DWH_SNOWFLAKE",
+    display_name="Preflight",
+    fields={"hostname": "any-domain.my-region.snowflakecomputing.com"},
+)
+if not result.success:
+    print(f"Cannot connect: {result.error}")
+```
+
+---
+
+### DestinationUsage
+
+Which transfers write to a destination, as returned by `destinations.get_usage()`. Worth
+calling before an update or a delete: changing a destination changes every pipeline below it.
+
+**Attributes:**
+
+- `is_used` (bool, required): Whether any transfer currently uses the destination
+- `transfers` (list[DestinationUsageTransfersItem], required): The transfers that do
+
+**Example:**
+
+```python
+usage = client.destinations.get_usage(team_id=12345, destination_id=8)
+if usage.is_used:
+    names = ", ".join(t.transfer_name for t in usage.transfers)
+    raise RuntimeError(f"Still in use by: {names}")
+
+client.destinations.delete(team_id=12345, destination_id=8)
+```
+
+---
+
+### DestinationUsageTransfersItem
+
+One transfer in a `DestinationUsage` report.
+
+**Attributes:**
+
+- `transfer_id` (int, required): Identifier of the transfer
+- `transfer_name` (str, required): Display name of the transfer
+
+---
+
 ### AccountTagOverview
 
-The list-item projection returned by [`account_tags.list()`](#list-5). It summarises a tag's
+The list-item projection returned by [`account_tags.list()`](#list-6). It summarises a tag's
 membership as counts rather than listing it. Returned by the SDK, not constructed by callers.
 Every attribute is optional at the schema level.
 
@@ -3424,7 +3994,7 @@ Every attribute is optional at the schema level.
 
 ### AccountTag
 
-The single-object model returned by [`account_tags.get()`](#get-7), `create()`, `update()`,
+The single-object model returned by [`account_tags.get()`](#get-8), `create()`, `update()`,
 `add_accounts()`, and `remove_accounts()`. Unlike [`AccountTagOverview`](#accounttagoverview)
 it carries the `data_sources` membership rather than counts. Returned by the SDK, not
 constructed by callers. Every attribute is optional at the schema level.

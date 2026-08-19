@@ -16,6 +16,7 @@ from .append_accounts_to_group_response_429 import AppendAccountsToGroupResponse
 from .append_accounts_to_group_response_429_meta import AppendAccountsToGroupResponse429Meta
 from .append_accounts_to_group_response_500 import AppendAccountsToGroupResponse500
 from .append_accounts_to_group_response_500_meta import AppendAccountsToGroupResponse500Meta
+from .auth_method import AuthMethod
 from .available_sources_response import AvailableSourcesResponse
 from .backfill import Backfill
 from .backfill_response import BackfillResponse
@@ -121,6 +122,22 @@ from .create_data_source_connection_response_429 import CreateDataSourceConnecti
 from .create_data_source_connection_response_429_meta import CreateDataSourceConnectionResponse429Meta
 from .create_data_source_connection_response_500 import CreateDataSourceConnectionResponse500
 from .create_data_source_connection_response_500_meta import CreateDataSourceConnectionResponse500Meta
+from .create_destination_request import CreateDestinationRequest
+from .create_destination_request_fields import CreateDestinationRequestFields
+from .create_destination_response_400 import CreateDestinationResponse400
+from .create_destination_response_400_meta import CreateDestinationResponse400Meta
+from .create_destination_response_401 import CreateDestinationResponse401
+from .create_destination_response_401_meta import CreateDestinationResponse401Meta
+from .create_destination_response_403 import CreateDestinationResponse403
+from .create_destination_response_403_meta import CreateDestinationResponse403Meta
+from .create_destination_response_409 import CreateDestinationResponse409
+from .create_destination_response_409_meta import CreateDestinationResponse409Meta
+from .create_destination_response_422 import CreateDestinationResponse422
+from .create_destination_response_422_meta import CreateDestinationResponse422Meta
+from .create_destination_response_429 import CreateDestinationResponse429
+from .create_destination_response_429_meta import CreateDestinationResponse429Meta
+from .create_destination_response_500 import CreateDestinationResponse500
+from .create_destination_response_500_meta import CreateDestinationResponse500Meta
 from .create_login_link_body import CreateLoginLinkBody
 from .create_login_link_response_401 import CreateLoginLinkResponse401
 from .create_login_link_response_401_meta import CreateLoginLinkResponse401Meta
@@ -223,6 +240,18 @@ from .delete_connector_secret_response_429 import DeleteConnectorSecretResponse4
 from .delete_connector_secret_response_429_meta import DeleteConnectorSecretResponse429Meta
 from .delete_connector_secret_response_500 import DeleteConnectorSecretResponse500
 from .delete_connector_secret_response_500_meta import DeleteConnectorSecretResponse500Meta
+from .delete_destination_response_401 import DeleteDestinationResponse401
+from .delete_destination_response_401_meta import DeleteDestinationResponse401Meta
+from .delete_destination_response_403 import DeleteDestinationResponse403
+from .delete_destination_response_403_meta import DeleteDestinationResponse403Meta
+from .delete_destination_response_404 import DeleteDestinationResponse404
+from .delete_destination_response_404_meta import DeleteDestinationResponse404Meta
+from .delete_destination_response_409 import DeleteDestinationResponse409
+from .delete_destination_response_409_meta import DeleteDestinationResponse409Meta
+from .delete_destination_response_429 import DeleteDestinationResponse429
+from .delete_destination_response_429_meta import DeleteDestinationResponse429Meta
+from .delete_destination_response_500 import DeleteDestinationResponse500
+from .delete_destination_response_500_meta import DeleteDestinationResponse500Meta
 from .delete_transfer_response_401 import DeleteTransferResponse401
 from .delete_transfer_response_401_meta import DeleteTransferResponse401Meta
 from .delete_transfer_response_403 import DeleteTransferResponse403
@@ -243,9 +272,17 @@ from .delete_transformation_response_429 import DeleteTransformationResponse429
 from .delete_transformation_response_429_meta import DeleteTransformationResponse429Meta
 from .delete_transformation_response_500 import DeleteTransformationResponse500
 from .delete_transformation_response_500_meta import DeleteTransformationResponse500Meta
+from .destination_info import DestinationInfo
+from .destination_list_item import DestinationListItem
+from .destination_list_response import DestinationListResponse
+from .destination_response import DestinationResponse
+from .destination_type import DestinationType
 from .destination_type_settings import DestinationTypeSettings
 from .destination_type_settings_auth_methods_item import DestinationTypeSettingsAuthMethodsItem
 from .destination_type_settings_settings_item import DestinationTypeSettingsSettingsItem
+from .destination_usage import DestinationUsage
+from .destination_usage_response import DestinationUsageResponse
+from .destination_usage_transfers_item import DestinationUsageTransfersItem
 from .error import Error
 from .error_response import ErrorResponse
 from .error_response_meta import ErrorResponseMeta
@@ -398,6 +435,26 @@ from .get_datasource_details_response_429 import GetDatasourceDetailsResponse429
 from .get_datasource_details_response_429_meta import GetDatasourceDetailsResponse429Meta
 from .get_datasource_details_response_500 import GetDatasourceDetailsResponse500
 from .get_datasource_details_response_500_meta import GetDatasourceDetailsResponse500Meta
+from .get_destination_response_401 import GetDestinationResponse401
+from .get_destination_response_401_meta import GetDestinationResponse401Meta
+from .get_destination_response_403 import GetDestinationResponse403
+from .get_destination_response_403_meta import GetDestinationResponse403Meta
+from .get_destination_response_404 import GetDestinationResponse404
+from .get_destination_response_404_meta import GetDestinationResponse404Meta
+from .get_destination_response_429 import GetDestinationResponse429
+from .get_destination_response_429_meta import GetDestinationResponse429Meta
+from .get_destination_response_500 import GetDestinationResponse500
+from .get_destination_response_500_meta import GetDestinationResponse500Meta
+from .get_destination_usage_response_401 import GetDestinationUsageResponse401
+from .get_destination_usage_response_401_meta import GetDestinationUsageResponse401Meta
+from .get_destination_usage_response_403 import GetDestinationUsageResponse403
+from .get_destination_usage_response_403_meta import GetDestinationUsageResponse403Meta
+from .get_destination_usage_response_404 import GetDestinationUsageResponse404
+from .get_destination_usage_response_404_meta import GetDestinationUsageResponse404Meta
+from .get_destination_usage_response_429 import GetDestinationUsageResponse429
+from .get_destination_usage_response_429_meta import GetDestinationUsageResponse429Meta
+from .get_destination_usage_response_500 import GetDestinationUsageResponse500
+from .get_destination_usage_response_500_meta import GetDestinationUsageResponse500Meta
 from .get_latest_backfill_response_401 import GetLatestBackfillResponse401
 from .get_latest_backfill_response_401_meta import GetLatestBackfillResponse401Meta
 from .get_latest_backfill_response_403 import GetLatestBackfillResponse403
@@ -484,6 +541,14 @@ from .list_data_source_logins_response_429 import ListDataSourceLoginsResponse42
 from .list_data_source_logins_response_429_meta import ListDataSourceLoginsResponse429Meta
 from .list_data_source_logins_response_500 import ListDataSourceLoginsResponse500
 from .list_data_source_logins_response_500_error import ListDataSourceLoginsResponse500Error
+from .list_destinations_response_401 import ListDestinationsResponse401
+from .list_destinations_response_401_meta import ListDestinationsResponse401Meta
+from .list_destinations_response_403 import ListDestinationsResponse403
+from .list_destinations_response_403_meta import ListDestinationsResponse403Meta
+from .list_destinations_response_429 import ListDestinationsResponse429
+from .list_destinations_response_429_meta import ListDestinationsResponse429Meta
+from .list_destinations_response_500 import ListDestinationsResponse500
+from .list_destinations_response_500_meta import ListDestinationsResponse500Meta
 from .list_incomplete_backfills_response_200 import ListIncompleteBackfillsResponse200
 from .list_incomplete_backfills_response_401 import ListIncompleteBackfillsResponse401
 from .list_incomplete_backfills_response_401_meta import ListIncompleteBackfillsResponse401Meta
@@ -557,10 +622,29 @@ from .resource_url import ResourceUrl
 from .response_meta import ResponseMeta
 from .rule_output import RuleOutput
 from .secret import Secret
+from .setup_setting import SetupSetting
+from .setup_setting_options_item import SetupSettingOptionsItem
+from .setup_setting_show_for_item import SetupSettingShowForItem
 from .single_transformation_output import SingleTransformationOutput
 from .team_transformation_output import TeamTransformationOutput
 from .team_transformation_output_definition import TeamTransformationOutputDefinition
 from .team_transformation_output_field_type import TeamTransformationOutputFieldType
+from .test_connection_request import TestConnectionRequest
+from .test_connection_request_fields import TestConnectionRequestFields
+from .test_connection_response import TestConnectionResponse
+from .test_connection_response_400 import TestConnectionResponse400
+from .test_connection_response_400_meta import TestConnectionResponse400Meta
+from .test_connection_response_401 import TestConnectionResponse401
+from .test_connection_response_401_meta import TestConnectionResponse401Meta
+from .test_connection_response_403 import TestConnectionResponse403
+from .test_connection_response_403_meta import TestConnectionResponse403Meta
+from .test_connection_response_422 import TestConnectionResponse422
+from .test_connection_response_422_meta import TestConnectionResponse422Meta
+from .test_connection_response_429 import TestConnectionResponse429
+from .test_connection_response_429_meta import TestConnectionResponse429Meta
+from .test_connection_response_500 import TestConnectionResponse500
+from .test_connection_response_500_meta import TestConnectionResponse500Meta
+from .test_connection_result import TestConnectionResult
 from .transfer_account import TransferAccount
 from .transfer_backfill_run_error import TransferBackfillRunError
 from .transfer_configuration_request import TransferConfigurationRequest
@@ -660,6 +744,22 @@ from .update_connector_secret_response_429 import UpdateConnectorSecretResponse4
 from .update_connector_secret_response_429_meta import UpdateConnectorSecretResponse429Meta
 from .update_connector_secret_response_500 import UpdateConnectorSecretResponse500
 from .update_connector_secret_response_500_meta import UpdateConnectorSecretResponse500Meta
+from .update_destination_request import UpdateDestinationRequest
+from .update_destination_request_fields import UpdateDestinationRequestFields
+from .update_destination_response_400 import UpdateDestinationResponse400
+from .update_destination_response_400_meta import UpdateDestinationResponse400Meta
+from .update_destination_response_401 import UpdateDestinationResponse401
+from .update_destination_response_401_meta import UpdateDestinationResponse401Meta
+from .update_destination_response_403 import UpdateDestinationResponse403
+from .update_destination_response_403_meta import UpdateDestinationResponse403Meta
+from .update_destination_response_404 import UpdateDestinationResponse404
+from .update_destination_response_404_meta import UpdateDestinationResponse404Meta
+from .update_destination_response_422 import UpdateDestinationResponse422
+from .update_destination_response_422_meta import UpdateDestinationResponse422Meta
+from .update_destination_response_429 import UpdateDestinationResponse429
+from .update_destination_response_429_meta import UpdateDestinationResponse429Meta
+from .update_destination_response_500 import UpdateDestinationResponse500
+from .update_destination_response_500_meta import UpdateDestinationResponse500Meta
 from .update_secret_request import UpdateSecretRequest
 from .update_transfer_response_400 import UpdateTransferResponse400
 from .update_transfer_response_400_meta import UpdateTransferResponse400Meta
@@ -739,6 +839,7 @@ __all__ = (
     "AppendAccountsToGroupResponse429Meta",
     "AppendAccountsToGroupResponse500",
     "AppendAccountsToGroupResponse500Meta",
+    "AuthMethod",
     "AvailableSourcesResponse",
     "Backfill",
     "BackfillResponse",
@@ -844,6 +945,22 @@ __all__ = (
     "CreateDataSourceConnectionResponse429Meta",
     "CreateDataSourceConnectionResponse500",
     "CreateDataSourceConnectionResponse500Meta",
+    "CreateDestinationRequest",
+    "CreateDestinationRequestFields",
+    "CreateDestinationResponse400",
+    "CreateDestinationResponse400Meta",
+    "CreateDestinationResponse401",
+    "CreateDestinationResponse401Meta",
+    "CreateDestinationResponse403",
+    "CreateDestinationResponse403Meta",
+    "CreateDestinationResponse409",
+    "CreateDestinationResponse409Meta",
+    "CreateDestinationResponse422",
+    "CreateDestinationResponse422Meta",
+    "CreateDestinationResponse429",
+    "CreateDestinationResponse429Meta",
+    "CreateDestinationResponse500",
+    "CreateDestinationResponse500Meta",
     "CreateLoginLinkBody",
     "CreateLoginLinkResponse401",
     "CreateLoginLinkResponse401Meta",
@@ -946,6 +1063,18 @@ __all__ = (
     "DeleteConnectorSecretResponse429Meta",
     "DeleteConnectorSecretResponse500",
     "DeleteConnectorSecretResponse500Meta",
+    "DeleteDestinationResponse401",
+    "DeleteDestinationResponse401Meta",
+    "DeleteDestinationResponse403",
+    "DeleteDestinationResponse403Meta",
+    "DeleteDestinationResponse404",
+    "DeleteDestinationResponse404Meta",
+    "DeleteDestinationResponse409",
+    "DeleteDestinationResponse409Meta",
+    "DeleteDestinationResponse429",
+    "DeleteDestinationResponse429Meta",
+    "DeleteDestinationResponse500",
+    "DeleteDestinationResponse500Meta",
     "DeleteTransferResponse401",
     "DeleteTransferResponse401Meta",
     "DeleteTransferResponse403",
@@ -966,9 +1095,17 @@ __all__ = (
     "DeleteTransformationResponse429Meta",
     "DeleteTransformationResponse500",
     "DeleteTransformationResponse500Meta",
+    "DestinationInfo",
+    "DestinationListItem",
+    "DestinationListResponse",
+    "DestinationResponse",
+    "DestinationType",
     "DestinationTypeSettings",
     "DestinationTypeSettingsAuthMethodsItem",
     "DestinationTypeSettingsSettingsItem",
+    "DestinationUsage",
+    "DestinationUsageResponse",
+    "DestinationUsageTransfersItem",
     "Error",
     "ErrorResponse",
     "ErrorResponseMeta",
@@ -1121,6 +1258,26 @@ __all__ = (
     "GetDataSourceLoginResponse429Meta",
     "GetDataSourceLoginResponse500",
     "GetDataSourceLoginResponse500Error",
+    "GetDestinationResponse401",
+    "GetDestinationResponse401Meta",
+    "GetDestinationResponse403",
+    "GetDestinationResponse403Meta",
+    "GetDestinationResponse404",
+    "GetDestinationResponse404Meta",
+    "GetDestinationResponse429",
+    "GetDestinationResponse429Meta",
+    "GetDestinationResponse500",
+    "GetDestinationResponse500Meta",
+    "GetDestinationUsageResponse401",
+    "GetDestinationUsageResponse401Meta",
+    "GetDestinationUsageResponse403",
+    "GetDestinationUsageResponse403Meta",
+    "GetDestinationUsageResponse404",
+    "GetDestinationUsageResponse404Meta",
+    "GetDestinationUsageResponse429",
+    "GetDestinationUsageResponse429Meta",
+    "GetDestinationUsageResponse500",
+    "GetDestinationUsageResponse500Meta",
     "GetLatestBackfillResponse401",
     "GetLatestBackfillResponse401Meta",
     "GetLatestBackfillResponse403",
@@ -1207,6 +1364,14 @@ __all__ = (
     "ListDataSourceLoginsResponse429Meta",
     "ListDataSourceLoginsResponse500",
     "ListDataSourceLoginsResponse500Error",
+    "ListDestinationsResponse401",
+    "ListDestinationsResponse401Meta",
+    "ListDestinationsResponse403",
+    "ListDestinationsResponse403Meta",
+    "ListDestinationsResponse429",
+    "ListDestinationsResponse429Meta",
+    "ListDestinationsResponse500",
+    "ListDestinationsResponse500Meta",
     "ListIncompleteBackfillsResponse200",
     "ListIncompleteBackfillsResponse401",
     "ListIncompleteBackfillsResponse401Meta",
@@ -1280,10 +1445,29 @@ __all__ = (
     "ResponseMeta",
     "RuleOutput",
     "Secret",
+    "SetupSetting",
+    "SetupSettingOptionsItem",
+    "SetupSettingShowForItem",
     "SingleTransformationOutput",
     "TeamTransformationOutput",
     "TeamTransformationOutputDefinition",
     "TeamTransformationOutputFieldType",
+    "TestConnectionRequest",
+    "TestConnectionRequestFields",
+    "TestConnectionResponse",
+    "TestConnectionResponse400",
+    "TestConnectionResponse400Meta",
+    "TestConnectionResponse401",
+    "TestConnectionResponse401Meta",
+    "TestConnectionResponse403",
+    "TestConnectionResponse403Meta",
+    "TestConnectionResponse422",
+    "TestConnectionResponse422Meta",
+    "TestConnectionResponse429",
+    "TestConnectionResponse429Meta",
+    "TestConnectionResponse500",
+    "TestConnectionResponse500Meta",
+    "TestConnectionResult",
     "TransferAccount",
     "TransferBackfillRunError",
     "TransferConfigurationRequest",
@@ -1379,6 +1563,22 @@ __all__ = (
     "UpdateConnectorSecretResponse429Meta",
     "UpdateConnectorSecretResponse500",
     "UpdateConnectorSecretResponse500Meta",
+    "UpdateDestinationRequest",
+    "UpdateDestinationRequestFields",
+    "UpdateDestinationResponse400",
+    "UpdateDestinationResponse400Meta",
+    "UpdateDestinationResponse401",
+    "UpdateDestinationResponse401Meta",
+    "UpdateDestinationResponse403",
+    "UpdateDestinationResponse403Meta",
+    "UpdateDestinationResponse404",
+    "UpdateDestinationResponse404Meta",
+    "UpdateDestinationResponse422",
+    "UpdateDestinationResponse422Meta",
+    "UpdateDestinationResponse429",
+    "UpdateDestinationResponse429Meta",
+    "UpdateDestinationResponse500",
+    "UpdateDestinationResponse500Meta",
     "UpdateSecretRequest",
     "UpdateTransferResponse400",
     "UpdateTransferResponse400Meta",

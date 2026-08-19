@@ -40,6 +40,7 @@ dev = [
     "pytest-cov==7.1.0",
     "ruff==0.16.3",
     "mypy==2.3.1",
+    "basedpyright==1.39.10",
     "pyyaml==6.0.3",
 ]
 
@@ -120,9 +121,37 @@ ignore_errors = true
 # Pytest configuration
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q"
+# --strict-markers turns an unregistered marker (a typo in `pytest.mark.e2e`, say)
+# into a collection error instead of a warning nobody reads.
+addopts = "-q --strict-markers"
 asyncio_mode = "strict"
 markers = [
     "e2e: end-to-end tests that drive the SDK over a real socket against a local HTTP server",
     "live: smoke tests against the real Supermetrics API; skipped unless SUPERMETRICS_API_KEY is set",
 ]
+
+# basedpyright configuration
+#
+# A second type checker alongside mypy, and a different one: mypy is nominal and
+# checks declarations, pyright infers aggressively and is better at narrowing,
+# unreachable code, and overload resolution. Running both catches more than either.
+#
+# Scoped to the hand-written source. The generated tree is excluded rather than
+# fixed — it is regenerated wholesale from the OpenAPI spec, so any finding there
+# is a note about openapi-python-client, not about this project, and would be
+# overwritten on the next run anyway. `ignore` as well as `exclude` because
+# exclude alone still reports on files pulled in through imports.
+#
+# `standard` rather than basedpyright's default `all`. On `all` this codebase
+# reports ~7,800 diagnostics, essentially all of them stylistic strictness
+# (reportAny, reportUnannotatedClassAttribute) plus 108 reportInvalidCast on the
+# `cast(AuthenticatedClient, self._client)` that every resource adapter performs.
+# Tightening those is a real piece of work and a deliberate decision; it is not
+# something to smuggle in behind a checker. On `standard` the source is clean, so
+# this is a gate that means something today rather than a wall of accepted noise.
+[tool.basedpyright]
+typeCheckingMode = "standard"
+pythonVersion = "3.11"
+include = ["src/supermetrics"]
+exclude = ["src/supermetrics/_generated"]
+ignore = ["src/supermetrics/_generated"]

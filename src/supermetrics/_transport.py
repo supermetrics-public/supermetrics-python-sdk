@@ -37,7 +37,7 @@ from supermetrics.exceptions import SupermetricsClientError
 DEFAULT_BASE_URL = "https://api.supermetrics.com"
 
 #: Default origin *and path prefix* for the Data Warehouse API, which serves transfers,
-#: transfer runs, backfills, and data source connections from a different host.
+#: transfer runs, backfills, data source connections, and destinations from a different host.
 DEFAULT_DTS_BASE_URL = "https://dts-api.supermetrics.com/v1"
 
 #: Paths served by the Data Warehouse API rather than the core API.
@@ -45,7 +45,9 @@ DEFAULT_DTS_BASE_URL = "https://dts-api.supermetrics.com/v1"
 #: The team id is a variable segment, so this has to be a pattern rather than a prefix
 #: list. Deliberately narrow: ``/teams/{team_id}/datasource/{data_source_id}`` shares the
 #: ``/teams/`` prefix but is a core-API route and must not be re-hosted.
-_DTS_PATH_PATTERN = re.compile(r"^/teams/[^/]+/(?:transfers|transfer_runs|backfills|data-source-connections)(?:/|$)")
+_DTS_PATH_PATTERN = re.compile(
+    r"^/teams/[^/]+/(?:transfers|transfer_runs|backfills|data-source-connections|destinations)(?:/|$)"
+)
 
 #: Bearer token to use for the current request, overriding the client credential.
 current_auth_token: ContextVar[str | None] = ContextVar("supermetrics_current_auth_token", default=None)
@@ -299,9 +301,10 @@ def _apply_header_and_timeout_overrides(request: httpx.Request) -> None:
 def resolve_dts_base_url(base_url: str, dts_base_url: str | None) -> str | None:
     """Decide where Data Warehouse requests should be sent, if anywhere.
 
-    Transfers, transfer runs, backfills and data source connections are served from
-    ``dts-api.supermetrics.com``, not from the core API host. Rather than force callers
-    to hold a second client, the SDK re-hosts those requests from a request event hook.
+    Transfers, transfer runs, backfills, data source connections and destinations are
+    served from ``dts-api.supermetrics.com``, not from the core API host. Rather than
+    force callers to hold a second client, the SDK re-hosts those requests from a
+    request event hook.
 
     Args:
         base_url: The client's configured base URL.
