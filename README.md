@@ -14,7 +14,7 @@ Official Python client for Supermetrics
 * Dual sync/async support via separate Client classes
 * Pydantic v2 models for request/response validation
 * Comprehensive API coverage: login links, logins, accounts, queries, DWH transfers and
-  transfer runs, DWH backfills, Connector Builder
+  transfer runs, DWH backfills, custom fields, Connector Builder
 * Custom exception hierarchy with HTTP status code mapping
 * Resource-based API organization
 * API key, OAuth bearer token, and dynamic token provider authentication
@@ -82,6 +82,58 @@ client.connector_builder_secrets.create(
 
 # View execution logs
 logs = client.connector_builder_logs.list(team_id=12345, connector_identifier=connector_id)
+```
+
+### Custom Fields
+
+Custom fields are calculated dimensions and metrics defined per team. Each carries a
+`definition`: an ordered pipeline of function, lookup, and condition steps.
+
+```python
+from supermetrics import DefinitionValue, FunctionArgument, FunctionStep, SupermetricsClient
+
+client = SupermetricsClient(api_key="your_api_key")
+
+# Discover which functions, rules, and data types the team is allowed to use
+metadata = client.custom_fields.get_metadata(team_id=12345)
+print([function.name for function in metadata.functions.items])
+
+# Create a one-step field. field_type is "dim" or "met" and is fixed at creation.
+field = client.custom_fields.create(
+    team_id=12345,
+    display_name="Platform (upper)",
+    field_type="dim",
+    data_type="string.text.value",
+    definition=[
+        FunctionStep(
+            type_="function",
+            name="upper_case",
+            arguments=[
+                FunctionArgument(name="value", value=DefinitionValue(type_="data_source_field", value="platform"))
+            ],
+        )
+    ],
+)
+
+# Read-modify-write. The definition comes back wrapped and is sent bare, so a round
+# trip reads `.definition.items`. update() takes no field_type and replaces the whole
+# object — anything you omit reverts to unset.
+current = client.custom_fields.get(team_id=12345, custom_field_id=field.id)
+client.custom_fields.update(
+    team_id=12345,
+    custom_field_id=field.id,
+    display_name="Platform (upper), revised",
+    data_type=current.data_type,
+    definition=current.definition.items,
+    description=current.description,
+)
+
+# list() returns the page only; the pagination rides in `meta` on the raw response,
+# and total_count appears only when you ask for it.
+response = client.with_raw_response.custom_fields.list(team_id=12345, include_total_count=True)
+print(f"{len(response.data)} of {response.json_body['meta']['pagination']['total_count']} fields")
+
+client.custom_fields.delete(team_id=12345, custom_field_id=field.id)
 ```
 
 ### Data Warehouse Transfers

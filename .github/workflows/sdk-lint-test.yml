@@ -80,11 +80,16 @@ jobs:
     # overrides, the raw-response envelope, the error taxonomy, and concurrency
     # isolation on a shared connection pool. Nothing here is mocked or patched.
     #
-    # Also covers every Data Transfers and Transfer Runs method on both the sync and
-    # async clients, and — using a second local server — proves that Data Warehouse
-    # calls are re-hosted to the DTS origin while core API calls are not. Host routing,
-    # request bodies, and query strings exist only on the wire, so the unit suite
-    # cannot observe them and would stay green while the SDK called the wrong host.
+    # Also covers every Data Transfers, Transfer Runs and Custom Fields method on both
+    # the sync and async clients, and — using a second local server — proves that Data
+    # Warehouse calls are re-hosted to the DTS origin while core API calls are not. Host
+    # routing, request bodies, and query strings exist only on the wire, so the unit
+    # suite cannot observe them and would stay green while the SDK called the wrong host.
+    #
+    # tests/e2e/test_e2e_markers.py guards this job's own coverage: pytest is not run
+    # with --strict-markers, so an e2e module that forgets `pytestmark` would be
+    # silently deselected here while still passing under `test` — green, but covering
+    # less than it appears to.
     name: End-to-end (local HTTP server)
     runs-on: ubuntu-latest
     strategy:
