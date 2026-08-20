@@ -348,3 +348,8 @@ component_patches:
                 properties:
                   cache_time:
                     nullable: true
+
+    # NOTE: The four production-shape fixes (Pagination, PaginationLinks, AuthMethod,
+    # AccountTagListResponse — see docs/openapi-spec-fixes.md) used to be patched here as
+    # an interim measure. They now live in the source spec
+    # (openapi-specs/openap-management.yaml), so the SDK-layer patches were removed.

@@ -111,7 +111,10 @@ def _overviews_of(parsed: AccountTagListResponse) -> AccountTagOverviewList:
         list[AccountTagOverview]: The team's account tags, empty when there are none.
     """
     data = parsed.data
-    return [] if isinstance(data, Unset) else data
+    if isinstance(data, Unset):
+        return []
+    items = data.items
+    return [] if isinstance(items, Unset) else items
 
 
 def _deleted_of(parsed: DeleteAccountGroupResponse200) -> bool:

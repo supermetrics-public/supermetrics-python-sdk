@@ -237,7 +237,7 @@ class TestRequestsReachTheRightHost:
         """
         api_server.route(
             "/v1/teams/42/account_tags",
-            ScriptedResponse(json_body={"data": []}),
+            ScriptedResponse(json_body={"meta": {"request_id": "req_0123456789abcdef"}, "data": {"items": []}}),
         )
 
         with SupermetricsClient(

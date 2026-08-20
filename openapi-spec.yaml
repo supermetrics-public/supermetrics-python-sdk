@@ -4531,19 +4531,32 @@ components:
     AccountTagListResponse:
       type: object
       additionalProperties: false
+      required:
+      - meta
+      - data
       properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
         data:
-          type: array
-          maxItems: 500
-          description: The list of account tags
-          items:
-            $ref: '#/components/schemas/AccountTagOverview'
+          type: object
+          additionalProperties: false
+          required:
+          - items
+          description: Wrapper object holding the team's account tags
+          properties:
+            items:
+              type: array
+              maxItems: 500
+              description: The list of account tags
+              items:
+                $ref: '#/components/schemas/AccountTagOverview'
           example:
-          - name: a1b2c3d
-            display_name: EMEA paid media
-            color: '#112233'
-            data_source_count: 3
-            account_count: 42
+            items:
+            - name: a1b2c3d
+              display_name: EMEA paid media
+              color: '#112233'
+              data_source_count: 3
+              account_count: 42
     AccountTagOverview:
       type: object
       additionalProperties: false
@@ -4587,18 +4600,29 @@ components:
       type: object
       required:
       - id
-      - label
+      - title
       properties:
         id:
           type: string
           maxLength: 100
           description: Authentication method identifier
           example: AUTH_METHOD_KEY_PAIR
-        label:
+        title:
           type: string
           maxLength: 255
-          description: Display label for the authentication method
+          description: Display title for the authentication method
           example: Key Pair Authentication
+        fields:
+          type: array
+          maxItems: 50
+          description: Settings the user must fill in to use this authentication method.
+          items:
+            $ref: '#/components/schemas/SetupSetting'
+        new_secret_field:
+          description: Setting describing a new secret to supply for this authentication
+            method.
+          allOf:
+          - $ref: '#/components/schemas/SetupSetting'
         is_default:
           type: boolean
           description: Whether this is the default authentication method
@@ -7778,19 +7802,39 @@ components:
           example: 0
         links:
           $ref: '#/components/schemas/PaginationLinks'
-      required:
-      - total_count
-      - limit
-      - offset
       additionalProperties: false
     PaginationLinks:
       type: object
       description: Navigation links for paginated collections.
       properties:
+        first:
+          type: string
+          format: uri
+          maxLength: 2048
+          nullable: true
+          description: URL of the first page, or null when not applicable.
+          example: https://api.supermetrics.com/v1/teams/team_abc/custom-fields?offset=0&limit=20
+        prev:
+          type: string
+          format: uri
+          maxLength: 2048
+          nullable: true
+          description: URL of the previous page, or null on the first page.
+          example: null
         next:
-          $ref: '#/components/schemas/ResourceUrl'
-        previous:
-          $ref: '#/components/schemas/ResourceUrl'
+          type: string
+          format: uri
+          maxLength: 2048
+          nullable: true
+          description: URL of the next page, or null on the last page.
+          example: https://api.supermetrics.com/v1/teams/team_abc/custom-fields?offset=20&limit=20
+        last:
+          type: string
+          format: uri
+          maxLength: 2048
+          nullable: true
+          description: URL of the last page, or null when not applicable.
+          example: null
       additionalProperties: false
     QueryDetails:
       type: object
@@ -7829,19 +7873,6 @@ components:
       example: BXaEFVtjc7TXaJxgZhmFgSUD9edqq_CN
       x-faker:
         random.alphaNumeric: 30
-    ResourceUrl:
-      type: object
-      description: A hyperlink to a related resource.
-      properties:
-        href:
-          type: string
-          format: uri
-          maxLength: 2048
-          description: Absolute URL of the resource.
-          example: https://api.supermetrics.com/v1/teams/team_abc/custom-fields?offset=20&limit=20
-      required:
-      - href
-      additionalProperties: false
     ResponseMeta:
       type: object
       description: Metadata included in every API response.

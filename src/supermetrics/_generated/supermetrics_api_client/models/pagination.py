@@ -19,15 +19,15 @@ class Pagination:
     """Offset-based pagination metadata for list responses.
 
     Attributes:
-        total_count (int): Total number of items available across all pages. Example: 137.
-        limit (int): Maximum number of items returned in this page. Example: 20.
-        offset (int): Number of items skipped before this page.
+        total_count (int | Unset): Total number of items available across all pages. Example: 137.
+        limit (int | Unset): Maximum number of items returned in this page. Example: 20.
+        offset (int | Unset): Number of items skipped before this page.
         links (PaginationLinks | Unset): Navigation links for paginated collections.
     """
 
-    total_count: int
-    limit: int
-    offset: int
+    total_count: int | Unset = UNSET
+    limit: int | Unset = UNSET
+    offset: int | Unset = UNSET
     links: PaginationLinks | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
@@ -43,13 +43,13 @@ class Pagination:
 
         field_dict: dict[str, Any] = {}
 
-        field_dict.update(
-            {
-                "total_count": total_count,
-                "limit": limit,
-                "offset": offset,
-            }
-        )
+        field_dict.update({})
+        if total_count is not UNSET:
+            field_dict["total_count"] = total_count
+        if limit is not UNSET:
+            field_dict["limit"] = limit
+        if offset is not UNSET:
+            field_dict["offset"] = offset
         if links is not UNSET:
             field_dict["links"] = links
 
@@ -60,11 +60,11 @@ class Pagination:
         from ..models.pagination_links import PaginationLinks
 
         d = dict(src_dict)
-        total_count = d.pop("total_count")
+        total_count = d.pop("total_count", UNSET)
 
-        limit = d.pop("limit")
+        limit = d.pop("limit", UNSET)
 
-        offset = d.pop("offset")
+        offset = d.pop("offset", UNSET)
 
         _links = d.pop("links", UNSET)
         links: PaginationLinks | Unset
