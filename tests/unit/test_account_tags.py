@@ -26,6 +26,9 @@ from supermetrics._generated.supermetrics_api_client.models.account_tag_data_sou
     AccountTagDataSourcesItem,
 )
 from supermetrics._generated.supermetrics_api_client.models.account_tag_list_response import AccountTagListResponse
+from supermetrics._generated.supermetrics_api_client.models.account_tag_list_response_data import (
+    AccountTagListResponseData,
+)
 from supermetrics._generated.supermetrics_api_client.models.account_tag_overview import AccountTagOverview
 from supermetrics._generated.supermetrics_api_client.models.account_tag_response import AccountTagResponse
 from supermetrics._generated.supermetrics_api_client.models.append_accounts_to_group_body import (
@@ -47,6 +50,7 @@ from supermetrics._generated.supermetrics_api_client.models.delete_account_group
 from supermetrics._generated.supermetrics_api_client.models.error import Error
 from supermetrics._generated.supermetrics_api_client.models.error_response import ErrorResponse
 from supermetrics._generated.supermetrics_api_client.models.error_response_meta import ErrorResponseMeta
+from supermetrics._generated.supermetrics_api_client.models.meta import Meta
 from supermetrics._generated.supermetrics_api_client.models.remove_accounts_from_group_body import (
     RemoveAccountsFromGroupBody,
 )
@@ -133,9 +137,18 @@ def _tag_response(data: AccountTag | object = None) -> AccountTagResponse:
     return AccountTagResponse(data=_sample_tag() if data is None else data)  # type: ignore[arg-type]
 
 
-def _list_response(data: list[AccountTagOverview] | object = None) -> AccountTagListResponse:
-    """Wrap a page of tag summaries in the list envelope the API sends."""
-    return AccountTagListResponse(data=[_sample_overview()] if data is None else data)  # type: ignore[arg-type]
+def _list_response(items: list[AccountTagOverview] | None = None) -> AccountTagListResponse:
+    """Wrap a page of tag summaries in the ``{meta, data: {items}}`` envelope the API sends.
+
+    Production double-wraps the page at ``data.items`` (see docs/openapi-spec-fixes.md), so
+    the summaries go inside an ``AccountTagListResponseData``. An empty page is ``items=[]``.
+    """
+    if items is None:
+        items = [_sample_overview()]
+    return AccountTagListResponse(
+        meta=Meta(request_id="req_test"),
+        data=AccountTagListResponseData(items=items),
+    )
 
 
 def _delete_response(result: bool | object) -> DeleteAccountGroupResponse200:
@@ -183,14 +196,14 @@ class TestAccountTagsResource:
         assert tags[0].account_count == 3
         assert mock_sync.call_args.kwargs["team_id"] == TEAM_ID
 
-    def test_list_returns_empty_when_data_unset(
+    def test_list_returns_empty_when_items_empty(
         self, monkeypatch: pytest.MonkeyPatch, account_tags_resource: AccountTagsResource
     ) -> None:
-        """Test that an absent data array degrades to an empty list rather than raising."""
+        """Test that an empty ``data.items`` array degrades to an empty list rather than raising."""
         monkeypatch.setattr(
             module.fetch_available_account_groups,
             "sync_detailed",
-            MagicMock(return_value=_make_success_response(_list_response(UNSET))),
+            MagicMock(return_value=_make_success_response(_list_response([]))),
         )
 
         assert account_tags_resource.list(team_id=TEAM_ID) == []
@@ -543,14 +556,14 @@ class TestAccountTagsAsyncResource:
         assert mock_asyncio.call_args.kwargs["team_id"] == TEAM_ID
 
     @pytest.mark.asyncio
-    async def test_list_returns_empty_when_data_unset(
+    async def test_list_returns_empty_when_items_empty(
         self, monkeypatch: pytest.MonkeyPatch, account_tags_resource: AccountTagsAsyncResource
     ) -> None:
-        """Test that an absent data array degrades to an empty list on the async path too."""
+        """Test that an empty ``data.items`` array degrades to an empty list on the async path too."""
         monkeypatch.setattr(
             module.fetch_available_account_groups,
             "asyncio_detailed",
-            AsyncMock(return_value=_make_success_response(_list_response(UNSET))),
+            AsyncMock(return_value=_make_success_response(_list_response([]))),
         )
 
         assert await account_tags_resource.list(team_id=TEAM_ID) == []

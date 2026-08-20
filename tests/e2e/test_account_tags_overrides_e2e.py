@@ -60,8 +60,12 @@ ACCOUNT_TAG_PAYLOAD: dict[str, Any] = {
     "data_sources": DATA_SOURCES,
 }
 
-#: Neither envelope carries a ``meta`` block in this domain — ``data`` is the whole body.
-ACCOUNT_TAG_LIST_BODY: dict[str, Any] = {"data": [ACCOUNT_TAG_OVERVIEW]}
+#: The list response is ``{meta, data}`` with the page double-wrapped at ``data.items``
+#: (see docs/openapi-spec-fixes.md). The single-object envelope below is a bare ``data``.
+ACCOUNT_TAG_LIST_BODY: dict[str, Any] = {
+    "meta": {"request_id": "req_0123456789abcdef"},
+    "data": {"items": [ACCOUNT_TAG_OVERVIEW]},
+}
 ACCOUNT_TAG_SINGLE_BODY: dict[str, Any] = {"data": ACCOUNT_TAG_PAYLOAD}
 
 

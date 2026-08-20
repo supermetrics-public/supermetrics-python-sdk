@@ -92,13 +92,16 @@ ACCOUNT_TAG_OVERVIEW_PAYLOAD: dict[str, Any] = {
 #: envelope is a plain ``{"data": ...}`` with nothing else in it.
 ACCOUNT_TAG_SINGLE_BODY: dict[str, Any] = {"data": ACCOUNT_TAG_PAYLOAD}
 
-#: GET the collection — a flat ``{"data": [...]}``, not the ``data.items`` double-wrap.
-ACCOUNT_TAG_LIST_BODY: dict[str, Any] = {"data": [ACCOUNT_TAG_OVERVIEW_PAYLOAD]}
+#: Every list response carries this envelope metadata.
+ACCOUNT_TAG_META: dict[str, Any] = {"request_id": "req_0123456789abcdef"}
 
-#: An empty team. ``data`` is optional upstream, so both of these are legal answers and
-#: both have to come back as ``[]`` rather than fall over.
-ACCOUNT_TAG_EMPTY_LIST_BODY: dict[str, Any] = {"data": []}
-ACCOUNT_TAG_NO_DATA_BODY: dict[str, Any] = {}
+#: GET the collection — ``{meta, data}`` with the page at ``data.items``, double-wrapped
+#: like custom fields and blends (the flat ``{"data": [...]}`` shape the SDK once assumed
+#: does not exist; see docs/openapi-spec-fixes.md).
+ACCOUNT_TAG_LIST_BODY: dict[str, Any] = {"meta": ACCOUNT_TAG_META, "data": {"items": [ACCOUNT_TAG_OVERVIEW_PAYLOAD]}}
+
+#: An empty team — an empty ``data.items`` array, which has to come back as ``[]``.
+ACCOUNT_TAG_EMPTY_LIST_BODY: dict[str, Any] = {"meta": ACCOUNT_TAG_META, "data": {"items": []}}
 
 #: Deletion is idempotent upstream, so all three of these arrive with HTTP 200 and the
 #: body is the only place the outcome is recorded. ``result`` is optional in the schema,
@@ -164,20 +167,6 @@ class TestAccountTagsResource:
         request = api_server.last_request
         assert request.method == "GET"
         assert urlsplit(request.path).path == ACCOUNT_TAGS_COLLECTION
-
-    def test_list_returns_an_empty_list_when_the_body_has_no_data_key(self, api_server: MockAPIServer) -> None:
-        """``data`` is optional upstream, so a body without it is legal and means empty."""
-        api_server.route(ACCOUNT_TAGS_COLLECTION, ScriptedResponse(json_body=ACCOUNT_TAG_NO_DATA_BODY))
-
-        with SupermetricsClient(api_key="api_k", base_url=api_server.base_url) as client:
-            tags = client.account_tags.list(team_id=TEAM_ID)
-
-        assert tags == []
-
-        request = api_server.last_request
-        assert request.method == "GET"
-        assert urlsplit(request.path).path == ACCOUNT_TAGS_COLLECTION
-        assert request.bearer_token == "api_k"
 
     def test_get_returns_the_tag_with_its_membership(self, api_server: MockAPIServer) -> None:
         """``get`` returns membership where ``list`` returns counts.
@@ -506,20 +495,6 @@ class TestAccountTagsAsyncResource:
         assert urlsplit(request.path).query == ""
         assert request.bearer_token == "api_k"
         assert request.body == b""
-
-    @pytest.mark.asyncio
-    async def test_list_returns_an_empty_list_when_the_body_has_no_data_key(self, api_server: MockAPIServer) -> None:
-        """An absent ``data`` is an empty team on the async path too."""
-        api_server.route(ACCOUNT_TAGS_COLLECTION, ScriptedResponse(json_body=ACCOUNT_TAG_NO_DATA_BODY))
-
-        async with SupermetricsAsyncClient(api_key="api_k", base_url=api_server.base_url) as client:
-            tags = await client.account_tags.list(team_id=TEAM_ID)
-
-        assert tags == []
-
-        request = api_server.last_request
-        assert request.method == "GET"
-        assert urlsplit(request.path).path == ACCOUNT_TAGS_COLLECTION
 
     @pytest.mark.asyncio
     async def test_list_returns_an_empty_list_when_data_is_an_empty_array(self, api_server: MockAPIServer) -> None:
