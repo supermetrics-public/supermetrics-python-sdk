@@ -173,6 +173,10 @@ paths:
         maxLength: 50
         pattern: ^[A-Za-z0-9_-]+$
       description: Supermetrics login link ID
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
     patch:
       summary: Update login link
       description: Change given properties for specified data source login link
@@ -226,10 +230,6 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       tags:
       - Data Source Login Links
-    servers:
-    - url: https://api.supermetrics.com
-      description: production server
-      x-internal: false
   /ds/login/link/{link_id}/close:
     put:
       summary: Close login link
@@ -317,6 +317,56 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
   /ds/login/{login_id}:
+    delete:
+      summary: Revoke login
+      description: Revoke an existing data source login
+      operationId: revokeDataSourceLogin
+      security:
+      - ApiKeyAuth:
+        - ds_logins_write
+      parameters:
+      - name: login_id
+        in: path
+        required: true
+        description: Entity login ID
+        schema:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+      responses:
+        '200':
+          description: Data source login revoked successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginRevokeResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Data Source Logins
+    parameters:
+    - name: login_id
+      in: path
+      required: true
+      schema:
+        type: string
+        maxLength: 50
+        pattern: ^[A-Za-z0-9_-]+$
+      description: Supermetrics login ID
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
     get:
       summary: Get login
       description: Retrieve details of a specific data source login
@@ -356,56 +406,6 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/LoginSearchFailed'
-    parameters:
-    - name: login_id
-      in: path
-      required: true
-      schema:
-        type: string
-        maxLength: 50
-        pattern: ^[A-Za-z0-9_-]+$
-      description: Supermetrics login ID
-    delete:
-      summary: Revoke login
-      description: Revoke an existing data source login
-      operationId: revokeDataSourceLogin
-      security:
-      - ApiKeyAuth:
-        - ds_logins_write
-      parameters:
-      - name: login_id
-        in: path
-        required: true
-        description: Entity login ID
-        schema:
-          type: string
-          maxLength: 50
-          pattern: ^[A-Za-z0-9_-]+$
-      responses:
-        '200':
-          description: Data source login revoked successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LoginRevokeResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-      tags:
-      - Data Source Logins
-    servers:
-    - url: https://api.supermetrics.com
-      description: production server
-      x-internal: false
   /ds/login/{login_id}/accounts:
     get:
       summary: List login accounts
@@ -2521,6 +2521,41 @@ paths:
       description: Global production public Supermetrics Data Warehouse Transfers
         API base path.
       x-internal: false
+  /v1/teams/{team_id}:
+    get:
+      summary: Get team details by team ID
+      description: Get team details by team ID
+      operationId: getTeam
+      security:
+      - ApiKeyAuth:
+        - team_read
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      responses:
+        '200':
+          description: Team retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Teams
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
   /v1/teams/{team_id}/account_tags:
     get:
       summary: List all account tags in a team
@@ -4403,6 +4438,48 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       tags:
       - Data Blending
+  /v1/teams/{team_id}/users:
+    get:
+      summary: List all users in a team
+      description: List all users in a team
+      operationId: listTeamUsers
+      security:
+      - ApiKeyAuth:
+        - team_users_read
+      parameters:
+      - name: team_id
+        in: path
+        required: true
+        description: The ID of the team
+        example: 936506
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+      responses:
+        '200':
+          description: Team users retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamUserListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Team Users
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
 components:
   schemas:
     AbstractResponse:
@@ -7967,6 +8044,52 @@ components:
               description: null
           report_types:
           - Default
+    TeamData:
+      type: object
+      description: Team resource
+      properties:
+        team_id:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+          description: Unique identifier of the team
+          example: 123
+        name:
+          type: string
+          maxLength: 255
+          pattern: ^.+
+          description: Name of the team
+          example: My Team
+        display_id:
+          type: string
+          maxLength: 50
+          pattern: ^SM_[A-Za-z0-9]+
+          description: Human-readable display identifier of the team
+          example: SM_ABC123
+        status:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 10
+          description: Status code of the team
+          example: 1
+        created_at:
+          type: string
+          format: date-time
+          maxLength: 32
+          description: Timestamp when the team was created in ISO 8601 format
+          example: '2026-01-01T00:00:00+00:00'
+    TeamResponse:
+      description: Response envelope containing team data
+      allOf:
+      - $ref: '#/components/schemas/AbstractResponse'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/TeamData'
+        required:
+        - data
     TeamTransformationOutput:
       type: object
       description: A persisted custom field (field transformation) as returned by
@@ -8079,6 +8202,69 @@ components:
             description: null
         report_types:
         - Default
+    TeamUser:
+      type: object
+      description: A user belonging to a team.
+      properties:
+        user_id:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+          description: Unique identifier of the user
+          example: 1
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          description: Email address of the user
+          example: user@example.com
+        first_name:
+          type: string
+          maxLength: 255
+          pattern: ^.+
+          description: First name of the user
+          example: John
+        last_name:
+          type: string
+          maxLength: 255
+          pattern: ^.+
+          description: Last name of the user
+          example: Doe
+        role:
+          type: string
+          maxLength: 50
+          pattern: ^.+
+          description: Role of the user within the team
+          example: ADMIN
+        created_at:
+          type: string
+          format: date-time
+          maxLength: 32
+          description: Timestamp when the user was added to the team in ISO 8601 format
+          example: '2026-01-01T00:00:00+00:00'
+      additionalProperties: false
+    TeamUserListResponse:
+      description: Response envelope containing a list of team users.
+      allOf:
+      - $ref: '#/components/schemas/AbstractResponse'
+      - type: object
+        properties:
+          data:
+            type: array
+            description: List of team users
+            maxItems: 1000
+            example:
+            - user_id: 1
+              email: user@example.com
+              first_name: John
+              last_name: Doe
+              role: member
+              created_at: '2026-01-01T00:00:00+00:00'
+            items:
+              $ref: '#/components/schemas/TeamUser'
+        required:
+        - data
     TestConnectionRequest:
       type: object
       required:

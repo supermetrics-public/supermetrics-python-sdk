@@ -163,6 +163,9 @@ client.account_tags.list(...)
 client.account_tags.get(...)
 client.account_tags.create(...)
 client.account_tags.add_accounts(...)
+
+client.teams.get(team_id=...)
+client.teams.list_users(team_id=...)
 ```
 
 ## Supported Data Sources

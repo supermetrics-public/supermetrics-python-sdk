@@ -76,6 +76,7 @@ callable, or if an `async def` provider is given — use `SupermetricsAsyncClien
 - `custom_fields`: Access to CustomFieldsResource
 - `blends`: Access to BlendsResource
 - `account_tags`: Access to AccountTagsResource
+- `teams`: Access to TeamsResource
 
 **Other Properties:**
 
@@ -161,6 +162,7 @@ not callable.
 - `custom_fields`: Access to CustomFieldsAsyncResource
 - `blends`: Access to BlendsAsyncResource
 - `account_tags`: Access to AccountTagsAsyncResource
+- `teams`: Access to TeamsAsyncResource
 
 **Other Properties:**
 
@@ -3429,6 +3431,69 @@ tag = client.account_tags.remove_accounts(
 **Raises:** `SupermetricsAuthError`, `SupermetricsForbiddenError`, `SupermetricsValidationError` (400), `SupermetricsRateLimitError`, `SupermetricsServerError`, `NetworkError`
 
 Every method above also accepts the standard per-request `auth_token`, `headers`, and
+`timeout` keyword-only overrides, and each is mirrored on `client.with_raw_response` and on
+the async client.
+
+---
+
+### TeamsResource
+
+Read a team's identity and its membership. This is a read-only domain: both methods are
+`GET`, and there is nothing here that creates, updates, or deletes.
+
+> **Base URL:** Teams are served by the core API host, not by the Data Warehouse API, so
+> nothing is re-hosted for them. The paths keep their `/v1` prefix: `/v1/teams/{team_id}`.
+> A plain client reaches them with no `dts_base_url` involvement at all.
+
+#### get()
+
+Fetch a team's identity by its ID.
+
+```python
+team = client.teams.get(team_id=12345)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+
+**Returns:** `TeamData` — the team's identity: `team_id`, `name`, `display_id`, `status`,
+and `created_at`.
+
+**Raises:** `SupermetricsAuthError`, `SupermetricsForbiddenError`, `SupermetricsNotFoundError` (404 if not found), `SupermetricsValidationError` (400), `SupermetricsRateLimitError`, `SupermetricsServerError`, `NetworkError`
+
+**Example:**
+
+```python
+team = client.teams.get(team_id=12345)
+print(f"{team.team_id}: {team.name} ({team.status})")
+```
+
+#### list_users()
+
+List the members of a team.
+
+```python
+users = client.teams.list_users(team_id=12345)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+
+**Returns:** `list[TeamUser]` — the team's members, each with `user_id`, `email`,
+`first_name`, `last_name`, `role`, and `created_at`.
+
+**Raises:** `SupermetricsAuthError`, `SupermetricsForbiddenError`, `SupermetricsValidationError` (400), `SupermetricsRateLimitError`, `SupermetricsServerError`, `NetworkError`
+
+**Example:**
+
+```python
+for user in client.teams.list_users(team_id=12345):
+    print(f"{user.email} ({user.role})")
+```
+
+Both methods above also accept the standard per-request `auth_token`, `headers`, and
 `timeout` keyword-only overrides, and each is mirrored on `client.with_raw_response` and on
 the async client.
 
