@@ -1,6 +1,18 @@
 # History
 
-## 0.5.0 (unreleased)
+## 0.5.0 (2026-08-20)
+
+### Teams & User Identity (Phase 8)
+
+A new `client.teams` resource with two read methods on both clients:
+`client.teams.get(team_id)` returns the team (id, name, `display_id`, status and created
+time) and `client.teams.list_users(team_id)` returns its members with their roles. Both
+appear under `client.with_raw_response` and take the same keyword-only `auth_token`,
+`headers` and `timeout` overrides as every other resource.
+
+Teams live on the **core API host** under the `/v1` prefix — `/v1/teams/{team_id}` and
+`/v1/teams/{team_id}/users` — so nothing is re-hosted and both responses arrive wrapped in
+`{"meta": ..., "data": ...}`, which the adapters unwrap.
 
 ### Logins & Login Links (Phase 7)
 
@@ -311,6 +323,28 @@ set yourself is taken literally and receives every request. The new keyword-only
 specific.
 
 If you currently hold two clients, one of them is now redundant.
+
+### Production-shape fixes
+
+Running the SDK against the live API surfaced four places where the OpenAPI spec disagreed
+with what production actually returns; each crashed a call while parsing a real response.
+All four are fixed at the schema source and regenerated, and are locked in by regression
+tests (`tests/e2e/test_prod_shape_regressions_e2e.py`); the details are logged in
+`docs/openapi-spec-fixes.md`.
+
+* **`custom_fields.list()`** raised on a normal call. `Pagination` required
+  `total_count`/`limit`/`offset`, which production sends only with
+  `include_total_count=true`, and `PaginationLinks` modelled `next`/`previous` as objects
+  when production sends `first`/`prev`/`next`/`last` as nullable URL strings.
+* **`destinations.get()`** raised on any destination carrying an auth method: `AuthMethod`
+  required a `label` the API never sends (it sends `title`, plus `fields` and
+  `new_secret_field`).
+* **`account_tags.list()`** raised because the response is double-wrapped as `data.items`
+  (like custom fields and blends), not the bare `data` array the spec declared.
+
+These endpoints now parse real responses correctly on both clients. Every SDK operation is
+additionally exercised by a read-only live smoke test (`tests/e2e/test_live_smoke.py`),
+team-gated on `SUPERMETRICS_TEAM_ID` so it self-skips without credentials.
 
 ### Generation pipeline
 
