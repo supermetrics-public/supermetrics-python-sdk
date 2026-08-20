@@ -1,5 +1,20 @@
 # History
 
+## 0.5.1 (2026-08-20)
+
+### Packaging
+
+The distribution now ships a PEP 561 `py.typed` marker at the package root
+(`supermetrics/py.typed`). Every module in `supermetrics` is fully annotated, but
+without this marker a type checker treated the installed package as untyped: `import
+supermetrics` raised `import-untyped`, and downstream projects had to silence it with a
+per-module `ignore_missing_imports` override. The marker makes the SDK's existing
+annotations visible to `mypy`, `pyright` and other PEP 561 consumers, so that workaround
+can be removed.
+
+The generated subpackage already carried its own marker; this adds the top-level one that
+governs the public `supermetrics.*` API. No code or API changed.
+
 ## 0.5.0 (2026-08-20)
 
 ### Teams & User Identity (Phase 8)
