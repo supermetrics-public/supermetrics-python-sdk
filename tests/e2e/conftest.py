@@ -190,6 +190,18 @@ DATA_SOURCE_CONNECTION_BODY: dict[str, Any] = {
     },
 }
 
+#: POST /teams/{team_id}/transfers/batch — wrapped, 200.
+BATCH_CREATE_TRANSFERS_BODY: dict[str, Any] = {
+    "meta": META,
+    "data": {
+        "has_errors": False,
+        "results": [
+            {"index": 0, "status": "success", "transfer_id": 36091, "transfer_name": "Transfer 1"},
+            {"index": 1, "status": "success", "transfer_id": 36092, "transfer_name": "Transfer 2"},
+        ],
+    },
+}
+
 # --- Custom fields ------------------------------------------------------------
 #
 # Custom fields live on the CORE api host under a "/v1" path prefix, unlike transfers.

@@ -34,6 +34,7 @@ from supermetrics.exceptions import (
 
 from .conftest import (
     AVAILABLE_SOURCES_BODY,
+    BATCH_CREATE_TRANSFERS_BODY,
     DATA_SOURCE_CONNECTION_BODY,
     TRANSFER_CREATED_BODY,
     TRANSFER_DETAIL_BODY,
@@ -65,6 +66,8 @@ AVAILABLE_SOURCES = f"{TRANSFERS}/available-sources"
 AVAILABLE_OPTIONS = f"{TRANSFERS}/available-options"
 RUNS = f"{TRANSFER}/runs"
 CONNECTIONS = f"/teams/{TEAM_ID}/data-source-connections"
+CLONE = f"{TRANSFER}/clone"
+BATCH = f"{TRANSFERS}/batch"
 
 START_DATE = datetime(2026, 1, 1, tzinfo=UTC)
 END_DATE = datetime(2026, 1, 31, tzinfo=UTC)
@@ -940,3 +943,154 @@ class TestTransfersErrorTaxonomy:
                 )
 
         assert exc_info.value.retry_after == 17
+
+
+class TestCloneTransfer:
+    """Clone transfer — sync and async, both directions on the wire."""
+
+    def test_clone_succeeds_on_201(self, api_server: MockAPIServer) -> None:
+        """Clone answers 201 and the envelope is unwrapped."""
+        api_server.route(CLONE, ScriptedResponse(status=201, json_body=TRANSFER_CREATED_BODY))
+
+        with SupermetricsClient(api_key="api_k", base_url=api_server.base_url) as client:
+            cloned = client.transfers.clone(team_id=TEAM_ID, transfer_id=TRANSFER_ID)
+
+        assert cloned.transfer_id == TRANSFER_ID
+        assert cloned.transfer_name == "Google Ads to BigQuery"
+
+    def test_clone_sends_a_post_to_the_clone_path(self, api_server: MockAPIServer) -> None:
+        """The request is a POST to /teams/{id}/transfers/{id}/clone."""
+        api_server.route(CLONE, ScriptedResponse(status=201, json_body=TRANSFER_CREATED_BODY))
+
+        with SupermetricsClient(api_key="api_k", base_url=api_server.base_url) as client:
+            client.transfers.clone(team_id=TEAM_ID, transfer_id=TRANSFER_ID)
+
+        request = api_server.last_request
+        assert request.method == "POST"
+        assert request.path == CLONE
+        assert request.bearer_token == "api_k"
+
+    def test_clone_with_overrides_sends_body(self, api_server: MockAPIServer) -> None:
+        """When overrides are provided, the body carries them."""
+        from supermetrics._generated.supermetrics_api_client.models.clone_transfer_body import CloneTransferBody
+
+        api_server.route(CLONE, ScriptedResponse(status=201, json_body=TRANSFER_CREATED_BODY))
+
+        overrides = CloneTransferBody(display_name="My Clone")
+        with SupermetricsClient(api_key="api_k", base_url=api_server.base_url) as client:
+            client.transfers.clone(team_id=TEAM_ID, transfer_id=TRANSFER_ID, overrides=overrides)
+
+        body = api_server.last_request.json()
+        assert body["display_name"] == "My Clone"
+
+    def test_clone_without_overrides_sends_empty_body(self, api_server: MockAPIServer) -> None:
+        """Cloning as-is (no overrides) still succeeds."""
+        api_server.route(CLONE, ScriptedResponse(status=201, json_body=TRANSFER_CREATED_BODY))
+
+        with SupermetricsClient(api_key="api_k", base_url=api_server.base_url) as client:
+            cloned = client.transfers.clone(team_id=TEAM_ID, transfer_id=TRANSFER_ID)
+
+        assert cloned.transfer_id == TRANSFER_ID
+
+    def test_clone_404_raises_not_found(self, api_server: MockAPIServer) -> None:
+        """A 404 raises SupermetricsNotFoundError."""
+        api_server.route(
+            CLONE, ScriptedResponse(status=404, json_body=_error_envelope("NOT_FOUND", "Transfer not found"))
+        )
+
+        with SupermetricsClient(api_key="api_k", base_url=api_server.base_url) as client:
+            with pytest.raises(SupermetricsNotFoundError):
+                client.transfers.clone(team_id=TEAM_ID, transfer_id=TRANSFER_ID)
+
+    @pytest.mark.asyncio
+    async def test_async_clone_succeeds(self, api_server: MockAPIServer) -> None:
+        """Async clone also unwraps the 201 envelope."""
+        api_server.route(CLONE, ScriptedResponse(status=201, json_body=TRANSFER_CREATED_BODY))
+
+        async with SupermetricsAsyncClient(api_key="api_k", base_url=api_server.base_url) as client:
+            cloned = await client.transfers.clone(team_id=TEAM_ID, transfer_id=TRANSFER_ID)
+
+        assert cloned.transfer_id == TRANSFER_ID
+
+
+class TestBatchCreateTransfers:
+    """Batch create transfers — sync and async, both directions on the wire."""
+
+    def test_batch_create_succeeds_on_200(self, api_server: MockAPIServer) -> None:
+        """Batch create answers 200 and the data is unwrapped."""
+        api_server.route(BATCH, ScriptedResponse(json_body=BATCH_CREATE_TRANSFERS_BODY))
+
+        with SupermetricsClient(api_key="api_k", base_url=api_server.base_url) as client:
+            from supermetrics._generated.supermetrics_api_client.models.transfer_configuration_request import (
+                TransferConfigurationRequest,
+            )
+
+            config = TransferConfigurationRequest(
+                data_source_id="AW",
+                schema_id=99999,
+                destination_id=8,
+                display_name="Batch Test",
+                schedule=[],
+                accounts=[],
+            )
+            result = client.transfers.batch_create(team_id=TEAM_ID, transfers=[config])
+
+        assert result.has_errors is False
+        assert len(result.results) == 2
+
+    def test_batch_create_sends_post_to_batch_path(self, api_server: MockAPIServer) -> None:
+        """The request is a POST to /teams/{id}/transfers/batch with a transfers array."""
+        api_server.route(BATCH, ScriptedResponse(json_body=BATCH_CREATE_TRANSFERS_BODY))
+
+        with SupermetricsClient(api_key="api_k", base_url=api_server.base_url) as client:
+            from supermetrics._generated.supermetrics_api_client.models.transfer_configuration_request import (
+                TransferConfigurationRequest,
+            )
+
+            config = TransferConfigurationRequest(
+                data_source_id="AW",
+                schema_id=99999,
+                destination_id=8,
+                display_name="Batch Test",
+                schedule=[],
+                accounts=[],
+            )
+            client.transfers.batch_create(team_id=TEAM_ID, transfers=[config])
+
+        request = api_server.last_request
+        assert request.method == "POST"
+        assert request.path == BATCH
+        body = request.json()
+        assert "transfers" in body
+        assert len(body["transfers"]) == 1
+        assert body["transfers"][0]["data_source_id"] == "AW"
+
+    def test_batch_create_401_raises_auth_error(self, api_server: MockAPIServer) -> None:
+        """A 401 raises SupermetricsAuthError."""
+        api_server.route(BATCH, ScriptedResponse(status=401, json_body=_error_envelope("UNAUTHORIZED", "Invalid key")))
+
+        with SupermetricsClient(api_key="bad_k", base_url=api_server.base_url) as client:
+            with pytest.raises(SupermetricsAuthError):
+                client.transfers.batch_create(team_id=TEAM_ID, transfers=[])
+
+    @pytest.mark.asyncio
+    async def test_async_batch_create_succeeds(self, api_server: MockAPIServer) -> None:
+        """Async batch create also unwraps the 200 data."""
+        api_server.route(BATCH, ScriptedResponse(json_body=BATCH_CREATE_TRANSFERS_BODY))
+
+        async with SupermetricsAsyncClient(api_key="api_k", base_url=api_server.base_url) as client:
+            from supermetrics._generated.supermetrics_api_client.models.transfer_configuration_request import (
+                TransferConfigurationRequest,
+            )
+
+            config = TransferConfigurationRequest(
+                data_source_id="AW",
+                schema_id=99999,
+                destination_id=8,
+                display_name="Batch Test",
+                schedule=[],
+                accounts=[],
+            )
+            result = await client.transfers.batch_create(team_id=TEAM_ID, transfers=[config])
+
+        assert result.has_errors is False
