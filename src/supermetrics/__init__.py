@@ -38,6 +38,9 @@ from supermetrics._generated.supermetrics_api_client.models.function_step import
 from supermetrics._generated.supermetrics_api_client.models.lookup_step import LookupStep
 from supermetrics._generated.supermetrics_api_client.models.lookup_step_map import LookupStepMap
 from supermetrics._generated.supermetrics_api_client.models.transfer_account import TransferAccount
+from supermetrics._generated.supermetrics_api_client.models.transfer_configuration_request import (
+    TransferConfigurationRequest,
+)
 from supermetrics._generated.supermetrics_api_client.models.transfer_data_source_setting import (
     TransferDataSourceSetting,
 )
@@ -98,6 +101,7 @@ __all__ = [
     "TransferSegment",
     "TransferDataSourceSetting",
     "CloneTransferBody",
+    "TransferConfigurationRequest",
     # Custom field definition steps. A `definition` is a list of these, and each step
     # nests the value/argument types below it.
     "FunctionStep",

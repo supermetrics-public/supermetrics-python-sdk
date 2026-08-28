@@ -1972,9 +1972,7 @@ class TransfersResource:
             NetworkError: If a network error occurs during the request.
 
         Example:
-            >>> from supermetrics._generated.supermetrics_api_client.models import (
-            ...     TransferConfigurationRequest,
-            ... )
+            >>> from supermetrics import TransferConfigurationRequest
             >>> results = client.transfers.batch_create(
             ...     team_id=12345,
             ...     transfers=[config1, config2],

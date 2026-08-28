@@ -972,7 +972,7 @@ class TestCloneTransfer:
 
     def test_clone_with_overrides_sends_body(self, api_server: MockAPIServer) -> None:
         """When overrides are provided, the body carries them."""
-        from supermetrics._generated.supermetrics_api_client.models.clone_transfer_body import CloneTransferBody
+        from supermetrics import CloneTransferBody
 
         api_server.route(CLONE, ScriptedResponse(status=201, json_body=TRANSFER_CREATED_BODY))
 
@@ -1021,9 +1021,7 @@ class TestBatchCreateTransfers:
         api_server.route(BATCH, ScriptedResponse(json_body=BATCH_CREATE_TRANSFERS_BODY))
 
         with SupermetricsClient(api_key="api_k", base_url=api_server.base_url) as client:
-            from supermetrics._generated.supermetrics_api_client.models.transfer_configuration_request import (
-                TransferConfigurationRequest,
-            )
+            from supermetrics import TransferConfigurationRequest
 
             config = TransferConfigurationRequest(
                 data_source_id="AW",
@@ -1043,9 +1041,7 @@ class TestBatchCreateTransfers:
         api_server.route(BATCH, ScriptedResponse(json_body=BATCH_CREATE_TRANSFERS_BODY))
 
         with SupermetricsClient(api_key="api_k", base_url=api_server.base_url) as client:
-            from supermetrics._generated.supermetrics_api_client.models.transfer_configuration_request import (
-                TransferConfigurationRequest,
-            )
+            from supermetrics import TransferConfigurationRequest
 
             config = TransferConfigurationRequest(
                 data_source_id="AW",
@@ -1079,9 +1075,7 @@ class TestBatchCreateTransfers:
         api_server.route(BATCH, ScriptedResponse(json_body=BATCH_CREATE_TRANSFERS_BODY))
 
         async with SupermetricsAsyncClient(api_key="api_k", base_url=api_server.base_url) as client:
-            from supermetrics._generated.supermetrics_api_client.models.transfer_configuration_request import (
-                TransferConfigurationRequest,
-            )
+            from supermetrics import TransferConfigurationRequest
 
             config = TransferConfigurationRequest(
                 data_source_id="AW",

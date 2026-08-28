@@ -1710,9 +1710,7 @@ Create multiple transfers in a single request. Each configuration is created
 independently — if one fails, the others still succeed.
 
 ```python
-from supermetrics._generated.supermetrics_api_client.models import (
-    TransferConfigurationRequest,
-)
+from supermetrics import TransferConfigurationRequest
 
 results = client.transfers.batch_create(
     team_id=12345,

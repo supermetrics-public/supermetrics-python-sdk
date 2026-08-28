@@ -15,8 +15,9 @@ Two new methods on `client.transfers`:
 Both are available on sync and async clients, mirrored under `with_raw_response`,
 and take the usual `auth_token` / `headers` / `timeout` overrides.
 
-`CloneTransferBody` is now exported from `supermetrics` for convenience:
-`from supermetrics import CloneTransferBody`.
+`CloneTransferBody` and `TransferConfigurationRequest` are now exported from
+`supermetrics` for convenience:
+`from supermetrics import CloneTransferBody, TransferConfigurationRequest`.
 
 ## 0.5.1 (2026-08-20)
 
