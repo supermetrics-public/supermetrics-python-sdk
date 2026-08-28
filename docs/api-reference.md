@@ -1069,8 +1069,9 @@ payload itself, unwrapped — but the envelope is still visible through
 `client.with_raw_response`, which is also the only way to reach the `meta.request_id` of a
 wrapped response.
 
-- **Wrapped** (`.data` is unwrapped for you): `list()`, `create()`, `list_runs()`,
-  `create_datasource_connection()`, and `transfer_runs.get()`
+- **Wrapped** (`.data` is unwrapped for you): `list()`, `create()`, `clone()`,
+  `batch_create()`, `list_runs()`, `create_datasource_connection()`, and
+  `transfer_runs.get()`
 - **Bare** (the model *is* the body): `get()`, `update()`, `set_state()`, `validate()`,
   `validate_update()`, `list_available_sources()`, `get_available_options()`
 
@@ -1671,6 +1672,66 @@ async def main():
 
 asyncio.run(main())
 ```
+
+#### clone()
+
+Clone an existing transfer, optionally overriding selected fields. The clone is fully
+independent — editing or deleting it never affects the source. Pass a `CloneTransferBody`
+to override fields; omit it to clone as-is.
+
+```python
+# Clone as-is
+cloned = client.transfers.clone(team_id=12345, transfer_id=36091)
+print(cloned.transfer_id, cloned.transfer_name)
+
+# Clone with overrides
+from supermetrics import CloneTransferBody
+
+cloned = client.transfers.clone(
+    team_id=12345,
+    transfer_id=36091,
+    overrides=CloneTransferBody(display_name="My clone"),
+)
+```
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `team_id` | `int` | Yes | Team identifier |
+| `transfer_id` | `int` | Yes | Source transfer to clone |
+| `overrides` | `CloneTransferBody \| None` | No | Fields to override in the clone |
+
+**Returns:** `TransferCreatedResponse` — the new transfer's ID and display name.
+
+**HTTP:** `POST /teams/{team_id}/transfers/{transfer_id}/clone` → 201
+
+#### batch_create()
+
+Create multiple transfers in a single request. Each configuration is created
+independently — if one fails, the others still succeed.
+
+```python
+from supermetrics._generated.supermetrics_api_client.models import (
+    TransferConfigurationRequest,
+)
+
+results = client.transfers.batch_create(
+    team_id=12345,
+    transfers=[config1, config2],
+)
+print(f"Errors: {results.has_errors}")
+for item in results.results:
+    print(f"  [{item.index}] {item.status}: {item.transfer_id}")
+```
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `team_id` | `int` | Yes | Team identifier |
+| `transfers` | `list[TransferConfigurationRequest]` | Yes | 1–100 transfer configurations |
+
+**Returns:** `BatchCreateTransfersResponse200Data` — with `has_errors` flag and
+per-item `results`.
+
+**HTTP:** `POST /teams/{team_id}/transfers/batch` → 200
 
 ---
 

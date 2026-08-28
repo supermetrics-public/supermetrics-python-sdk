@@ -25,6 +25,7 @@ from supermetrics._generated.supermetrics_api_client.models.blended_data_source_
 from supermetrics._generated.supermetrics_api_client.models.blended_data_source_input_segments_item import (
     BlendedDataSourceInputSegmentsItem,
 )
+from supermetrics._generated.supermetrics_api_client.models.clone_transfer_body import CloneTransferBody
 from supermetrics._generated.supermetrics_api_client.models.condition_case import ConditionCase
 from supermetrics._generated.supermetrics_api_client.models.condition_case_condition import ConditionCaseCondition
 from supermetrics._generated.supermetrics_api_client.models.condition_step import ConditionStep
@@ -96,6 +97,7 @@ __all__ = [
     "TransferAccount",
     "TransferSegment",
     "TransferDataSourceSetting",
+    "CloneTransferBody",
     # Custom field definition steps. A `definition` is a list of these, and each step
     # nests the value/argument types below it.
     "FunctionStep",
