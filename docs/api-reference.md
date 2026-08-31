@@ -1636,7 +1636,7 @@ if connection.login_url:
     print(f"Finish authentication at {connection.login_url}")
 ```
 
-**Async usage** (all twelve methods above are also available on `TransfersAsyncResource`):
+**Async usage** (all fourteen methods above are also available on `TransfersAsyncResource`):
 
 ```python
 import asyncio

@@ -29,6 +29,7 @@ from supermetrics.resources.destinations import DestinationsAsyncResource, Desti
 from supermetrics.resources.login_links import LoginLinksAsyncResource, LoginLinksResource
 from supermetrics.resources.logins import LoginsAsyncResource, LoginsResource
 from supermetrics.resources.queries import QueriesAsyncResource, QueriesResource
+from supermetrics.resources.table_groups import TableGroupsAsyncResource, TableGroupsResource
 from supermetrics.resources.teams import TeamsAsyncResource, TeamsResource
 from supermetrics.resources.transfer_runs import TransferRunsAsyncResource, TransferRunsResource
 from supermetrics.resources.transfers import TransfersAsyncResource, TransfersResource
@@ -60,6 +61,8 @@ __all__ = [
     "LoginsAsyncResource",
     "QueriesResource",
     "QueriesAsyncResource",
+    "TableGroupsResource",
+    "TableGroupsAsyncResource",
     "TeamsResource",
     "TeamsAsyncResource",
     "TransfersResource",

@@ -402,9 +402,35 @@ from .destination_type_settings_settings_item import DestinationTypeSettingsSett
 from .destination_usage import DestinationUsage
 from .destination_usage_response import DestinationUsageResponse
 from .destination_usage_transfers_item import DestinationUsageTransfersItem
+from .edit_table_group_body import EditTableGroupBody
+from .edit_table_group_response_400 import EditTableGroupResponse400
+from .edit_table_group_response_400_meta import EditTableGroupResponse400Meta
+from .edit_table_group_response_401 import EditTableGroupResponse401
+from .edit_table_group_response_401_meta import EditTableGroupResponse401Meta
+from .edit_table_group_response_403 import EditTableGroupResponse403
+from .edit_table_group_response_403_meta import EditTableGroupResponse403Meta
+from .edit_table_group_response_404 import EditTableGroupResponse404
+from .edit_table_group_response_404_error import EditTableGroupResponse404Error
+from .edit_table_group_response_422 import EditTableGroupResponse422
+from .edit_table_group_response_422_meta import EditTableGroupResponse422Meta
+from .edit_table_group_response_429 import EditTableGroupResponse429
+from .edit_table_group_response_429_meta import EditTableGroupResponse429Meta
+from .edit_table_group_response_500 import EditTableGroupResponse500
+from .edit_table_group_response_500_meta import EditTableGroupResponse500Meta
 from .error import Error
 from .error_response import ErrorResponse
 from .error_response_meta import ErrorResponseMeta
+from .export_table_group_response_200 import ExportTableGroupResponse200
+from .export_table_group_response_401 import ExportTableGroupResponse401
+from .export_table_group_response_401_meta import ExportTableGroupResponse401Meta
+from .export_table_group_response_404 import ExportTableGroupResponse404
+from .export_table_group_response_404_error import ExportTableGroupResponse404Error
+from .export_table_group_response_422 import ExportTableGroupResponse422
+from .export_table_group_response_422_meta import ExportTableGroupResponse422Meta
+from .export_table_group_response_429 import ExportTableGroupResponse429
+from .export_table_group_response_429_meta import ExportTableGroupResponse429Meta
+from .export_table_group_response_500 import ExportTableGroupResponse500
+from .export_table_group_response_500_error import ExportTableGroupResponse500Error
 from .fetch_account_group_response_400 import FetchAccountGroupResponse400
 from .fetch_account_group_response_400_meta import FetchAccountGroupResponse400Meta
 from .fetch_account_group_response_401 import FetchAccountGroupResponse401
@@ -447,6 +473,7 @@ from .fetch_transformation_response_429 import FetchTransformationResponse429
 from .fetch_transformation_response_429_meta import FetchTransformationResponse429Meta
 from .fetch_transformation_response_500 import FetchTransformationResponse500
 from .fetch_transformation_response_500_meta import FetchTransformationResponse500Meta
+from .field_definition import FieldDefinition
 from .function_argument import FunctionArgument
 from .function_specification_output import FunctionSpecificationOutput
 from .function_specification_output_arguments_item import FunctionSpecificationOutputArgumentsItem
@@ -649,6 +676,21 @@ from .get_transfer_run_response_429 import GetTransferRunResponse429
 from .get_transfer_run_response_429_meta import GetTransferRunResponse429Meta
 from .get_transfer_run_response_500 import GetTransferRunResponse500
 from .get_transfer_run_response_500_meta import GetTransferRunResponse500Meta
+from .import_table_group_body import ImportTableGroupBody
+from .import_table_group_response_400 import ImportTableGroupResponse400
+from .import_table_group_response_400_error import ImportTableGroupResponse400Error
+from .import_table_group_response_401 import ImportTableGroupResponse401
+from .import_table_group_response_401_meta import ImportTableGroupResponse401Meta
+from .import_table_group_response_404 import ImportTableGroupResponse404
+from .import_table_group_response_404_error import ImportTableGroupResponse404Error
+from .import_table_group_response_409 import ImportTableGroupResponse409
+from .import_table_group_response_409_error import ImportTableGroupResponse409Error
+from .import_table_group_response_422 import ImportTableGroupResponse422
+from .import_table_group_response_422_meta import ImportTableGroupResponse422Meta
+from .import_table_group_response_429 import ImportTableGroupResponse429
+from .import_table_group_response_429_meta import ImportTableGroupResponse429Meta
+from .import_table_group_response_500 import ImportTableGroupResponse500
+from .import_table_group_response_500_error import ImportTableGroupResponse500Error
 from .list_connector_logs_response_200 import ListConnectorLogsResponse200
 from .list_connector_logs_response_400 import ListConnectorLogsResponse400
 from .list_connector_logs_response_400_meta import ListConnectorLogsResponse400Meta
@@ -727,6 +769,15 @@ from .list_login_links_response_429 import ListLoginLinksResponse429
 from .list_login_links_response_429_meta import ListLoginLinksResponse429Meta
 from .list_login_links_response_500 import ListLoginLinksResponse500
 from .list_login_links_response_500_meta import ListLoginLinksResponse500Meta
+from .list_table_groups_response_200 import ListTableGroupsResponse200
+from .list_table_groups_response_401 import ListTableGroupsResponse401
+from .list_table_groups_response_401_meta import ListTableGroupsResponse401Meta
+from .list_table_groups_response_422 import ListTableGroupsResponse422
+from .list_table_groups_response_422_meta import ListTableGroupsResponse422Meta
+from .list_table_groups_response_429 import ListTableGroupsResponse429
+from .list_table_groups_response_429_meta import ListTableGroupsResponse429Meta
+from .list_table_groups_response_500 import ListTableGroupsResponse500
+from .list_table_groups_response_500_error import ListTableGroupsResponse500Error
 from .list_team_users_response_400 import ListTeamUsersResponse400
 from .list_team_users_response_400_meta import ListTeamUsersResponse400Meta
 from .list_team_users_response_401 import ListTeamUsersResponse401
@@ -788,6 +839,7 @@ from .remove_accounts_from_group_response_429 import RemoveAccountsFromGroupResp
 from .remove_accounts_from_group_response_429_meta import RemoveAccountsFromGroupResponse429Meta
 from .remove_accounts_from_group_response_500 import RemoveAccountsFromGroupResponse500
 from .remove_accounts_from_group_response_500_meta import RemoveAccountsFromGroupResponse500Meta
+from .resource_url import ResourceURL
 from .response_meta import ResponseMeta
 from .response_meta_with_pagination import ResponseMetaWithPagination
 from .response_meta_with_pagination_paginate import ResponseMetaWithPaginationPaginate
@@ -809,6 +861,14 @@ from .setup_setting import SetupSetting
 from .setup_setting_options_item import SetupSettingOptionsItem
 from .setup_setting_show_for_item import SetupSettingShowForItem
 from .single_transformation_output import SingleTransformationOutput
+from .table_definition import TableDefinition
+from .table_definition_table_partition import TableDefinitionTablePartition
+from .table_group import TableGroup
+from .table_group_export import TableGroupExport
+from .table_group_import import TableGroupImport
+from .table_group_links import TableGroupLinks
+from .table_group_response import TableGroupResponse
+from .table_group_type import TableGroupType
 from .team_data import TeamData
 from .team_response import TeamResponse
 from .team_transformation_output import TeamTransformationOutput
@@ -1427,9 +1487,35 @@ __all__ = (
     "DestinationUsage",
     "DestinationUsageResponse",
     "DestinationUsageTransfersItem",
+    "EditTableGroupBody",
+    "EditTableGroupResponse400",
+    "EditTableGroupResponse400Meta",
+    "EditTableGroupResponse401",
+    "EditTableGroupResponse401Meta",
+    "EditTableGroupResponse403",
+    "EditTableGroupResponse403Meta",
+    "EditTableGroupResponse404",
+    "EditTableGroupResponse404Error",
+    "EditTableGroupResponse422",
+    "EditTableGroupResponse422Meta",
+    "EditTableGroupResponse429",
+    "EditTableGroupResponse429Meta",
+    "EditTableGroupResponse500",
+    "EditTableGroupResponse500Meta",
     "Error",
     "ErrorResponse",
     "ErrorResponseMeta",
+    "ExportTableGroupResponse200",
+    "ExportTableGroupResponse401",
+    "ExportTableGroupResponse401Meta",
+    "ExportTableGroupResponse404",
+    "ExportTableGroupResponse404Error",
+    "ExportTableGroupResponse422",
+    "ExportTableGroupResponse422Meta",
+    "ExportTableGroupResponse429",
+    "ExportTableGroupResponse429Meta",
+    "ExportTableGroupResponse500",
+    "ExportTableGroupResponse500Error",
     "FetchAccountGroupResponse400",
     "FetchAccountGroupResponse400Meta",
     "FetchAccountGroupResponse401",
@@ -1472,6 +1558,7 @@ __all__ = (
     "FetchTransformationResponse429Meta",
     "FetchTransformationResponse500",
     "FetchTransformationResponse500Meta",
+    "FieldDefinition",
     "FunctionArgument",
     "FunctionSpecificationOutput",
     "FunctionSpecificationOutputArgumentsItem",
@@ -1674,6 +1761,21 @@ __all__ = (
     "GetTransferRunResponse429Meta",
     "GetTransferRunResponse500",
     "GetTransferRunResponse500Meta",
+    "ImportTableGroupBody",
+    "ImportTableGroupResponse400",
+    "ImportTableGroupResponse400Error",
+    "ImportTableGroupResponse401",
+    "ImportTableGroupResponse401Meta",
+    "ImportTableGroupResponse404",
+    "ImportTableGroupResponse404Error",
+    "ImportTableGroupResponse409",
+    "ImportTableGroupResponse409Error",
+    "ImportTableGroupResponse422",
+    "ImportTableGroupResponse422Meta",
+    "ImportTableGroupResponse429",
+    "ImportTableGroupResponse429Meta",
+    "ImportTableGroupResponse500",
+    "ImportTableGroupResponse500Error",
     "ListConnectorLogsResponse200",
     "ListConnectorLogsResponse400",
     "ListConnectorLogsResponse400Meta",
@@ -1752,6 +1854,15 @@ __all__ = (
     "ListLoginLinksResponse429Meta",
     "ListLoginLinksResponse500",
     "ListLoginLinksResponse500Meta",
+    "ListTableGroupsResponse200",
+    "ListTableGroupsResponse401",
+    "ListTableGroupsResponse401Meta",
+    "ListTableGroupsResponse422",
+    "ListTableGroupsResponse422Meta",
+    "ListTableGroupsResponse429",
+    "ListTableGroupsResponse429Meta",
+    "ListTableGroupsResponse500",
+    "ListTableGroupsResponse500Error",
     "ListTeamUsersResponse400",
     "ListTeamUsersResponse400Meta",
     "ListTeamUsersResponse401",
@@ -1813,6 +1924,7 @@ __all__ = (
     "RemoveAccountsFromGroupResponse429Meta",
     "RemoveAccountsFromGroupResponse500",
     "RemoveAccountsFromGroupResponse500Meta",
+    "ResourceURL",
     "ResponseMeta",
     "ResponseMetaWithPagination",
     "ResponseMetaWithPaginationPaginate",
@@ -1834,6 +1946,14 @@ __all__ = (
     "SetupSettingOptionsItem",
     "SetupSettingShowForItem",
     "SingleTransformationOutput",
+    "TableDefinition",
+    "TableDefinitionTablePartition",
+    "TableGroup",
+    "TableGroupExport",
+    "TableGroupImport",
+    "TableGroupLinks",
+    "TableGroupResponse",
+    "TableGroupType",
     "TeamData",
     "TeamResponse",
     "TeamTransformationOutput",

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime
+import json
 from typing import cast
 
 import httpx
@@ -837,9 +838,10 @@ class TransfersAsyncResource:
             if response.status_code in (200, 201):
                 parsed = response.parsed
                 if parsed is None:
-                    import json as _json
-
-                    parsed = TransferCreatedEnvelope.from_dict(_json.loads(response.content))
+                    # Stopgap: spec declares clone as 201-only, so the generated
+                    # client returns parsed=None on 200. Remove once 200 is added
+                    # to the canonical spec upstream.
+                    parsed = TransferCreatedEnvelope.from_dict(json.loads(response.content))
                 return cast(TransferCreatedEnvelope, parsed).data
             _raise_for_status(
                 int(response.status_code),
@@ -1958,9 +1960,10 @@ class TransfersResource:
             if response.status_code in (200, 201):
                 parsed = response.parsed
                 if parsed is None:
-                    import json as _json
-
-                    parsed = TransferCreatedEnvelope.from_dict(_json.loads(response.content))
+                    # Stopgap: spec declares clone as 201-only, so the generated
+                    # client returns parsed=None on 200. Remove once 200 is added
+                    # to the canonical spec upstream.
+                    parsed = TransferCreatedEnvelope.from_dict(json.loads(response.content))
                 return cast(TransferCreatedEnvelope, parsed).data
             _raise_for_status(
                 int(response.status_code),

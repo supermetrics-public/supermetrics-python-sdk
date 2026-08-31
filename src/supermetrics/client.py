@@ -24,6 +24,7 @@ from supermetrics.resources.destinations import DestinationsResource
 from supermetrics.resources.login_links import LoginLinksResource
 from supermetrics.resources.logins import LoginsResource
 from supermetrics.resources.queries import QueriesResource
+from supermetrics.resources.table_groups import TableGroupsResource
 from supermetrics.resources.teams import TeamsResource
 from supermetrics.resources.transfer_runs import TransferRunsResource
 from supermetrics.resources.transfers import TransfersResource
@@ -160,6 +161,7 @@ class SupermetricsClient:
         self.account_tags = AccountTagsResource(self._client)
         self.blends = BlendsResource(self._client)
         self.teams = TeamsResource(self._client)
+        self.table_groups = TableGroupsResource(self._client)
 
         self._with_raw_response: SupermetricsClientWithRawResponse | None = None
 

@@ -184,6 +184,26 @@ endpoints:
   - method: GET
     path: /teams/{team_id}/destinations/{destination_id}/usage
 
+  # Table Groups
+  #
+  # Served from https://api.supermetrics.com/enterprise/v2, but openapi-python-client
+  # ignores path-level servers and concatenates base_url + path. The SDK's base_url is
+  # https://api.supermetrics.com (no /enterprise/v2), so rewrite_path prepends the
+  # prefix to produce the correct URL. These paths do NOT match _DTS_PATH_PATTERN,
+  # so they stay on the default api.supermetrics.com host.
+  - method: GET
+    path: /table/groups
+    rewrite_path: /enterprise/v2/table/groups
+  - method: GET
+    path: /table/group/{group_id}/export
+    rewrite_path: /enterprise/v2/table/group/{group_id}/export
+  - method: POST
+    path: /table/group/import
+    rewrite_path: /enterprise/v2/table/group/import
+  - method: PUT
+    path: /table/group/{group_id}
+    rewrite_path: /enterprise/v2/table/group/{group_id}
+
   # Datasource
   - method: GET
     path: /teams/{team_id}/datasource/{data_source_id}
