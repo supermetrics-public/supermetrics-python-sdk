@@ -202,6 +202,26 @@ BATCH_CREATE_TRANSFERS_BODY: dict[str, Any] = {
     },
 }
 
+#: POST /teams/{team_id}/transfers/batch — wrapped, 200, with partial failures.
+BATCH_CREATE_TRANSFERS_MIXED_BODY: dict[str, Any] = {
+    "meta": META,
+    "data": {
+        "has_errors": True,
+        "results": [
+            {"index": 0, "status": "success", "transfer_id": 36091, "transfer_name": "Transfer 1"},
+            {
+                "index": 1,
+                "status": "error",
+                "error_code": "DWH_INVALID_TRANSFER_SETUP_DATA",
+                "message": "Invalid account configuration",
+                "validation_errors": [
+                    {"field_id": "accounts", "error_code": "isEmpty", "message": "Accounts list must not be empty"}
+                ],
+            },
+        ],
+    },
+}
+
 # --- Custom fields ------------------------------------------------------------
 #
 # Custom fields live on the CORE api host under a "/v1" path prefix, unlike transfers.

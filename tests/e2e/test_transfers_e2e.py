@@ -35,6 +35,7 @@ from supermetrics.exceptions import (
 from .conftest import (
     AVAILABLE_SOURCES_BODY,
     BATCH_CREATE_TRANSFERS_BODY,
+    BATCH_CREATE_TRANSFERS_MIXED_BODY,
     DATA_SOURCE_CONNECTION_BODY,
     TRANSFER_CREATED_BODY,
     TRANSFER_DETAIL_BODY,
@@ -1068,6 +1069,32 @@ class TestBatchCreateTransfers:
         with SupermetricsClient(api_key="bad_k", base_url=api_server.base_url) as client:
             with pytest.raises(SupermetricsAuthError):
                 client.transfers.batch_create(team_id=TEAM_ID, transfers=[])
+
+    def test_batch_create_surfaces_partial_failures(self, api_server: MockAPIServer) -> None:
+        """A 200 with has_errors=True surfaces per-item results including failures."""
+        api_server.route(BATCH, ScriptedResponse(json_body=BATCH_CREATE_TRANSFERS_MIXED_BODY))
+
+        with SupermetricsClient(api_key="api_k", base_url=api_server.base_url) as client:
+            from supermetrics import TransferConfigurationRequest
+
+            config = TransferConfigurationRequest(
+                data_source_id="AW",
+                schema_id=99999,
+                destination_id=8,
+                display_name="Batch Test",
+                schedule=[],
+                accounts=[],
+            )
+            result = client.transfers.batch_create(team_id=TEAM_ID, transfers=[config, config])
+
+        assert result.has_errors is True
+        assert len(result.results) == 2
+        assert result.results[0].status == "success"
+        assert result.results[0].transfer_id == 36091
+        assert result.results[1].status == "error"
+        assert result.results[1].error_code == "DWH_INVALID_TRANSFER_SETUP_DATA"
+        assert result.results[1].validation_errors is not None
+        assert result.results[1].validation_errors[0].field_id == "accounts"
 
     @pytest.mark.asyncio
     async def test_async_batch_create_succeeds(self, api_server: MockAPIServer) -> None:

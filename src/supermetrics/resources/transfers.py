@@ -806,6 +806,21 @@ class TransfersAsyncResource:
         """Clone an existing transfer.
 
         Async version of TransfersResource.clone(). See sync version for full documentation.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
+
+        Raises:
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            ValidationError: If the clone configuration is invalid (HTTP 400, 422).
+            APIError: If the API returns a server error (HTTP 403, 404, 429, 5xx).
+            NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/transfers/{transfer_id}/clone"
         with (
@@ -843,6 +858,21 @@ class TransfersAsyncResource:
         """Create multiple transfers in a single request.
 
         Async version of TransfersResource.batch_create(). See sync version for full documentation.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
+
+        Raises:
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            ValidationError: If the batch configuration is invalid (HTTP 400).
+            APIError: If the API returns a server error (HTTP 403, 429, 5xx).
+            NetworkError: If a network error occurs during the request.
         """
         endpoint = f"/teams/{team_id}/transfers/batch"
         with (

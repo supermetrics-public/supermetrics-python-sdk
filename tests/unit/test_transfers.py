@@ -1380,6 +1380,51 @@ class TestTransfersResource:
 
         module.batch_create_transfers.sync_detailed = original
 
+    def test_batch_create_passes_correct_params(
+        self,
+        transfers_resource: TransfersResource,
+        meta: Meta,
+        schedule: list[TransferSchedule],
+        accounts: list[TransferAccount],
+    ) -> None:
+        """Test that batch_create() forwards the transfers array to the generated client."""
+        import supermetrics.resources.transfers as module
+        from supermetrics._generated.supermetrics_api_client.models.batch_create_transfers_response_200 import (
+            BatchCreateTransfersResponse200,
+        )
+        from supermetrics._generated.supermetrics_api_client.models.batch_create_transfers_response_200_data import (
+            BatchCreateTransfersResponse200Data,
+        )
+        from supermetrics._generated.supermetrics_api_client.models.transfer_configuration_request import (
+            TransferConfigurationRequest,
+        )
+
+        data = BatchCreateTransfersResponse200Data(has_errors=False, results=[])
+        original = module.batch_create_transfers.sync_detailed
+        mock_sync = MagicMock(
+            return_value=_make_success_response(BatchCreateTransfersResponse200(meta=meta, data=data))
+        )
+        module.batch_create_transfers.sync_detailed = mock_sync
+
+        config = TransferConfigurationRequest(
+            data_source_id="AW",
+            schema_id=2,
+            destination_id=8,
+            display_name="Batch item",
+            schedule=schedule,
+            accounts=accounts,
+        )
+        transfers_resource.batch_create(team_id=12345, transfers=[config])
+
+        call_kwargs = mock_sync.call_args.kwargs
+        assert call_kwargs["team_id"] == 12345
+        body = call_kwargs["body"]
+        assert len(body.transfers) == 1
+        assert body.transfers[0].data_source_id == "AW"
+        assert body.transfers[0].display_name == "Batch item"
+
+        module.batch_create_transfers.sync_detailed = original
+
     def test_batch_create_auth_error_on_401(self, transfers_resource: TransfersResource) -> None:
         """Test that batch_create() raises AuthenticationError on 401."""
         import supermetrics.resources.transfers as module
@@ -2630,6 +2675,56 @@ class TestTransfersAsyncResource:
 
         assert cloned.transfer_id == 36091
         assert cloned.transfer_name == "AW enhanced"
+
+        module.clone_transfer.asyncio_detailed = original
+
+    @pytest.mark.asyncio
+    async def test_clone_passes_overrides(
+        self,
+        transfers_resource: TransfersAsyncResource,
+        sample_created: TransferCreatedResponse,
+        meta: Meta,
+    ) -> None:
+        """Test that async clone() passes the overrides body to the generated client."""
+        import supermetrics.resources.transfers as module
+        from supermetrics._generated.supermetrics_api_client.models.clone_transfer_body import CloneTransferBody
+
+        original = module.clone_transfer.asyncio_detailed
+        mock_async = AsyncMock(
+            return_value=_make_created_response(TransferCreatedEnvelope(meta=meta, data=sample_created))
+        )
+        module.clone_transfer.asyncio_detailed = mock_async
+
+        overrides = CloneTransferBody(display_name="My Clone")
+        await transfers_resource.clone(team_id=12345, transfer_id=36091, overrides=overrides)
+
+        call_kwargs = mock_async.call_args.kwargs
+        assert call_kwargs["team_id"] == 12345
+        assert call_kwargs["transfer_id"] == 36091
+        assert call_kwargs["body"].display_name == "My Clone"
+
+        module.clone_transfer.asyncio_detailed = original
+
+    @pytest.mark.asyncio
+    async def test_clone_without_overrides_sends_unset(
+        self,
+        transfers_resource: TransfersAsyncResource,
+        sample_created: TransferCreatedResponse,
+        meta: Meta,
+    ) -> None:
+        """Test that async clone() without overrides sends UNSET as body."""
+        import supermetrics.resources.transfers as module
+
+        original = module.clone_transfer.asyncio_detailed
+        mock_async = AsyncMock(
+            return_value=_make_created_response(TransferCreatedEnvelope(meta=meta, data=sample_created))
+        )
+        module.clone_transfer.asyncio_detailed = mock_async
+
+        await transfers_resource.clone(team_id=12345, transfer_id=36091)
+
+        call_kwargs = mock_async.call_args.kwargs
+        assert call_kwargs["body"] is UNSET
 
         module.clone_transfer.asyncio_detailed = original
 
