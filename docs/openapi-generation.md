@@ -284,3 +284,58 @@ For real-world reference, see the following PRs in the repository:
 | `pyproject.toml` generated inside `_generated/` | `openapi-python-client` creates standalone package by default | The script removes it from the staging directory before the swap, so it never reaches `src/supermetrics/_generated/` |
 | `AssertionError` in `_typing_extra.eval_type_backport` while generating | The pinned `openapi-python-client` pulls a pydantic that breaks under Python 3.14, the project's default interpreter | Use `./scripts/regenerate_client.sh`, which runs the generator on Python 3.12 through `uvx`; set `GENERATOR_PYTHON` to pick a different one |
 | Generation failed and `src/supermetrics/_generated/` is gone | An older version of the script deleted the tree before generating | Restore it with `git checkout -- src/supermetrics/_generated`, then re-run the current script, which stages and swaps |
+
+---
+
+## 5. Downstream: Notifying the CLI
+
+The SDK is the first consumer of the canonical specs; the `supermetrics-cli` chains through
+it. The CLI does **not** read the raw canonical spec — it reads *this repo's* filtered,
+production-ready `openapi-spec.yaml`, so the CLI and SDK always expose the same endpoint set.
+
+When `openapi-spec.yaml` changes on `main` (i.e. a spec-update PR merges), the
+`.github/workflows/notify-cli-on-spec-change.yml` workflow sends a cross-repo
+`repository_dispatch` to the CLI:
+
+```yaml
+on:
+  push:
+    branches: [main]
+    paths:
+      - openapi-spec.yaml
+  workflow_dispatch: # manual re-trigger for the initial backlog sync or recovery
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.CLI_DISPATCH_TOKEN }}
+          repository: supermetrics-public/supermetrics-cli
+          event-type: openapi-spec-updated
+```
+
+The CLI's own `spec-sync.yml` handler receives the `openapi-spec-updated` event, fetches
+this repo's `openapi-spec.yaml`, regenerates its commands (`make generate`), and **opens a
+PR** for human review. The automation never pushes to the CLI's `main` or auto-merges — a
+person reviews and merges every CLI change.
+
+A new endpoint appearing here does **not** automatically become a CLI command: the CLI
+regenerates only the endpoints already listed in its `scripts/command-mapping.yaml`. Adding
+a command is a deliberate, separate change in the CLI repo.
+
+### The `CLI_DISPATCH_TOKEN` secret
+
+The dispatch authenticates to the CLI repo with a repo-scoped GitHub PAT stored as the
+`CLI_DISPATCH_TOKEN` secret in this repo's Actions secrets. The workflow's `GITHUB_TOKEN`
+cannot reach another repository, so a PAT is required. To (re)create it: generate a
+classic PAT with `repo` scope on `supermetrics-public/supermetrics-cli` (org admin needed),
+store it in 1Password, then add it under **Settings → Secrets and variables → Actions**.
+
+### Failure is visible
+
+`repository-dispatch` exits non-zero if the dispatch call fails or the token is
+missing/invalid, so the workflow run turns red in the Actions tab — no silent failure
+leaves the CLI on a stale spec. Use the `workflow_dispatch` trigger to re-fire the dispatch
+manually (e.g. the first large backlog sync) without a dummy spec commit.
