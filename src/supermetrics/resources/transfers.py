@@ -10,7 +10,9 @@ import httpx
 from supermetrics._generated.supermetrics_api_client import AuthenticatedClient
 from supermetrics._generated.supermetrics_api_client import Client as GeneratedClient
 from supermetrics._generated.supermetrics_api_client.api.data_transfers import (
+    batch_create_transfers,
     change_transfer_state,
+    clone_transfer,
     create_data_source_connection,
     create_transfer,
     delete_transfer,
@@ -24,12 +26,22 @@ from supermetrics._generated.supermetrics_api_client.api.data_transfers import (
     validate_transfer_update,
 )
 from supermetrics._generated.supermetrics_api_client.models.available_sources_response import AvailableSourcesResponse
+from supermetrics._generated.supermetrics_api_client.models.batch_create_transfers_body import (
+    BatchCreateTransfersBody,
+)
+from supermetrics._generated.supermetrics_api_client.models.batch_create_transfers_response_200 import (
+    BatchCreateTransfersResponse200,
+)
+from supermetrics._generated.supermetrics_api_client.models.batch_create_transfers_response_200_data import (
+    BatchCreateTransfersResponse200Data,
+)
 from supermetrics._generated.supermetrics_api_client.models.change_transfer_state_request import (
     ChangeTransferStateRequest,
 )
 from supermetrics._generated.supermetrics_api_client.models.change_transfer_state_request_transfer_state import (
     ChangeTransferStateRequestTransferState,
 )
+from supermetrics._generated.supermetrics_api_client.models.clone_transfer_body import CloneTransferBody
 from supermetrics._generated.supermetrics_api_client.models.create_data_source_connection_request import (
     CreateDataSourceConnectionRequest,
 )
@@ -83,6 +95,7 @@ DataSourceSettingList = list[TransferDataSourceSetting]
 RecipientList = list[str]
 TransferInfoList = list[TransferInfoResponse]
 TransferRunItemList = list[TransferRunItem]
+TransferConfigRequestList = list[TransferConfigurationRequest]
 
 
 class TransfersAsyncResource:
@@ -776,6 +789,115 @@ class TransfersAsyncResource:
                 endpoint,
                 not_found_msg="Team not found or you do not have access to it",
                 bad_request_msg="Invalid connection configuration",
+                headers=response.headers,
+                raw_body=response.content,
+            )
+
+    async def clone(
+        self,
+        team_id: int,
+        transfer_id: int,
+        *,
+        overrides: CloneTransferBody | None = None,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> TransferCreatedResponse:
+        """Clone an existing transfer.
+
+        Async version of TransfersResource.clone(). See sync version for full documentation.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
+
+        Raises:
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            ValidationError: If the clone configuration is invalid (HTTP 400, 422).
+            APIError: If the API returns a server error (HTTP 403, 404, 429, 5xx).
+            NetworkError: If a network error occurs during the request.
+        """
+        endpoint = f"/teams/{team_id}/transfers/{transfer_id}/clone"
+        with (
+            api_error_handler(endpoint, context_400="Invalid clone configuration"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
+            body = overrides if overrides is not None else UNSET
+            response = await clone_transfer.asyncio_detailed(
+                client=cast(AuthenticatedClient, self._client),
+                team_id=team_id,
+                transfer_id=transfer_id,
+                body=body,
+            )
+            if response.status_code in (200, 201):
+                parsed = response.parsed
+                if parsed is None:
+                    import json as _json
+
+                    parsed = TransferCreatedEnvelope.from_dict(_json.loads(response.content))
+                return cast(TransferCreatedEnvelope, parsed).data
+            _raise_for_status(
+                int(response.status_code),
+                response.parsed,
+                endpoint,
+                not_found_msg="Transfer not found or you do not have access to it",
+                bad_request_msg="Invalid clone configuration",
+                headers=response.headers,
+                raw_body=response.content,
+            )
+
+    async def batch_create(
+        self,
+        team_id: int,
+        transfers: TransferConfigRequestList,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> BatchCreateTransfersResponse200Data:
+        """Create multiple transfers in a single request.
+
+        Async version of TransfersResource.batch_create(). See sync version for full documentation.
+
+        Args:
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only (for example
+                ``X-Span-Id``, ``traceparent``, ``Idempotency-Key``, ``X-Team-ID``).
+                Takes precedence over client-level headers.
+            timeout: Timeout override for this request only, in seconds or as an
+                ``httpx.Timeout``.
+
+        Raises:
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            ValidationError: If the batch configuration is invalid (HTTP 400).
+            APIError: If the API returns a server error (HTTP 403, 429, 5xx).
+            NetworkError: If a network error occurs during the request.
+        """
+        endpoint = f"/teams/{team_id}/transfers/batch"
+        with (
+            api_error_handler(endpoint, context_400="Invalid batch transfer configuration"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
+            body = BatchCreateTransfersBody(transfers=transfers)
+            response = await batch_create_transfers.asyncio_detailed(
+                client=cast(AuthenticatedClient, self._client),
+                team_id=team_id,
+                body=body,
+            )
+            if response.status_code == 200:
+                parsed = cast(BatchCreateTransfersResponse200, response.parsed)
+                return cast(BatchCreateTransfersResponse200Data, parsed.data)
+            _raise_for_status(
+                int(response.status_code),
+                response.parsed,
+                endpoint,
+                bad_request_msg="Invalid batch transfer configuration",
                 headers=response.headers,
                 raw_body=response.content,
             )
@@ -1769,6 +1891,153 @@ class TransfersResource:
                 endpoint,
                 not_found_msg="Team not found or you do not have access to it",
                 bad_request_msg="Invalid connection configuration",
+                headers=response.headers,
+                raw_body=response.content,
+            )
+
+    def clone(
+        self,
+        team_id: int,
+        transfer_id: int,
+        *,
+        overrides: CloneTransferBody | None = None,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> TransferCreatedResponse:
+        """Clone an existing transfer, optionally overriding selected fields.
+
+        The clone is a fully independent transfer — editing or deleting it never
+        affects the source. Pass a ``CloneTransferBody`` to override fields; omit
+        it or pass ``None`` to clone as-is. Fields not provided are copied from
+        the source. Notification recipients are deliberately not copied (default
+        to empty) but can be overridden explicitly.
+
+        Restrictions:
+        - The data source is always inherited and cannot be overridden.
+        - The destination can be changed only to one of the same type.
+
+        Args:
+            team_id: The unique identifier of the team.
+            transfer_id: The unique identifier of the source transfer to clone.
+            overrides: Optional ``CloneTransferBody`` with fields to override in
+                the clone. Omit to clone the transfer as-is.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only.
+            timeout: Timeout override for this request only.
+
+        Returns:
+            TransferCreatedResponse: The identifier and display name of the cloned transfer.
+
+        Raises:
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            ValidationError: If the clone configuration is invalid (HTTP 400, 422).
+            APIError: If the API returns a server error (HTTP 403, 404, 429, 5xx).
+            NetworkError: If a network error occurs during the request.
+
+        Example:
+            >>> cloned = client.transfers.clone(
+            ...     team_id=12345,
+            ...     transfer_id=36091,
+            ... )
+            >>> print(cloned.transfer_id)
+        """
+        endpoint = f"/teams/{team_id}/transfers/{transfer_id}/clone"
+        with (
+            api_error_handler(endpoint, context_400="Invalid clone configuration"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
+            body = overrides if overrides is not None else UNSET
+            response = clone_transfer.sync_detailed(
+                client=cast(AuthenticatedClient, self._client),
+                team_id=team_id,
+                transfer_id=transfer_id,
+                body=body,
+            )
+            if response.status_code in (200, 201):
+                parsed = response.parsed
+                if parsed is None:
+                    import json as _json
+
+                    parsed = TransferCreatedEnvelope.from_dict(_json.loads(response.content))
+                return cast(TransferCreatedEnvelope, parsed).data
+            _raise_for_status(
+                int(response.status_code),
+                response.parsed,
+                endpoint,
+                not_found_msg="Transfer not found or you do not have access to it",
+                bad_request_msg="Invalid clone configuration",
+                headers=response.headers,
+                raw_body=response.content,
+            )
+
+    def batch_create(
+        self,
+        team_id: int,
+        transfers: TransferConfigRequestList,
+        *,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> BatchCreateTransfersResponse200Data:
+        """Create multiple transfers in a single request.
+
+        Each transfer configuration is created independently — if one fails, the
+        others still succeed. Mixed data source types are allowed within a single
+        batch.
+
+        The batch must contain between 1 and 100 items. Empty batches, batches
+        exceeding 100 items, and exact-duplicate configurations within the same
+        batch are rejected. To create copies of an existing transfer, use
+        :meth:`clone` instead.
+
+        Args:
+            team_id: The unique identifier of the team.
+            transfers: List of transfer configurations, each using the same
+                structure as the single-create endpoint.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only.
+            timeout: Timeout override for this request only.
+
+        Returns:
+            BatchCreateTransfersResponse200Data: Results with ``has_errors`` flag
+                and per-item ``results``.
+
+        Raises:
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            ValidationError: If the batch configuration is invalid (HTTP 400).
+            APIError: If the API returns a server error (HTTP 403, 429, 5xx).
+            NetworkError: If a network error occurs during the request.
+
+        Example:
+            >>> from supermetrics import TransferConfigurationRequest
+            >>> results = client.transfers.batch_create(
+            ...     team_id=12345,
+            ...     transfers=[config1, config2],
+            ... )
+            >>> print(f"Errors: {results.has_errors}, Items: {len(results.results)}")
+        """
+        endpoint = f"/teams/{team_id}/transfers/batch"
+        with (
+            api_error_handler(endpoint, context_400="Invalid batch transfer configuration"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
+            body = BatchCreateTransfersBody(transfers=transfers)
+            response = batch_create_transfers.sync_detailed(
+                client=cast(AuthenticatedClient, self._client),
+                team_id=team_id,
+                body=body,
+            )
+            if response.status_code == 200:
+                parsed = cast(BatchCreateTransfersResponse200, response.parsed)
+                return cast(BatchCreateTransfersResponse200Data, parsed.data)
+            _raise_for_status(
+                int(response.status_code),
+                response.parsed,
+                endpoint,
+                bad_request_msg="Invalid batch transfer configuration",
                 headers=response.headers,
                 raw_body=response.content,
             )

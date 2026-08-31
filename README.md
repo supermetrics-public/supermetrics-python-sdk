@@ -14,8 +14,9 @@ Official Python client for Supermetrics
 * Dual sync/async support via separate Client classes
 * Fully typed request and response models, generated from the spec as `attrs` classes
 * Comprehensive API coverage: login links (including update), logins (including account
-  listing and revocation), accounts, queries, DWH transfers and transfer runs, DWH
-  destinations, DWH backfills, custom fields, data blending, account tags, Connector Builder
+  listing and revocation), accounts, queries, DWH transfers (including clone and batch
+  create) and transfer runs, DWH destinations, DWH backfills, custom fields, data
+  blending, account tags, Connector Builder
 * Custom exception hierarchy with HTTP status code mapping
 * Resource-based API organization
 * API key, OAuth bearer token, and dynamic token provider authentication

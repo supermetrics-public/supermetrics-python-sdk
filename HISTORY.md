@@ -1,5 +1,24 @@
 # History
 
+## Unreleased
+
+### Transfers: clone and batch create
+
+Two new methods on `client.transfers`:
+
+- `clone(team_id, transfer_id, *, overrides=None)` — clone an existing transfer,
+  optionally overriding fields via a `CloneTransferBody`. The clone is fully
+  independent of the source.
+- `batch_create(team_id, transfers)` — create up to 100 transfers in a single
+  request. Each is created independently; partial failures are reported per item.
+
+Both are available on sync and async clients, mirrored under `with_raw_response`,
+and take the usual `auth_token` / `headers` / `timeout` overrides.
+
+`CloneTransferBody` and `TransferConfigurationRequest` are now exported from
+`supermetrics` for convenience:
+`from supermetrics import CloneTransferBody, TransferConfigurationRequest`.
+
 ## 0.5.1 (2026-08-20)
 
 ### Packaging

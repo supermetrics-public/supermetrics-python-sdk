@@ -23,6 +23,22 @@ from .backfill import Backfill
 from .backfill_response import BackfillResponse
 from .backfill_response_meta import BackfillResponseMeta
 from .backfill_status import BackfillStatus
+from .batch_create_transfers_body import BatchCreateTransfersBody
+from .batch_create_transfers_response_200 import BatchCreateTransfersResponse200
+from .batch_create_transfers_response_200_data import BatchCreateTransfersResponse200Data
+from .batch_create_transfers_response_200_data_results_item import BatchCreateTransfersResponse200DataResultsItem
+from .batch_create_transfers_response_200_data_results_item_status import (
+    BatchCreateTransfersResponse200DataResultsItemStatus,
+)
+from .batch_create_transfers_response_200_data_results_item_validation_errors_item import (
+    BatchCreateTransfersResponse200DataResultsItemValidationErrorsItem,
+)
+from .batch_create_transfers_response_401 import BatchCreateTransfersResponse401
+from .batch_create_transfers_response_401_meta import BatchCreateTransfersResponse401Meta
+from .batch_create_transfers_response_403 import BatchCreateTransfersResponse403
+from .batch_create_transfers_response_403_meta import BatchCreateTransfersResponse403Meta
+from .batch_create_transfers_response_500 import BatchCreateTransfersResponse500
+from .batch_create_transfers_response_500_meta import BatchCreateTransfersResponse500Meta
 from .blend_base_request import BlendBaseRequest
 from .blend_config import BlendConfig
 from .blend_config_output import BlendConfigOutput
@@ -98,6 +114,26 @@ from .change_transfer_state_response_429 import ChangeTransferStateResponse429
 from .change_transfer_state_response_429_meta import ChangeTransferStateResponse429Meta
 from .change_transfer_state_response_500 import ChangeTransferStateResponse500
 from .change_transfer_state_response_500_meta import ChangeTransferStateResponse500Meta
+from .clone_transfer_body import CloneTransferBody
+from .clone_transfer_body_accounts_item import CloneTransferBodyAccountsItem
+from .clone_transfer_body_data_source_settings_item import CloneTransferBodyDataSourceSettingsItem
+from .clone_transfer_body_schedule_item import CloneTransferBodyScheduleItem
+from .clone_transfer_body_schedule_item_run_interval import CloneTransferBodyScheduleItemRunInterval
+from .clone_transfer_body_segments_item import CloneTransferBodySegmentsItem
+from .clone_transfer_response_400 import CloneTransferResponse400
+from .clone_transfer_response_400_meta import CloneTransferResponse400Meta
+from .clone_transfer_response_401 import CloneTransferResponse401
+from .clone_transfer_response_401_meta import CloneTransferResponse401Meta
+from .clone_transfer_response_403 import CloneTransferResponse403
+from .clone_transfer_response_403_meta import CloneTransferResponse403Meta
+from .clone_transfer_response_404 import CloneTransferResponse404
+from .clone_transfer_response_404_meta import CloneTransferResponse404Meta
+from .clone_transfer_response_422 import CloneTransferResponse422
+from .clone_transfer_response_422_meta import CloneTransferResponse422Meta
+from .clone_transfer_response_429 import CloneTransferResponse429
+from .clone_transfer_response_429_meta import CloneTransferResponse429Meta
+from .clone_transfer_response_500 import CloneTransferResponse500
+from .clone_transfer_response_500_meta import CloneTransferResponse500Meta
 from .close_login_link_response_401 import CloseLoginLinkResponse401
 from .close_login_link_response_401_meta import CloseLoginLinkResponse401Meta
 from .close_login_link_response_404 import CloseLoginLinkResponse404
@@ -1020,6 +1056,18 @@ __all__ = (
     "BackfillResponse",
     "BackfillResponseMeta",
     "BackfillStatus",
+    "BatchCreateTransfersBody",
+    "BatchCreateTransfersResponse200",
+    "BatchCreateTransfersResponse200Data",
+    "BatchCreateTransfersResponse200DataResultsItem",
+    "BatchCreateTransfersResponse200DataResultsItemStatus",
+    "BatchCreateTransfersResponse200DataResultsItemValidationErrorsItem",
+    "BatchCreateTransfersResponse401",
+    "BatchCreateTransfersResponse401Meta",
+    "BatchCreateTransfersResponse403",
+    "BatchCreateTransfersResponse403Meta",
+    "BatchCreateTransfersResponse500",
+    "BatchCreateTransfersResponse500Meta",
     "BlendBaseRequest",
     "BlendConfig",
     "BlendConfigOutput",
@@ -1091,6 +1139,26 @@ __all__ = (
     "ChangeTransferStateResponse429Meta",
     "ChangeTransferStateResponse500",
     "ChangeTransferStateResponse500Meta",
+    "CloneTransferBody",
+    "CloneTransferBodyAccountsItem",
+    "CloneTransferBodyDataSourceSettingsItem",
+    "CloneTransferBodyScheduleItem",
+    "CloneTransferBodyScheduleItemRunInterval",
+    "CloneTransferBodySegmentsItem",
+    "CloneTransferResponse400",
+    "CloneTransferResponse400Meta",
+    "CloneTransferResponse401",
+    "CloneTransferResponse401Meta",
+    "CloneTransferResponse403",
+    "CloneTransferResponse403Meta",
+    "CloneTransferResponse404",
+    "CloneTransferResponse404Meta",
+    "CloneTransferResponse422",
+    "CloneTransferResponse422Meta",
+    "CloneTransferResponse429",
+    "CloneTransferResponse429Meta",
+    "CloneTransferResponse500",
+    "CloneTransferResponse500Meta",
     "CloseLoginLinkResponse401",
     "CloseLoginLinkResponse401Meta",
     "CloseLoginLinkResponse404",

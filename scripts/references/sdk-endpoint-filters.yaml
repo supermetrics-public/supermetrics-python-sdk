@@ -154,6 +154,12 @@ endpoints:
   - method: GET
     path: /v1/teams/{team_id}/transfer_runs/{transfer_run_id}
     rewrite_path: /teams/{team_id}/transfer_runs/{transfer_run_id}
+  - method: POST
+    path: /v1/teams/{team_id}/transfers/{transfer_id}/clone
+    rewrite_path: /teams/{team_id}/transfers/{transfer_id}/clone
+  - method: POST
+    path: /v1/teams/{team_id}/transfers/batch
+    rewrite_path: /teams/{team_id}/transfers/batch
 
   # DWH Data Source Connections (already "/teams/..." upstream; no rewrite needed)
   - method: POST

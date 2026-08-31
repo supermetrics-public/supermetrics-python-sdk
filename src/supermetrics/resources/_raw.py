@@ -368,6 +368,8 @@ class TransfersResourceWithRawResponse:
         self.get_available_options = to_raw_response_wrapper(resource.get_available_options)
         self.list_runs = to_raw_response_wrapper(resource.list_runs)
         self.create_datasource_connection = to_raw_response_wrapper(resource.create_datasource_connection)
+        self.clone = to_raw_response_wrapper(resource.clone)
+        self.batch_create = to_raw_response_wrapper(resource.batch_create)
 
 
 class TransfersAsyncResourceWithRawResponse:
@@ -391,6 +393,8 @@ class TransfersAsyncResourceWithRawResponse:
         self.get_available_options = async_to_raw_response_wrapper(resource.get_available_options)
         self.list_runs = async_to_raw_response_wrapper(resource.list_runs)
         self.create_datasource_connection = async_to_raw_response_wrapper(resource.create_datasource_connection)
+        self.clone = async_to_raw_response_wrapper(resource.clone)
+        self.batch_create = async_to_raw_response_wrapper(resource.batch_create)
 
 
 class TransferRunsResourceWithRawResponse:
