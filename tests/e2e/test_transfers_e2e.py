@@ -959,6 +959,16 @@ class TestCloneTransfer:
         assert cloned.transfer_id == TRANSFER_ID
         assert cloned.transfer_name == "Google Ads to BigQuery"
 
+    def test_clone_succeeds_on_200(self, api_server: MockAPIServer) -> None:
+        """Some transfers return 200 instead of 201 on clone — both must work."""
+        api_server.route(CLONE, ScriptedResponse(status=200, json_body=TRANSFER_CREATED_BODY))
+
+        with SupermetricsClient(api_key="api_k", base_url=api_server.base_url) as client:
+            cloned = client.transfers.clone(team_id=TEAM_ID, transfer_id=TRANSFER_ID)
+
+        assert cloned.transfer_id == TRANSFER_ID
+        assert cloned.transfer_name == "Google Ads to BigQuery"
+
     def test_clone_sends_a_post_to_the_clone_path(self, api_server: MockAPIServer) -> None:
         """The request is a POST to /teams/{id}/transfers/{id}/clone."""
         api_server.route(CLONE, ScriptedResponse(status=201, json_body=TRANSFER_CREATED_BODY))

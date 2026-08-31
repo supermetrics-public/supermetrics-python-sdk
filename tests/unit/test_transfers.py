@@ -1268,7 +1268,7 @@ class TestTransfersResource:
 
         module.create_data_source_connection.sync_detailed = original
 
-    def test_clone_success(
+    def test_clone_success_201(
         self,
         transfers_resource: TransfersResource,
         sample_created: TransferCreatedResponse,
@@ -1280,6 +1280,27 @@ class TestTransfersResource:
         original = module.clone_transfer.sync_detailed
         module.clone_transfer.sync_detailed = MagicMock(
             return_value=_make_created_response(TransferCreatedEnvelope(meta=meta, data=sample_created))
+        )
+
+        cloned = transfers_resource.clone(team_id=12345, transfer_id=36091)
+
+        assert cloned.transfer_id == 36091
+        assert cloned.transfer_name == "AW enhanced"
+
+        module.clone_transfer.sync_detailed = original
+
+    def test_clone_success_200(
+        self,
+        transfers_resource: TransfersResource,
+        sample_created: TransferCreatedResponse,
+        meta: Meta,
+    ) -> None:
+        """Some transfers return 200 instead of 201 on clone — both must work."""
+        import supermetrics.resources.transfers as module
+
+        original = module.clone_transfer.sync_detailed
+        module.clone_transfer.sync_detailed = MagicMock(
+            return_value=_make_success_response(TransferCreatedEnvelope(meta=meta, data=sample_created))
         )
 
         cloned = transfers_resource.clone(team_id=12345, transfer_id=36091)
@@ -2657,18 +2678,40 @@ class TestTransfersAsyncResource:
         module.create_data_source_connection.asyncio_detailed = original
 
     @pytest.mark.asyncio
-    async def test_clone_success(
+    async def test_clone_success_201(
         self,
         transfers_resource: TransfersAsyncResource,
         sample_created: TransferCreatedResponse,
         meta: Meta,
     ) -> None:
-        """Test async clone success."""
+        """Test async clone success with 201."""
         import supermetrics.resources.transfers as module
 
         original = module.clone_transfer.asyncio_detailed
         module.clone_transfer.asyncio_detailed = AsyncMock(
             return_value=_make_created_response(TransferCreatedEnvelope(meta=meta, data=sample_created))
+        )
+
+        cloned = await transfers_resource.clone(team_id=12345, transfer_id=36091)
+
+        assert cloned.transfer_id == 36091
+        assert cloned.transfer_name == "AW enhanced"
+
+        module.clone_transfer.asyncio_detailed = original
+
+    @pytest.mark.asyncio
+    async def test_clone_success_200(
+        self,
+        transfers_resource: TransfersAsyncResource,
+        sample_created: TransferCreatedResponse,
+        meta: Meta,
+    ) -> None:
+        """Some transfers return 200 instead of 201 — both must work."""
+        import supermetrics.resources.transfers as module
+
+        original = module.clone_transfer.asyncio_detailed
+        module.clone_transfer.asyncio_detailed = AsyncMock(
+            return_value=_make_success_response(TransferCreatedEnvelope(meta=meta, data=sample_created))
         )
 
         cloned = await transfers_resource.clone(team_id=12345, transfer_id=36091)

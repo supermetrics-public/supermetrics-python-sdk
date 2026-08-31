@@ -834,8 +834,13 @@ class TransfersAsyncResource:
                 transfer_id=transfer_id,
                 body=body,
             )
-            if response.status_code == 201:
-                return cast(TransferCreatedEnvelope, response.parsed).data
+            if response.status_code in (200, 201):
+                parsed = response.parsed
+                if parsed is None:
+                    import json as _json
+
+                    parsed = TransferCreatedEnvelope.from_dict(_json.loads(response.content))
+                return cast(TransferCreatedEnvelope, parsed).data
             _raise_for_status(
                 int(response.status_code),
                 response.parsed,
@@ -1950,8 +1955,13 @@ class TransfersResource:
                 transfer_id=transfer_id,
                 body=body,
             )
-            if response.status_code == 201:
-                return cast(TransferCreatedEnvelope, response.parsed).data
+            if response.status_code in (200, 201):
+                parsed = response.parsed
+                if parsed is None:
+                    import json as _json
+
+                    parsed = TransferCreatedEnvelope.from_dict(_json.loads(response.content))
+                return cast(TransferCreatedEnvelope, parsed).data
             _raise_for_status(
                 int(response.status_code),
                 response.parsed,
