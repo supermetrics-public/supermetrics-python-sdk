@@ -1,0 +1,26 @@
+name: Notify CLI on spec change
+
+# When the filtered, production-ready openapi-spec.yaml changes on main, notify the
+# supermetrics-cli repo so its spec-sync.yml handler regenerates commands and opens a PR.
+# This is the sender half of the api-style-guide -> SDK -> CLI chain; the CLI receiver
+# (repository_dispatch: openapi-spec-updated) already exists and opens a PR for review.
+on:
+  push:
+    branches: [main]
+    paths:
+      - openapi-spec.yaml
+  workflow_dispatch: # manual re-trigger for the initial backlog sync or recovery
+
+permissions: {} # the dispatch authenticates with CLI_DISPATCH_TOKEN, not GITHUB_TOKEN
+
+jobs:
+  notify:
+    name: Dispatch to supermetrics-cli
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify CLI repo
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.CLI_DISPATCH_TOKEN }}
+          repository: supermetrics-public/supermetrics-cli
+          event-type: openapi-spec-updated
