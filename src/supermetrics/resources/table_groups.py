@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import cast
 
 import httpx
@@ -24,10 +25,31 @@ from supermetrics._generated.supermetrics_api_client.models.list_table_groups_re
 )
 from supermetrics._generated.supermetrics_api_client.models.table_group import TableGroup
 from supermetrics._generated.supermetrics_api_client.models.table_group_response import TableGroupResponse
+from supermetrics._generated.supermetrics_api_client.types import Unset
 from supermetrics._transport import request_options
 from supermetrics.resources._error_handlers import _raise_for_status, api_error_handler
 
 TableGroupList = list[TableGroup]
+
+
+def _unwrap_table_group(response: object) -> TableGroup:
+    """Extract a TableGroup from an import/edit response.
+
+    The spec declares these responses as ``TableGroupResponse`` (``{meta, data}``
+    envelope), but the API actually returns a flat ``{group_id, group_name, links}``
+    object. The generated parser builds a ``TableGroupResponse`` whose ``data`` is
+    ``UNSET`` because no ``data`` key exists in the flat response.
+
+    Stopgap: when ``data`` is UNSET, parse the raw response body directly as a
+    ``TableGroup``. Remove once the spec is corrected upstream.
+    """
+    from supermetrics._generated.supermetrics_api_client.types import Response as GenResponse
+
+    resp = cast(GenResponse[object], response)
+    parsed = resp.parsed
+    if isinstance(parsed, TableGroupResponse) and not isinstance(parsed.data, Unset):
+        return parsed.data
+    return TableGroup.from_dict(json.loads(resp.content))
 
 
 class TableGroupsAsyncResource:
@@ -166,7 +188,7 @@ class TableGroupsAsyncResource:
                 body=body,
             )
             if response.status_code == 201:
-                return cast(TableGroup, cast(TableGroupResponse, response.parsed).data)
+                return _unwrap_table_group(response)
             _raise_for_status(
                 int(response.status_code),
                 response.parsed,
@@ -223,7 +245,7 @@ class TableGroupsAsyncResource:
                 version=version,
             )
             if response.status_code == 200:
-                return cast(TableGroup, cast(TableGroupResponse, response.parsed).data)
+                return _unwrap_table_group(response)
             _raise_for_status(
                 int(response.status_code),
                 response.parsed,
@@ -444,7 +466,7 @@ class TableGroupsResource:
                 body=body,
             )
             if response.status_code == 201:
-                return cast(TableGroup, cast(TableGroupResponse, response.parsed).data)
+                return _unwrap_table_group(response)
             _raise_for_status(
                 int(response.status_code),
                 response.parsed,
@@ -525,7 +547,7 @@ class TableGroupsResource:
                 version=version,
             )
             if response.status_code == 200:
-                return cast(TableGroup, cast(TableGroupResponse, response.parsed).data)
+                return _unwrap_table_group(response)
             _raise_for_status(
                 int(response.status_code),
                 response.parsed,
