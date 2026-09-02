@@ -1,0 +1,3237 @@
+openapi: 3.0.3
+info:
+  title: Data API Reference
+  version: "2.0.0"
+  description: API Documentation for the Supermetrics Data API including data source search capabilities. For more information, visit https://supermetrics.com.
+  termsOfService: https://supermetrics.com/terms-of-service
+  contact:
+    name: Supermetrics Suppot
+    email: support@supermetrics.com
+    url: https://supermetrics.com/support
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  x-api-id: 'sm-data-api'
+  x-audience: 'public'
+externalDocs:
+  description: Find out more about Supermetrics Data API
+  url: https://docs.supermetrics.com/apidocs/data-api
+servers:
+  - url: https://api.supermetrics.com/v2
+    description: Global production public Supermetrics Data API base path.
+    x-internal: false
+  - url: https://api.supermetrics.com
+    description: Global production public Supermetrics API base path for datasource search.
+    x-internal: false
+tags:
+  - name: Get data
+    description: Query data and retrieve results, fields, segments, and accounts
+  - name: Data Source Search
+    description: Search and discover data sources with filtering capabilities
+  - name: Destination Search
+    description: Search and discover destinations for your team
+  - name: API Usage
+    description: Retrieve API usage rollups — timeseries, top breakdowns, errors, and summary
+  - name: Raw Usage Data Export
+    description: Endpoints for creating and retrieving a team's raw usage reposts.
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API_KEY
+      description: |
+        API key authentication. Create API keys in the Supermetrics Hub and send
+        them in the Authorization header:
+        `Authorization: Bearer <your-api-key>`
+  schemas:
+    SegmentListOutput:
+      type: object
+      description: List of data source segments and metadata.
+      properties:
+        meta:
+          $ref: '#/components/schemas/SegmentListMetaOutput'
+        data:
+          type: array
+          maxItems: 100
+          description: List of all segments for requested data source users.
+          items:
+            $ref: '#/components/schemas/SegmentListTokenOutput'
+    FieldListResponse:
+      type: object
+      properties:
+        meta:
+          type: object
+          properties:
+            request_id:
+              type: string
+              maxLength: 50
+              pattern: ^[A-Za-z0-9_-]+$
+              description: API request ID
+        data:
+          type: array
+          description: List of available fields for the data source.
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/DimensionFieldOutput'
+              - $ref: '#/components/schemas/MetricFieldOutput'
+          maxItems: 1000
+    DimensionFieldOutput:
+      allOf:
+        - $ref: '#/components/schemas/AbstractFieldOutput'
+        - type: object
+          description: Details of a dimension field, extending base field information.
+          properties:
+            entity_type:
+              type: string
+              description: Type of the entity (dimension).
+              enum:
+                - ds_dimension
+    MetricFieldOutput:
+      allOf:
+        - $ref: '#/components/schemas/AbstractFieldOutput'
+        - type: object
+          description: Details of a metric field, extending base field information.
+          properties:
+            entity_type:
+              type: string
+              description: Type of the entity (metric).
+              enum:
+                - ds_metric
+            is_non_aggregatable:
+              type: boolean
+              description: Indicates if the metric cannot be aggregated.
+    AccountListOutput:
+      type: object
+      description: Output object containing fetched account data and metadata.
+      properties:
+        meta:
+          $ref: '#/components/schemas/AccountListMetaOutput'
+        data:
+          type: array
+          maxItems: 100
+          description: List of fetched accounts grouped by user tokens.
+          items:
+            $ref: '#/components/schemas/AccountListTokenOutput'
+    QueryStatusResponse:
+      type: object
+      properties:
+        meta:
+          type: object
+          properties:
+            request_id:
+              type: string
+              maxLength: 50
+              pattern: ^[A-Za-z0-9_-]+$
+              description: API request ID
+            schedule_id:
+              type: string
+              maxLength: 50
+              pattern: ^[A-Za-z0-9_-]+$
+              description: Query schedule ID
+            status_code:
+              type: string
+              maxLength: 20
+              description: Status code for the query
+              enum:
+                - SCHEDULED
+                - QUEUED
+                - RUNNING
+                - SUCCESS
+                - FAILURE
+                - STOPPED
+                - PROCESS_EXITED
+              x-enum:
+                - SCHEDULED
+                - QUEUED
+                - RUNNING
+                - SUCCESS
+                - FAILURE
+                - STOPPED
+            progress:
+              type: object
+              properties:
+                queries_ready:
+                  type: integer
+                  format: int32
+                  minimum: 0
+                  maximum: 10000
+                  description: Number of sub-queries completed for this query
+                queries_total:
+                  type: integer
+                  format: int32
+                  minimum: 0
+                  maximum: 10000
+                  description: Number of sub-queries scheduled for this query (can increase as query progresses)
+            workflow:
+              type: object
+              properties:
+                tasks_scheduled:
+                  type: integer
+                  format: int32
+                  minimum: 0
+                  maximum: 1000
+                  description: Number of query tasks scheduled to your license queue
+                tasks_running:
+                  type: integer
+                  format: int32
+                  minimum: 0
+                  maximum: 1000
+                  description: Number of query tasks running in your license queue
+        data:
+          type: array
+          maxItems: 10000
+          description: Query results. Empty array when query is not in SUCCESS state.
+          items:
+            type: object
+    DataQuery:
+      type: object
+      required:
+        - ds_id
+      properties:
+        schedule_id:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+          description: Schedule ID for this query request. If not provided, one will be generated from other query parameters
+          example: my_query_123
+        ds_id:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+          description: Target data source ID
+          example: GAWA
+        ds_accounts:
+          type: string
+          description: List of data source accounts the query should target, or a filter for them
+          example: account123,account456
+          maxLength: 100
+        ds_segments:
+          type: string
+          description: List of data source segment IDs the query should target
+          example: segment1,segment2
+          maxLength: 100
+        ds_user:
+          type: string
+          maxLength: 255
+          description: Shorthand parameter to provide one value for ds_users
+          example: user@example.com
+        ds_users:
+          type: string
+          description: List of data source login usernames to limit when searching for suitable authentication
+          maxLength: 100
+        date_range_type:
+          type: string
+          maxLength: 50
+          description: Type of date range the query should use
+        start_date:
+          type: string
+          maxLength: 100
+          description: Fixed or relative start date for your query
+          example: yesterday
+        end_date:
+          type: string
+          maxLength: 100
+          description: Fixed or relative end date for your query
+          example: yesterday
+        compare_type:
+          type: string
+          maxLength: 50
+          description: Date range comparison type. Defaults to none
+        compare_show:
+          type: string
+          maxLength: 50
+          description: When compare_type is custom, display type for comparison values
+        compare_start_date:
+          type: string
+          maxLength: 100
+          description: When compare_type is custom, fixed or relative start date for comparison
+        compare_end_date:
+          type: string
+          maxLength: 100
+          description: When compare_type is custom, fixed or relative end date for comparison
+        fields:
+          type: string
+          description: Target data source fields the query should return
+          maxLength: 100
+        settings:
+          type: array
+          description: Settings that should be applied when performing the query
+          maxItems: 1000
+          items:
+            type: string
+            maxLength: 255
+        filter:
+          type: string
+          maxLength: 5000
+          description: Filter string that should be applied to the results
+        order_columns:
+          type: string
+          maxLength: 1000
+          description: Order instruction for fields that are split by column
+        order_rows:
+          type: string
+          description: List of order fields and sort directions for result rows
+          maxLength: 100
+        max_columns:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 1000
+          description: Maximum number of columns the query results should contain
+        max_rows:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 1000000
+          description: Maximum number of rows the query results should contain
+        offset_start:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 1000000
+          description: Starting row index for paginated response
+        offset_end:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 1000000
+          description: Ending row index for paginated response
+        cache_minutes:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 10080
+          description: Maximum allowed age of query results cache in minutes
+        sync_timeout:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 3600
+          description: Number of seconds the API should wait for query to finish
+        api_links:
+          type: array
+          items:
+            type: string
+            maxLength: 100
+          description: Types of resource links to return. Not in use.
+          maxItems: 1000
+    DataResponse:
+      type: object
+      properties:
+        meta:
+          type: object
+          properties:
+            request_id:
+              type: string
+              maxLength: 50
+              pattern: ^[A-Za-z0-9_-]+$
+              description: API request ID
+            schedule_id:
+              type: string
+              maxLength: 50
+              pattern: ^[A-Za-z0-9_-]+$
+              description: Custom or generated schedule ID for the query
+            status_code:
+              type: string
+              maxLength: 20
+              description: Status code for the query
+            query:
+              type: object
+              properties:
+                start_date:
+                  type: string
+                  maxLength: 10
+                  pattern: ^\d{4}-\d{2}-\d{2}$
+                  description: Query start date in YYYY-MM-DD format
+                end_date:
+                  type: string
+                  maxLength: 10
+                  pattern: ^\d{4}-\d{2}-\d{2}$
+                  description: Query end date in YYYY-MM-DD format
+                ds_accounts:
+                  type: array
+                  maxItems: 100
+                  items:
+                    type: string
+                    maxLength: 50
+                    pattern: ^[A-Za-z0-9_-]+$
+                  description: Data source account IDs used in the query
+                ds_segments:
+                  type: array
+                  maxItems: 1000
+                  items:
+                    type: string
+                    maxLength: 50
+                    pattern: ^[A-Za-z0-9_-]+$
+                  description: Data source segment IDs used in the query
+                fields:
+                  type: array
+                  maxItems: 100
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        maxLength: 100
+                        pattern: ^[A-Za-z0-9_-]+$
+                        description: Field ID from the request
+                      field_id:
+                        type: string
+                        maxLength: 100
+                        pattern: ^[A-Za-z0-9_-]+$
+                        description: Field ID the API uses
+                      field_name:
+                        type: string
+                        maxLength: 255
+                        description: Field name
+                      field_type:
+                        type: string
+                        maxLength: 10
+                        description: Field type
+                      field_split:
+                        type: string
+                        maxLength: 50
+                        description: Field split by type
+                      data_type:
+                        type: string
+                        maxLength: 50
+                        description: Field data type
+                      data_column:
+                        type: integer
+                        format: int32
+                        minimum: 0
+                        maximum: 1000
+                        description: Field value position in each data row
+                      visible:
+                        type: boolean
+                        description: Whether data for this field is visible
+                compare_type:
+                  type: string
+                  maxLength: 50
+                  description: Date range comparison type used
+                compare_show:
+                  type: string
+                  maxLength: 50
+                  description: Display type for comparison values
+                compare_start_date:
+                  type: string
+                  maxLength: 10
+                  pattern: ^\d{4}-\d{2}-\d{2}$
+                  description: Start date for comparison date range
+                compare_end_date:
+                  type: string
+                  maxLength: 10
+                  pattern: ^\d{4}-\d{2}-\d{2}$
+                  description: End date for comparison date range
+                settings:
+                  type: object
+                  description: Settings used in query
+                cache_minutes:
+                  type: integer
+                  format: int32
+                  minimum: 0
+                  maximum: 10080
+                  description: Requested maximum age of cache in minutes
+            result:
+              type: object
+              properties:
+                total_columns:
+                  type: integer
+                  format: int32
+                  minimum: 0
+                  maximum: 1000
+                  description: Total amount of columns
+                total_rows:
+                  type: integer
+                  format: int64
+                  minimum: 0
+                  maximum: 100000000
+                  description: Total amount of rows in data
+                run_seconds:
+                  type: number
+                  format: float
+                  minimum: 0
+                  maximum: 7200
+                  description: Number of seconds it took for the query to run
+                data_sampled:
+                  type: boolean
+                  description: If data source has provided sampled data
+                cache_used:
+                  type: boolean
+                  description: If cached data was used
+                cache_time:
+                  type: string
+                  format: date-time
+                  maxLength: 30
+                  description: ISO 8601 datetime for the most recent cached data
+            paginate:
+              type: object
+              properties:
+                prev:
+                  type: string
+                  format: uri
+                  maxLength: 500
+                  description: URL to previous offset
+                next:
+                  type: string
+                  format: uri
+                  maxLength: 500
+                  description: URL to next offset
+        data:
+          type: array
+          maxItems: 1000000
+          items:
+            type: array
+            maxItems: 1000
+            items:
+              type: string
+              maxLength: 10000
+          description: Query result rows
+    AccountListMetaOutput:
+      type: object
+      description: Metadata about the accounts fetched.
+      properties:
+        request_id:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+          description: API request ID
+        query:
+          type: object
+          description: Query metadata including cache age.
+          properties:
+            cache_minutes:
+              type: integer
+              nullable: true
+              format: int32
+              minimum: 60
+              maximum: 1440
+              description: Maximum allowed age of cached data in minutes.
+    AccountListAccountOutput:
+      type: object
+      description: Details of a data source account.
+      properties:
+        account_id:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+          description: Account ID.
+        account_name:
+          type: string
+          maxLength: 255
+          description: Account name.
+        group_name:
+          type: string
+          maxLength: 255
+          description: Account group name. Empty string when not available.
+    AccountListTokenOutput:
+      type: object
+      description: Detailed information about accounts linked to a specific token.
+      properties:
+        ds_user:
+          type: string
+          maxLength: 255
+          description: Data source username.
+        display_name:
+          type: string
+          maxLength: 255
+          description: Display name of the data source user.
+        cache_time:
+          type: string
+          format: date-time
+          maxLength: 30
+          nullable: true
+          description: Cache freshness timestamp, if applicable.
+        accounts:
+          type: array
+          maxItems: 1000
+          description: List of accounts associated with the token.
+          items:
+            $ref: '#/components/schemas/AccountListAccountOutput'
+    RequestId:
+      type: string
+      description: Unique identifier for the request, for tracking and debugging.
+      pattern: ^[A-Za-z0-9_-]+$
+      minLength: 8
+      maxLength: 64
+      example: BXaEFVtjc7TXaJxgZhmFgSUD9edqq_CN
+      x-faker:
+        random.alphaNumeric: 30
+    Meta:
+      type: object
+      description: Metadata included in every API response.
+      properties:
+        request_id:
+          $ref: '#/components/schemas/RequestId'
+      required:
+        - request_id
+      additionalProperties: false
+    Error:
+      type: object
+      description: Machine- and human-readable detail for a failed request.
+      properties:
+        code:
+          type: string
+          pattern: ^[A-Z][A-Z0-9_]*$
+          maxLength: 100
+          description: Stable, screaming-snake-case identifier for the error condition. Clients should branch on this, not on `message`. Common values include BAD_REQUEST, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, CONFLICT_ERROR, PERMISSION_ERROR, UNPROCESSABLE_ENTITY, UNPROCESSABLE_CONTENT, TOO_MANY_REQUESTS, INTERNAL_SERVER_ERROR, DUPLICATION_FAILED, SERVICE_UNAVAILABLE; domains may define additional codes.
+          example: BAD_REQUEST
+        message:
+          type: string
+          maxLength: 255
+          pattern: ^.+$
+          description: Short, human-readable summary of the error.
+          example: The request was invalid.
+        description:
+          type: string
+          maxLength: 2048
+          description: Optional longer explanation specific to this occurrence.
+          example: The field 'display_name' must not be empty.
+      required:
+        - code
+        - message
+      additionalProperties: false
+    ErrorResponse:
+      type: object
+      description: Standard envelope returned by all error (4xx/5xx) responses.
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+        error:
+          $ref: '#/components/schemas/Error'
+      required:
+        - meta
+        - error
+      additionalProperties: false
+    AbstractFieldOutput:
+      type: object
+      description: Base details of a data source field.
+      properties:
+        field_id:
+          type: string
+          description: Internal ID of the field.
+          maxLength: 100
+        field_name:
+          type: string
+          description: Display name of the field.
+          maxLength: 255
+        field_type:
+          type: string
+          description: Type of the field (e.g., dimension or metric).
+          maxLength: 100
+        data_type:
+          type: string
+          nullable: true
+          description: Data type of the field.
+          maxLength: 100
+        description:
+          type: string
+          description: Description of the field.
+          maxLength: 2000
+        group_name:
+          type: string
+          description: Group name the field belongs to.
+          maxLength: 255
+        is_filterable:
+          type: boolean
+          description: Indicates if the field can be used for filtering.
+        report_types:
+          type: array
+          description: List of report types that support this field.
+          items:
+            type: string
+            maxLength: 100
+          maxItems: 1000
+    SegmentListMetaOutput:
+      type: object
+      description: Metadata about the segment list.
+      properties:
+        request_id:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+          description: API request ID
+        query:
+          type: object
+          description: Query metadata including cache age.
+          properties:
+            cache_minutes:
+              type: integer
+              nullable: true
+              format: int32
+              minimum: 60
+              maximum: 1440
+              description: Maximum allowed age of cached data in minutes.
+    SegmentListSegmentOutput:
+      type: object
+      description: Details about a specific data source segment.
+      properties:
+        segment_id:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+          description: Unique identifier of the segment.
+        segment_name:
+          type: string
+          maxLength: 255
+          description: Name of the segment.
+    SegmentListTokenOutput:
+      type: object
+      description: Details about a data source user and their associated segments.
+      properties:
+        ds_user:
+          type: string
+          maxLength: 255
+          description: The data source username.
+        display_name:
+          type: string
+          maxLength: 255
+          description: Display name of the data source user.
+        cache_time:
+          type: string
+          format: date-time
+          maxLength: 30
+          nullable: true
+          description: Timestamp of the last data refresh for this user.
+        segments:
+          type: array
+          maxItems: 1000
+          description: List of segments associated with this user.
+          items:
+            $ref: '#/components/schemas/SegmentListSegmentOutput'
+    DataSourceSearchItem:
+      type: object
+      description: A single data source matched by the search.
+      properties:
+        id:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+          description: Connector identifier.
+          example: GA
+        name:
+          type: string
+          nullable: true
+          maxLength: 255
+          description: Connector name.
+          example: Google Analytics 4
+        marketing_name:
+          type: string
+          nullable: true
+          maxLength: 255
+          description: Connector marketing name. Can be empty — use name as fallback.
+          example: Google Analytics
+        description:
+          type: string
+          nullable: true
+          maxLength: 1000
+          description: Connector description.
+          example: Web analytics service for tracking website traffic and user behavior.
+        status:
+          type: string
+          nullable: true
+          maxLength: 50
+          description: Connector release status.
+          enum:
+            - Development
+            - Invite only
+            - Early access
+            - Released
+            - Sunsetted
+          example: Released
+        is_premium:
+          type: boolean
+          description: Whether the connector requires a premium subscription.
+          example: false
+        logo_url:
+          type: string
+          nullable: true
+          maxLength: 500
+          format: uri
+          description: Connector logo URL.
+          example: https://assets.supermetrics.com/images/dsLogos/GA.png
+        categories:
+          type: array
+          maxItems: 20
+          description: Categories the connector belongs to.
+          items:
+            type: string
+            maxLength: 100
+          example:
+            - ANALYTICS
+        tags:
+          type: array
+          maxItems: 10
+          description: Connector tags.
+          items:
+            type: string
+            maxLength: 50
+          example:
+            - popular
+        products:
+          type: array
+          maxItems: 10
+          description: Products the connector is available in.
+          items:
+            type: string
+            maxLength: 50
+            enum:
+              - EXCEL
+              - SHEETS
+              - DS
+              - API
+              - HUB
+          example:
+            - API
+            - SHEETS
+    DataSourceSearchResponse:
+      type: object
+      description: Response envelope containing data source search results.
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+        data:
+          type: object
+          properties:
+            list:
+              type: array
+              maxItems: 1000
+              description: List of matching connectors.
+              items:
+                $ref: '#/components/schemas/DataSourceSearchItem'
+    DataSourceCategoriesResponse:
+      type: object
+      description: Response envelope listing data source categories for search filtering.
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+        data:
+          type: object
+          properties:
+            list:
+              type: object
+              description: Map of category IDs to their human-readable names.
+              additionalProperties:
+                type: string
+                maxLength: 255
+    DataSourceStatusesResponse:
+      type: object
+      description: Response envelope listing data source release statuses for search filtering.
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+        data:
+          type: object
+          properties:
+            list:
+              type: object
+              description: Map of release status IDs to their human-readable names.
+              additionalProperties:
+                type: string
+                maxLength: 255
+    DataSourceTagsResponse:
+      type: object
+      description: Response envelope listing data source tags for search filtering.
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+        data:
+          type: object
+          properties:
+            list:
+              type: object
+              description: Map of tag slugs to their human-readable names.
+              additionalProperties:
+                type: string
+                maxLength: 255
+    AbstractResponse:
+      type: object
+      description: Base envelope for all successful API responses. Concrete responses extend this via `allOf` and add a `data` property.
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+      required:
+        - meta
+    DestinationSearchItem:
+      type: object
+      description: A single destination returned by a search.
+      properties:
+        app_id_type:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+          description: Product identifier.
+          example: GAWA
+        name:
+          type: string
+          maxLength: 255
+          pattern: ^.+
+          description: Destination display name.
+          example: Google Analytics 4
+        destination_name:
+          type: string
+          nullable: true
+          maxLength: 255
+          pattern: ^.+
+          description: Destination name.
+          example: Google Analytics 4
+        logo_url:
+          type: string
+          nullable: true
+          maxLength: 500
+          format: uri
+          description: Destination logo URL.
+          example: https://assets.supermetrics.com/logos/gawa.png
+    DestinationSearchData:
+      type: object
+      description: Container for the destination search result list.
+      properties:
+        list:
+          type: array
+          maxItems: 500
+          description: List of matching destinations.
+          items:
+            $ref: '#/components/schemas/DestinationSearchItem'
+      required:
+        - list
+    DestinationSearchResponse:
+      description: Response envelope containing the list of matching destinations.
+      allOf:
+        - $ref: '#/components/schemas/AbstractResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/DestinationSearchData'
+          required:
+            - data
+    TimeseriesResponse:
+      type: object
+      additionalProperties: false
+      description: Usage timeseries data.
+      properties:
+        points:
+          type: array
+          description: Array of timeseries data points.
+          example:
+            - bucket: '2026-01-01T00:00:00Z'
+              value: 1234
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              bucket:
+                type: string
+                description: Time bucket identifier.
+                maxLength: 128
+                example: '2026-01-01T00:00:00Z'
+              value:
+                $ref: '#/components/schemas/MetricValue'
+            required:
+              - bucket
+              - value
+          maxItems: 10000
+      required:
+        - points
+    TopResponse:
+      type: object
+      additionalProperties: false
+      description: Top usage breakdown.
+      properties:
+        items:
+          type: array
+          description: Array of top breakdown items.
+          example:
+            - dimension: AW
+              value: 1234
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              dimension:
+                type: string
+                description: Dimension value.
+                maxLength: 128
+                example: AW
+              value:
+                $ref: '#/components/schemas/MetricValue'
+            required:
+              - dimension
+              - value
+          maxItems: 1000
+      required:
+        - items
+    ErrorsResponse:
+      type: object
+      additionalProperties: false
+      description: Usage error data.
+      properties:
+        errors:
+          type: array
+          description: Array of error entries.
+          example:
+            - query_error_code: RATE_LIMIT_EXCEEDED
+              errors: 17
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              query_error_code:
+                type: string
+                description: Error code for the query.
+                maxLength: 64
+                example: RATE_LIMIT_EXCEEDED
+              errors:
+                type: integer
+                description: Count of errors.
+                format: int64
+                minimum: 0
+                maximum: 9223372036854776000
+                example: 17
+            required:
+              - query_error_code
+              - errors
+          maxItems: 1000
+      required:
+        - errors
+    SummaryResponse:
+      type: object
+      additionalProperties: false
+      description: Usage summary data.
+      properties:
+        queries:
+          type: number
+          format: double
+          description: Total number of queries.
+          minimum: 0
+          example: 1234
+        rows:
+          type: number
+          format: double
+          description: Total number of rows.
+          minimum: 0
+          example: 567890
+        latency:
+          type: object
+          nullable: true
+          description: Latency percentiles, or null when the range has no data.
+          allOf:
+            - $ref: '#/components/schemas/LatencyTriple'
+        error_rate:
+          type: number
+          format: double
+          nullable: true
+          description: Error rate percentage.
+          minimum: 0
+          maximum: 100
+          example: 1.5
+      required:
+        - queries
+        - rows
+        - latency
+    MetricValue:
+      description: 'Metric value: a number, latency percentiles, or null when the bucket has no data (empty range) or the value is a nullIf-guarded ratio (error_rate).'
+      oneOf:
+        - type: number
+          format: double
+          nullable: true
+        - $ref: '#/components/schemas/LatencyTriple'
+    LatencyTriple:
+      type: object
+      additionalProperties: false
+      description: Latency percentile values.
+      example:
+        p50: 120.5
+        p95: 340.2
+        p99: 512.8
+      properties:
+        p50:
+          type: number
+          format: double
+          description: 50th percentile latency.
+          minimum: 0
+          example: 120.5
+        p95:
+          type: number
+          format: double
+          description: 95th percentile latency.
+          minimum: 0
+          example: 340.2
+        p99:
+          type: number
+          format: double
+          description: 99th percentile latency.
+          minimum: 0
+          example: 512.8
+      required:
+        - p50
+        - p95
+        - p99
+    ProductCategory:
+      type: string
+      enum:
+        - GADGL
+        - DS
+        - DWH_SQL_BQ
+        - API
+        - DWH_BQ
+        - DWH_INT_BQ
+        - GS
+        - EXCEL
+        - DWH_S3S
+        - DWH_AZS
+        - DWH_SNO
+        - CLAUDE
+        - DWH_GCS
+        - PBI
+        - DWH_SQL_AZR
+        - DWH_RSH
+        - STUDIO
+        - DWH_FTP
+        - DASH
+        - CHATGPT
+        - DWH_SQL_MSFBR
+        - XPLD
+        - DWH_SQL_DBR
+        - DWH_AZR
+        - DWH_SQL_ALY
+        - CONNECTOR_BUILDER
+        - GEMINI
+        - COPILOT
+        - CAPI
+        - STUDIO_EDIT
+        - DWH
+        - GPT
+        - DWH_INT
+        - DWH_SQL
+      description: A Supermetrics product category as recorded on a usage row.
+      example: API
+    ExportCreatedOutput:
+      type: object
+      additionalProperties: false
+      description: A newly accepted export job.
+      properties:
+        id:
+          type: string
+          format: uuid
+          maxLength: 36
+          description: The generated export job id.
+          example: 0f8fad5b-d9cb-469f-a165-70867728950e
+        status:
+          type: string
+          enum:
+            - PENDING
+            - RUNNING
+            - READY
+            - FAILED
+          description: Current status of the export job.
+          example: PENDING
+        requested_at:
+          type: string
+          format: date-time
+          nullable: true
+          maxLength: 32
+          description: When the export job was requested.
+          example: '2026-07-14T09:00:00Z'
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+          maxLength: 32
+          description: When the export expires; null until the job is READY.
+          example: null
+    ExportCreatedResponse:
+      type: object
+      additionalProperties: false
+      description: Response envelope for a newly accepted export job.
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+        data:
+          $ref: '#/components/schemas/ExportCreatedOutput'
+      required:
+        - meta
+        - data
+    ExportStatusOutput:
+      type: object
+      additionalProperties: false
+      description: Full status of a single export job.
+      properties:
+        id:
+          type: string
+          format: uuid
+          maxLength: 36
+          description: The export job id.
+          example: 0f8fad5b-d9cb-469f-a165-70867728950e
+        status:
+          type: string
+          enum:
+            - PENDING
+            - RUNNING
+            - READY
+            - FAILED
+          description: Current status of the export job.
+          example: READY
+        estimated_rows:
+          type: integer
+          format: int64
+          nullable: true
+          minimum: 0
+          maximum: 9223372036854776000
+          description: Estimated number of rows in the export.
+          example: 123456
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+          maxLength: 32
+          description: When the signed download URLs expire.
+          example: '2026-02-01T00:00:00Z'
+        product_categories:
+          type: array
+          maxItems: 100
+          description: 'The product categories this export was created for. Not constrained to the request enum: a job created before a category was retired keeps returning that category, so responses may carry values the request no longer accepts.'
+          items:
+            type: string
+            maxLength: 32
+            pattern: ^[A-Z0-9_]{1,32}$
+          example:
+            - GADGL
+            - DS
+        files:
+          type: array
+          maxItems: 10000
+          description: Signed download URLs for each export part, when ready.
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              url:
+                type: string
+                format: uri
+                maxLength: 2048
+                description: Signed download URL for this export part.
+                example: https://storage.googleapis.com/usage-exports/team-936506/0f8fad5b/part-202601.csv.gz
+              part:
+                type: integer
+                format: int32
+                minimum: 0
+                maximum: 2147483647
+                description: Year and month (YYYYMM) of the usage rows in this file. Each export is split into one file per calendar month; files are returned in ascending chronological order.
+                example: 202601
+              size_bytes:
+                type: integer
+                format: int64
+                minimum: 0
+                maximum: 9223372036854776000
+                description: Size of the export part in bytes.
+                example: 20480
+    ExportStatusResponse:
+      type: object
+      additionalProperties: false
+      description: Response envelope for a single export job's status.
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+        data:
+          $ref: '#/components/schemas/ExportStatusOutput'
+      required:
+        - meta
+        - data
+    ExportSummaryOutput:
+      type: object
+      additionalProperties: false
+      description: Lightweight export list row.
+      properties:
+        id:
+          type: string
+          format: uuid
+          maxLength: 36
+          description: The export job id.
+          example: 0f8fad5b-d9cb-469f-a165-70867728950e
+        status:
+          type: string
+          enum:
+            - PENDING
+            - RUNNING
+            - READY
+            - FAILED
+          description: Current status of the export job.
+          example: READY
+        start_date:
+          type: string
+          format: date
+          nullable: true
+          maxLength: 10
+          description: Inclusive UTC start date of the reporting period.
+          example: '2026-01-01'
+        end_date:
+          type: string
+          format: date
+          nullable: true
+          maxLength: 10
+          description: Inclusive UTC end date of the reporting period.
+          example: '2026-01-31'
+        product_categories:
+          type: array
+          maxItems: 100
+          description: 'The product categories this export was created for. Not constrained to the request enum: a job created before a category was retired keeps returning that category, so responses may carry values the request no longer accepts.'
+          items:
+            type: string
+            maxLength: 32
+            pattern: ^[A-Z0-9_]{1,32}$
+          example:
+            - GADGL
+            - DS
+    ExportsCollectionResponse:
+      type: object
+      additionalProperties: false
+      description: A page of export summaries; the total count and navigation links live in `meta`.
+      properties:
+        meta:
+          $ref: '#/components/schemas/MetaWithPagination'
+        data:
+          $ref: '#/components/schemas/ExportsCollectionOutput'
+      required:
+        - meta
+        - data
+    ExportsCollectionOutput:
+      type: object
+      additionalProperties: false
+      description: A page of export summaries.
+      properties:
+        exports:
+          type: array
+          maxItems: 1000
+          description: The exports on this page.
+          items:
+            $ref: '#/components/schemas/ExportSummaryOutput'
+    MetaWithPagination:
+      type: object
+      additionalProperties: false
+      description: Response metadata including offset pagination.
+      properties:
+        request_id:
+          type: string
+          pattern: ^[A-Za-z0-9_-]+$
+          minLength: 8
+          maxLength: 64
+          description: Unique identifier for the request, for tracking and debugging.
+          example: BXaEFVtjc7TXaJxgZhmFgSUD9edqq_CN
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+        - request_id
+        - pagination
+    Pagination:
+      type: object
+      additionalProperties: false
+      description: Offset-based pagination metadata for list responses.
+      properties:
+        total_count:
+          type: integer
+          format: int64
+          minimum: 0
+          maximum: 1000000000
+          description: Total number of items available across all pages.
+          example: 137
+        limit:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 200
+          description: Maximum number of items returned in this page.
+          example: 50
+        offset:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 2147483647
+          description: Number of items skipped before this page.
+          example: 0
+        links:
+          $ref: '#/components/schemas/PaginationLinks'
+      required:
+        - total_count
+        - limit
+        - offset
+    PaginationLinks:
+      type: object
+      additionalProperties: false
+      description: Navigation links for paginated collections.
+      properties:
+        first:
+          type: string
+          format: uri
+          maxLength: 2048
+          nullable: true
+          description: URL of the first page, or null when not applicable.
+          example: https://api.supermetrics.com/v1/teams/123456/usage-exports?offset=0&limit=50
+        prev:
+          type: string
+          format: uri
+          maxLength: 2048
+          nullable: true
+          description: URL of the previous page, or null on the first page.
+          example: null
+        next:
+          type: string
+          format: uri
+          maxLength: 2048
+          nullable: true
+          description: URL of the next page, or null on the last page.
+          example: https://api.supermetrics.com/v1/teams/123456/usage-exports?offset=50&limit=50
+        last:
+          type: string
+          format: uri
+          maxLength: 2048
+          nullable: true
+          description: URL of the last page, or null when not applicable.
+          example: null
+  headers:
+    X-RateLimit-Limit:
+      description: Request limit per hour
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 10000
+        example: 5000
+    X-RateLimit-Remaining:
+      description: Remaining requests in current window
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        maximum: 10000
+        example: 4999
+    Access-Control-Allow-Origin:
+      description: CORS header
+      schema:
+        type: string
+        maxLength: 255
+        enum:
+          - '*'
+        example: '*'
+    WWW-Authenticate:
+      description: Bearer token required
+      schema:
+        type: string
+        maxLength: 255
+        pattern: ^Bearer.*
+    Retry-After:
+      description: Seconds until rate limit resets
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 86400
+        example: 3600
+  responses:
+    BadRequest:
+      description: Bad request - invalid parameters
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            meta:
+              request_id: BXaEFVtjc7TXaJxgZhmFgSUD9edqq_CN
+            error:
+              code: BAD_REQUEST
+              message: The request was invalid.
+    Unauthorized:
+      description: Unauthorized
+      headers:
+        WWW-Authenticate:
+          $ref: '#/components/headers/WWW-Authenticate'
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            meta:
+              request_id: BXaEFVtjc7TXaJxgZhmFgSUD9edqq_CN
+            error:
+              code: UNAUTHORIZED
+              message: Authentication is required.
+    PermissionDenied:
+      description: Permission denied
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            meta:
+              request_id: BXaEFVtjc7TXaJxgZhmFgSUD9edqq_CN
+            error:
+              code: PERMISSION_ERROR
+              message: You do not have permission to perform this action.
+    UnprocessableEntity:
+      description: Unprocessable Entity - validation failed for the request parameters
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            meta:
+              request_id: BXaEFVtjc7TXaJxgZhmFgSUD9edqq_CN
+            error:
+              code: UNPROCESSABLE_ENTITY
+              message: Validation failed for the request parameters.
+    TooManyRequests:
+      description: Too Many Requests
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        Retry-After:
+          $ref: '#/components/headers/Retry-After'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            meta:
+              request_id: BXaEFVtjc7TXaJxgZhmFgSUD9edqq_CN
+            error:
+              code: TOO_MANY_REQUESTS
+              message: Rate limit exceeded. Retry later.
+    InternalServerError:
+      description: Internal server error
+      headers:
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            meta:
+              request_id: BXaEFVtjc7TXaJxgZhmFgSUD9edqq_CN
+            error:
+              code: INTERNAL_SERVER_ERROR
+              message: An unexpected error occurred.
+    NotFound:
+      description: Resource not found
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            meta:
+              request_id: BXaEFVtjc7TXaJxgZhmFgSUD9edqq_CN
+            error:
+              code: NOT_FOUND
+              message: The requested resource was not found.
+    UnprocessableContent:
+      description: Unprocessable Content - invalid or corrupted data
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            meta:
+              request_id: BXaEFVtjc7TXaJxgZhmFgSUD9edqq_CN
+            error:
+              code: UNPROCESSABLE_CONTENT
+              message: The content is invalid or corrupted.
+paths:
+  /query/accounts:
+    servers:
+      - url: https://api.supermetrics.com
+        description: production server
+        x-internal: false
+    get:
+      summary: Get accounts
+      description: Retrieve a list of available data source logins (authentications) and their accounts
+      operationId: getAccounts
+      parameters:
+        - name: ds_id
+          in: query
+          required: true
+          description: Data source ID
+          schema:
+            type: string
+            maxLength: 50
+            pattern: ^[A-Za-z0-9_-]+$
+            example: GA
+        - name: ds_users
+          in: query
+          required: false
+          description: Comma-separated list of usernames. Defaults to all available.
+          schema:
+            type: string
+            maxLength: 100
+            example: example
+        - name: cache_minutes
+          in: query
+          required: false
+          description: Maximum allowed age of the cached accounts in minutes. Defaults to none for last fetched data.
+          schema:
+            type: integer
+            format: int32
+            minimum: 60
+            maximum: 1440
+            example: 60
+      responses:
+        '200':
+          description: Accounts retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountListOutput'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - ApiKeyAuth:
+            - ds_accounts_read
+            - any_api_key
+      tags:
+        - Get data
+  /query/data/{context_type}:
+    servers:
+      - url: https://api.supermetrics.com
+        description: production server
+        x-internal: false
+    get:
+      summary: Query data
+      description: Execute a query to retrieve data from a specified data source
+      operationId: getData
+      parameters:
+        - name: context_type
+          in: path
+          required: true
+          description: Output format to use for query results
+          schema:
+            type: string
+            enum:
+              - json
+              - keyjson
+              - ndjson
+              - parquet
+              - powerbi
+              - qlik
+              - tableau
+              - csv
+              - tsv
+              - pbijson
+              - postman
+            x-enum:
+              - json
+              - keyjson
+              - ndjson
+              - parquet
+              - powerbi
+              - qlik
+              - tableau
+              - csv
+              - tsv
+            example: json
+        - name: schedule_id
+          in: query
+          required: false
+          description: Custom query schedule ID
+          schema:
+            type: string
+            maxLength: 100
+            example: example
+        - name: sync_timeout
+          in: query
+          required: false
+          description: Number of seconds to wait for the query to finish
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 3600
+            default: 1800
+            example: 0
+        - name: api_links
+          in: query
+          required: false
+          description: Types of resource links to return. Not in use.
+          schema:
+            type: array
+            items:
+              type: string
+              maxLength: 100
+            maxItems: 1000
+        - name: ds_id
+          in: query
+          required: true
+          description: Data source ID
+          schema:
+            type: string
+            maxLength: 100
+            example: GA
+        - name: ds_accounts
+          in: query
+          required: false
+          description: List of data source account IDs to query
+          schema:
+            type: string
+            maxLength: 100
+            example: example
+        - name: ds_segments
+          in: query
+          required: false
+          description: List of data source segment IDs to query
+          schema:
+            type: string
+            maxLength: 100
+            example: example
+        - name: ds_user
+          in: query
+          required: false
+          description: Shorthand parameter to provide one value for ds_users
+          schema:
+            type: string
+            maxLength: 100
+            example: example
+        - name: ds_users
+          in: query
+          required: false
+          description: List of data source usernames we should target
+          schema:
+            type: string
+            maxLength: 100
+            example: example
+        - name: date_range_type
+          in: query
+          required: false
+          description: Type of date range the query should use
+          schema:
+            type: string
+            maxLength: 50
+            example: yesterday
+        - name: start_date
+          in: query
+          required: false
+          description: Fixed or relative query start date
+          schema:
+            type: string
+            maxLength: 50
+            example: yesterday
+        - name: end_date
+          in: query
+          required: false
+          description: Fixed or relative query end date
+          schema:
+            type: string
+            maxLength: 50
+            example: yesterday
+        - name: compare_type
+          in: query
+          required: false
+          description: Date range comparison type
+          schema:
+            type: string
+            maxLength: 100
+            example: example
+        - name: compare_show
+          in: query
+          required: false
+          description: Display type for comparison values
+          schema:
+            type: string
+            maxLength: 100
+            example: example
+        - name: compare_start_date
+          in: query
+          required: false
+          description: Fixed or relative start date for comparison date range
+          schema:
+            type: string
+            maxLength: 50
+            example: yesterday
+        - name: compare_end_date
+          in: query
+          required: false
+          description: Fixed or relative end date for comparison date range
+          schema:
+            type: string
+            maxLength: 50
+            example: yesterday
+        - name: fields
+          in: query
+          required: false
+          description: List of metric and dimension field IDs or field objects for the query
+          schema:
+            type: string
+            maxLength: 100
+            example: example
+        - name: filter
+          in: query
+          required: false
+          description: Query filter string
+          schema:
+            type: string
+            maxLength: 100
+            example: example
+        - name: settings
+          in: query
+          required: false
+          description: Additional settings for query in key-value pairs
+          schema:
+            type: array
+            items:
+              type: string
+              maxLength: 100
+            maxItems: 1000
+        - name: order_rows
+          in: query
+          required: false
+          description: List of fields and their sorting directions for the results
+          schema:
+            type: string
+            maxLength: 100
+            example: example
+        - name: order_columns
+          in: query
+          required: false
+          description: Order policy for fields that are split by column
+          schema:
+            type: string
+            maxLength: 100
+            example: example
+        - name: offset_start
+          in: query
+          required: false
+          description: Starting row index for a paginated response. Defaults to 0.
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 1000000
+            default: 0
+            example: 0
+        - name: offset_end
+          in: query
+          required: false
+          description: Ending row index for a paginated response. Defaults to none for all the data.
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 1000000
+            example: 0
+        - name: max_columns
+          in: query
+          required: false
+          description: Maximum number of columns the query should return when fields are split by column
+          schema:
+            type: integer
+            format: int32
+            default: 20
+            minimum: 0
+            maximum: 2147483647
+            example: 0
+        - name: max_rows
+          in: query
+          required: false
+          description: Maximum number of rows the query should return. Defaults to 1000.
+          schema:
+            type: integer
+            format: int32
+            default: 1000
+            minimum: 0
+            maximum: 2147483647
+            example: 0
+        - name: cache_minutes
+          in: query
+          required: false
+          description: Maximum allowed age of query results cache in minutes. Defaults to none for no explicit policy.
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 2147483647
+            example: 0
+      responses:
+        '200':
+          description: Query executed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - ApiKeyAuth:
+            - ds_queries_write
+            - ds_queries_run
+            - any_api_key
+      tags:
+        - Get data
+    post:
+      summary: Query data
+      description: Execute a query to retrieve data from a specified data source
+      operationId: postData
+      parameters:
+        - name: context_type
+          in: path
+          required: true
+          description: Output format to use for query results
+          schema:
+            type: string
+            enum:
+              - json
+              - keyjson
+              - ndjson
+              - parquet
+              - powerbi
+              - qlik
+              - tableau
+              - csv
+              - tsv
+              - pbijson
+              - postman
+            x-enum:
+              - json
+              - keyjson
+              - ndjson
+              - parquet
+              - powerbi
+              - qlik
+              - tableau
+              - csv
+              - tsv
+            example: json
+      requestBody:
+        required: true
+        description: Query parameters for data retrieval
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataQuery'
+            example:
+              ds_id: GAWA
+              ds_accounts: account123
+              start_date: yesterday
+              end_date: yesterday
+              fields: date,sessions
+      responses:
+        '200':
+          description: Query executed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - ApiKeyAuth:
+            - ds_queries_write
+            - ds_queries_run
+            - any_api_key
+      tags:
+        - Get data
+  /query/fields:
+    servers:
+      - url: https://api.supermetrics.com
+        description: production server
+        x-internal: false
+    get:
+      summary: Get fields
+      description: List available fixed and custom fields for a data source
+      operationId: getFields
+      parameters:
+        - name: ds_id
+          in: query
+          required: true
+          description: Data source ID
+          schema:
+            type: string
+            maxLength: 50
+            pattern: ^[A-Za-z0-9_-]+$
+            example: GA
+        - name: ds_accounts
+          in: query
+          required: false
+          description: Comma-separated list of account IDs to target. Required to return custom fields.
+          schema:
+            type: string
+            maxLength: 100
+            example: example
+        - name: ds_users
+          in: query
+          required: false
+          description: Comma-separated list of usernames. Required when ds_accounts is provided to return custom fields.
+          schema:
+            type: string
+            maxLength: 100
+            example: example
+      responses:
+        '200':
+          description: Fields retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - ApiKeyAuth:
+            - default
+            - any_api_key
+      tags:
+        - Get data
+  /query/results:
+    servers:
+      - url: https://api.supermetrics.com
+        description: production server
+        x-internal: false
+    get:
+      summary: Get query results
+      description: Get results of a recently performed query in the originally requested output format
+      operationId: getQueryResults
+      parameters:
+        - name: schedule_id
+          in: query
+          required: true
+          description: Query schedule ID
+          schema:
+            type: string
+            maxLength: 50
+            pattern: ^[A-Za-z0-9_-]+$
+            example: example
+        - name: offset
+          in: query
+          required: false
+          description: Pagination offset for the number of result rows to return. Defaults to 0.
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 1000000
+            default: 0
+            example: 0
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of result rows to return.
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100000
+            default: 100
+            example: 1
+      responses:
+        '200':
+          description: Query results retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                description: The query results in the requested output format.
+            text/csv:
+              schema:
+                type: string
+                maxLength: 10000000
+                description: The query results in CSV format.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - ApiKeyAuth:
+            - ds_queries_write
+            - ds_queries_run
+            - any_api_key
+      tags:
+        - Get data
+  /query/segments:
+    servers:
+      - url: https://api.supermetrics.com
+        description: production server
+        x-internal: false
+    get:
+      summary: Get segments
+      description: List all available data source logins for current team and their segments
+      operationId: getSegments
+      parameters:
+        - name: ds_id
+          in: query
+          required: true
+          description: Data source ID
+          schema:
+            type: string
+            maxLength: 50
+            pattern: ^[A-Za-z0-9_-]+$
+            example: GA
+        - name: ds_users
+          in: query
+          required: false
+          description: Comma-separated list of usernames. Defaults to all available.
+          schema:
+            type: string
+            maxLength: 100
+            example: example
+        - name: cache_minutes
+          in: query
+          required: false
+          description: Maximum allowed age of the cached segments in minutes. Defaults to none for last fetched data.
+          schema:
+            type: integer
+            format: int32
+            minimum: 60
+            maximum: 1440
+            example: 60
+      responses:
+        '200':
+          description: Segments retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SegmentListOutput'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - ApiKeyAuth:
+            - ds_queries_run
+            - any_api_key
+      tags:
+        - Get data
+  /query/status:
+    servers:
+      - url: https://api.supermetrics.com
+        description: production server
+        x-internal: false
+    get:
+      summary: Get query status
+      description: Get status and results for an asynchronous query execution
+      operationId: getQueryStatus
+      parameters:
+        - name: schedule_id
+          in: query
+          required: true
+          description: Query schedule ID
+          schema:
+            type: string
+            maxLength: 50
+            pattern: ^[A-Za-z0-9_-]+$
+            example: example
+        - name: offset_start
+          in: query
+          required: false
+          description: Starting row index for a paginated response. Defaults to 0.
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 1000000
+            default: 0
+            example: 0
+        - name: offset_end
+          in: query
+          required: false
+          description: Ending row index for a paginated response. Defaults to none for all the data.
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 1000000
+            example: 0
+      responses:
+        '200':
+          description: Query status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryStatusResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - ApiKeyAuth:
+            - ds_queries_write
+            - ds_queries_run
+            - any_api_key
+      tags:
+        - Get data
+  /datasource/search:
+    servers:
+      - url: https://api.supermetrics.com
+        description: production server
+        x-internal: false
+    get:
+      summary: Search data sources
+      description: Search for all publicly available data sources
+      operationId: searchDataSources
+      security: []
+      parameters:
+        - name: filter[keyword]
+          in: query
+          required: false
+          description: Fuzzy search by keyword in connector ID, name, marketing name, description, categories, aliases, and tags.
+          schema:
+            type: string
+            maxLength: 255
+            pattern: ^[A-Za-z0-9\s_-]*$
+        - name: filter[category]
+          in: query
+          required: false
+          description: Filter by category.
+          schema:
+            type: string
+            enum:
+              - AD_VERIFICATION
+              - AFFILIATE
+              - ANALYTICS
+              - BRAND_REPUTATION
+              - CRM_SALES
+              - DATA_WAREHOUSES
+              - DSP
+              - ECOMMERCE
+              - FILES
+              - MARKETING_ATTRIBUTION
+              - MARKETING_AUTOMATION
+              - MOBILE
+              - OTHER
+              - PAID_MEDIA
+              - PAYMENTS
+              - RETAIL_MEDIA
+              - SEARCH
+              - SEO
+              - SOCIAL_MEDIA
+        - name: filter[status]
+          in: query
+          required: false
+          description: Filter by release status.
+          schema:
+            type: string
+            enum:
+              - DEVELOPMENT
+              - INVITE_ONLY
+              - EARLY_ACCESS
+              - RELEASED
+              - SUNSETTED
+        - name: filter[product]
+          in: query
+          required: false
+          description: Filter by product.
+          schema:
+            type: string
+            enum:
+              - EXCEL
+              - SHEETS
+              - DS
+              - API
+              - HUB
+        - name: filter[tag]
+          in: query
+          required: false
+          description: Filter by tag.
+          schema:
+            type: string
+            maxLength: 100
+        - name: filter[is_new]
+          in: query
+          required: false
+          description: Filter only new connectors (release date within the last 90 days).
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+        - name: filter[is_shown_website]
+          in: query
+          required: false
+          description: Filter only connectors shown on the website.
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+      responses:
+        '200':
+          description: List of connectors retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSourceSearchResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+        - Data Source Search
+  /datasource/search/categories:
+    servers:
+      - url: https://api.supermetrics.com
+        description: production server
+        x-internal: false
+    get:
+      summary: Get search categories
+      description: Categories list for data sources search filtering
+      operationId: getSearchCategories
+      security: []
+      responses:
+        '200':
+          description: List of connector categories retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSourceCategoriesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+        - Data Source Search
+  /datasource/search/statuses:
+    servers:
+      - url: https://api.supermetrics.com
+        description: production server
+        x-internal: false
+    get:
+      summary: Get release statuses
+      description: Release statuses list for data sources search filtering
+      operationId: getReleaseStatuses
+      security: []
+      responses:
+        '200':
+          description: List of connector release statuses retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSourceStatusesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+        - Data Source Search
+  /datasource/search/tags:
+    servers:
+      - url: https://api.supermetrics.com
+        description: production server
+        x-internal: false
+    get:
+      summary: Get search tags
+      description: Tags list for data sources search filtering
+      operationId: getSearchTags
+      security: []
+      responses:
+        '200':
+          description: List of connector tags retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSourceTagsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+        - Data Source Search
+  /teams/{team_id}/datasource/search:
+    servers:
+      - url: https://api.supermetrics.com
+        description: production server
+        x-internal: false
+    get:
+      summary: Search data sources for team
+      description: Search for all publicly and privately available data sources
+      operationId: searchTeamDataSources
+      parameters:
+        - in: path
+          name: team_id
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            maximum: 9223372036854776000
+          description: Team id whose data sources to be searched.
+        - in: query
+          name: filter
+          required: false
+          schema:
+            type: array
+            maxItems: 50
+            items:
+              type: string
+              maxLength: 255
+          description: List of filters
+      responses:
+        '200':
+          description: List of connectors retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSourceSearchResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - Data Source Search
+  /teams/{team_id}/destination/search:
+    servers:
+      - url: https://api.supermetrics.com
+        description: production server
+        x-internal: false
+    get:
+      summary: Search destinations for team
+      description: Search for all publicly and privately available destinations
+      operationId: searchTeamDestinations
+      parameters:
+        - in: path
+          name: team_id
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            maximum: 9223372036854776000
+          description: Team id whose destinations to be searched.
+      responses:
+        '200':
+          description: List of destinations retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DestinationSearchResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - Destination Search
+  /v1/teams/{team_id}/usage/timeseries:
+    servers:
+      - url: https://api.supermetrics.com
+        description: production server
+        x-internal: false
+    get:
+      summary: Get usage timeseries.
+      description: Retrieve usage data as a timeseries.
+      operationId: getTimeseries
+      parameters:
+        - in: path
+          name: team_id
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            maximum: 9223372036854776000
+          required: true
+          description: Team ID to scope the usage report to.
+          example: 936506
+        - in: query
+          name: start_date
+          schema:
+            type: string
+            format: date
+            maxLength: 10
+          required: true
+          description: Inclusive start date (YYYY-MM-DD) of the reporting window.
+          example: '2026-01-01'
+        - in: query
+          name: end_date
+          schema:
+            type: string
+            format: date
+            maxLength: 10
+          required: true
+          description: Inclusive end date (YYYY-MM-DD) of the reporting window.
+          example: '2026-01-31'
+        - in: query
+          name: granularity
+          schema:
+            type: string
+            enum:
+              - hour
+              - day
+          required: true
+          description: Time bucket granularity for aggregation.
+          example: day
+        - in: query
+          name: metric
+          schema:
+            type: string
+            enum:
+              - queries
+              - rows
+              - latency
+              - error_rate
+          required: false
+          description: Metric to aggregate. Defaults to queries.
+          example: queries
+        - in: query
+          name: api_key_id[]
+          schema:
+            type: array
+            items:
+              type: integer
+              format: int64
+              minimum: 1
+              maximum: 9223372036854776000
+            maxItems: 1000
+          required: false
+          description: Filter results to these API key IDs.
+          example:
+            - 12345
+        - in: query
+          name: data_source[]
+          schema:
+            type: array
+            items:
+              type: string
+              maxLength: 128
+            maxItems: 1000
+          required: false
+          description: Filter results to these data source IDs.
+          example:
+            - AW
+      responses:
+        '200':
+          description: Usage timeseries.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeseriesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - ApiKeyAuth:
+            - api_query_usage_read
+      tags:
+        - API Usage
+  /v1/teams/{team_id}/usage/top:
+    servers:
+      - url: https://api.supermetrics.com
+        description: production server
+        x-internal: false
+    get:
+      summary: Get top usage breakdown.
+      description: Retrieve top usage breakdown by dimension.
+      operationId: getTop
+      parameters:
+        - in: path
+          name: team_id
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            maximum: 9223372036854776000
+          required: true
+          description: Team ID to scope the usage report to.
+          example: 936506
+        - in: query
+          name: start_date
+          schema:
+            type: string
+            format: date
+            maxLength: 10
+          required: true
+          description: Inclusive start date (YYYY-MM-DD) of the reporting window.
+          example: '2026-01-01'
+        - in: query
+          name: end_date
+          schema:
+            type: string
+            format: date
+            maxLength: 10
+          required: true
+          description: Inclusive end date (YYYY-MM-DD) of the reporting window.
+          example: '2026-01-31'
+        - in: query
+          name: granularity
+          schema:
+            type: string
+            enum:
+              - hour
+              - day
+          required: true
+          description: Time bucket granularity for aggregation.
+          example: day
+        - in: query
+          name: metric
+          schema:
+            type: string
+            enum:
+              - queries
+              - rows
+              - latency
+              - error_rate
+          required: false
+          description: Metric to aggregate. Defaults to queries.
+          example: queries
+        - in: query
+          name: dimension
+          schema:
+            type: string
+            enum:
+              - data_source
+              - api_key_id
+          required: false
+          description: Dimension to group the top breakdown by.
+          example: data_source
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 1000
+          required: false
+          description: Maximum number of rows to return in the top breakdown.
+          example: 100
+        - in: query
+          name: api_key_id[]
+          schema:
+            type: array
+            items:
+              type: integer
+              format: int64
+              minimum: 1
+              maximum: 9223372036854776000
+            maxItems: 1000
+          required: false
+          description: Filter results to these API key IDs.
+          example:
+            - 12345
+        - in: query
+          name: data_source[]
+          schema:
+            type: array
+            items:
+              type: string
+              maxLength: 128
+            maxItems: 1000
+          required: false
+          description: Filter results to these data source IDs.
+          example:
+            - AW
+      responses:
+        '200':
+          description: Top usage breakdown.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - ApiKeyAuth:
+            - api_query_usage_read
+      tags:
+        - API Usage
+  /v1/teams/{team_id}/usage/errors:
+    servers:
+      - url: https://api.supermetrics.com
+        description: production server
+        x-internal: false
+    get:
+      summary: Get usage errors.
+      description: Retrieve usage error data.
+      operationId: getErrors
+      parameters:
+        - in: path
+          name: team_id
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            maximum: 9223372036854776000
+          required: true
+          description: Team ID to scope the usage report to.
+          example: 936506
+        - in: query
+          name: start_date
+          schema:
+            type: string
+            format: date
+            maxLength: 10
+          required: true
+          description: Inclusive start date (YYYY-MM-DD) of the reporting window.
+          example: '2026-01-01'
+        - in: query
+          name: end_date
+          schema:
+            type: string
+            format: date
+            maxLength: 10
+          required: true
+          description: Inclusive end date (YYYY-MM-DD) of the reporting window.
+          example: '2026-01-31'
+        - in: query
+          name: granularity
+          schema:
+            type: string
+            enum:
+              - hour
+              - day
+          required: true
+          description: Time bucket granularity for aggregation.
+          example: day
+        - in: query
+          name: api_key_id[]
+          schema:
+            type: array
+            items:
+              type: integer
+              format: int64
+              minimum: 1
+              maximum: 9223372036854776000
+            maxItems: 1000
+          required: false
+          description: Filter results to these API key IDs.
+          example:
+            - 12345
+        - in: query
+          name: data_source[]
+          schema:
+            type: array
+            items:
+              type: string
+              maxLength: 128
+            maxItems: 1000
+          required: false
+          description: Filter results to these data source IDs.
+          example:
+            - AW
+      responses:
+        '200':
+          description: Usage errors.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - ApiKeyAuth:
+            - api_query_usage_read
+      tags:
+        - API Usage
+  /v1/teams/{team_id}/usage/summary:
+    servers:
+      - url: https://api.supermetrics.com
+        description: production server
+        x-internal: false
+    get:
+      summary: Get usage summary.
+      description: Retrieve usage summary data.
+      operationId: getSummary
+      parameters:
+        - in: path
+          name: team_id
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            maximum: 9223372036854776000
+          required: true
+          description: Team ID to scope the usage report to.
+          example: 936506
+        - in: query
+          name: start_date
+          schema:
+            type: string
+            format: date
+            maxLength: 10
+          required: true
+          description: Inclusive start date (YYYY-MM-DD) of the reporting window.
+          example: '2026-01-01'
+        - in: query
+          name: end_date
+          schema:
+            type: string
+            format: date
+            maxLength: 10
+          required: true
+          description: Inclusive end date (YYYY-MM-DD) of the reporting window.
+          example: '2026-01-31'
+        - in: query
+          name: granularity
+          schema:
+            type: string
+            enum:
+              - hour
+              - day
+          required: true
+          description: Time bucket granularity for aggregation.
+          example: day
+        - in: query
+          name: api_key_id[]
+          schema:
+            type: array
+            items:
+              type: integer
+              format: int64
+              minimum: 1
+              maximum: 9223372036854776000
+            maxItems: 1000
+          required: false
+          description: Filter results to these API key IDs.
+          example:
+            - 12345
+        - in: query
+          name: data_source[]
+          schema:
+            type: array
+            items:
+              type: string
+              maxLength: 128
+            maxItems: 1000
+          required: false
+          description: Filter results to these data source IDs.
+          example:
+            - AW
+      responses:
+        '200':
+          description: Usage summary.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SummaryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - ApiKeyAuth:
+            - api_query_usage_read
+      tags:
+        - API Usage
+  /v1/teams/{team_id}/usage-exports:
+    servers:
+      - url: https://api.supermetrics.com
+        description: production server
+        x-internal: false
+    post:
+      summary: Create a usage export job
+      description: Create a usage export job for a team.
+      operationId: create
+      parameters:
+        - in: path
+          name: team_id
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            maximum: 9223372036854776000
+          description: The team ID that owns the exports.
+          example: 936506
+      requestBody:
+        required: true
+        description: The reporting period and product scope to export.
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                start_date:
+                  type: string
+                  format: date
+                  maxLength: 10
+                  description: Inclusive UTC start date (Y-m-d) of the reporting period.
+                  example: '2026-01-01'
+                end_date:
+                  type: string
+                  format: date
+                  maxLength: 10
+                  description: Inclusive UTC end date (Y-m-d) of the reporting period.
+                  example: '2026-01-31'
+                product_categories:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  description: Product categories to export. At least one is required.
+                  items:
+                    $ref: '#/components/schemas/ProductCategory'
+                  example:
+                    - API
+                    - DS
+                license_ids:
+                  type: array
+                  maxItems: 100
+                  description: Restrict the export to these license IDs.
+                  items:
+                    type: integer
+                    format: int64
+                    minimum: 1
+                    maximum: 9223372036854776000
+                  example:
+                    - 100
+                    - 101
+                api_key_ids:
+                  type: array
+                  maxItems: 100
+                  description: Restrict the export to these API key IDs.
+                  items:
+                    type: integer
+                    format: int64
+                    minimum: 1
+                    maximum: 9223372036854776000
+                  example:
+                    - 7
+                data_sources:
+                  type: array
+                  maxItems: 100
+                  description: Restrict the export to these data source IDs.
+                  items:
+                    type: string
+                    maxLength: 5
+                    pattern: ^[A-Za-z0-9_]{2,5}$
+                  example:
+                    - GA4
+                user_ids:
+                  type: array
+                  maxItems: 100
+                  description: Restrict the export to these user IDs.
+                  items:
+                    type: integer
+                    format: int64
+                    minimum: 1
+                    maximum: 9223372036854776000
+                  example:
+                    - 42
+              required:
+                - start_date
+                - end_date
+                - product_categories
+            example:
+              start_date: '2026-01-01'
+              end_date: '2026-01-31'
+              product_categories:
+                - API
+                - DS
+              license_ids:
+                - 100
+      responses:
+        '202':
+          description: Export job accepted for processing.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportCreatedResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - ApiKeyAuth:
+            - usage_export_write
+      tags:
+        - Raw Usage Data Export
+    get:
+      summary: List usage export jobs
+      description: List a team's usage export jobs.
+      operationId: list
+      parameters:
+        - in: path
+          name: team_id
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            maximum: 9223372036854776000
+          description: The team ID that owns the exports.
+          example: 936506
+        - in: query
+          name: status
+          required: false
+          schema:
+            type: string
+            enum:
+              - PENDING
+              - RUNNING
+              - READY
+              - FAILED
+          description: Filter exports by status (PENDING, RUNNING, READY, FAILED).
+          example: READY
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 200
+          description: Maximum number of exports to return.
+          example: 50
+        - in: query
+          name: offset
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 2147483647
+          description: Number of exports to skip for pagination.
+          example: 0
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportsCollectionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - ApiKeyAuth:
+            - usage_export_read
+      tags:
+        - Raw Usage Data Export
+  /v1/teams/{team_id}/usage-exports/{id}:
+    servers:
+      - url: https://api.supermetrics.com
+        description: production server
+        x-internal: false
+    get:
+      summary: Get usage export status
+      description: Get the status of a usage export job.
+      operationId: get
+      parameters:
+        - in: path
+          name: team_id
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            maximum: 9223372036854776000
+          description: The team ID that owns the exports.
+          example: 936506
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+            maxLength: 36
+          description: The export job id to fetch.
+          example: 0f8fad5b-d9cb-469f-a165-70867728950e
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportStatusResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - ApiKeyAuth:
+            - usage_export_read
+      tags:
+        - Raw Usage Data Export
