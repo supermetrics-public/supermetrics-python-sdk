@@ -25,6 +25,7 @@ from supermetrics._generated.supermetrics_api_client.models.list_table_groups_re
 )
 from supermetrics._generated.supermetrics_api_client.models.table_group import TableGroup
 from supermetrics._generated.supermetrics_api_client.models.table_group_response import TableGroupResponse
+from supermetrics._generated.supermetrics_api_client.types import Response as GenResponse
 from supermetrics._generated.supermetrics_api_client.types import Unset
 from supermetrics._transport import request_options
 from supermetrics.resources._error_handlers import _raise_for_status, api_error_handler
@@ -43,8 +44,6 @@ def _unwrap_table_group(response: object) -> TableGroup:
     Stopgap: when ``data`` is UNSET, parse the raw response body directly as a
     ``TableGroup``. Remove once the spec is corrected upstream.
     """
-    from supermetrics._generated.supermetrics_api_client.types import Response as GenResponse
-
     resp = cast(GenResponse[object], response)
     parsed = resp.parsed
     if isinstance(parsed, TableGroupResponse) and not isinstance(parsed.data, Unset):

@@ -24,7 +24,7 @@ from supermetrics._generated.supermetrics_api_client.models.table_group import T
 from supermetrics._generated.supermetrics_api_client.models.table_group_export import TableGroupExport
 from supermetrics._generated.supermetrics_api_client.models.table_group_import import TableGroupImport
 from supermetrics._generated.supermetrics_api_client.models.table_group_response import TableGroupResponse
-from supermetrics._generated.supermetrics_api_client.types import Response
+from supermetrics._generated.supermetrics_api_client.types import UNSET, Response
 from supermetrics.exceptions import APIError, AuthenticationError, SupermetricsNotFoundError
 from supermetrics.resources.table_groups import TableGroupsAsyncResource, TableGroupsResource
 
@@ -346,6 +346,33 @@ class TestTableGroupsResource:
         finally:
             module.import_table_group.sync_detailed = original
 
+    def test_import_flat_response_fallback(
+        self,
+        resource: TableGroupsResource,
+        sample_import_body: ImportTableGroupBody,
+    ) -> None:
+        """When the API returns a flat object (no {meta, data} envelope), the wrapper
+        falls back to parsing the raw body as a TableGroup via _unwrap_table_group."""
+        import json as _json
+
+        import supermetrics.resources.table_groups as module
+
+        flat_body = {"@type": "table_group", "group_id": "tg_300", "group_name": "SDK Test"}
+        original = module.import_table_group.sync_detailed
+        module.import_table_group.sync_detailed = MagicMock(
+            return_value=Response(
+                status_code=HTTPStatus.CREATED,
+                content=_json.dumps(flat_body).encode(),
+                headers={},
+                parsed=TableGroupResponse(meta=UNSET, data=UNSET),
+            )
+        )
+        try:
+            created = resource.import_(body=sample_import_body)
+            assert created.group_id == "tg_300"
+        finally:
+            module.import_table_group.sync_detailed = original
+
     # --- edit() ---
 
     def test_edit_success(
@@ -441,6 +468,33 @@ class TestTableGroupsResource:
             with pytest.raises(APIError) as exc_info:
                 resource.edit(group_id="tg_100", version=1, body=sample_edit_body)
             assert exc_info.value.status_code == 500
+        finally:
+            module.edit_table_group.sync_detailed = original
+
+    def test_edit_flat_response_fallback(
+        self,
+        resource: TableGroupsResource,
+        sample_edit_body: EditTableGroupBody,
+    ) -> None:
+        """When the API returns a flat object (no {meta, data} envelope), the wrapper
+        falls back to parsing the raw body as a TableGroup via _unwrap_table_group."""
+        import json as _json
+
+        import supermetrics.resources.table_groups as module
+
+        flat_body = {"@type": "table_group", "group_id": "tg_100", "group_name": "Updated Group"}
+        original = module.edit_table_group.sync_detailed
+        module.edit_table_group.sync_detailed = MagicMock(
+            return_value=Response(
+                status_code=HTTPStatus.OK,
+                content=_json.dumps(flat_body).encode(),
+                headers={},
+                parsed=TableGroupResponse(meta=UNSET, data=UNSET),
+            )
+        )
+        try:
+            updated = resource.edit(group_id="tg_100", version=1, body=sample_edit_body)
+            assert updated.group_id == "tg_100"
         finally:
             module.edit_table_group.sync_detailed = original
 
@@ -728,6 +782,34 @@ class TestTableGroupsAsyncResource:
         finally:
             module.import_table_group.asyncio_detailed = original
 
+    @pytest.mark.asyncio
+    async def test_import_flat_response_fallback(
+        self,
+        resource: TableGroupsAsyncResource,
+        sample_import_body: ImportTableGroupBody,
+    ) -> None:
+        """When the API returns a flat object (no {meta, data} envelope), the async wrapper
+        falls back to parsing the raw body as a TableGroup via _unwrap_table_group."""
+        import json as _json
+
+        import supermetrics.resources.table_groups as module
+
+        flat_body = {"@type": "table_group", "group_id": "tg_300", "group_name": "SDK Test"}
+        original = module.import_table_group.asyncio_detailed
+        module.import_table_group.asyncio_detailed = AsyncMock(
+            return_value=Response(
+                status_code=HTTPStatus.CREATED,
+                content=_json.dumps(flat_body).encode(),
+                headers={},
+                parsed=TableGroupResponse(meta=UNSET, data=UNSET),
+            )
+        )
+        try:
+            created = await resource.import_(body=sample_import_body)
+            assert created.group_id == "tg_300"
+        finally:
+            module.import_table_group.asyncio_detailed = original
+
     # --- edit() ---
 
     @pytest.mark.asyncio
@@ -824,5 +906,33 @@ class TestTableGroupsAsyncResource:
             with pytest.raises(APIError) as exc_info:
                 await resource.edit(group_id="tg_100", version=1, body=sample_edit_body)
             assert exc_info.value.status_code == 500
+        finally:
+            module.edit_table_group.asyncio_detailed = original
+
+    @pytest.mark.asyncio
+    async def test_edit_flat_response_fallback(
+        self,
+        resource: TableGroupsAsyncResource,
+        sample_edit_body: EditTableGroupBody,
+    ) -> None:
+        """When the API returns a flat object (no {meta, data} envelope), the async wrapper
+        falls back to parsing the raw body as a TableGroup via _unwrap_table_group."""
+        import json as _json
+
+        import supermetrics.resources.table_groups as module
+
+        flat_body = {"@type": "table_group", "group_id": "tg_100", "group_name": "Updated Group"}
+        original = module.edit_table_group.asyncio_detailed
+        module.edit_table_group.asyncio_detailed = AsyncMock(
+            return_value=Response(
+                status_code=HTTPStatus.OK,
+                content=_json.dumps(flat_body).encode(),
+                headers={},
+                parsed=TableGroupResponse(meta=UNSET, data=UNSET),
+            )
+        )
+        try:
+            updated = await resource.edit(group_id="tg_100", version=1, body=sample_edit_body)
+            assert updated.group_id == "tg_100"
         finally:
             module.edit_table_group.asyncio_detailed = original

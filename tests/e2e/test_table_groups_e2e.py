@@ -74,6 +74,18 @@ TABLE_GROUP_RESPONSE_BODY: dict[str, Any] = {
     "data": {"@type": "table_group", "group_id": "tg_100", "schema_id": 354, "name": "Google Ads Standard"},
 }
 
+# What the API actually returns — flat object, no {meta, data} envelope
+FLAT_TABLE_GROUP_BODY: dict[str, Any] = {
+    "@type": "table_group",
+    "group_id": "tg_300",
+    "group_name": "SDK Test (auto-delete)",
+    "links": {
+        "enclosure": {
+            "href": "https://api.supermetrics.com/enterprise/table/group/tg_300/export?version=1",
+        },
+    },
+}
+
 IMPORT_REQUEST_BODY: dict[str, Any] = {
     "version": 1,
     "group": {"group_name": "Test Group", "ds_id": "AW", "table_prefix": "TST"},
@@ -218,6 +230,28 @@ class TestTableGroupsResource:
 
         assert "version=1" in api_server.last_request.path
 
+    def test_import_flat_response_fallback(self, api_server: MockAPIServer) -> None:
+        """The real API returns a flat object, not a {meta, data} envelope. The wrapper
+        must fall back to parsing the raw body as a TableGroup."""
+        api_server.route(IMPORT_PATH, ScriptedResponse(status=201, json_body=FLAT_TABLE_GROUP_BODY))
+
+        with SupermetricsClient(api_key="not-a-real-key", base_url=api_server.base_url) as client:
+            created = client.table_groups.import_(body=_import_body())
+
+        assert isinstance(created, TableGroup)
+        assert created.group_id == "tg_300"
+
+    def test_edit_flat_response_fallback(self, api_server: MockAPIServer) -> None:
+        """The real API returns a flat object, not a {meta, data} envelope. The wrapper
+        must fall back to parsing the raw body as a TableGroup."""
+        api_server.route(EDIT_PATH, ScriptedResponse(json_body=FLAT_TABLE_GROUP_BODY))
+
+        with SupermetricsClient(api_key="not-a-real-key", base_url=api_server.base_url) as client:
+            updated = client.table_groups.edit(group_id=GROUP_ID, version=1, body=_edit_body())
+
+        assert isinstance(updated, TableGroup)
+        assert updated.group_id == "tg_300"
+
 
 # ---------------------------------------------------------------------------
 # Asynchronous
@@ -282,6 +316,28 @@ class TestTableGroupsAsyncResource:
         request = api_server.last_request
         assert request.method == "PUT"
         assert "version=1" in request.path
+
+    @pytest.mark.asyncio
+    async def test_import_flat_response_fallback(self, api_server: MockAPIServer) -> None:
+        """The real API returns a flat object, not a {meta, data} envelope."""
+        api_server.route(IMPORT_PATH, ScriptedResponse(status=201, json_body=FLAT_TABLE_GROUP_BODY))
+
+        async with SupermetricsAsyncClient(api_key="not-a-real-key", base_url=api_server.base_url) as client:
+            created = await client.table_groups.import_(body=_import_body())
+
+        assert isinstance(created, TableGroup)
+        assert created.group_id == "tg_300"
+
+    @pytest.mark.asyncio
+    async def test_edit_flat_response_fallback(self, api_server: MockAPIServer) -> None:
+        """The real API returns a flat object, not a {meta, data} envelope."""
+        api_server.route(EDIT_PATH, ScriptedResponse(json_body=FLAT_TABLE_GROUP_BODY))
+
+        async with SupermetricsAsyncClient(api_key="not-a-real-key", base_url=api_server.base_url) as client:
+            updated = await client.table_groups.edit(group_id=GROUP_ID, version=1, body=_edit_body())
+
+        assert isinstance(updated, TableGroup)
+        assert updated.group_id == "tg_300"
 
 
 # ---------------------------------------------------------------------------
