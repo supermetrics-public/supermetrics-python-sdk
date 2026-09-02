@@ -71,6 +71,7 @@ callable, or if an `async def` provider is given — use `SupermetricsAsyncClien
 - `connector_builder_logs`: Access to ConnectorBuilderLogsResource
 - `datasource_details`: Access to DatasourceDetailsResource
 - `destinations`: Access to DestinationsResource
+- `table_groups`: Access to TableGroupsResource
 - `transfers`: Access to TransfersResource
 - `transfer_runs`: Access to TransferRunsResource
 - `custom_fields`: Access to CustomFieldsResource
@@ -1636,7 +1637,7 @@ if connection.login_url:
     print(f"Finish authentication at {connection.login_url}")
 ```
 
-**Async usage** (all twelve methods above are also available on `TransfersAsyncResource`):
+**Async usage** (all fourteen methods above are also available on `TransfersAsyncResource`):
 
 ```python
 import asyncio
@@ -2651,6 +2652,117 @@ async def main():
             fields={"hostname": "any-domain.my-region.snowflakecomputing.com", "username": "USER"},
         )
         print(f"Created {created.id}")
+
+
+asyncio.run(main())
+```
+
+---
+
+### TableGroupsResource
+
+Manage table groups — the schema definitions that control how data is structured in the
+warehouse. Table groups define tables, fields, and their mappings for each data source.
+
+The team identity comes from the API key, not a path parameter, so no `team_id` is needed.
+
+> **Base URL:** `https://api.supermetrics.com/enterprise/v2` — Table Groups lives on the
+> core API, not the Data Warehouse host.
+
+#### list()
+
+List all table groups available for the team.
+
+```python
+groups = client.table_groups.list()
+for g in groups:
+    print(f"{g.group_id} (schema {g.schema_id}): {g.name}")
+```
+
+**Returns:** `list[TableGroup]` — each item has `group_id` (string, e.g. `"tg_123"`),
+`schema_id` (int, for use as `schema_id` when creating transfers), and `name`.
+
+#### export()
+
+Export a table group's full data model including tables and field mappings.
+
+```python
+export = client.table_groups.export(group_id="tg_123", version=1)
+print(f"Group: {export.group.group_name} (ds={export.group.ds_id})")
+for table in export.tables:
+    print(f"  {table.table_name}: {table.fields}")
+for field in export.fields:
+    print(f"  {field.field_id} -> {field.target_name}")
+```
+
+**Args:**
+- `group_id` (str): Table group ID (e.g. `"tg_123"`)
+- `version` (int): Data model version
+
+**Returns:** `ExportTableGroupResponse200` — has `version`, `group` (TableGroupExport),
+`tables` (list[TableDefinition]), and `fields` (list[FieldDefinition]).
+
+#### import\_()
+
+Create a new table group from a data model definition.
+
+```python
+from supermetrics import ImportTableGroupBody, TableGroupImport, TableDefinition, FieldDefinition
+
+created = client.table_groups.import_(
+    body=ImportTableGroupBody(
+        version=1,
+        group=TableGroupImport(group_name="My Group", ds_id="AW", table_prefix="MYG"),
+        tables=[TableDefinition(table_name="CAMPAIGNS", fields=["campaign_id", "date"])],
+        fields=[FieldDefinition(field_id="campaign_id", target_name="campaign_id")],
+    )
+)
+print(f"Created: {created.group_id} (schema {created.schema_id})")
+```
+
+**Args:**
+- `body` (ImportTableGroupBody): Import payload with `version`, `group`, `tables`, and optionally `fields`
+
+**Returns:** `TableGroup` — the created group with its assigned `group_id` and `schema_id`.
+
+**Raises:** `ValidationError` on invalid data (400), `APIError` on name conflict (409).
+
+#### edit()
+
+Update an existing table group (full replace). The natural workflow is
+`export()` → edit locally → `edit()`.
+
+```python
+from supermetrics import EditTableGroupBody
+
+export = client.table_groups.export(group_id="tg_123", version=1)
+updated = client.table_groups.edit(
+    group_id="tg_123",
+    version=1,
+    body=EditTableGroupBody(group=export.group, tables=export.tables, fields=export.fields),
+)
+```
+
+**Args:**
+- `group_id` (str): Table group ID
+- `version` (int): Data model version
+- `body` (EditTableGroupBody): Edit payload with `group`, `tables`, and optionally `fields`.
+  Omitting `fields` clears all field mappings.
+
+**Returns:** `TableGroup` — the updated group.
+
+**Async usage** (all four methods above are also available on `TableGroupsAsyncResource`):
+
+```python
+import asyncio
+from supermetrics import SupermetricsAsyncClient
+
+
+async def main():
+    async with SupermetricsAsyncClient(api_key="your-key") as client:
+        groups = await client.table_groups.list()
+        export = await client.table_groups.export(group_id=groups[0].group_id, version=1)
+        print(f"{export.group.group_name}: {len(export.tables)} tables")
 
 
 asyncio.run(main())

@@ -37,6 +37,7 @@ from supermetrics.resources.destinations import DestinationsAsyncResource, Desti
 from supermetrics.resources.login_links import LoginLinksAsyncResource, LoginLinksResource
 from supermetrics.resources.logins import LoginsAsyncResource, LoginsResource
 from supermetrics.resources.queries import QueriesAsyncResource, QueriesResource
+from supermetrics.resources.table_groups import TableGroupsAsyncResource, TableGroupsResource
 from supermetrics.resources.teams import TeamsAsyncResource, TeamsResource
 from supermetrics.resources.transfer_runs import TransferRunsAsyncResource, TransferRunsResource
 from supermetrics.resources.transfers import TransfersAsyncResource, TransfersResource
@@ -549,6 +550,36 @@ class TeamsAsyncResourceWithRawResponse:
         self.list_users = async_to_raw_response_wrapper(resource.list_users)
 
 
+class TableGroupsResourceWithRawResponse:
+    """Raw-response view over :class:`~supermetrics.resources.table_groups.TableGroupsResource`.
+
+    Args:
+        resource: The synchronous resource adapter to mirror.
+    """
+
+    def __init__(self, resource: TableGroupsResource) -> None:
+        """Wrap every method of ``resource`` to return an ``ApiResponse``."""
+        self.list = to_raw_response_wrapper(resource.list)
+        self.export = to_raw_response_wrapper(resource.export)
+        self.import_ = to_raw_response_wrapper(resource.import_)
+        self.edit = to_raw_response_wrapper(resource.edit)
+
+
+class TableGroupsAsyncResourceWithRawResponse:
+    """Raw-response view over :class:`~supermetrics.resources.table_groups.TableGroupsAsyncResource`.
+
+    Args:
+        resource: The asynchronous resource adapter to mirror.
+    """
+
+    def __init__(self, resource: TableGroupsAsyncResource) -> None:
+        """Wrap every method of ``resource`` to return an ``ApiResponse``."""
+        self.list = async_to_raw_response_wrapper(resource.list)
+        self.export = async_to_raw_response_wrapper(resource.export)
+        self.import_ = async_to_raw_response_wrapper(resource.import_)
+        self.edit = async_to_raw_response_wrapper(resource.edit)
+
+
 class SupermetricsClientWithRawResponse:
     """Raw-response view over every resource of a synchronous client.
 
@@ -578,6 +609,7 @@ class SupermetricsClientWithRawResponse:
         self.account_tags = AccountTagsResourceWithRawResponse(client.account_tags)
         self.blends = BlendsResourceWithRawResponse(client.blends)
         self.teams = TeamsResourceWithRawResponse(client.teams)
+        self.table_groups = TableGroupsResourceWithRawResponse(client.table_groups)
 
 
 class SupermetricsAsyncClientWithRawResponse:
@@ -609,6 +641,7 @@ class SupermetricsAsyncClientWithRawResponse:
         self.account_tags = AccountTagsAsyncResourceWithRawResponse(client.account_tags)
         self.blends = BlendsAsyncResourceWithRawResponse(client.blends)
         self.teams = TeamsAsyncResourceWithRawResponse(client.teams)
+        self.table_groups = TableGroupsAsyncResourceWithRawResponse(client.table_groups)
 
 
 __all__ = [
@@ -640,6 +673,8 @@ __all__ = [
     "QueriesResourceWithRawResponse",
     "SupermetricsAsyncClientWithRawResponse",
     "SupermetricsClientWithRawResponse",
+    "TableGroupsAsyncResourceWithRawResponse",
+    "TableGroupsResourceWithRawResponse",
     "TeamsAsyncResourceWithRawResponse",
     "TeamsResourceWithRawResponse",
     "TransferRunsAsyncResourceWithRawResponse",

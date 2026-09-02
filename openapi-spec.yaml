@@ -47,6 +47,10 @@ servers:
   description: Global production public Supermetrics Data Warehouse Destinations API
     base path.
   x-internal: false
+- url: https://api.supermetrics.com/enterprise/v2
+  description: Global production public Supermetrics Data Warehouse Table Groups API
+    base path.
+  x-internal: false
 paths:
   /ds/login/link:
     post:
@@ -511,6 +515,341 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/LoginSearchFailed'
+  /enterprise/v2/table/group/import:
+    post:
+      summary: Import table group
+      description: Create a new table group from a data model.
+      operationId: importTableGroup
+      tags:
+      - Table Groups
+      security:
+      - ApiKeyAuth: []
+      requestBody:
+        description: Table group import data including version, group configuration,
+          and table definitions
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - version
+              - group
+              - tables
+              properties:
+                version:
+                  type: integer
+                  format: int32
+                  minimum: 1
+                  maximum: 100
+                  description: Data model version for the received data
+                group:
+                  $ref: '#/components/schemas/TableGroupImport'
+                tables:
+                  type: array
+                  maxItems: 1000
+                  description: List of table objects
+                  items:
+                    $ref: '#/components/schemas/TableDefinition'
+                fields:
+                  type: array
+                  maxItems: 10000
+                  description: List of field objects
+                  items:
+                    $ref: '#/components/schemas/FieldDefinition'
+            example:
+              version: 1
+              group:
+                group_name: Marketing Analytics
+                ds_id: GAWA
+                table_prefix: MKT
+              tables:
+              - table_name: SESSIONS
+                table_partition: date
+                fields:
+                - session_id
+                - date
+                - users
+              fields:
+              - field_id: session_id
+                target_name: session_id
+              - field_id: date
+                target_name: session_date
+              - field_id: users
+                target_name: user_count
+      responses:
+        '201':
+          description: Table group imported successfully
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableGroupResponse'
+        '400':
+          $ref: '#/components/responses/TableGroupImportError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/TableGroupNotFound'
+        '409':
+          $ref: '#/components/responses/TableGroupNameConflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/TableGroupCreateFailed'
+    servers:
+    - url: https://api.supermetrics.com/enterprise/v2
+      description: Global production public Supermetrics Data Warehouse Table Groups
+        API base path.
+      x-internal: false
+  /enterprise/v2/table/group/{group_id}:
+    put:
+      summary: Edit table group
+      description: 'Update an existing table group''s definition (full replace).
+
+        The request body uses the same `{group, tables, fields}` structure that Import
+        accepts and Export returns, so the natural workflow is export → edit → PUT.
+        The data model `version` is specified via the required query parameter, not
+        in the request body.
+
+
+        This is a full replace — all tables and fields must be provided. Omitting
+        `fields` clears all field mappings. Tables and fields are matched to existing
+        records by name. Renaming a table or field is equivalent to removing the old
+        one and adding a new one — the old table''s settings and query filter linkage
+        are lost.
+
+
+        The `ignore_errors` and `ds_settings` properties are not yet supported on
+        this endpoint and will be rejected with 422 if present.
+
+        '
+      operationId: editTableGroup
+      tags:
+      - Table Groups
+      security:
+      - ApiKeyAuth: []
+      requestBody:
+        description: Full table group definition to replace the existing one
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - group
+              - tables
+              properties:
+                group:
+                  $ref: '#/components/schemas/TableGroupImport'
+                tables:
+                  type: array
+                  maxItems: 1000
+                  description: List of table objects
+                  items:
+                    $ref: '#/components/schemas/TableDefinition'
+                fields:
+                  type: array
+                  maxItems: 10000
+                  description: List of field objects. Omitting this property clears
+                    all field mappings (full replace).
+                  items:
+                    $ref: '#/components/schemas/FieldDefinition'
+            example:
+              group:
+                group_name: Marketing Analytics Updated
+                ds_id: GAWA
+                table_prefix: MKT
+              tables:
+              - table_name: SESSIONS
+                table_partition: date
+                fields:
+                - session_id
+                - date
+                - users
+              - table_name: PAGEVIEWS
+                table_partition: date
+                fields:
+                - date
+                - page_path
+                - pageviews
+              fields:
+              - field_id: session_id
+                target_name: session_id
+              - field_id: date
+                target_name: session_date
+              - field_id: users
+                target_name: user_count
+              - field_id: page_path
+                target_name: page_path
+              - field_id: pageviews
+                target_name: page_views
+      responses:
+        '200':
+          description: Table group updated successfully
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableGroupResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/TableGroupNotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    parameters:
+    - name: group_id
+      in: path
+      required: true
+      schema:
+        type: string
+        maxLength: 50
+        pattern: ^[A-Za-z0-9_-]+$
+      description: Supermetrics table group ID (prefixed, e.g. tg_123)
+    - name: version
+      in: query
+      required: true
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100
+      description: Data model version for the received data
+    servers:
+    - url: https://api.supermetrics.com/enterprise/v2
+      description: Global production public Supermetrics Data Warehouse Table Groups
+        API base path.
+      x-internal: false
+  /enterprise/v2/table/group/{group_id}/export:
+    get:
+      summary: Export table group
+      description: Export a specific table group's data model.
+      operationId: exportTableGroup
+      tags:
+      - Table Groups
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Table group data model exported successfully
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version:
+                    type: integer
+                    format: int32
+                    minimum: 1
+                    maximum: 100
+                    description: Data model version
+                  group:
+                    $ref: '#/components/schemas/TableGroupExport'
+                  tables:
+                    type: array
+                    maxItems: 1000
+                    description: List of table objects
+                    items:
+                      $ref: '#/components/schemas/TableDefinition'
+                  fields:
+                    type: array
+                    maxItems: 10000
+                    description: List of field objects
+                    items:
+                      $ref: '#/components/schemas/FieldDefinition'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/TableGroupNotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/TableGroupSearchFailed'
+    parameters:
+    - name: group_id
+      in: path
+      required: true
+      schema:
+        type: string
+        maxLength: 50
+        pattern: ^[A-Za-z0-9_-]+$
+      description: Supermetrics table group ID
+    - name: version
+      in: query
+      required: true
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100
+      description: Data model version for the returned data
+    servers:
+    - url: https://api.supermetrics.com/enterprise/v2
+      description: Global production public Supermetrics Data Warehouse Table Groups
+        API base path.
+      x-internal: false
+  /enterprise/v2/table/groups:
+    get:
+      summary: List table groups
+      description: List all table groups available for the team.
+      operationId: listTableGroups
+      tags:
+      - Table Groups
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: List of table groups retrieved successfully
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  data:
+                    type: array
+                    maxItems: 1000
+                    items:
+                      $ref: '#/components/schemas/TableGroup'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/TableGroupSearchFailed'
+    servers:
+    - url: https://api.supermetrics.com/enterprise/v2
+      description: Global production public Supermetrics Data Warehouse Table Groups
+        API base path.
+      x-internal: false
   /query/accounts:
     get:
       summary: Get accounts
@@ -7646,6 +7985,35 @@ components:
       - meta
       - error
       additionalProperties: false
+    FieldDefinition:
+      type: object
+      required:
+      - field_id
+      properties:
+        field_id:
+          type: string
+          maxLength: 100
+          description: Field ID that appears in one of the table objects
+        field_name:
+          type: string
+          maxLength: 255
+          description: Data source field name
+          readOnly: true
+        display_name:
+          type: string
+          maxLength: 255
+          description: Field display name
+          readOnly: true
+        target_name:
+          type: string
+          maxLength: 255
+          description: Field name in target table. Defaults to field ID in lower snake
+            case.
+        data_type:
+          type: string
+          maxLength: 100
+          description: Field data type
+          readOnly: true
     FunctionArgument:
       type: object
       description: A named argument supplied to a function step.
@@ -8255,6 +8623,13 @@ components:
       example: BXaEFVtjc7TXaJxgZhmFgSUD9edqq_CN
       x-faker:
         random.alphaNumeric: 30
+    ResourceURL:
+      type: object
+      properties:
+        href:
+          type: string
+          maxLength: 500
+          description: Full URL to the resource
     ResponseMeta:
       type: object
       description: Metadata included in every API response.
@@ -8457,6 +8832,108 @@ components:
               description: null
           report_types:
           - Default
+    TableDefinition:
+      type: object
+      required:
+      - table_name
+      - fields
+      properties:
+        table_name:
+          type: string
+          maxLength: 255
+          description: Table name. Enforced into upper snake case.
+        table_partition:
+          type: string
+          maxLength: 50
+          description: Table partition. Either date or none.
+          enum:
+          - date
+          - none
+          default: date
+        report_type:
+          type: string
+          nullable: true
+          maxLength: 255
+          description: Data source report type. Required for some data sources.
+        fields:
+          type: array
+          maxItems: 1000
+          description: List of field IDs for the table
+          items:
+            type: string
+            maxLength: 100
+    TableGroup:
+      type: object
+      properties:
+        '@type':
+          type: string
+          enum:
+          - table_group
+        group_id:
+          type: string
+          maxLength: 50
+          description: Supermetrics table group ID
+        schema_id:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 10000000
+          description: Numeric schema identifier (dwh_schema_id) of this table group.
+            Use this value as the `schema_id` parameter when creating a transfer.
+        name:
+          type: string
+          maxLength: 255
+          description: Table group name
+        links:
+          type: object
+          properties:
+            enclosure:
+              $ref: '#/components/schemas/ResourceURL'
+    TableGroupExport:
+      type: object
+      properties:
+        group_id:
+          type: string
+          maxLength: 50
+          description: Supermetrics table group ID
+        group_name:
+          type: string
+          maxLength: 255
+          description: Table group name
+        ds_id:
+          type: string
+          maxLength: 50
+          description: Data source ID
+        table_prefix:
+          type: string
+          maxLength: 15
+          description: Prefix to table names. Enforced into upper snake case.
+    TableGroupImport:
+      type: object
+      required:
+      - group_name
+      - ds_id
+      properties:
+        group_name:
+          type: string
+          maxLength: 255
+          description: Table group name
+        ds_id:
+          type: string
+          maxLength: 50
+          description: Data source ID
+        table_prefix:
+          type: string
+          maxLength: 15
+          description: Prefix to table names. Enforced into upper snake case. Maximum
+            length is 15 characters. Appended with an underscore.
+    TableGroupResponse:
+      type: object
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+        data:
+          $ref: '#/components/schemas/TableGroup'
     TeamData:
       type: object
       description: Team resource
@@ -10305,6 +10782,116 @@ components:
             error:
               code: PERMISSION_ERROR
               message: You do not have permission to perform this action.
+    TableGroupCreateFailed:
+      description: Table Group Create Failed
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                maxLength: 100
+                enum:
+                - TABLE_GROUP_CREATE_FAILED
+              message:
+                type: string
+                maxLength: 255
+    TableGroupImportError:
+      description: Table Group Import Error
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                maxLength: 100
+                enum:
+                - TABLE_GROUP_IMPORT_ERROR
+              message:
+                type: string
+                maxLength: 255
+    TableGroupNameConflict:
+      description: Table Group Name Conflict
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                maxLength: 100
+                enum:
+                - TABLE_GROUP_NAME_CONFLICT
+              message:
+                type: string
+                maxLength: 255
+    TableGroupNotFound:
+      description: Table Group Not Found
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                maxLength: 100
+                enum:
+                - TABLE_GROUP_NOT_FOUND
+              message:
+                type: string
+                maxLength: 255
+    TableGroupSearchFailed:
+      description: Table Group Search Failed
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/Access-Control-Allow-Origin'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                maxLength: 100
+                enum:
+                - TABLE_GROUP_SEARCH_FAILED
+              message:
+                type: string
+                maxLength: 255
     TooManyRequests:
       description: Too Many Requests
       headers:

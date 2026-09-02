@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+### Table Groups: list, export, import, edit
+
+New `client.table_groups` resource with four methods:
+
+- `list()` — list all table groups available for the team
+- `export(group_id, version=)` — export a table group's full data model
+  (tables, fields, and mappings)
+- `import_(body=)` — create a new table group from a data model definition
+- `edit(group_id, version=, body=)` — full-replace update of an existing
+  table group
+
+The team identity comes from the API key (no `team_id` parameter). The natural
+workflow is export → edit locally → put back via `edit()`.
+
+`ImportTableGroupBody`, `EditTableGroupBody`, `TableGroupImport`,
+`TableDefinition`, and `FieldDefinition` are exported from `supermetrics` for
+convenience.
+
 ### Transfers: clone and batch create
 
 Two new methods on `client.transfers`:

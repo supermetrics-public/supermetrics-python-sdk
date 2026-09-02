@@ -15,8 +15,8 @@ Official Python client for Supermetrics
 * Fully typed request and response models, generated from the spec as `attrs` classes
 * Comprehensive API coverage: login links (including update), logins (including account
   listing and revocation), accounts, queries, DWH transfers (including clone and batch
-  create) and transfer runs, DWH destinations, DWH backfills, custom fields, data
-  blending, account tags, Connector Builder
+  create) and transfer runs, DWH destinations, DWH table groups (list, export, import,
+  edit), DWH backfills, custom fields, data blending, account tags, Connector Builder
 * Custom exception hierarchy with HTTP status code mapping
 * Resource-based API organization
 * API key, OAuth bearer token, and dynamic token provider authentication
@@ -449,6 +449,52 @@ if usage.is_used:
         print(f"still used by {transfer.transfer_id}: {transfer.transfer_name}")
 else:
     client.destinations.delete(team_id=12345, destination_id=8)
+```
+
+### Data Warehouse Table Groups
+
+Table groups define the schema structure for data in the warehouse — tables, fields,
+and their mappings. The team identity comes from the API key (no `team_id` parameter).
+
+```python
+from supermetrics import (
+    EditTableGroupBody,
+    FieldDefinition,
+    ImportTableGroupBody,
+    SupermetricsClient,
+    TableDefinition,
+    TableGroupImport,
+)
+
+client = SupermetricsClient(api_key="your_api_key")
+
+# List all table groups
+for group in client.table_groups.list():
+    print(f"{group.group_id} (schema {group.schema_id}): {group.name}")
+
+# Export a table group's full data model
+export = client.table_groups.export(group_id="tg_123", version=1)
+for table in export.tables:
+    print(f"  {table.table_name}: {table.fields}")
+
+# Import (create) a new table group
+created = client.table_groups.import_(
+    body=ImportTableGroupBody(
+        version=1,
+        group=TableGroupImport(group_name="My Group", ds_id="AW", table_prefix="MYG"),
+        tables=[TableDefinition(table_name="CAMPAIGNS", fields=["campaign_id", "date"])],
+        fields=[FieldDefinition(field_id="campaign_id", target_name="campaign_id")],
+    )
+)
+print(f"Created: {created.group_id}")
+
+# Edit (full replace) — export, modify, put back
+export = client.table_groups.export(group_id=created.group_id, version=1)
+updated = client.table_groups.edit(
+    group_id=created.group_id,
+    version=1,
+    body=EditTableGroupBody(group=export.group, tables=export.tables, fields=export.fields),
+)
 ```
 
 ### Data Warehouse Backfills

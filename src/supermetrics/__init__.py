@@ -33,10 +33,15 @@ from supermetrics._generated.supermetrics_api_client.models.custom_field_create_
     CustomFieldCreateRequestDataSourceItem,
 )
 from supermetrics._generated.supermetrics_api_client.models.definition_value import DefinitionValue
+from supermetrics._generated.supermetrics_api_client.models.edit_table_group_body import EditTableGroupBody
+from supermetrics._generated.supermetrics_api_client.models.field_definition import FieldDefinition
 from supermetrics._generated.supermetrics_api_client.models.function_argument import FunctionArgument
 from supermetrics._generated.supermetrics_api_client.models.function_step import FunctionStep
+from supermetrics._generated.supermetrics_api_client.models.import_table_group_body import ImportTableGroupBody
 from supermetrics._generated.supermetrics_api_client.models.lookup_step import LookupStep
 from supermetrics._generated.supermetrics_api_client.models.lookup_step_map import LookupStepMap
+from supermetrics._generated.supermetrics_api_client.models.table_definition import TableDefinition
+from supermetrics._generated.supermetrics_api_client.models.table_group_import import TableGroupImport
 from supermetrics._generated.supermetrics_api_client.models.transfer_account import TransferAccount
 from supermetrics._generated.supermetrics_api_client.models.transfer_configuration_request import (
     TransferConfigurationRequest,
@@ -102,6 +107,12 @@ __all__ = [
     "TransferDataSourceSetting",
     "CloneTransferBody",
     "TransferConfigurationRequest",
+    # Table group request models. import_ and edit take these as the body payload.
+    "ImportTableGroupBody",
+    "EditTableGroupBody",
+    "TableGroupImport",
+    "TableDefinition",
+    "FieldDefinition",
     # Custom field definition steps. A `definition` is a list of these, and each step
     # nests the value/argument types below it.
     "FunctionStep",

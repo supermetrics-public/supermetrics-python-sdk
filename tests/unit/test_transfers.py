@@ -1310,6 +1310,35 @@ class TestTransfersResource:
 
         module.clone_transfer.sync_detailed = original
 
+    def test_clone_200_parsed_none_fallback(
+        self,
+        transfers_resource: TransfersResource,
+        sample_created: TransferCreatedResponse,
+        meta: Meta,
+    ) -> None:
+        """When clone returns 200 with parsed=None, the wrapper falls back to manual JSON parsing."""
+        import json
+
+        import supermetrics.resources.transfers as module
+
+        envelope = TransferCreatedEnvelope(meta=meta, data=sample_created)
+        original = module.clone_transfer.sync_detailed
+        module.clone_transfer.sync_detailed = MagicMock(
+            return_value=Response(
+                status_code=HTTPStatus.OK,
+                content=json.dumps(envelope.to_dict()).encode(),
+                headers={},
+                parsed=None,
+            )
+        )
+
+        cloned = transfers_resource.clone(team_id=12345, transfer_id=36091)
+
+        assert cloned.transfer_id == 36091
+        assert cloned.transfer_name == "AW enhanced"
+
+        module.clone_transfer.sync_detailed = original
+
     def test_clone_passes_overrides(
         self,
         transfers_resource: TransfersResource,
@@ -2722,6 +2751,36 @@ class TestTransfersAsyncResource:
         module.clone_transfer.asyncio_detailed = original
 
     @pytest.mark.asyncio
+    async def test_clone_200_parsed_none_fallback(
+        self,
+        transfers_resource: TransfersAsyncResource,
+        sample_created: TransferCreatedResponse,
+        meta: Meta,
+    ) -> None:
+        """When async clone returns 200 with parsed=None, the wrapper falls back to manual JSON parsing."""
+        import json
+
+        import supermetrics.resources.transfers as module
+
+        envelope = TransferCreatedEnvelope(meta=meta, data=sample_created)
+        original = module.clone_transfer.asyncio_detailed
+        module.clone_transfer.asyncio_detailed = AsyncMock(
+            return_value=Response(
+                status_code=HTTPStatus.OK,
+                content=json.dumps(envelope.to_dict()).encode(),
+                headers={},
+                parsed=None,
+            )
+        )
+
+        cloned = await transfers_resource.clone(team_id=12345, transfer_id=36091)
+
+        assert cloned.transfer_id == 36091
+        assert cloned.transfer_name == "AW enhanced"
+
+        module.clone_transfer.asyncio_detailed = original
+
+    @pytest.mark.asyncio
     async def test_clone_passes_overrides(
         self,
         transfers_resource: TransfersAsyncResource,
@@ -2812,6 +2871,52 @@ class TestTransfersAsyncResource:
         result = await transfers_resource.batch_create(team_id=12345, transfers=[])
 
         assert result.has_errors is False
+
+        module.batch_create_transfers.asyncio_detailed = original
+
+    @pytest.mark.asyncio
+    async def test_batch_create_passes_correct_params(
+        self,
+        transfers_resource: TransfersAsyncResource,
+        meta: Meta,
+        schedule: list[TransferSchedule],
+        accounts: list[TransferAccount],
+    ) -> None:
+        """Test that async batch_create() forwards the transfers array to the generated client."""
+        import supermetrics.resources.transfers as module
+        from supermetrics._generated.supermetrics_api_client.models.batch_create_transfers_response_200 import (
+            BatchCreateTransfersResponse200,
+        )
+        from supermetrics._generated.supermetrics_api_client.models.batch_create_transfers_response_200_data import (
+            BatchCreateTransfersResponse200Data,
+        )
+        from supermetrics._generated.supermetrics_api_client.models.transfer_configuration_request import (
+            TransferConfigurationRequest,
+        )
+
+        data = BatchCreateTransfersResponse200Data(has_errors=False, results=[])
+        original = module.batch_create_transfers.asyncio_detailed
+        mock_async = AsyncMock(
+            return_value=_make_success_response(BatchCreateTransfersResponse200(meta=meta, data=data))
+        )
+        module.batch_create_transfers.asyncio_detailed = mock_async
+
+        config = TransferConfigurationRequest(
+            data_source_id="AW",
+            schema_id=2,
+            destination_id=8,
+            display_name="Batch item",
+            schedule=schedule,
+            accounts=accounts,
+        )
+        await transfers_resource.batch_create(team_id=12345, transfers=[config])
+
+        call_kwargs = mock_async.call_args.kwargs
+        assert call_kwargs["team_id"] == 12345
+        body = call_kwargs["body"]
+        assert len(body.transfers) == 1
+        assert body.transfers[0].data_source_id == "AW"
+        assert body.transfers[0].display_name == "Batch item"
 
         module.batch_create_transfers.asyncio_detailed = original
 
