@@ -47,6 +47,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          # Full history + tags: uv sync builds this package, whose version is
+          # derived from git tags by versioningit; a shallow clone has no tag
+          # and the build fails with NoTagError.
+          fetch-depth: 0
 
       - name: Install uv
         uses: astral-sh/setup-uv@v10.0.1
