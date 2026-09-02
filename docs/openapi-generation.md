@@ -345,11 +345,13 @@ manually (e.g. the first large backlog sync) without a dummy spec commit.
 ## 6. CI: Spec Validation
 
 `.github/workflows/sdk-spec-validation.yml` guards the generation pipeline. When a PR
-touches the raw upstream specs (`openapi-specs/`) or the merged spec (`openapi-spec.yaml`),
-CI re-runs the pipeline and fails if the committed artifacts are out of sync with the raw
-specs — catching a forgotten regeneration, a regeneration from stale specs, or a hand-edited
-`openapi-spec.yaml`. This is what spec-update PRs from upstream (the api-style-guide → SDK
-sync) are validated against before a human reviews them.
+touches any generation input — the raw upstream specs (`openapi-specs/`), the merged spec
+(`openapi-spec.yaml`), the allowlist (`scripts/references/sdk-endpoint-filters.yaml`), the
+pipeline scripts, or the generator config — CI re-runs the pipeline and fails if the
+committed artifacts are out of sync — catching a forgotten regeneration, a regeneration from
+stale specs, an allowlist edit that wasn't regenerated, or a hand-edited `openapi-spec.yaml`.
+This is what spec-update PRs from upstream (the api-style-guide → SDK sync) are validated
+against before a human reviews them.
 
 The job does exactly what a developer does locally in **Step 3** and **Step 4**:
 
@@ -379,5 +381,7 @@ Key properties:
 - **No duplicate test gate.** Lint, typecheck, and the hermetic test suite already run on
   every PR — including spec PRs — via `sdk-lint-test.yml` (which has no `paths` filter). This
   workflow adds only the drift check and does not re-run `just qa`.
-- **Scoped trigger.** The `paths` filter means PRs that don't touch spec files never start
-  this job.
+- **Scoped trigger.** The `paths` filter means PRs that don't touch a generation input never
+  start this job. (A bump of the `openapi-python-client` pin in `pyproject.toml` is
+  deliberately *not* a trigger — it would fire on every unrelated dependency change; such a
+  bump is instead caught by the next spec PR.)

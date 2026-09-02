@@ -18,8 +18,19 @@ on:
   pull_request:
     branches: ["main", "master"]
     paths:
+      # Raw upstream specs and the merged spec.
       - "openapi-specs/**"
       - "openapi-spec.yaml"
+      # Generation inputs — a change to any of these can alter the filtered
+      # spec or the generated client, so the drift check must re-run:
+      #   the allowlist read by filter_openapi_spec.py, the two pipeline
+      #   scripts, and the generator config.
+      - "scripts/references/sdk-endpoint-filters.yaml"
+      - "scripts/filter_openapi_spec.py"
+      - "scripts/regenerate_client.sh"
+      - "openapi-python-client-config.yaml"
+      # The guard itself, so edits to it are validated (and get exercised).
+      - ".github/workflows/sdk-spec-validation.yml"
   workflow_dispatch: # manual run to exercise the drift check on demand
 
 concurrency:
@@ -69,9 +80,11 @@ jobs:
             echo "Out-of-sync paths:"
             echo "$CHANGES"
             echo ""
-            echo "----- diff -----"
             # Stage so newly generated / deleted files also appear in the diff.
             git add -A -- openapi-spec.yaml src/supermetrics/_generated/
+            echo "----- summary -----"
+            git diff --cached --stat -- openapi-spec.yaml src/supermetrics/_generated/
+            echo "----- diff -----"
             git diff --cached -- openapi-spec.yaml src/supermetrics/_generated/
             exit 1
           fi
