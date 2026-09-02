@@ -339,3 +339,45 @@ store it in 1Password, then add it under **Settings → Secrets and variables �
 missing/invalid, so the workflow run turns red in the Actions tab — no silent failure
 leaves the CLI on a stale spec. Use the `workflow_dispatch` trigger to re-fire the dispatch
 manually (e.g. the first large backlog sync) without a dummy spec commit.
+
+---
+
+## 6. CI: Spec Validation
+
+`.github/workflows/sdk-spec-validation.yml` guards the generation pipeline. When a PR
+touches the raw upstream specs (`openapi-specs/`) or the merged spec (`openapi-spec.yaml`),
+CI re-runs the pipeline and fails if the committed artifacts are out of sync with the raw
+specs — catching a forgotten regeneration, a regeneration from stale specs, or a hand-edited
+`openapi-spec.yaml`. This is what spec-update PRs from upstream (the api-style-guide → SDK
+sync) are validated against before a human reviews them.
+
+The job does exactly what a developer does locally in **Step 3** and **Step 4**:
+
+```yaml
+- run: uv run python scripts/filter_openapi_spec.py   # regenerate openapi-spec.yaml
+- run: ./scripts/regenerate_client.sh                 # regenerate src/supermetrics/_generated/
+- run: |                                              # fail if either drifted from the commit
+    CHANGES="$(git status --porcelain -- openapi-spec.yaml src/supermetrics/_generated/)"
+    [ -z "$CHANGES" ] || { echo "$CHANGES"; exit 1; }
+```
+
+When it fails, the run prints the out-of-sync paths and the diff. The fix is always the same
+— run the two scripts locally and commit the result:
+
+```bash
+uv run python scripts/filter_openapi_spec.py
+./scripts/regenerate_client.sh
+```
+
+Key properties:
+
+- **Validation only.** The job never pushes commits back to the PR. It reads and compares;
+  the developer pushes the fix.
+- **Safe unattended.** Both scripts are non-interactive and credential-free, and
+  `pin_baseline` keeps regeneration additive-only (see **Step 2 → A1**), so a clean PR
+  reproduces the committed artifacts byte-for-byte.
+- **No duplicate test gate.** Lint, typecheck, and the hermetic test suite already run on
+  every PR — including spec PRs — via `sdk-lint-test.yml` (which has no `paths` filter). This
+  workflow adds only the drift check and does not re-run `just qa`.
+- **Scoped trigger.** The `paths` filter means PRs that don't touch spec files never start
+  this job.
