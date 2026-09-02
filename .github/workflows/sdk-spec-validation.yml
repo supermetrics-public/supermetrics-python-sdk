@@ -1,0 +1,96 @@
+name: Validate SDK spec changes
+
+# Item 19 — CI validation for spec changes.
+#
+# When a PR touches the raw upstream specs (openapi-specs/) or the merged
+# spec (openapi-spec.yaml), this job re-runs the filter + regeneration
+# pipeline and fails if the committed openapi-spec.yaml or the generated
+# client (src/supermetrics/_generated/) are out of sync with the raw specs.
+#
+# This is validation only: it never pushes commits back to the PR. If it
+# fails, the developer runs the scripts locally and pushes the fix.
+#
+# The lint + typecheck + test gate (Scenario 5) is already provided for
+# every PR — including spec PRs — by sdk-lint-test.yml, which has no paths
+# filter. This workflow deliberately does not duplicate it.
+
+on:
+  pull_request:
+    branches: ["main", "master"]
+    paths:
+      # Raw upstream specs and the merged spec.
+      - "openapi-specs/**"
+      - "openapi-spec.yaml"
+      # Generation inputs — a change to any of these can alter the filtered
+      # spec or the generated client, so the drift check must re-run:
+      #   the allowlist read by filter_openapi_spec.py, the two pipeline
+      #   scripts, and the generator config.
+      - "scripts/references/sdk-endpoint-filters.yaml"
+      - "scripts/filter_openapi_spec.py"
+      - "scripts/regenerate_client.sh"
+      - "openapi-python-client-config.yaml"
+      # The guard itself, so edits to it are validated (and get exercised).
+      - ".github/workflows/sdk-spec-validation.yml"
+  workflow_dispatch: # manual run to exercise the drift check on demand
+
+concurrency:
+  group: sdk-spec-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate-spec:
+    name: Filter + regenerate + drift check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # Full history + tags: uv sync builds this package, whose version is
+          # derived from git tags by versioningit; a shallow clone has no tag
+          # and the build fails with NoTagError.
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Filter OpenAPI spec
+        # Reads openapi-specs/*.yaml + scripts/references/sdk-endpoint-filters.yaml,
+        # applies the allowlist/patches/pin_baseline, writes openapi-spec.yaml.
+        run: uv run python scripts/filter_openapi_spec.py
+
+      - name: Regenerate client
+        # Runs openapi-python-client (pinned) via uvx on its own pinned Python,
+        # generates into a staging dir, swaps src/supermetrics/_generated/ on success.
+        run: ./scripts/regenerate_client.sh
+
+      - name: Check for spec / client drift
+        run: |
+          CHANGES="$(git status --porcelain -- openapi-spec.yaml src/supermetrics/_generated/)"
+          if [ -n "$CHANGES" ]; then
+            echo "::error::openapi-spec.yaml or the generated client is out of sync with openapi-specs/."
+            echo ""
+            echo "Regeneration was likely forgotten, or was run against stale specs."
+            echo "Fix locally, then commit the results:"
+            echo "    uv run python scripts/filter_openapi_spec.py"
+            echo "    ./scripts/regenerate_client.sh"
+            echo ""
+            echo "Out-of-sync paths:"
+            echo "$CHANGES"
+            echo ""
+            # Stage so newly generated / deleted files also appear in the diff.
+            git add -A -- openapi-spec.yaml src/supermetrics/_generated/
+            echo "----- summary -----"
+            git diff --cached --stat -- openapi-spec.yaml src/supermetrics/_generated/
+            echo "----- diff -----"
+            git diff --cached -- openapi-spec.yaml src/supermetrics/_generated/
+            exit 1
+          fi
+          echo "In sync: openapi-spec.yaml and src/supermetrics/_generated/ match the raw specs."
