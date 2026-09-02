@@ -21,18 +21,22 @@ T = TypeVar("T", bound="EditTableGroupBody")
 class EditTableGroupBody:
     """
     Attributes:
+        version (int): Data model version for the received data
         group (TableGroupImport):
         tables (list[TableDefinition]): List of table objects
         fields (list[FieldDefinition] | Unset): List of field objects. Omitting this property clears all field mappings
             (full replace).
     """
 
+    version: int
     group: TableGroupImport
     tables: list[TableDefinition]
     fields: list[FieldDefinition] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        version = self.version
+
         group = self.group.to_dict()
 
         tables = []
@@ -51,6 +55,7 @@ class EditTableGroupBody:
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
+                "version": version,
                 "group": group,
                 "tables": tables,
             }
@@ -67,6 +72,8 @@ class EditTableGroupBody:
         from ..models.table_group_import import TableGroupImport
 
         d = dict(src_dict)
+        version = d.pop("version")
+
         group = TableGroupImport.from_dict(d.pop("group"))
 
         tables = []
@@ -86,6 +93,7 @@ class EditTableGroupBody:
                 fields.append(fields_item)
 
         edit_table_group_body = cls(
+            version=version,
             group=group,
             tables=tables,
             fields=fields,

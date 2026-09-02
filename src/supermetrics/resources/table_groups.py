@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from typing import cast
 
 import httpx
@@ -24,31 +23,11 @@ from supermetrics._generated.supermetrics_api_client.models.list_table_groups_re
     ListTableGroupsResponse200,
 )
 from supermetrics._generated.supermetrics_api_client.models.table_group import TableGroup
-from supermetrics._generated.supermetrics_api_client.models.table_group_response import TableGroupResponse
-from supermetrics._generated.supermetrics_api_client.types import Response as GenResponse
-from supermetrics._generated.supermetrics_api_client.types import Unset
+from supermetrics._generated.supermetrics_api_client.models.table_group_write_response import TableGroupWriteResponse
 from supermetrics._transport import request_options
 from supermetrics.resources._error_handlers import _raise_for_status, api_error_handler
 
 TableGroupList = list[TableGroup]
-
-
-def _unwrap_table_group(response: object) -> TableGroup:
-    """Extract a TableGroup from an import/edit response.
-
-    The spec declares these responses as ``TableGroupResponse`` (``{meta, data}``
-    envelope), but the API actually returns a flat ``{group_id, group_name, links}``
-    object. The generated parser builds a ``TableGroupResponse`` whose ``data`` is
-    ``UNSET`` because no ``data`` key exists in the flat response.
-
-    Stopgap: when ``data`` is UNSET, parse the raw response body directly as a
-    ``TableGroup``. Remove once the spec is corrected upstream.
-    """
-    resp = cast(GenResponse[object], response)
-    parsed = resp.parsed
-    if isinstance(parsed, TableGroupResponse) and not isinstance(parsed.data, Unset):
-        return parsed.data
-    return TableGroup.from_dict(json.loads(resp.content))
 
 
 class TableGroupsAsyncResource:
@@ -157,7 +136,7 @@ class TableGroupsAsyncResource:
         auth_token: str | None = None,
         headers: dict[str, str] | None = None,
         timeout: float | httpx.Timeout | None = None,
-    ) -> TableGroup:
+    ) -> TableGroupWriteResponse:
         """Import (create) a new table group from a data model.
 
         Async version of TableGroupsResource.import_(). See sync version for full documentation.
@@ -187,7 +166,7 @@ class TableGroupsAsyncResource:
                 body=body,
             )
             if response.status_code == 201:
-                return _unwrap_table_group(response)
+                return cast(TableGroupWriteResponse, response.parsed)
             _raise_for_status(
                 int(response.status_code),
                 response.parsed,
@@ -201,21 +180,19 @@ class TableGroupsAsyncResource:
         self,
         group_id: str,
         *,
-        version: int,
         body: EditTableGroupBody,
         auth_token: str | None = None,
         headers: dict[str, str] | None = None,
         timeout: float | httpx.Timeout | None = None,
-    ) -> TableGroup:
+    ) -> TableGroupWriteResponse:
         """Update an existing table group (full replace).
 
         Async version of TableGroupsResource.edit(). See sync version for full documentation.
 
         Args:
             group_id: Supermetrics table group ID (e.g. ``"tg_123"``).
-            version: Data model version for the request data.
-            body: The edit payload containing group config, tables, and optionally
-                fields.
+            body: The edit payload containing version, group config, tables, and
+                optionally fields. ``version`` is a required field on the body.
             auth_token: Bearer token to use for this request only, overriding the
                 client credential.
             headers: Extra HTTP headers for this request only.
@@ -241,10 +218,9 @@ class TableGroupsAsyncResource:
                 group_id=group_id,
                 client=cast(AuthenticatedClient, self._client),
                 body=body,
-                version=version,
             )
             if response.status_code == 200:
-                return _unwrap_table_group(response)
+                return cast(TableGroupWriteResponse, response.parsed)
             _raise_for_status(
                 int(response.status_code),
                 response.parsed,
@@ -409,7 +385,7 @@ class TableGroupsResource:
         auth_token: str | None = None,
         headers: dict[str, str] | None = None,
         timeout: float | httpx.Timeout | None = None,
-    ) -> TableGroup:
+    ) -> TableGroupWriteResponse:
         """Import (create) a new table group from a data model.
 
         Creates a new table group with the provided definition. The ``body``
@@ -431,8 +407,8 @@ class TableGroupsResource:
                 ``httpx.Timeout``.
 
         Returns:
-            TableGroup: The created table group with its assigned ``group_id``
-            and ``schema_id``.
+            TableGroupWriteResponse: The created table group with its assigned
+            ``group_id`` and ``group_name``.
 
         Raises:
             AuthenticationError: If the API key is invalid or expired (HTTP 401).
@@ -453,7 +429,7 @@ class TableGroupsResource:
             ...     tables=[TableDefinition(table_name="CAMPAIGNS", fields=["campaign_id", "date"])],
             ... )
             >>> created = client.table_groups.import_(body=body)
-            >>> print(f"Created: {created.group_id} (schema {created.schema_id})")
+            >>> print(f"Created: {created.group_id}")
         """
         endpoint = "/enterprise/v2/table/group/import"
         with (
@@ -465,7 +441,7 @@ class TableGroupsResource:
                 body=body,
             )
             if response.status_code == 201:
-                return _unwrap_table_group(response)
+                return cast(TableGroupWriteResponse, response.parsed)
             _raise_for_status(
                 int(response.status_code),
                 response.parsed,
@@ -479,12 +455,11 @@ class TableGroupsResource:
         self,
         group_id: str,
         *,
-        version: int,
         body: EditTableGroupBody,
         auth_token: str | None = None,
         headers: dict[str, str] | None = None,
         timeout: float | httpx.Timeout | None = None,
-    ) -> TableGroup:
+    ) -> TableGroupWriteResponse:
         """Update an existing table group (full replace).
 
         This is a full replacement of the table group's definition. All tables
@@ -495,11 +470,10 @@ class TableGroupsResource:
 
         Args:
             group_id: Supermetrics table group ID (e.g. ``"tg_123"``).
-            version: Data model version for the request data.
             body: The edit payload. Build with ``EditTableGroupBody``:
-                ``group`` (``TableGroupImport``), ``tables`` (list of
-                ``TableDefinition``), and optionally ``fields`` (list of
-                ``FieldDefinition``).
+                ``version`` (int, required), ``group`` (``TableGroupImport``),
+                ``tables`` (list of ``TableDefinition``), and optionally
+                ``fields`` (list of ``FieldDefinition``).
             auth_token: Bearer token to use for this request only, overriding the
                 client credential.
             headers: Extra HTTP headers for this request only (for example
@@ -509,7 +483,7 @@ class TableGroupsResource:
                 ``httpx.Timeout``.
 
         Returns:
-            TableGroup: The updated table group.
+            TableGroupWriteResponse: The updated table group.
 
         Raises:
             AuthenticationError: If the API key is invalid or expired (HTTP 401).
@@ -524,11 +498,12 @@ class TableGroupsResource:
             ... )
             >>> export = client.table_groups.export(group_id="tg_123", version=1)
             >>> body = EditTableGroupBody(
+            ...     version=1,
             ...     group=export.group,
             ...     tables=export.tables,
             ...     fields=export.fields,
             ... )
-            >>> updated = client.table_groups.edit(group_id="tg_123", version=1, body=body)
+            >>> updated = client.table_groups.edit(group_id="tg_123", body=body)
         """
         endpoint = f"/enterprise/v2/table/group/{group_id}"
         with (
@@ -543,10 +518,9 @@ class TableGroupsResource:
                 group_id=group_id,
                 client=cast(AuthenticatedClient, self._client),
                 body=body,
-                version=version,
             )
             if response.status_code == 200:
-                return _unwrap_table_group(response)
+                return cast(TableGroupWriteResponse, response.parsed)
             _raise_for_status(
                 int(response.status_code),
                 response.parsed,

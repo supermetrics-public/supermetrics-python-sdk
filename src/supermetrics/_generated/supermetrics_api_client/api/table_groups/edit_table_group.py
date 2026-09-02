@@ -14,30 +14,22 @@ from ...models.edit_table_group_response_404 import EditTableGroupResponse404
 from ...models.edit_table_group_response_422 import EditTableGroupResponse422
 from ...models.edit_table_group_response_429 import EditTableGroupResponse429
 from ...models.edit_table_group_response_500 import EditTableGroupResponse500
-from ...models.table_group_response import TableGroupResponse
-from ...types import UNSET, Response
+from ...models.table_group_write_response import TableGroupWriteResponse
+from ...types import Response
 
 
 def _get_kwargs(
     group_id: str,
     *,
     body: EditTableGroupBody,
-    version: int,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
-
-    params: dict[str, Any] = {}
-
-    params["version"] = version
-
-    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     _kwargs: dict[str, Any] = {
         "method": "put",
         "url": "/enterprise/v2/table/group/{group_id}".format(
             group_id=quote(str(group_id), safe=""),
         ),
-        "params": params,
     }
 
     _kwargs["json"] = body.to_dict()
@@ -58,11 +50,11 @@ def _parse_response(
     | EditTableGroupResponse422
     | EditTableGroupResponse429
     | EditTableGroupResponse500
-    | TableGroupResponse
+    | TableGroupWriteResponse
     | None
 ):
     if response.status_code == 200:
-        response_200 = TableGroupResponse.from_dict(response.json())
+        response_200 = TableGroupWriteResponse.from_dict(response.json())
 
         return response_200
 
@@ -117,7 +109,7 @@ def _build_response(
     | EditTableGroupResponse422
     | EditTableGroupResponse429
     | EditTableGroupResponse500
-    | TableGroupResponse
+    | TableGroupWriteResponse
 ]:
     return Response(
         status_code=HTTPStatus(response.status_code),
@@ -132,7 +124,6 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     body: EditTableGroupBody,
-    version: int,
 ) -> Response[
     EditTableGroupResponse400
     | EditTableGroupResponse401
@@ -141,14 +132,13 @@ def sync_detailed(
     | EditTableGroupResponse422
     | EditTableGroupResponse429
     | EditTableGroupResponse500
-    | TableGroupResponse
+    | TableGroupWriteResponse
 ]:
     """Edit table group
 
      Update an existing table group's definition (full replace).
-    The request body uses the same `{group, tables, fields}` structure that Import accepts and Export
-    returns, so the natural workflow is export → edit → PUT. The data model `version` is specified via
-    the required query parameter, not in the request body.
+    The request body uses the same `{version, group, tables, fields}` structure that Import accepts and
+    Export returns, so the natural workflow is export → edit → PUT.
 
     This is a full replace — all tables and fields must be provided. Omitting `fields` clears all field
     mappings. Tables and fields are matched to existing records by name. Renaming a table or field is
@@ -160,7 +150,6 @@ def sync_detailed(
 
     Args:
         group_id (str):
-        version (int):
         body (EditTableGroupBody):
 
     Raises:
@@ -168,13 +157,12 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[EditTableGroupResponse400 | EditTableGroupResponse401 | EditTableGroupResponse403 | EditTableGroupResponse404 | EditTableGroupResponse422 | EditTableGroupResponse429 | EditTableGroupResponse500 | TableGroupResponse]
+        Response[EditTableGroupResponse400 | EditTableGroupResponse401 | EditTableGroupResponse403 | EditTableGroupResponse404 | EditTableGroupResponse422 | EditTableGroupResponse429 | EditTableGroupResponse500 | TableGroupWriteResponse]
     """
 
     kwargs = _get_kwargs(
         group_id=group_id,
         body=body,
-        version=version,
     )
 
     response = client.get_httpx_client().request(
@@ -189,7 +177,6 @@ def sync(
     *,
     client: AuthenticatedClient,
     body: EditTableGroupBody,
-    version: int,
 ) -> (
     EditTableGroupResponse400
     | EditTableGroupResponse401
@@ -198,15 +185,14 @@ def sync(
     | EditTableGroupResponse422
     | EditTableGroupResponse429
     | EditTableGroupResponse500
-    | TableGroupResponse
+    | TableGroupWriteResponse
     | None
 ):
     """Edit table group
 
      Update an existing table group's definition (full replace).
-    The request body uses the same `{group, tables, fields}` structure that Import accepts and Export
-    returns, so the natural workflow is export → edit → PUT. The data model `version` is specified via
-    the required query parameter, not in the request body.
+    The request body uses the same `{version, group, tables, fields}` structure that Import accepts and
+    Export returns, so the natural workflow is export → edit → PUT.
 
     This is a full replace — all tables and fields must be provided. Omitting `fields` clears all field
     mappings. Tables and fields are matched to existing records by name. Renaming a table or field is
@@ -218,7 +204,6 @@ def sync(
 
     Args:
         group_id (str):
-        version (int):
         body (EditTableGroupBody):
 
     Raises:
@@ -226,14 +211,13 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        EditTableGroupResponse400 | EditTableGroupResponse401 | EditTableGroupResponse403 | EditTableGroupResponse404 | EditTableGroupResponse422 | EditTableGroupResponse429 | EditTableGroupResponse500 | TableGroupResponse
+        EditTableGroupResponse400 | EditTableGroupResponse401 | EditTableGroupResponse403 | EditTableGroupResponse404 | EditTableGroupResponse422 | EditTableGroupResponse429 | EditTableGroupResponse500 | TableGroupWriteResponse
     """
 
     return sync_detailed(
         group_id=group_id,
         client=client,
         body=body,
-        version=version,
     ).parsed
 
 
@@ -242,7 +226,6 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     body: EditTableGroupBody,
-    version: int,
 ) -> Response[
     EditTableGroupResponse400
     | EditTableGroupResponse401
@@ -251,14 +234,13 @@ async def asyncio_detailed(
     | EditTableGroupResponse422
     | EditTableGroupResponse429
     | EditTableGroupResponse500
-    | TableGroupResponse
+    | TableGroupWriteResponse
 ]:
     """Edit table group
 
      Update an existing table group's definition (full replace).
-    The request body uses the same `{group, tables, fields}` structure that Import accepts and Export
-    returns, so the natural workflow is export → edit → PUT. The data model `version` is specified via
-    the required query parameter, not in the request body.
+    The request body uses the same `{version, group, tables, fields}` structure that Import accepts and
+    Export returns, so the natural workflow is export → edit → PUT.
 
     This is a full replace — all tables and fields must be provided. Omitting `fields` clears all field
     mappings. Tables and fields are matched to existing records by name. Renaming a table or field is
@@ -270,7 +252,6 @@ async def asyncio_detailed(
 
     Args:
         group_id (str):
-        version (int):
         body (EditTableGroupBody):
 
     Raises:
@@ -278,13 +259,12 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[EditTableGroupResponse400 | EditTableGroupResponse401 | EditTableGroupResponse403 | EditTableGroupResponse404 | EditTableGroupResponse422 | EditTableGroupResponse429 | EditTableGroupResponse500 | TableGroupResponse]
+        Response[EditTableGroupResponse400 | EditTableGroupResponse401 | EditTableGroupResponse403 | EditTableGroupResponse404 | EditTableGroupResponse422 | EditTableGroupResponse429 | EditTableGroupResponse500 | TableGroupWriteResponse]
     """
 
     kwargs = _get_kwargs(
         group_id=group_id,
         body=body,
-        version=version,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -297,7 +277,6 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     body: EditTableGroupBody,
-    version: int,
 ) -> (
     EditTableGroupResponse400
     | EditTableGroupResponse401
@@ -306,15 +285,14 @@ async def asyncio(
     | EditTableGroupResponse422
     | EditTableGroupResponse429
     | EditTableGroupResponse500
-    | TableGroupResponse
+    | TableGroupWriteResponse
     | None
 ):
     """Edit table group
 
      Update an existing table group's definition (full replace).
-    The request body uses the same `{group, tables, fields}` structure that Import accepts and Export
-    returns, so the natural workflow is export → edit → PUT. The data model `version` is specified via
-    the required query parameter, not in the request body.
+    The request body uses the same `{version, group, tables, fields}` structure that Import accepts and
+    Export returns, so the natural workflow is export → edit → PUT.
 
     This is a full replace — all tables and fields must be provided. Omitting `fields` clears all field
     mappings. Tables and fields are matched to existing records by name. Renaming a table or field is
@@ -326,7 +304,6 @@ async def asyncio(
 
     Args:
         group_id (str):
-        version (int):
         body (EditTableGroupBody):
 
     Raises:
@@ -334,7 +311,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        EditTableGroupResponse400 | EditTableGroupResponse401 | EditTableGroupResponse403 | EditTableGroupResponse404 | EditTableGroupResponse422 | EditTableGroupResponse429 | EditTableGroupResponse500 | TableGroupResponse
+        EditTableGroupResponse400 | EditTableGroupResponse401 | EditTableGroupResponse403 | EditTableGroupResponse404 | EditTableGroupResponse422 | EditTableGroupResponse429 | EditTableGroupResponse500 | TableGroupWriteResponse
     """
 
     return (
@@ -342,6 +319,5 @@ async def asyncio(
             group_id=group_id,
             client=client,
             body=body,
-            version=version,
         )
     ).parsed
