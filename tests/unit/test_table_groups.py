@@ -23,8 +23,8 @@ from supermetrics._generated.supermetrics_api_client.models.table_definition imp
 from supermetrics._generated.supermetrics_api_client.models.table_group import TableGroup
 from supermetrics._generated.supermetrics_api_client.models.table_group_export import TableGroupExport
 from supermetrics._generated.supermetrics_api_client.models.table_group_import import TableGroupImport
-from supermetrics._generated.supermetrics_api_client.models.table_group_response import TableGroupResponse
-from supermetrics._generated.supermetrics_api_client.types import UNSET, Response
+from supermetrics._generated.supermetrics_api_client.models.table_group_write_response import TableGroupWriteResponse
+from supermetrics._generated.supermetrics_api_client.types import Response
 from supermetrics.exceptions import APIError, AuthenticationError, SupermetricsNotFoundError
 from supermetrics.resources.table_groups import TableGroupsAsyncResource, TableGroupsResource
 
@@ -49,6 +49,10 @@ def _make_error_response(status_code: HTTPStatus, code: str, message: str) -> Re
     )
 
 
+def _sample_write_response() -> TableGroupWriteResponse:
+    return TableGroupWriteResponse(group_id="tg_100", group_name="Google Ads Standard")
+
+
 class TestTableGroupsResource:
     """Test suite for TableGroupsResource (synchronous)."""
 
@@ -70,10 +74,6 @@ class TestTableGroupsResource:
             TableGroup(group_id="tg_100", schema_id=354, name="Google Ads Standard"),
             TableGroup(group_id="tg_200", schema_id=68, name="Pinterest Ads Standard"),
         ]
-
-    @pytest.fixture
-    def sample_group(self) -> TableGroup:
-        return TableGroup(group_id="tg_100", schema_id=354, name="Google Ads Standard")
 
     @pytest.fixture
     def sample_export(self) -> ExportTableGroupResponse200:
@@ -101,6 +101,7 @@ class TestTableGroupsResource:
     @pytest.fixture
     def sample_edit_body(self) -> EditTableGroupBody:
         return EditTableGroupBody(
+            version=1,
             group=TableGroupImport(group_name="Updated Group", ds_id="AW", table_prefix="TST"),
             tables=[TableDefinition(table_name="CAMPAIGNS", fields=["campaign_id", "date", "clicks"])],
             fields=[
@@ -253,35 +254,30 @@ class TestTableGroupsResource:
     def test_import_success(
         self,
         resource: TableGroupsResource,
-        sample_group: TableGroup,
-        meta: Meta,
         sample_import_body: ImportTableGroupBody,
     ) -> None:
         import supermetrics.resources.table_groups as module
 
         original = module.import_table_group.sync_detailed
         module.import_table_group.sync_detailed = MagicMock(
-            return_value=_make_created_response(TableGroupResponse(meta=meta, data=sample_group))
+            return_value=_make_created_response(_sample_write_response())
         )
         try:
             created = resource.import_(body=sample_import_body)
             assert created.group_id == "tg_100"
-            assert created.schema_id == 354
-            assert created.name == "Google Ads Standard"
+            assert created.group_name == "Google Ads Standard"
         finally:
             module.import_table_group.sync_detailed = original
 
     def test_import_passes_correct_params(
         self,
         resource: TableGroupsResource,
-        sample_group: TableGroup,
-        meta: Meta,
         sample_import_body: ImportTableGroupBody,
     ) -> None:
         import supermetrics.resources.table_groups as module
 
         original = module.import_table_group.sync_detailed
-        mock_sync = MagicMock(return_value=_make_created_response(TableGroupResponse(meta=meta, data=sample_group)))
+        mock_sync = MagicMock(return_value=_make_created_response(_sample_write_response()))
         module.import_table_group.sync_detailed = mock_sync
         try:
             resource.import_(body=sample_import_body)
@@ -346,73 +342,41 @@ class TestTableGroupsResource:
         finally:
             module.import_table_group.sync_detailed = original
 
-    def test_import_flat_response_fallback(
-        self,
-        resource: TableGroupsResource,
-        sample_import_body: ImportTableGroupBody,
-    ) -> None:
-        """When the API returns a flat object (no {meta, data} envelope), the wrapper
-        falls back to parsing the raw body as a TableGroup via _unwrap_table_group."""
-        import json as _json
-
-        import supermetrics.resources.table_groups as module
-
-        flat_body = {"@type": "table_group", "group_id": "tg_300", "group_name": "SDK Test"}
-        original = module.import_table_group.sync_detailed
-        module.import_table_group.sync_detailed = MagicMock(
-            return_value=Response(
-                status_code=HTTPStatus.CREATED,
-                content=_json.dumps(flat_body).encode(),
-                headers={},
-                parsed=TableGroupResponse(meta=UNSET, data=UNSET),
-            )
-        )
-        try:
-            created = resource.import_(body=sample_import_body)
-            assert created.group_id == "tg_300"
-        finally:
-            module.import_table_group.sync_detailed = original
-
     # --- edit() ---
 
     def test_edit_success(
         self,
         resource: TableGroupsResource,
-        sample_group: TableGroup,
-        meta: Meta,
         sample_edit_body: EditTableGroupBody,
     ) -> None:
         import supermetrics.resources.table_groups as module
 
         original = module.edit_table_group.sync_detailed
-        module.edit_table_group.sync_detailed = MagicMock(
-            return_value=_make_success_response(TableGroupResponse(meta=meta, data=sample_group))
-        )
+        module.edit_table_group.sync_detailed = MagicMock(return_value=_make_success_response(_sample_write_response()))
         try:
-            updated = resource.edit(group_id="tg_100", version=1, body=sample_edit_body)
+            updated = resource.edit(group_id="tg_100", body=sample_edit_body)
             assert updated.group_id == "tg_100"
-            assert updated.name == "Google Ads Standard"
+            assert updated.group_name == "Google Ads Standard"
         finally:
             module.edit_table_group.sync_detailed = original
 
     def test_edit_passes_correct_params(
         self,
         resource: TableGroupsResource,
-        sample_group: TableGroup,
-        meta: Meta,
         sample_edit_body: EditTableGroupBody,
     ) -> None:
         import supermetrics.resources.table_groups as module
 
         original = module.edit_table_group.sync_detailed
-        mock_sync = MagicMock(return_value=_make_success_response(TableGroupResponse(meta=meta, data=sample_group)))
+        mock_sync = MagicMock(return_value=_make_success_response(_sample_write_response()))
         module.edit_table_group.sync_detailed = mock_sync
         try:
-            resource.edit(group_id="tg_100", version=1, body=sample_edit_body)
+            resource.edit(group_id="tg_100", body=sample_edit_body)
             call_kwargs = mock_sync.call_args.kwargs
             assert call_kwargs["group_id"] == "tg_100"
-            assert call_kwargs["version"] == 1
+            assert "version" not in call_kwargs
             body = call_kwargs["body"]
+            assert body.version == 1
             assert body.group.group_name == "Updated Group"
             assert len(body.tables) == 1
         finally:
@@ -431,7 +395,7 @@ class TestTableGroupsResource:
         )
         try:
             with pytest.raises(AuthenticationError):
-                resource.edit(group_id="tg_100", version=1, body=sample_edit_body)
+                resource.edit(group_id="tg_100", body=sample_edit_body)
         finally:
             module.edit_table_group.sync_detailed = original
 
@@ -448,7 +412,7 @@ class TestTableGroupsResource:
         )
         try:
             with pytest.raises(SupermetricsNotFoundError) as exc_info:
-                resource.edit(group_id="tg_999", version=1, body=sample_edit_body)
+                resource.edit(group_id="tg_999", body=sample_edit_body)
             assert exc_info.value.status_code == 404
         finally:
             module.edit_table_group.sync_detailed = original
@@ -466,35 +430,8 @@ class TestTableGroupsResource:
         )
         try:
             with pytest.raises(APIError) as exc_info:
-                resource.edit(group_id="tg_100", version=1, body=sample_edit_body)
+                resource.edit(group_id="tg_100", body=sample_edit_body)
             assert exc_info.value.status_code == 500
-        finally:
-            module.edit_table_group.sync_detailed = original
-
-    def test_edit_flat_response_fallback(
-        self,
-        resource: TableGroupsResource,
-        sample_edit_body: EditTableGroupBody,
-    ) -> None:
-        """When the API returns a flat object (no {meta, data} envelope), the wrapper
-        falls back to parsing the raw body as a TableGroup via _unwrap_table_group."""
-        import json as _json
-
-        import supermetrics.resources.table_groups as module
-
-        flat_body = {"@type": "table_group", "group_id": "tg_100", "group_name": "Updated Group"}
-        original = module.edit_table_group.sync_detailed
-        module.edit_table_group.sync_detailed = MagicMock(
-            return_value=Response(
-                status_code=HTTPStatus.OK,
-                content=_json.dumps(flat_body).encode(),
-                headers={},
-                parsed=TableGroupResponse(meta=UNSET, data=UNSET),
-            )
-        )
-        try:
-            updated = resource.edit(group_id="tg_100", version=1, body=sample_edit_body)
-            assert updated.group_id == "tg_100"
         finally:
             module.edit_table_group.sync_detailed = original
 
@@ -522,10 +459,6 @@ class TestTableGroupsAsyncResource:
         ]
 
     @pytest.fixture
-    def sample_group(self) -> TableGroup:
-        return TableGroup(group_id="tg_100", schema_id=354, name="Google Ads Standard")
-
-    @pytest.fixture
     def sample_export(self) -> ExportTableGroupResponse200:
         return ExportTableGroupResponse200(
             version=1,
@@ -551,6 +484,7 @@ class TestTableGroupsAsyncResource:
     @pytest.fixture
     def sample_edit_body(self) -> EditTableGroupBody:
         return EditTableGroupBody(
+            version=1,
             group=TableGroupImport(group_name="Updated Group", ds_id="AW", table_prefix="TST"),
             tables=[TableDefinition(table_name="CAMPAIGNS", fields=["campaign_id", "date", "clicks"])],
             fields=[
@@ -706,20 +640,18 @@ class TestTableGroupsAsyncResource:
     async def test_import_success(
         self,
         resource: TableGroupsAsyncResource,
-        sample_group: TableGroup,
-        meta: Meta,
         sample_import_body: ImportTableGroupBody,
     ) -> None:
         import supermetrics.resources.table_groups as module
 
         original = module.import_table_group.asyncio_detailed
         module.import_table_group.asyncio_detailed = AsyncMock(
-            return_value=_make_created_response(TableGroupResponse(meta=meta, data=sample_group))
+            return_value=_make_created_response(_sample_write_response())
         )
         try:
             created = await resource.import_(body=sample_import_body)
             assert created.group_id == "tg_100"
-            assert created.schema_id == 354
+            assert created.group_name == "Google Ads Standard"
         finally:
             module.import_table_group.asyncio_detailed = original
 
@@ -727,14 +659,12 @@ class TestTableGroupsAsyncResource:
     async def test_import_passes_correct_params(
         self,
         resource: TableGroupsAsyncResource,
-        sample_group: TableGroup,
-        meta: Meta,
         sample_import_body: ImportTableGroupBody,
     ) -> None:
         import supermetrics.resources.table_groups as module
 
         original = module.import_table_group.asyncio_detailed
-        mock_async = AsyncMock(return_value=_make_created_response(TableGroupResponse(meta=meta, data=sample_group)))
+        mock_async = AsyncMock(return_value=_make_created_response(_sample_write_response()))
         module.import_table_group.asyncio_detailed = mock_async
         try:
             await resource.import_(body=sample_import_body)
@@ -782,52 +712,22 @@ class TestTableGroupsAsyncResource:
         finally:
             module.import_table_group.asyncio_detailed = original
 
-    @pytest.mark.asyncio
-    async def test_import_flat_response_fallback(
-        self,
-        resource: TableGroupsAsyncResource,
-        sample_import_body: ImportTableGroupBody,
-    ) -> None:
-        """When the API returns a flat object (no {meta, data} envelope), the async wrapper
-        falls back to parsing the raw body as a TableGroup via _unwrap_table_group."""
-        import json as _json
-
-        import supermetrics.resources.table_groups as module
-
-        flat_body = {"@type": "table_group", "group_id": "tg_300", "group_name": "SDK Test"}
-        original = module.import_table_group.asyncio_detailed
-        module.import_table_group.asyncio_detailed = AsyncMock(
-            return_value=Response(
-                status_code=HTTPStatus.CREATED,
-                content=_json.dumps(flat_body).encode(),
-                headers={},
-                parsed=TableGroupResponse(meta=UNSET, data=UNSET),
-            )
-        )
-        try:
-            created = await resource.import_(body=sample_import_body)
-            assert created.group_id == "tg_300"
-        finally:
-            module.import_table_group.asyncio_detailed = original
-
     # --- edit() ---
 
     @pytest.mark.asyncio
     async def test_edit_success(
         self,
         resource: TableGroupsAsyncResource,
-        sample_group: TableGroup,
-        meta: Meta,
         sample_edit_body: EditTableGroupBody,
     ) -> None:
         import supermetrics.resources.table_groups as module
 
         original = module.edit_table_group.asyncio_detailed
         module.edit_table_group.asyncio_detailed = AsyncMock(
-            return_value=_make_success_response(TableGroupResponse(meta=meta, data=sample_group))
+            return_value=_make_success_response(_sample_write_response())
         )
         try:
-            updated = await resource.edit(group_id="tg_100", version=1, body=sample_edit_body)
+            updated = await resource.edit(group_id="tg_100", body=sample_edit_body)
             assert updated.group_id == "tg_100"
         finally:
             module.edit_table_group.asyncio_detailed = original
@@ -836,20 +736,19 @@ class TestTableGroupsAsyncResource:
     async def test_edit_passes_correct_params(
         self,
         resource: TableGroupsAsyncResource,
-        sample_group: TableGroup,
-        meta: Meta,
         sample_edit_body: EditTableGroupBody,
     ) -> None:
         import supermetrics.resources.table_groups as module
 
         original = module.edit_table_group.asyncio_detailed
-        mock_async = AsyncMock(return_value=_make_success_response(TableGroupResponse(meta=meta, data=sample_group)))
+        mock_async = AsyncMock(return_value=_make_success_response(_sample_write_response()))
         module.edit_table_group.asyncio_detailed = mock_async
         try:
-            await resource.edit(group_id="tg_100", version=1, body=sample_edit_body)
+            await resource.edit(group_id="tg_100", body=sample_edit_body)
             call_kwargs = mock_async.call_args.kwargs
             assert call_kwargs["group_id"] == "tg_100"
-            assert call_kwargs["version"] == 1
+            assert "version" not in call_kwargs
+            assert call_kwargs["body"].version == 1
             assert call_kwargs["body"].group.group_name == "Updated Group"
         finally:
             module.edit_table_group.asyncio_detailed = original
@@ -868,7 +767,7 @@ class TestTableGroupsAsyncResource:
         )
         try:
             with pytest.raises(AuthenticationError):
-                await resource.edit(group_id="tg_100", version=1, body=sample_edit_body)
+                await resource.edit(group_id="tg_100", body=sample_edit_body)
         finally:
             module.edit_table_group.asyncio_detailed = original
 
@@ -886,7 +785,7 @@ class TestTableGroupsAsyncResource:
         )
         try:
             with pytest.raises(SupermetricsNotFoundError):
-                await resource.edit(group_id="tg_999", version=1, body=sample_edit_body)
+                await resource.edit(group_id="tg_999", body=sample_edit_body)
         finally:
             module.edit_table_group.asyncio_detailed = original
 
@@ -904,35 +803,7 @@ class TestTableGroupsAsyncResource:
         )
         try:
             with pytest.raises(APIError) as exc_info:
-                await resource.edit(group_id="tg_100", version=1, body=sample_edit_body)
+                await resource.edit(group_id="tg_100", body=sample_edit_body)
             assert exc_info.value.status_code == 500
-        finally:
-            module.edit_table_group.asyncio_detailed = original
-
-    @pytest.mark.asyncio
-    async def test_edit_flat_response_fallback(
-        self,
-        resource: TableGroupsAsyncResource,
-        sample_edit_body: EditTableGroupBody,
-    ) -> None:
-        """When the API returns a flat object (no {meta, data} envelope), the async wrapper
-        falls back to parsing the raw body as a TableGroup via _unwrap_table_group."""
-        import json as _json
-
-        import supermetrics.resources.table_groups as module
-
-        flat_body = {"@type": "table_group", "group_id": "tg_100", "group_name": "Updated Group"}
-        original = module.edit_table_group.asyncio_detailed
-        module.edit_table_group.asyncio_detailed = AsyncMock(
-            return_value=Response(
-                status_code=HTTPStatus.OK,
-                content=_json.dumps(flat_body).encode(),
-                headers={},
-                parsed=TableGroupResponse(meta=UNSET, data=UNSET),
-            )
-        )
-        try:
-            updated = await resource.edit(group_id="tg_100", version=1, body=sample_edit_body)
-            assert updated.group_id == "tg_100"
         finally:
             module.edit_table_group.asyncio_detailed = original

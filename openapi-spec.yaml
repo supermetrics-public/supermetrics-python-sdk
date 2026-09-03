@@ -588,7 +588,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TableGroupResponse'
+                $ref: '#/components/schemas/TableGroupWriteResponse'
         '400':
           $ref: '#/components/responses/TableGroupImportError'
         '401':
@@ -613,10 +613,9 @@ paths:
       summary: Edit table group
       description: 'Update an existing table group''s definition (full replace).
 
-        The request body uses the same `{group, tables, fields}` structure that Import
-        accepts and Export returns, so the natural workflow is export → edit → PUT.
-        The data model `version` is specified via the required query parameter, not
-        in the request body.
+        The request body uses the same `{version, group, tables, fields}` structure
+        that Import accepts and Export returns, so the natural workflow is export
+        → edit → PUT.
 
 
         This is a full replace — all tables and fields must be provided. Omitting
@@ -643,9 +642,16 @@ paths:
             schema:
               type: object
               required:
+              - version
               - group
               - tables
               properties:
+                version:
+                  type: integer
+                  format: int32
+                  minimum: 1
+                  maximum: 100
+                  description: Data model version for the received data
                 group:
                   $ref: '#/components/schemas/TableGroupImport'
                 tables:
@@ -662,6 +668,7 @@ paths:
                   items:
                     $ref: '#/components/schemas/FieldDefinition'
             example:
+              version: 1
               group:
                 group_name: Marketing Analytics Updated
                 ds_id: GAWA
@@ -699,7 +706,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TableGroupResponse'
+                $ref: '#/components/schemas/TableGroupWriteResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -723,15 +730,6 @@ paths:
         maxLength: 50
         pattern: ^[A-Za-z0-9_-]+$
       description: Supermetrics table group ID (prefixed, e.g. tg_123)
-    - name: version
-      in: query
-      required: true
-      schema:
-        type: integer
-        format: int32
-        minimum: 1
-        maximum: 100
-      description: Data model version for the received data
     servers:
     - url: https://api.supermetrics.com/enterprise/v2
       description: Global production public Supermetrics Data Warehouse Table Groups
@@ -10550,13 +10548,27 @@ components:
           maxLength: 15
           description: Prefix to table names. Enforced into upper snake case. Maximum
             length is 15 characters. Appended with an underscore.
-    TableGroupResponse:
+    TableGroupWriteResponse:
       type: object
+      description: Flat response returned by import and edit endpoints.
       properties:
-        meta:
-          $ref: '#/components/schemas/Meta'
-        data:
-          $ref: '#/components/schemas/TableGroup'
+        '@type':
+          type: string
+          enum:
+          - table_group
+        group_id:
+          type: string
+          maxLength: 50
+          description: Supermetrics table group ID (prefixed, e.g. tg_123)
+        group_name:
+          type: string
+          maxLength: 255
+          description: Table group name
+        links:
+          type: object
+          properties:
+            enclosure:
+              $ref: '#/components/schemas/ResourceURL'
     TeamData:
       type: object
       description: Team resource

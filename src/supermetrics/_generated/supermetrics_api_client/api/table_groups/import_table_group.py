@@ -13,7 +13,7 @@ from ...models.import_table_group_response_409 import ImportTableGroupResponse40
 from ...models.import_table_group_response_422 import ImportTableGroupResponse422
 from ...models.import_table_group_response_429 import ImportTableGroupResponse429
 from ...models.import_table_group_response_500 import ImportTableGroupResponse500
-from ...models.table_group_response import TableGroupResponse
+from ...models.table_group_write_response import TableGroupWriteResponse
 from ...types import Response
 
 
@@ -46,11 +46,11 @@ def _parse_response(
     | ImportTableGroupResponse422
     | ImportTableGroupResponse429
     | ImportTableGroupResponse500
-    | TableGroupResponse
+    | TableGroupWriteResponse
     | None
 ):
     if response.status_code == 201:
-        response_201 = TableGroupResponse.from_dict(response.json())
+        response_201 = TableGroupWriteResponse.from_dict(response.json())
 
         return response_201
 
@@ -105,7 +105,7 @@ def _build_response(
     | ImportTableGroupResponse422
     | ImportTableGroupResponse429
     | ImportTableGroupResponse500
-    | TableGroupResponse
+    | TableGroupWriteResponse
 ]:
     return Response(
         status_code=HTTPStatus(response.status_code),
@@ -127,7 +127,7 @@ def sync_detailed(
     | ImportTableGroupResponse422
     | ImportTableGroupResponse429
     | ImportTableGroupResponse500
-    | TableGroupResponse
+    | TableGroupWriteResponse
 ]:
     """Import table group
 
@@ -141,7 +141,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ImportTableGroupResponse400 | ImportTableGroupResponse401 | ImportTableGroupResponse404 | ImportTableGroupResponse409 | ImportTableGroupResponse422 | ImportTableGroupResponse429 | ImportTableGroupResponse500 | TableGroupResponse]
+        Response[ImportTableGroupResponse400 | ImportTableGroupResponse401 | ImportTableGroupResponse404 | ImportTableGroupResponse409 | ImportTableGroupResponse422 | ImportTableGroupResponse429 | ImportTableGroupResponse500 | TableGroupWriteResponse]
     """
 
     kwargs = _get_kwargs(
@@ -167,7 +167,7 @@ def sync(
     | ImportTableGroupResponse422
     | ImportTableGroupResponse429
     | ImportTableGroupResponse500
-    | TableGroupResponse
+    | TableGroupWriteResponse
     | None
 ):
     """Import table group
@@ -182,7 +182,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ImportTableGroupResponse400 | ImportTableGroupResponse401 | ImportTableGroupResponse404 | ImportTableGroupResponse409 | ImportTableGroupResponse422 | ImportTableGroupResponse429 | ImportTableGroupResponse500 | TableGroupResponse
+        ImportTableGroupResponse400 | ImportTableGroupResponse401 | ImportTableGroupResponse404 | ImportTableGroupResponse409 | ImportTableGroupResponse422 | ImportTableGroupResponse429 | ImportTableGroupResponse500 | TableGroupWriteResponse
     """
 
     return sync_detailed(
@@ -203,7 +203,7 @@ async def asyncio_detailed(
     | ImportTableGroupResponse422
     | ImportTableGroupResponse429
     | ImportTableGroupResponse500
-    | TableGroupResponse
+    | TableGroupWriteResponse
 ]:
     """Import table group
 
@@ -217,7 +217,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ImportTableGroupResponse400 | ImportTableGroupResponse401 | ImportTableGroupResponse404 | ImportTableGroupResponse409 | ImportTableGroupResponse422 | ImportTableGroupResponse429 | ImportTableGroupResponse500 | TableGroupResponse]
+        Response[ImportTableGroupResponse400 | ImportTableGroupResponse401 | ImportTableGroupResponse404 | ImportTableGroupResponse409 | ImportTableGroupResponse422 | ImportTableGroupResponse429 | ImportTableGroupResponse500 | TableGroupWriteResponse]
     """
 
     kwargs = _get_kwargs(
@@ -241,7 +241,7 @@ async def asyncio(
     | ImportTableGroupResponse422
     | ImportTableGroupResponse429
     | ImportTableGroupResponse500
-    | TableGroupResponse
+    | TableGroupWriteResponse
     | None
 ):
     """Import table group
@@ -256,7 +256,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ImportTableGroupResponse400 | ImportTableGroupResponse401 | ImportTableGroupResponse404 | ImportTableGroupResponse409 | ImportTableGroupResponse422 | ImportTableGroupResponse429 | ImportTableGroupResponse500 | TableGroupResponse
+        ImportTableGroupResponse400 | ImportTableGroupResponse401 | ImportTableGroupResponse404 | ImportTableGroupResponse409 | ImportTableGroupResponse422 | ImportTableGroupResponse429 | ImportTableGroupResponse500 | TableGroupWriteResponse
     """
 
     return (
