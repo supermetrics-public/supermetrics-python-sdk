@@ -238,6 +238,7 @@ class DestinationsResourceWithRawResponse:
         self.delete = to_raw_response_wrapper(resource.delete)
         self.test_connection = to_raw_response_wrapper(resource.test_connection)
         self.get_usage = to_raw_response_wrapper(resource.get_usage)
+        self.batch_update = to_raw_response_wrapper(resource.batch_update)
 
 
 class DestinationsAsyncResourceWithRawResponse:
@@ -256,6 +257,7 @@ class DestinationsAsyncResourceWithRawResponse:
         self.delete = async_to_raw_response_wrapper(resource.delete)
         self.test_connection = async_to_raw_response_wrapper(resource.test_connection)
         self.get_usage = async_to_raw_response_wrapper(resource.get_usage)
+        self.batch_update = async_to_raw_response_wrapper(resource.batch_update)
 
 
 class LoginLinksResourceWithRawResponse:

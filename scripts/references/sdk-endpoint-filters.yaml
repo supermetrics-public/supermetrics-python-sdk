@@ -183,6 +183,8 @@ endpoints:
     path: /teams/{team_id}/destinations/test-connection
   - method: GET
     path: /teams/{team_id}/destinations/{destination_id}/usage
+  - method: PATCH
+    path: /teams/{team_id}/destinations/batch
 
   # Table Groups
   #

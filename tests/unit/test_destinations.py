@@ -8,6 +8,18 @@ import httpx
 import pytest
 
 from supermetrics._generated.supermetrics_api_client.client import Client as GeneratedClient
+from supermetrics._generated.supermetrics_api_client.models.batch_update_destinations_body_updates_item import (
+    BatchUpdateDestinationsBodyUpdatesItem as _BatchUpdateItem,
+)
+from supermetrics._generated.supermetrics_api_client.models.batch_update_destinations_response_200 import (
+    BatchUpdateDestinationsResponse200 as _BatchResponse200,
+)
+from supermetrics._generated.supermetrics_api_client.models.batch_update_destinations_response_200_data import (
+    BatchUpdateDestinationsResponse200Data as _BatchData,
+)
+from supermetrics._generated.supermetrics_api_client.models.batch_update_destinations_response_200_data_results_item import (  # noqa: E501
+    BatchUpdateDestinationsResponse200DataResultsItem as _BatchResultItem,
+)
 from supermetrics._generated.supermetrics_api_client.models.destination_info import DestinationInfo
 from supermetrics._generated.supermetrics_api_client.models.destination_list_item import DestinationListItem
 from supermetrics._generated.supermetrics_api_client.models.destination_list_response import DestinationListResponse
@@ -1130,6 +1142,152 @@ class TestDestinationsResource:
         finally:
             module.get_destination_usage.sync_detailed = original
 
+    # ── batch_update ────────────────────────────────────────────────────
+
+    def test_batch_update_success(
+        self,
+        destinations_resource: DestinationsResource,
+        meta: Meta,
+    ) -> None:
+        """Test successful batch update returns the data envelope."""
+        import supermetrics.resources.destinations as module
+
+        data = _BatchData(has_errors=False, results=[])
+        original = module.batch_update_destinations.sync_detailed
+        module.batch_update_destinations.sync_detailed = MagicMock(
+            return_value=_make_success_response(_BatchResponse200(meta=meta, data=data))
+        )
+
+        try:
+            result = destinations_resource.batch_update(
+                team_id=12345,
+                destination_type="DWH_SNOWFLAKE",
+                updates=[_BatchUpdateItem(destination_id=8, new_secret="new-pw-123")],
+            )
+
+            assert result.has_errors is False
+            assert result.results == []
+        finally:
+            module.batch_update_destinations.sync_detailed = original
+
+    def test_batch_update_partial_failure(
+        self,
+        destinations_resource: DestinationsResource,
+        meta: Meta,
+    ) -> None:
+        """Test batch update with partial failure reports has_errors and per-item results."""
+        import supermetrics.resources.destinations as module
+
+        results_items = [
+            _BatchResultItem(destination_id=8, status="success"),
+            _BatchResultItem(destination_id=9, status="error", error_code="INVALID_SECRET", message="Secret too short"),
+        ]
+        data = _BatchData(has_errors=True, results=results_items)
+        original = module.batch_update_destinations.sync_detailed
+        module.batch_update_destinations.sync_detailed = MagicMock(
+            return_value=_make_success_response(_BatchResponse200(meta=meta, data=data))
+        )
+
+        try:
+            result = destinations_resource.batch_update(
+                team_id=12345,
+                destination_type="DWH_SNOWFLAKE",
+                updates=[
+                    _BatchUpdateItem(destination_id=8, new_secret="new-pw-123"),
+                    _BatchUpdateItem(destination_id=9, new_secret="x"),
+                ],
+            )
+
+            assert result.has_errors is True
+            assert len(result.results) == 2
+            assert result.results[0].status == "success"
+            assert result.results[1].status == "error"
+            assert result.results[1].error_code == "INVALID_SECRET"
+        finally:
+            module.batch_update_destinations.sync_detailed = original
+
+    def test_batch_update_passes_correct_params(
+        self,
+        destinations_resource: DestinationsResource,
+        meta: Meta,
+    ) -> None:
+        """Test that batch_update() forwards destination_type and updates to the generated client."""
+        import supermetrics.resources.destinations as module
+
+        data = _BatchData(has_errors=False, results=[])
+        original = module.batch_update_destinations.sync_detailed
+        mock_sync = MagicMock(return_value=_make_success_response(_BatchResponse200(meta=meta, data=data)))
+        module.batch_update_destinations.sync_detailed = mock_sync
+
+        try:
+            destinations_resource.batch_update(
+                team_id=12345,
+                destination_type="DWH_SNOWFLAKE",
+                updates=[_BatchUpdateItem(destination_id=8, new_secret="new-pw-123")],
+            )
+
+            call_kwargs = mock_sync.call_args.kwargs
+            assert call_kwargs["team_id"] == 12345
+            body = call_kwargs["body"]
+            assert body.type_ == "DWH_SNOWFLAKE"
+            assert len(body.updates) == 1
+            assert body.updates[0].destination_id == 8
+            assert body.updates[0].new_secret == "new-pw-123"
+        finally:
+            module.batch_update_destinations.sync_detailed = original
+
+    def test_batch_update_auth_error_on_401(self, destinations_resource: DestinationsResource) -> None:
+        """Test that batch_update() raises AuthenticationError on 401."""
+        import supermetrics.resources.destinations as module
+
+        original = module.batch_update_destinations.sync_detailed
+        module.batch_update_destinations.sync_detailed = MagicMock(
+            return_value=_make_error_response(HTTPStatus.UNAUTHORIZED, "UNAUTHORIZED", "Invalid API key")
+        )
+
+        try:
+            with pytest.raises(AuthenticationError) as exc_info:
+                destinations_resource.batch_update(team_id=12345, destination_type="DWH_SNOWFLAKE", updates=[])
+
+            assert exc_info.value.status_code == 401
+        finally:
+            module.batch_update_destinations.sync_detailed = original
+
+    def test_batch_update_validation_error_on_400(self, destinations_resource: DestinationsResource) -> None:
+        """Test that batch_update() raises ValidationError on 400."""
+        import supermetrics.resources.destinations as module
+        from supermetrics.exceptions import SupermetricsValidationError
+
+        original = module.batch_update_destinations.sync_detailed
+        module.batch_update_destinations.sync_detailed = MagicMock(
+            return_value=_make_error_response(HTTPStatus.BAD_REQUEST, "INVALID_REQUEST", "Duplicate destination_id")
+        )
+
+        try:
+            with pytest.raises(SupermetricsValidationError) as exc_info:
+                destinations_resource.batch_update(team_id=12345, destination_type="DWH_SNOWFLAKE", updates=[])
+
+            assert exc_info.value.status_code == 400
+        finally:
+            module.batch_update_destinations.sync_detailed = original
+
+    def test_batch_update_api_error_on_500(self, destinations_resource: DestinationsResource) -> None:
+        """Test that batch_update() raises APIError on 500."""
+        import supermetrics.resources.destinations as module
+
+        original = module.batch_update_destinations.sync_detailed
+        module.batch_update_destinations.sync_detailed = MagicMock(
+            return_value=_make_error_response(HTTPStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "Server error")
+        )
+
+        try:
+            with pytest.raises(APIError) as exc_info:
+                destinations_resource.batch_update(team_id=12345, destination_type="DWH_SNOWFLAKE", updates=[])
+
+            assert exc_info.value.status_code == 500
+        finally:
+            module.batch_update_destinations.sync_detailed = original
+
 
 class TestDestinationsAsyncResource:
     """Test suite for DestinationsAsyncResource (asynchronous)."""
@@ -2220,3 +2378,155 @@ class TestDestinationsAsyncResource:
             assert exc_info.value.status_code == 500
         finally:
             module.get_destination_usage.asyncio_detailed = original
+
+    # ── batch_update (async) ────────────────────────────────────────────
+
+    @pytest.mark.asyncio
+    async def test_batch_update_success(
+        self,
+        destinations_resource: DestinationsAsyncResource,
+        meta: Meta,
+    ) -> None:
+        """Test async batch update returns the data envelope."""
+        import supermetrics.resources.destinations as module
+
+        data = _BatchData(has_errors=False, results=[])
+        original = module.batch_update_destinations.asyncio_detailed
+        module.batch_update_destinations.asyncio_detailed = AsyncMock(
+            return_value=_make_success_response(_BatchResponse200(meta=meta, data=data))
+        )
+
+        try:
+            result = await destinations_resource.batch_update(
+                team_id=12345,
+                destination_type="DWH_SNOWFLAKE",
+                updates=[_BatchUpdateItem(destination_id=8, new_secret="new-pw-123")],
+            )
+
+            assert result.has_errors is False
+            assert result.results == []
+        finally:
+            module.batch_update_destinations.asyncio_detailed = original
+
+    @pytest.mark.asyncio
+    async def test_batch_update_partial_failure(
+        self,
+        destinations_resource: DestinationsAsyncResource,
+        meta: Meta,
+    ) -> None:
+        """Test async batch update with partial failure."""
+        import supermetrics.resources.destinations as module
+
+        results_items = [
+            _BatchResultItem(destination_id=8, status="success"),
+            _BatchResultItem(destination_id=9, status="error", error_code="INVALID_SECRET", message="Secret too short"),
+        ]
+        data = _BatchData(has_errors=True, results=results_items)
+        original = module.batch_update_destinations.asyncio_detailed
+        module.batch_update_destinations.asyncio_detailed = AsyncMock(
+            return_value=_make_success_response(_BatchResponse200(meta=meta, data=data))
+        )
+
+        try:
+            result = await destinations_resource.batch_update(
+                team_id=12345,
+                destination_type="DWH_SNOWFLAKE",
+                updates=[
+                    _BatchUpdateItem(destination_id=8, new_secret="new-pw-123"),
+                    _BatchUpdateItem(destination_id=9, new_secret="x"),
+                ],
+            )
+
+            assert result.has_errors is True
+            assert len(result.results) == 2
+            assert result.results[0].status == "success"
+            assert result.results[1].status == "error"
+            assert result.results[1].error_code == "INVALID_SECRET"
+        finally:
+            module.batch_update_destinations.asyncio_detailed = original
+
+    @pytest.mark.asyncio
+    async def test_batch_update_passes_correct_params(
+        self,
+        destinations_resource: DestinationsAsyncResource,
+        meta: Meta,
+    ) -> None:
+        """Test async batch_update() forwards destination_type and updates."""
+        import supermetrics.resources.destinations as module
+
+        data = _BatchData(has_errors=False, results=[])
+        original = module.batch_update_destinations.asyncio_detailed
+        mock_async = AsyncMock(return_value=_make_success_response(_BatchResponse200(meta=meta, data=data)))
+        module.batch_update_destinations.asyncio_detailed = mock_async
+
+        try:
+            await destinations_resource.batch_update(
+                team_id=12345,
+                destination_type="DWH_SNOWFLAKE",
+                updates=[_BatchUpdateItem(destination_id=8, new_secret="new-pw-123")],
+            )
+
+            call_kwargs = mock_async.call_args.kwargs
+            assert call_kwargs["team_id"] == 12345
+            body = call_kwargs["body"]
+            assert body.type_ == "DWH_SNOWFLAKE"
+            assert len(body.updates) == 1
+            assert body.updates[0].destination_id == 8
+            assert body.updates[0].new_secret == "new-pw-123"
+        finally:
+            module.batch_update_destinations.asyncio_detailed = original
+
+    @pytest.mark.asyncio
+    async def test_batch_update_auth_error_on_401(self, destinations_resource: DestinationsAsyncResource) -> None:
+        """Test async batch_update() raises AuthenticationError on 401."""
+        import supermetrics.resources.destinations as module
+
+        original = module.batch_update_destinations.asyncio_detailed
+        module.batch_update_destinations.asyncio_detailed = AsyncMock(
+            return_value=_make_error_response(HTTPStatus.UNAUTHORIZED, "UNAUTHORIZED", "Invalid API key")
+        )
+
+        try:
+            with pytest.raises(AuthenticationError) as exc_info:
+                await destinations_resource.batch_update(team_id=12345, destination_type="DWH_SNOWFLAKE", updates=[])
+
+            assert exc_info.value.status_code == 401
+        finally:
+            module.batch_update_destinations.asyncio_detailed = original
+
+    @pytest.mark.asyncio
+    async def test_batch_update_validation_error_on_400(self, destinations_resource: DestinationsAsyncResource) -> None:
+        """Test async batch_update() raises ValidationError on 400."""
+        import supermetrics.resources.destinations as module
+        from supermetrics.exceptions import SupermetricsValidationError
+
+        original = module.batch_update_destinations.asyncio_detailed
+        module.batch_update_destinations.asyncio_detailed = AsyncMock(
+            return_value=_make_error_response(HTTPStatus.BAD_REQUEST, "INVALID_REQUEST", "Duplicate destination_id")
+        )
+
+        try:
+            with pytest.raises(SupermetricsValidationError) as exc_info:
+                await destinations_resource.batch_update(team_id=12345, destination_type="DWH_SNOWFLAKE", updates=[])
+
+            assert exc_info.value.status_code == 400
+        finally:
+            module.batch_update_destinations.asyncio_detailed = original
+
+    @pytest.mark.asyncio
+    async def test_batch_update_api_error_on_500(self, destinations_resource: DestinationsAsyncResource) -> None:
+        """Test async batch_update() raises APIError on 500."""
+        import supermetrics.resources.destinations as module
+
+        original = module.batch_update_destinations.asyncio_detailed
+        module.batch_update_destinations.asyncio_detailed = AsyncMock(
+            return_value=_make_error_response(HTTPStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "Server error")
+        )
+
+        try:
+            with pytest.raises(APIError) as exc_info:
+                await destinations_resource.batch_update(team_id=12345, destination_type="DWH_SNOWFLAKE", updates=[])
+
+            assert exc_info.value.status_code == 500
+        finally:
+            module.batch_update_destinations.asyncio_detailed = original
