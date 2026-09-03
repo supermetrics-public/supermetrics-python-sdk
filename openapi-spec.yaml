@@ -848,6 +848,37 @@ paths:
       description: Global production public Supermetrics Data Warehouse Table Groups
         API base path.
       x-internal: false
+  /queries:
+    get:
+      summary: List queries
+      description: List queries
+      operationId: listQueries
+      responses:
+        '200':
+          description: List of queries retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth:
+        - ds_queries_read
+      tags:
+      - Saved Queries
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
   /query/accounts:
     get:
       summary: Get accounts
@@ -1030,6 +1061,118 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /query/{query_id}:
+    get:
+      summary: Get query
+      description: Get query
+      operationId: getQuery
+      parameters:
+      - name: query_id
+        in: path
+        required: true
+        description: Entity query ID
+        schema:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+          example: example
+      responses:
+        '200':
+          description: Query details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth:
+        - ds_queries_read
+      tags:
+      - Saved Queries
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
+  /team/settings:
+    get:
+      summary: Get settings
+      description: Retrieve all general team settings for the current team.
+      operationId: getTeamSettings
+      responses:
+        '200':
+          description: Team settings retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamSettingsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth:
+        - team_settings_read
+      tags:
+      - Team Settings
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
+    patch:
+      summary: Update settings
+      description: Update specific general team settings for the current team.
+      operationId: updateTeamSettings
+      requestBody:
+        required: true
+        description: Team settings configuration for API behavior and default values
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamSettings'
+            example:
+              api_json_unescaped_slashes: true
+              api_json_unescaped_unicode: false
+              query_default_timezone: America/New_York
+              tableau_default_no_headers: false
+      responses:
+        '200':
+          description: Team settings updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamSettingsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth:
+        - team_settings_write
+      tags:
+      - Team Settings
   /teams/{team_id}/backfills:
     get:
       summary: List incomplete backfills for team
@@ -3839,6 +3982,239 @@ paths:
     - url: https://api.supermetrics.com
       description: production server
       x-internal: false
+  /v1/teams/{team_id}/api_keys:
+    get:
+      summary: List API keys for a team
+      description: Retrieve a list of all API keys belonging to a team.
+      operationId: getTeamApiKeys
+      security:
+      - ApiKeyAuth:
+        - api_keys_read
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      responses:
+        '200':
+          description: List of API keys retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - API Keys
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
+    post:
+      summary: Create an API key for a team
+      description: Create a new API key for a team. Creating a new API key through
+        this endpoint is recorded to the audit logs.
+      operationId: createTeamApiKey
+      security:
+      - ApiKeyAuth:
+        - api_keys_write
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      requestBody:
+        description: API key creation parameters including permissions and access
+          controls
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  maxLength: 1000
+                  description: Internal API key description
+                scope_names:
+                  type: array
+                  maxItems: 100
+                  description: List of permission scopes for the API key.
+                  items:
+                    type: string
+                    maxLength: 100
+                allow_ips:
+                  type: array
+                  maxItems: 100
+                  description: List of fixed or CIDR formatted IP addresses allowed
+                    to use API key. Only IPv4 is supported.
+                  items:
+                    type: string
+                    maxLength: 255
+                is_enabled:
+                  type: boolean
+                  default: true
+                  description: Whether API key is enabled and can be used in requests
+                behalf_of_user_id:
+                  type: string
+                  nullable: true
+                  maxLength: 50
+                  pattern: ^[A-Za-z0-9_-]+$
+                  description: Supermetrics user ID the API key identifies as
+              required:
+              - scope_names
+              - behalf_of_user_id
+            example:
+              description: Marketing team API key
+              scope_names:
+              - ds_queries_read
+              - ds_queries_run
+              - table_groups_read
+              allow_ips:
+              - 192.168.1.100
+              - 10.0.0.0/24
+              is_enabled: true
+              behalf_of_user_id: user_123456
+      responses:
+        '201':
+          description: API key created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - API Keys
+  /v1/teams/{team_id}/api_keys/{api_key_id}:
+    get:
+      summary: Get an API key for a team
+      description: Retrieve details of a specific API key belonging to a team.
+      operationId: getTeamApiKey
+      security:
+      - ApiKeyAuth:
+        - api_keys_read
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/ApiKeyId'
+      responses:
+        '200':
+          description: API key details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - API Keys
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
+    patch:
+      summary: Update an API key for a team
+      description: Update an existing API key belonging to a team.
+      operationId: updateTeamApiKey
+      security:
+      - ApiKeyAuth:
+        - api_keys_write
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/ApiKeyId'
+      requestBody:
+        required: true
+        description: API key update parameters for modifying permissions and settings
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  maxLength: 1000
+                  description: Internal API key description
+                scope_names:
+                  type: array
+                  maxItems: 100
+                  description: List of permission scopes for the API key.
+                  items:
+                    type: string
+                    maxLength: 100
+                allow_ips:
+                  type: array
+                  maxItems: 100
+                  description: List of fixed or CIDR formatted IP addresses allowed
+                    to use API key. Only IPv4 is supported.
+                  items:
+                    type: string
+                    maxLength: 255
+                is_enabled:
+                  type: boolean
+                  description: Whether API key is enabled and can be used in requests
+                behalf_of_user_id:
+                  type: string
+                  nullable: true
+                  maxLength: 50
+                  pattern: ^[A-Za-z0-9_-]+$
+                  description: Supermetrics user ID the API key identifies as. Use
+                    null to remove previously saved value.
+            example:
+              description: Updated marketing team API key
+              scope_names:
+              - ds_queries_read
+              - ds_queries_run
+              - table_groups_read
+              - team_lists_read
+              allow_ips:
+              - 192.168.1.0/24
+              is_enabled: false
+              behalf_of_user_id: null
+      responses:
+        '200':
+          description: API key updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - API Keys
   /v1/teams/{team_id}/connector_builder/connectors:
     get:
       summary: List connectors
@@ -5272,6 +5648,263 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       tags:
       - Data Blending
+  /v1/teams/{team_id}/licenses:
+    get:
+      summary: List all licenses for a team
+      description: List all licenses for a team
+      operationId: listTeamLicenses
+      security:
+      - ApiKeyAuth:
+        - team_licenses_read
+      parameters:
+      - name: team_id
+        in: path
+        required: true
+        description: The ID of the team
+        example: 936506
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+      responses:
+        '200':
+          description: Licenses retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LicenseListResponse'
+        '400':
+          description: Bad request — invalid or missing parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+        '401':
+          description: Unauthorized — token is missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        '403':
+          description: Forbidden — insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionError'
+        '429':
+          description: Too many requests - rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequestsError'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+      tags:
+      - Team Licenses
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
+  /v1/teams/{team_id}/licenses/{license_id}/users:
+    post:
+      summary: Assign users to a license
+      description: Replace the set of users assigned to a license. Users not included
+        in the request are unassigned.
+      operationId: assignTeamLicenseUsers
+      security:
+      - ApiKeyAuth:
+        - team_licenses_write
+      x-validate_role:
+      - owner
+      - admin
+      parameters:
+      - name: team_id
+        in: path
+        required: true
+        description: The ID of the team
+        example: 936506
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+      - name: license_id
+        in: path
+        required: true
+        description: The ID of the license
+        example: 1001
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+      requestBody:
+        required: true
+        description: User IDs to assign to the license
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - user_ids
+              properties:
+                user_ids:
+                  type: array
+                  description: List of user IDs to assign to the license
+                  maxItems: 100
+                  example:
+                  - 12345
+                  - 67890
+                  items:
+                    type: integer
+                    format: int64
+                    minimum: 1
+                    maximum: 9223372036854776000
+            example:
+              user_ids:
+              - 12345
+              - 67890
+      responses:
+        '200':
+          description: Users assigned to license successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LicenseResponse'
+        '400':
+          description: Bad request — invalid or missing parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+        '401':
+          description: Unauthorized — token is missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        '403':
+          description: Forbidden — insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionError'
+        '404':
+          description: License not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+        '429':
+          description: Too many requests - rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequestsError'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+      tags:
+      - Team Licenses
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
+  /v1/teams/{team_id}/licenses/{license_id}/users/{user_id}:
+    delete:
+      summary: Unassign a user from a license
+      description: Unassign a user from a license
+      operationId: unassignTeamLicenseUser
+      security:
+      - ApiKeyAuth:
+        - team_licenses_write
+      x-validate_role:
+      - owner
+      - admin
+      parameters:
+      - name: team_id
+        in: path
+        required: true
+        description: The ID of the team
+        example: 936506
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+      - name: license_id
+        in: path
+        required: true
+        description: The ID of the license
+        example: 1001
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+      - name: user_id
+        in: path
+        required: true
+        description: The ID of the user to unassign
+        example: 12345
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+      responses:
+        '204':
+          description: User unassigned from license successfully
+        '400':
+          description: Bad request — invalid or missing parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+        '401':
+          description: Unauthorized — token is missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        '403':
+          description: Forbidden — insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionError'
+        '404':
+          description: License not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundError'
+        '429':
+          description: Too many requests - rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequestsError'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+      tags:
+      - Team Licenses
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
   /v1/teams/{team_id}/users:
     get:
       summary: List all users in a team
@@ -5314,6 +5947,695 @@ paths:
     - url: https://api.supermetrics.com
       description: production server
       x-internal: false
+  /v1/teams/{team_id}/workspaces:
+    get:
+      summary: Get a list of workspaces for a team
+      description: Get a list of workspaces for a team
+      operationId: listWorkspaces
+      security:
+      - ApiKeyAuth:
+        - workspaces_read
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      responses:
+        '200':
+          description: Workspaces retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Workspaces
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
+    post:
+      summary: Create a new sub-workspace
+      description: Create a new sub-workspace
+      operationId: createWorkspace
+      security:
+      - ApiKeyAuth:
+        - workspaces_write
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      requestBody:
+        required: true
+        description: Workspace creation details
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkspaceCreateRequest'
+            example:
+              name: Marketing
+              parent_workspace_id: 71bc0582-31b5-11f1-a55c-4201ac182030
+      responses:
+        '201':
+          description: Workspace created successfully
+          headers:
+            Location:
+              description: URL of the newly created workspace
+              schema:
+                type: string
+                format: uri
+                maxLength: 2048
+            Access-Control-Allow-Origin:
+              description: Indicates which origins are allowed to access the resource
+              schema:
+                type: string
+                maxLength: 255
+                pattern: ^.+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Workspaces
+  /v1/teams/{team_id}/workspaces/{workspace_uuid}:
+    get:
+      summary: Get a single workspace by UUID
+      description: Get a single workspace by UUID
+      operationId: getWorkspace
+      security:
+      - ApiKeyAuth:
+        - workspaces_read
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - name: workspace_uuid
+        in: path
+        required: true
+        description: UUID of the workspace
+        example: 71bc0582-31b5-11f1-a55c-4201ac182030
+        schema:
+          type: string
+          format: uuid
+          maxLength: 36
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      responses:
+        '200':
+          description: Workspace retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Workspaces
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
+    patch:
+      summary: Update a workspace by UUID
+      description: Update a workspace by UUID
+      operationId: updateWorkspace
+      security:
+      - ApiKeyAuth:
+        - workspaces_write
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - name: workspace_uuid
+        in: path
+        required: true
+        description: UUID of the workspace
+        example: 71bc0582-31b5-11f1-a55c-4201ac182030
+        schema:
+          type: string
+          format: uuid
+          maxLength: 36
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      requestBody:
+        required: false
+        description: Workspace fields to update
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkspaceUpdateRequest'
+            example:
+              name: Updated Workspace
+      responses:
+        '200':
+          description: Workspace updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Workspaces
+  /v1/teams/{team_id}/workspaces/{workspace_uuid}/api_keys:
+    get:
+      summary: List API keys for a child workspace
+      description: Retrieve a list of all API keys belonging to a child workspace,
+        using a parent-team credential. Requires the workspaces_read scope in addition
+        to api_keys_read.
+      operationId: getWorkspaceApiKeys
+      security:
+      - ApiKeyAuth:
+        - api_keys_read
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/WorkspaceUuid__api_keys'
+      responses:
+        '200':
+          description: List of API keys retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - API Keys
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
+    post:
+      summary: Create an API key for a child workspace
+      description: Create a new API key for a child workspace, using a parent-team
+        credential. The key is scoped to the child workspace and can only be created
+        on behalf of a child-workspace user. Requires the workspaces_write scope in
+        addition to api_keys_write.
+      operationId: createWorkspaceApiKey
+      security:
+      - ApiKeyAuth:
+        - api_keys_write
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/WorkspaceUuid__api_keys'
+      requestBody:
+        description: API key creation parameters including permissions and access
+          controls
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  maxLength: 1000
+                  description: Internal API key description
+                scope_names:
+                  type: array
+                  maxItems: 100
+                  description: List of permission scopes for the API key.
+                  items:
+                    type: string
+                    maxLength: 100
+                allow_ips:
+                  type: array
+                  maxItems: 100
+                  description: List of fixed or CIDR formatted IP addresses allowed
+                    to use API key. Only IPv4 is supported.
+                  items:
+                    type: string
+                    maxLength: 255
+                is_enabled:
+                  type: boolean
+                  default: true
+                  description: Whether API key is enabled and can be used in requests
+                behalf_of_user_id:
+                  type: string
+                  nullable: true
+                  maxLength: 50
+                  pattern: ^[A-Za-z0-9_-]+$
+                  description: Supermetrics user ID the API key identifies as
+              required:
+              - scope_names
+              - behalf_of_user_id
+            example:
+              description: Workspace API key
+              scope_names:
+              - ds_queries_read
+              - ds_queries_run
+              - table_groups_read
+              allow_ips:
+              - 192.168.1.100
+              - 10.0.0.0/24
+              is_enabled: true
+              behalf_of_user_id: user_123456
+      responses:
+        '201':
+          description: API key created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - API Keys
+  /v1/teams/{team_id}/workspaces/{workspace_uuid}/api_keys/{api_key_id}:
+    get:
+      summary: Get an API key for a child workspace
+      description: Retrieve details of a specific API key belonging to a child workspace,
+        using a parent-team credential. Requires the workspaces_read scope in addition
+        to api_keys_read.
+      operationId: getWorkspaceApiKey
+      security:
+      - ApiKeyAuth:
+        - api_keys_read
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/WorkspaceUuid__api_keys'
+      - $ref: '#/components/parameters/ApiKeyId'
+      responses:
+        '200':
+          description: API key details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - API Keys
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
+    patch:
+      summary: Update an API key for a child workspace
+      description: Update an existing API key belonging to a child workspace, using
+        a parent-team credential. Requires the workspaces_write scope in addition
+        to api_keys_write.
+      operationId: updateWorkspaceApiKey
+      security:
+      - ApiKeyAuth:
+        - api_keys_write
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/WorkspaceUuid__api_keys'
+      - $ref: '#/components/parameters/ApiKeyId'
+      requestBody:
+        required: true
+        description: API key update parameters for modifying permissions and settings
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  maxLength: 1000
+                  description: Internal API key description
+                scope_names:
+                  type: array
+                  maxItems: 100
+                  description: List of permission scopes for the API key.
+                  items:
+                    type: string
+                    maxLength: 100
+                allow_ips:
+                  type: array
+                  maxItems: 100
+                  description: List of fixed or CIDR formatted IP addresses allowed
+                    to use API key. Only IPv4 is supported.
+                  items:
+                    type: string
+                    maxLength: 255
+                is_enabled:
+                  type: boolean
+                  description: Whether API key is enabled and can be used in requests
+                behalf_of_user_id:
+                  type: string
+                  nullable: true
+                  maxLength: 50
+                  pattern: ^[A-Za-z0-9_-]+$
+                  description: Supermetrics user ID the API key identifies as. Use
+                    null to remove previously saved value.
+            example:
+              description: Updated workspace API key
+              scope_names:
+              - ds_queries_read
+              - ds_queries_run
+              - table_groups_read
+              - team_lists_read
+              allow_ips:
+              - 192.168.1.0/24
+              is_enabled: false
+              behalf_of_user_id: null
+      responses:
+        '200':
+          description: API key updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - API Keys
+  /v1/teams/{team_id}/workspaces/{workspace_uuid}/users:
+    get:
+      summary: Get all users in a workspace
+      description: Get all users in a workspace
+      operationId: listWorkspaceUsers
+      security:
+      - ApiKeyAuth:
+        - workspace_users_read
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/WorkspaceUuid'
+      responses:
+        '200':
+          description: Workspace users retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceUserListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Workspaces
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
+  /v1/teams/{team_id}/workspaces/{workspace_uuid}/users/invites:
+    get:
+      summary: Get pending invitations for a workspace
+      description: Get pending invitations for a workspace
+      operationId: listWorkspaceUserInvites
+      security:
+      - ApiKeyAuth:
+        - workspace_users_read
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/WorkspaceUuid'
+      responses:
+        '200':
+          description: Pending invitations retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceInviteListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Workspaces
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
+    patch:
+      summary: Update invitation status for a workspace
+      description: Update invitation status for a workspace
+      operationId: updateWorkspaceUserInvite
+      security:
+      - ApiKeyAuth:
+        - workspace_users_write
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/WorkspaceUuid'
+      requestBody:
+        required: true
+        description: Invitation update details
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkspaceInviteStatusUpdateRequest'
+            example:
+              email: user@example.com
+              status: cancelled
+      responses:
+        '200':
+          description: Invitation updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceInviteResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Workspaces
+    post:
+      summary: Invite users to a workspace
+      description: Invite users to a workspace
+      operationId: inviteWorkspaceUser
+      security:
+      - ApiKeyAuth:
+        - workspace_users_write
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/WorkspaceUuid'
+      requestBody:
+        required: true
+        description: Invitation details
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkspaceInviteRequest'
+            example:
+              invites:
+              - email: user@example.com
+                role: EDITOR
+      responses:
+        '201':
+          description: Users invited successfully
+          headers:
+            Location:
+              description: URL of the workspace invitations
+              schema:
+                type: string
+                format: uri
+                maxLength: 2048
+            Access-Control-Allow-Origin:
+              description: Indicates which origins are allowed to access the resource
+              schema:
+                type: string
+                maxLength: 255
+                pattern: ^.+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceInviteResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Workspaces
+  /v1/teams/{team_id}/workspaces/{workspace_uuid}/users/{user_id}:
+    delete:
+      summary: Remove a user from a workspace
+      description: Remove a user from a workspace
+      operationId: removeWorkspaceUser
+      security:
+      - ApiKeyAuth:
+        - workspace_users_write
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/WorkspaceUuid'
+      - name: user_id
+        in: path
+        required: true
+        description: The ID of the user to remove
+        example: 12345
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+      responses:
+        '204':
+          description: User removed from workspace successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Workspaces
+    servers:
+    - url: https://api.supermetrics.com
+      description: production server
+      x-internal: false
+    patch:
+      summary: Update a workspace user's role
+      description: Update a workspace user's role
+      operationId: updateWorkspaceUser
+      security:
+      - ApiKeyAuth:
+        - workspace_users_write
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/WorkspaceUuid'
+      - name: user_id
+        in: path
+        required: true
+        description: The ID of the user to update
+        example: 12345
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+      requestBody:
+        required: true
+        description: Role update details
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkspaceUserRoleUpdateRequest'
+            example:
+              role: EDITOR
+      responses:
+        '200':
+          description: Workspace user updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceUserResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      tags:
+      - Workspaces
 components:
   schemas:
     AbstractResponse:
@@ -5430,6 +6752,103 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/AccountTag'
+    ActionResult:
+      type: object
+      description: Result of a workspace action
+      properties:
+        result:
+          type: boolean
+          description: Whether the action completed successfully
+          example: true
+      required:
+      - result
+      additionalProperties: false
+    ApiKey:
+      type: object
+      properties:
+        '@type':
+          type: string
+          enum:
+          - api_key
+        api_key_id:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+          description: Supermetrics API key ID
+        created_time:
+          type: string
+          format: date-time
+          maxLength: 50
+          description: ISO 8601 datetime for when API key was created
+        description:
+          type: string
+          maxLength: 1000
+          description: Internal API key description
+        key_type:
+          type: string
+          maxLength: 50
+          description: Type of API key
+        key_start:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9_-]+$
+          description: First 10 characters from the API key value
+        key_value:
+          type: string
+          nullable: true
+          maxLength: 255
+          pattern: ^[A-Za-z0-9_-]+$
+          description: API key value as plain text, when requested. Defaults to null.
+        scope_names:
+          type: array
+          maxItems: 100
+          description: List of permission scopes for the API key
+          items:
+            type: string
+            maxLength: 100
+        allow_ips:
+          type: array
+          maxItems: 100
+          description: List of fixed or CIDR formatted IP addresses allowed to use
+            API key
+          items:
+            type: string
+            maxLength: 255
+            pattern: ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\/([0-9]|[1-2][0-9]|3[0-2]))?$
+        is_enabled:
+          type: boolean
+          description: Whether API key is enabled and can be used in requests
+        behalf_of_user_info:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          description: Supermetrics user the API key identifies as
+    ApiKeyListResponse:
+      type: object
+      description: Response envelope containing a list of API keys
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+        data:
+          type: array
+          maxItems: 1000
+          description: List of API keys
+          items:
+            $ref: '#/components/schemas/ApiKey'
+    ApiKeyResponse:
+      type: object
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+        data:
+          $ref: '#/components/schemas/ApiKey'
+    AssignResultData:
+      type: object
+      description: Result of a user assignment operation
+      properties:
+        result:
+          type: boolean
+          description: Whether the assignment was successful
+          example: true
     AuthMethod:
       type: object
       required:
@@ -5629,6 +7048,19 @@ components:
           additionalProperties: false
         data:
           $ref: '#/components/schemas/Backfill'
+    BadRequestError:
+      type: object
+      properties:
+        message:
+          type: string
+          maxLength: 255
+          pattern: ^.+$
+          description: Bad request error
+        code:
+          type: string
+          enum:
+          - BAD_REQUEST
+          description: BAD_REQUEST
     BlendBaseRequest:
       type: object
       description: Fields shared by the blend create and update requests. Concrete
@@ -8246,6 +9678,103 @@ components:
             type: data_source_field
             value: platform
         description: null
+    InternalServerError:
+      type: object
+      properties:
+        message:
+          type: string
+          maxLength: 255
+          pattern: ^.+$
+          description: Internal server error
+        code:
+          type: string
+          enum:
+          - INTERNAL_SERVER_ERROR
+          description: INTERNAL_SERVER_ERROR
+    LicenseData:
+      type: object
+      description: License resource
+      properties:
+        license_id:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+          description: Unique identifier of the license
+          example: 1
+        team_id:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+          description: ID of the team the license belongs to
+          example: 123
+        license_model:
+          type: string
+          maxLength: 50
+          pattern: ^.+
+          description: The licensing model type
+          example: team
+        status:
+          type: string
+          maxLength: 50
+          pattern: ^.+
+          description: Current status of the license
+          example: active
+        is_trial:
+          type: boolean
+          description: Whether this is a trial license
+          example: false
+        available_data_sources:
+          type: array
+          maxItems: 500
+          description: List of data source identifiers available under this license
+          example:
+          - GA
+          - FA
+          items:
+            type: string
+            maxLength: 100
+            pattern: ^[A-Za-z0-9_]+
+    LicenseListResponse:
+      type: object
+      description: Response envelope containing a list of licenses
+      properties:
+        meta:
+          type: object
+          description: Response metadata
+          example: {}
+          properties:
+            request_id:
+              type: string
+              maxLength: 36
+              pattern: ^[A-Za-z0-9_-]+
+              description: Unique ID of the request
+              example: RfNUgKPReZtgmzkqAFe4ArjuCQXQuaRr
+        data:
+          type: array
+          description: List of licenses
+          maxItems: 1000
+          example: []
+          items:
+            $ref: '#/components/schemas/LicenseData'
+    LicenseResponse:
+      type: object
+      description: Response envelope containing assignment result
+      properties:
+        meta:
+          type: object
+          description: Response metadata
+          example: {}
+          properties:
+            request_id:
+              type: string
+              maxLength: 36
+              pattern: ^[A-Za-z0-9_-]+
+              description: Unique ID of the request
+              example: RfNUgKPReZtgmzkqAFe4ArjuCQXQuaRr
+        data:
+          $ref: '#/components/schemas/AssignResultData'
     LogEntry:
       type: object
       description: A connector execution log entry.
@@ -8570,6 +10099,19 @@ components:
             - output_type: string.text.value
               label: STRING
           data_transformation_steps_limit: 10
+    NotFoundError:
+      type: object
+      properties:
+        message:
+          type: string
+          maxLength: 255
+          pattern: ^.+$
+          description: Not found
+        code:
+          type: string
+          enum:
+          - NOT_FOUND
+          description: NOT_FOUND
     OutputDataTypeOutput:
       type: object
       description: An output data type available for custom field transformations.
@@ -8699,6 +10241,52 @@ components:
           description: URL of the last page, or null when not applicable.
           example: null
       additionalProperties: false
+    PermissionError:
+      type: object
+      properties:
+        message:
+          type: string
+          maxLength: 255
+          pattern: ^.+$
+          description: Permission error
+        code:
+          type: string
+          enum:
+          - PERMISSION_ERROR
+          description: PERMISSION_ERROR
+    Query:
+      type: object
+      properties:
+        '@type':
+          type: string
+          enum:
+          - query
+        query_id:
+          type: string
+          maxLength: 50
+          description: Supermetrics query ID
+        slug:
+          type: string
+          maxLength: 255
+          description: Unique query slug string, used in query's short URL
+        name:
+          type: string
+          maxLength: 255
+          description: Custom query name
+        modified_time:
+          type: string
+          format: date-time
+          nullable: true
+          maxLength: 50
+          description: ISO 8601 datetime for when the saved query was last modified
+        ds_info:
+          $ref: '#/components/schemas/DataSource'
+        group_info:
+          $ref: '#/components/schemas/QueryGroup'
+        query_params:
+          type: object
+          description: Query parameters in key-value pairs, as expected by the get
+            data endpoint
     QueryDetails:
       type: object
       description: Per-query execution details within a transfer run.
@@ -8727,6 +10315,41 @@ components:
           nullable: true
           description: Error description if the query failed
           example: null
+    QueryGroup:
+      type: object
+      properties:
+        '@type':
+          type: string
+          enum:
+          - query_group
+        group_id:
+          type: string
+          maxLength: 50
+          description: Supermetrics query group ID
+        name:
+          type: string
+          maxLength: 255
+          description: Query group name
+    QueryListResponse:
+      type: object
+      description: Response envelope containing a list of saved queries
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+        data:
+          type: array
+          maxItems: 1000
+          description: List of saved queries
+          items:
+            $ref: '#/components/schemas/Query'
+    QueryResponse:
+      type: object
+      description: Response envelope containing a single saved query
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+        data:
+          $ref: '#/components/schemas/Query'
     RequestId:
       type: string
       description: Unique identifier for the request, for tracking and debugging.
@@ -9107,6 +10730,44 @@ components:
             $ref: '#/components/schemas/TeamData'
         required:
         - data
+    TeamSettings:
+      type: object
+      properties:
+        api_json_unescaped_slashes:
+          type: boolean
+          description: Whether to unescape forward slashes for all authenticated JSON
+            responses. Defaults to false. You might need to turn this when integrating
+            into some systems, such as BigQuery.
+        api_json_unescaped_unicode:
+          type: boolean
+          description: Whether to unescape unicode characters for all authenticated
+            JSON responses. Defaults to false. You might need to turn this on when
+            integrating into some systems, such as BigQuery.
+        query_default_timezone:
+          type: string
+          nullable: true
+          maxLength: 50
+          pattern: ^[A-Za-z0-9/_+-]+$
+          description: Default timezone to add to all queries that are missing one.
+            Value is either a valid database timezone name or null for system timezone.
+        tableau_default_no_headers:
+          type: boolean
+          description: Whether Tableau output format should hide header row by default
+            or not. Defaults to true for teams enrolled after June 2nd 2022.
+    TeamSettingsResponse:
+      type: object
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+        data:
+          allOf:
+          - $ref: '#/components/schemas/TeamSettings'
+          - type: object
+            properties:
+              '@type':
+                type: string
+                enum:
+                - team_settings
     TeamTransformationOutput:
       type: object
       description: A persisted custom field (field transformation) as returned by
@@ -9347,6 +11008,19 @@ components:
           nullable: true
           description: Error message if connection test failed, null on success
           example: null
+    TooManyRequestsError:
+      type: object
+      properties:
+        message:
+          type: string
+          maxLength: 255
+          pattern: ^.+$
+          description: Too many requests
+        code:
+          type: string
+          enum:
+          - TOO_MANY_REQUESTS
+          description: TOO_MANY_REQUESTS
     TransferAccount:
       type: object
       properties:
@@ -10053,6 +11727,19 @@ components:
         email: user@supermetrics.com
         first_name: John
         last_name: Doe
+    UnauthorizedError:
+      type: object
+      properties:
+        message:
+          type: string
+          maxLength: 255
+          pattern: ^.+$
+          description: Unauthorized access
+        code:
+          type: string
+          enum:
+          - UNAUTHORIZED
+          description: UNAUTHORIZED
     UpdateConnectorRequest:
       type: object
       description: Connector metadata and configuration to update.
@@ -10167,6 +11854,379 @@ components:
           description: List of validation errors (empty if valid)
           items:
             $ref: '#/components/schemas/ValidationError'
+    Workspace:
+      type: object
+      description: Workspace data
+      properties:
+        id:
+          type: string
+          format: uuid
+          maxLength: 36
+          description: UUID of the workspace
+          example: 71bc0582-31b5-11f1-a55c-4201ac182030
+        parent_id:
+          type: string
+          format: uuid
+          maxLength: 36
+          nullable: true
+          description: UUID of the parent workspace, or null for a zero-level workspace
+          example: 5d514fda-f2ec-4c6a-afb0-00ffe8066024
+        team_id:
+          type: integer
+          format: int64
+          nullable: true
+          minimum: 1
+          maximum: 9223372036854776000
+          description: ID of the team the workspace is linked to
+          example: 936506
+        date_created:
+          type: string
+          format: date
+          maxLength: 10
+          description: Date the workspace was created
+          example: '2026-06-15'
+        status:
+          type: string
+          maxLength: 32
+          pattern: ^.+
+          description: Status of the workspace
+          example: active
+        team_name:
+          type: string
+          maxLength: 50
+          nullable: true
+          description: Name of the workspace's team
+          example: Marketing
+        team_display_id:
+          type: string
+          maxLength: 255
+          nullable: true
+          description: Display ID of the workspace's team
+          example: Display Id 936506
+        parent_team_name:
+          type: string
+          maxLength: 50
+          nullable: true
+          description: Name of the parent workspace's team
+          example: Acme
+        parent_team_display_id:
+          type: string
+          maxLength: 255
+          nullable: true
+          description: Display ID of the parent workspace's team
+          example: Display Id 936505
+        subscription:
+          $ref: '#/components/schemas/WorkspaceSubscription'
+    WorkspaceCreateRequest:
+      type: object
+      description: Payload for creating a new sub-workspace.
+      required:
+      - name
+      - parent_workspace_id
+      properties:
+        name:
+          type: string
+          maxLength: 50
+          pattern: ^.+
+          description: Name of the new workspace
+          example: Marketing
+        parent_workspace_id:
+          type: string
+          format: uuid
+          maxLength: 36
+          description: UUID of the parent workspace
+          example: 71bc0582-31b5-11f1-a55c-4201ac182030
+      additionalProperties: false
+    WorkspaceInvitation:
+      type: object
+      description: Workspace invitation data
+      properties:
+        role:
+          type: string
+          enum:
+          - OWNER
+          - ADMIN
+          - EDITOR
+          - FINANCE
+          - VIEWER
+          description: Role assigned to the invited user
+          example: EDITOR
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          description: Email address of the invited user
+          example: user@example.com
+        date_sent:
+          type: string
+          format: date
+          maxLength: 10
+          description: Date the invitation was sent
+          example: '2026-06-15'
+    WorkspaceInviteListResponse:
+      description: Response envelope containing a list of workspace invitations
+      allOf:
+      - $ref: '#/components/schemas/AbstractResponse'
+      - type: object
+        properties:
+          data:
+            type: object
+            description: Workspace invitations payload
+            properties:
+              invitations:
+                type: array
+                description: List of workspace invitations
+                maxItems: 1000
+                items:
+                  $ref: '#/components/schemas/WorkspaceInvitation'
+        required:
+        - data
+    WorkspaceInviteRequest:
+      type: object
+      description: Users to invite to a workspace.
+      required:
+      - invites
+      properties:
+        invites:
+          type: array
+          description: List of user invitations with email and role
+          maxItems: 1
+          minItems: 1
+          example:
+          - email: user@example.com
+            role: EDITOR
+          items:
+            type: object
+            required:
+            - email
+            - role
+            properties:
+              email:
+                type: string
+                format: email
+                maxLength: 254
+                description: Email address of the user to invite
+              role:
+                type: string
+                enum:
+                - OWNER
+                - ADMIN
+                - EDITOR
+                - FINANCE
+                - VIEWER
+                description: Role to assign to the invited user
+      additionalProperties: false
+    WorkspaceInviteResponse:
+      description: Response envelope containing the result of a workspace invitation
+        action
+      allOf:
+      - $ref: '#/components/schemas/AbstractResponse'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/ActionResult'
+        required:
+        - data
+    WorkspaceInviteStatusUpdateRequest:
+      type: object
+      description: Invitation status update.
+      required:
+      - email
+      - status
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          description: Email of the user whose invitation to update
+          example: user@example.com
+        status:
+          type: string
+          enum:
+          - cancelled
+          description: New invitation status
+          example: cancelled
+      additionalProperties: false
+    WorkspaceListItem:
+      type: object
+      description: Workspace list item
+      allOf:
+      - $ref: '#/components/schemas/Workspace'
+      - type: object
+        properties:
+          workspace_user_count:
+            type: integer
+            format: int64
+            minimum: 0
+            maximum: 9223372036854776000
+            description: Number of users in the workspace
+            example: 4
+    WorkspaceListResponse:
+      description: Response envelope containing a list of workspaces
+      allOf:
+      - $ref: '#/components/schemas/AbstractResponse'
+      - type: object
+        properties:
+          data:
+            type: object
+            description: Workspace list payload
+            properties:
+              workspaces:
+                type: array
+                description: List of workspaces
+                maxItems: 1000
+                items:
+                  $ref: '#/components/schemas/WorkspaceListItem'
+              unique_users_in_workspaces_count:
+                type: integer
+                format: int64
+                minimum: 0
+                maximum: 9223372036854776000
+                description: Count of unique users across all workspaces
+                example: 12
+        required:
+        - data
+    WorkspaceResponse:
+      description: Response envelope containing workspace data
+      allOf:
+      - $ref: '#/components/schemas/AbstractResponse'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/Workspace'
+        required:
+        - data
+    WorkspaceSubscription:
+      type: object
+      nullable: true
+      description: Subscription details of the workspace, or null when none is active
+      properties:
+        end_date:
+          type: string
+          format: date
+          maxLength: 10
+          description: End date of the subscription
+          example: '2026-12-31'
+        assigned_seats:
+          type: integer
+          format: int64
+          minimum: 0
+          maximum: 9223372036854776000
+          description: Number of assigned seats
+          example: 5
+        total_seats:
+          type: integer
+          format: int64
+          minimum: 0
+          maximum: 9223372036854776000
+          description: Total number of seats
+          example: 10
+        destinations:
+          type: array
+          description: Destinations enabled by the subscription
+          maxItems: 1000
+          items:
+            type: string
+            maxLength: 255
+    WorkspaceUpdateRequest:
+      type: object
+      description: Workspace fields to update.
+      properties:
+        name:
+          type: string
+          maxLength: 50
+          pattern: ^.+
+          description: New name of the workspace
+          example: Updated Workspace
+      additionalProperties: false
+    WorkspaceUser:
+      type: object
+      description: Workspace user data
+      properties:
+        user_id:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 9223372036854776000
+          description: ID of the user
+          example: 12345
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          description: Email address of the user
+          example: user@example.com
+        first_name:
+          type: string
+          maxLength: 255
+          description: First name of the user
+          example: Ada
+        last_name:
+          type: string
+          maxLength: 255
+          description: Last name of the user
+          example: Lovelace
+        role:
+          type: string
+          enum:
+          - OWNER
+          - ADMIN
+          - EDITOR
+          - FINANCE
+          - VIEWER
+          description: Role of the user in the workspace
+          example: EDITOR
+    WorkspaceUserListResponse:
+      description: Response envelope containing a list of workspace users
+      allOf:
+      - $ref: '#/components/schemas/AbstractResponse'
+      - type: object
+        properties:
+          data:
+            type: object
+            description: Workspace users payload
+            properties:
+              public_uuid:
+                type: string
+                format: uuid
+                maxLength: 36
+                description: UUID of the workspace
+                example: 71bc0582-31b5-11f1-a55c-4201ac182030
+              users:
+                type: array
+                description: List of workspace users
+                maxItems: 1000
+                items:
+                  $ref: '#/components/schemas/WorkspaceUser'
+        required:
+        - data
+    WorkspaceUserResponse:
+      description: Response envelope containing workspace user data
+      allOf:
+      - $ref: '#/components/schemas/AbstractResponse'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/WorkspaceUser'
+        required:
+        - data
+    WorkspaceUserRoleUpdateRequest:
+      type: object
+      description: New role to assign to a workspace user.
+      required:
+      - role
+      properties:
+        role:
+          type: string
+          enum:
+          - OWNER
+          - ADMIN
+          - EDITOR
+          - FINANCE
+          - VIEWER
+          description: New role for the workspace user
+          example: EDITOR
+      additionalProperties: false
   responses:
     BadRequest:
       description: Bad request - invalid parameters
@@ -11196,6 +13256,16 @@ components:
               code: UNPROCESSABLE_ENTITY
               message: Validation failed for the request parameters.
   parameters:
+    ApiKeyId:
+      name: api_key_id
+      in: path
+      required: true
+      description: Supermetrics API key ID
+      example: key_123456
+      schema:
+        type: string
+        maxLength: 50
+        pattern: ^[A-Za-z0-9_-]+$
     ConnectorIdentifierPath:
       name: connector_identifier
       in: path
@@ -11268,6 +13338,28 @@ components:
         minimum: 1
         maximum: 9223372036854775807
       example: 936506
+    WorkspaceUuid:
+      name: workspace_uuid
+      in: path
+      required: true
+      description: UUID of the workspace
+      example: 71bc0582-31b5-11f1-a55c-4201ac182030
+      schema:
+        type: string
+        format: uuid
+        maxLength: 36
+        pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+    WorkspaceUuid__api_keys:
+      name: workspace_uuid
+      in: path
+      required: true
+      description: UUID of the child workspace
+      example: 71bc0582-31b5-11f1-a55c-4201ac182030
+      schema:
+        type: string
+        format: uuid
+        maxLength: 36
+        pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
   headers:
     Access-Control-Allow-Origin:
       description: CORS header

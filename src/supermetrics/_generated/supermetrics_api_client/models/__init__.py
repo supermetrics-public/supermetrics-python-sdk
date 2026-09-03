@@ -7,6 +7,11 @@ from .account_tag_list_response import AccountTagListResponse
 from .account_tag_list_response_data import AccountTagListResponseData
 from .account_tag_overview import AccountTagOverview
 from .account_tag_response import AccountTagResponse
+from .action_result import ActionResult
+from .api_key import ApiKey
+from .api_key_list_response import ApiKeyListResponse
+from .api_key_response import ApiKeyResponse
+from .api_key_type import ApiKeyType
 from .append_accounts_to_group_body import AppendAccountsToGroupBody
 from .append_accounts_to_group_body_data_sources_item import AppendAccountsToGroupBodyDataSourcesItem
 from .append_accounts_to_group_response_400 import AppendAccountsToGroupResponse400
@@ -17,12 +22,16 @@ from .append_accounts_to_group_response_429 import AppendAccountsToGroupResponse
 from .append_accounts_to_group_response_429_meta import AppendAccountsToGroupResponse429Meta
 from .append_accounts_to_group_response_500 import AppendAccountsToGroupResponse500
 from .append_accounts_to_group_response_500_meta import AppendAccountsToGroupResponse500Meta
+from .assign_result_data import AssignResultData
+from .assign_team_license_users_body import AssignTeamLicenseUsersBody
 from .auth_method import AuthMethod
 from .available_sources_response import AvailableSourcesResponse
 from .backfill import Backfill
 from .backfill_response import BackfillResponse
 from .backfill_response_meta import BackfillResponseMeta
 from .backfill_status import BackfillStatus
+from .bad_request_error import BadRequestError
+from .bad_request_error_code import BadRequestErrorCode
 from .batch_create_transfers_body import BatchCreateTransfersBody
 from .batch_create_transfers_response_200 import BatchCreateTransfersResponse200
 from .batch_create_transfers_response_200_data import BatchCreateTransfersResponse200Data
@@ -272,6 +281,17 @@ from .create_login_link_response_429_meta import CreateLoginLinkResponse429Meta
 from .create_login_link_response_500 import CreateLoginLinkResponse500
 from .create_login_link_response_500_meta import CreateLoginLinkResponse500Meta
 from .create_secret_request import CreateSecretRequest
+from .create_team_api_key_body import CreateTeamApiKeyBody
+from .create_team_api_key_response_400 import CreateTeamApiKeyResponse400
+from .create_team_api_key_response_400_meta import CreateTeamApiKeyResponse400Meta
+from .create_team_api_key_response_401 import CreateTeamApiKeyResponse401
+from .create_team_api_key_response_401_meta import CreateTeamApiKeyResponse401Meta
+from .create_team_api_key_response_422 import CreateTeamApiKeyResponse422
+from .create_team_api_key_response_422_meta import CreateTeamApiKeyResponse422Meta
+from .create_team_api_key_response_429 import CreateTeamApiKeyResponse429
+from .create_team_api_key_response_429_meta import CreateTeamApiKeyResponse429Meta
+from .create_team_api_key_response_500 import CreateTeamApiKeyResponse500
+from .create_team_api_key_response_500_meta import CreateTeamApiKeyResponse500Meta
 from .create_transfer_response_400 import CreateTransferResponse400
 from .create_transfer_response_400_meta import CreateTransferResponse400Meta
 from .create_transfer_response_401 import CreateTransferResponse401
@@ -296,6 +316,29 @@ from .create_transformation_response_429 import CreateTransformationResponse429
 from .create_transformation_response_429_meta import CreateTransformationResponse429Meta
 from .create_transformation_response_500 import CreateTransformationResponse500
 from .create_transformation_response_500_meta import CreateTransformationResponse500Meta
+from .create_workspace_api_key_body import CreateWorkspaceApiKeyBody
+from .create_workspace_api_key_response_400 import CreateWorkspaceApiKeyResponse400
+from .create_workspace_api_key_response_400_meta import CreateWorkspaceApiKeyResponse400Meta
+from .create_workspace_api_key_response_401 import CreateWorkspaceApiKeyResponse401
+from .create_workspace_api_key_response_401_meta import CreateWorkspaceApiKeyResponse401Meta
+from .create_workspace_api_key_response_404 import CreateWorkspaceApiKeyResponse404
+from .create_workspace_api_key_response_404_meta import CreateWorkspaceApiKeyResponse404Meta
+from .create_workspace_api_key_response_422 import CreateWorkspaceApiKeyResponse422
+from .create_workspace_api_key_response_422_meta import CreateWorkspaceApiKeyResponse422Meta
+from .create_workspace_api_key_response_429 import CreateWorkspaceApiKeyResponse429
+from .create_workspace_api_key_response_429_meta import CreateWorkspaceApiKeyResponse429Meta
+from .create_workspace_api_key_response_500 import CreateWorkspaceApiKeyResponse500
+from .create_workspace_api_key_response_500_meta import CreateWorkspaceApiKeyResponse500Meta
+from .create_workspace_response_400 import CreateWorkspaceResponse400
+from .create_workspace_response_400_meta import CreateWorkspaceResponse400Meta
+from .create_workspace_response_401 import CreateWorkspaceResponse401
+from .create_workspace_response_401_meta import CreateWorkspaceResponse401Meta
+from .create_workspace_response_404 import CreateWorkspaceResponse404
+from .create_workspace_response_404_meta import CreateWorkspaceResponse404Meta
+from .create_workspace_response_429 import CreateWorkspaceResponse429
+from .create_workspace_response_429_meta import CreateWorkspaceResponse429Meta
+from .create_workspace_response_500 import CreateWorkspaceResponse500
+from .create_workspace_response_500_meta import CreateWorkspaceResponse500Meta
 from .custom_field_create_request import CustomFieldCreateRequest
 from .custom_field_create_request_data_source_item import CustomFieldCreateRequestDataSourceItem
 from .custom_field_create_request_field_type import CustomFieldCreateRequestFieldType
@@ -645,6 +688,34 @@ from .get_login_link_response_429 import GetLoginLinkResponse429
 from .get_login_link_response_429_meta import GetLoginLinkResponse429Meta
 from .get_login_link_response_500 import GetLoginLinkResponse500
 from .get_login_link_response_500_meta import GetLoginLinkResponse500Meta
+from .get_query_response_401 import GetQueryResponse401
+from .get_query_response_401_meta import GetQueryResponse401Meta
+from .get_query_response_404 import GetQueryResponse404
+from .get_query_response_404_meta import GetQueryResponse404Meta
+from .get_query_response_422 import GetQueryResponse422
+from .get_query_response_422_meta import GetQueryResponse422Meta
+from .get_query_response_429 import GetQueryResponse429
+from .get_query_response_429_meta import GetQueryResponse429Meta
+from .get_query_response_500 import GetQueryResponse500
+from .get_query_response_500_meta import GetQueryResponse500Meta
+from .get_team_api_key_response_400 import GetTeamApiKeyResponse400
+from .get_team_api_key_response_400_meta import GetTeamApiKeyResponse400Meta
+from .get_team_api_key_response_401 import GetTeamApiKeyResponse401
+from .get_team_api_key_response_401_meta import GetTeamApiKeyResponse401Meta
+from .get_team_api_key_response_404 import GetTeamApiKeyResponse404
+from .get_team_api_key_response_404_meta import GetTeamApiKeyResponse404Meta
+from .get_team_api_key_response_429 import GetTeamApiKeyResponse429
+from .get_team_api_key_response_429_meta import GetTeamApiKeyResponse429Meta
+from .get_team_api_key_response_500 import GetTeamApiKeyResponse500
+from .get_team_api_key_response_500_meta import GetTeamApiKeyResponse500Meta
+from .get_team_api_keys_response_400 import GetTeamApiKeysResponse400
+from .get_team_api_keys_response_400_meta import GetTeamApiKeysResponse400Meta
+from .get_team_api_keys_response_401 import GetTeamApiKeysResponse401
+from .get_team_api_keys_response_401_meta import GetTeamApiKeysResponse401Meta
+from .get_team_api_keys_response_429 import GetTeamApiKeysResponse429
+from .get_team_api_keys_response_429_meta import GetTeamApiKeysResponse429Meta
+from .get_team_api_keys_response_500 import GetTeamApiKeysResponse500
+from .get_team_api_keys_response_500_meta import GetTeamApiKeysResponse500Meta
 from .get_team_blends_response_400 import GetTeamBlendsResponse400
 from .get_team_blends_response_400_meta import GetTeamBlendsResponse400Meta
 from .get_team_blends_response_401 import GetTeamBlendsResponse401
@@ -664,6 +735,14 @@ from .get_team_response_429 import GetTeamResponse429
 from .get_team_response_429_meta import GetTeamResponse429Meta
 from .get_team_response_500 import GetTeamResponse500
 from .get_team_response_500_meta import GetTeamResponse500Meta
+from .get_team_settings_response_401 import GetTeamSettingsResponse401
+from .get_team_settings_response_401_meta import GetTeamSettingsResponse401Meta
+from .get_team_settings_response_422 import GetTeamSettingsResponse422
+from .get_team_settings_response_422_meta import GetTeamSettingsResponse422Meta
+from .get_team_settings_response_429 import GetTeamSettingsResponse429
+from .get_team_settings_response_429_meta import GetTeamSettingsResponse429Meta
+from .get_team_settings_response_500 import GetTeamSettingsResponse500
+from .get_team_settings_response_500_meta import GetTeamSettingsResponse500Meta
 from .get_transfer_options_response_401 import GetTransferOptionsResponse401
 from .get_transfer_options_response_401_meta import GetTransferOptionsResponse401Meta
 from .get_transfer_options_response_403 import GetTransferOptionsResponse403
@@ -692,6 +771,36 @@ from .get_transfer_run_response_429 import GetTransferRunResponse429
 from .get_transfer_run_response_429_meta import GetTransferRunResponse429Meta
 from .get_transfer_run_response_500 import GetTransferRunResponse500
 from .get_transfer_run_response_500_meta import GetTransferRunResponse500Meta
+from .get_workspace_api_key_response_400 import GetWorkspaceApiKeyResponse400
+from .get_workspace_api_key_response_400_meta import GetWorkspaceApiKeyResponse400Meta
+from .get_workspace_api_key_response_401 import GetWorkspaceApiKeyResponse401
+from .get_workspace_api_key_response_401_meta import GetWorkspaceApiKeyResponse401Meta
+from .get_workspace_api_key_response_404 import GetWorkspaceApiKeyResponse404
+from .get_workspace_api_key_response_404_meta import GetWorkspaceApiKeyResponse404Meta
+from .get_workspace_api_key_response_429 import GetWorkspaceApiKeyResponse429
+from .get_workspace_api_key_response_429_meta import GetWorkspaceApiKeyResponse429Meta
+from .get_workspace_api_key_response_500 import GetWorkspaceApiKeyResponse500
+from .get_workspace_api_key_response_500_meta import GetWorkspaceApiKeyResponse500Meta
+from .get_workspace_api_keys_response_400 import GetWorkspaceApiKeysResponse400
+from .get_workspace_api_keys_response_400_meta import GetWorkspaceApiKeysResponse400Meta
+from .get_workspace_api_keys_response_401 import GetWorkspaceApiKeysResponse401
+from .get_workspace_api_keys_response_401_meta import GetWorkspaceApiKeysResponse401Meta
+from .get_workspace_api_keys_response_404 import GetWorkspaceApiKeysResponse404
+from .get_workspace_api_keys_response_404_meta import GetWorkspaceApiKeysResponse404Meta
+from .get_workspace_api_keys_response_429 import GetWorkspaceApiKeysResponse429
+from .get_workspace_api_keys_response_429_meta import GetWorkspaceApiKeysResponse429Meta
+from .get_workspace_api_keys_response_500 import GetWorkspaceApiKeysResponse500
+from .get_workspace_api_keys_response_500_meta import GetWorkspaceApiKeysResponse500Meta
+from .get_workspace_response_400 import GetWorkspaceResponse400
+from .get_workspace_response_400_meta import GetWorkspaceResponse400Meta
+from .get_workspace_response_401 import GetWorkspaceResponse401
+from .get_workspace_response_401_meta import GetWorkspaceResponse401Meta
+from .get_workspace_response_404 import GetWorkspaceResponse404
+from .get_workspace_response_404_meta import GetWorkspaceResponse404Meta
+from .get_workspace_response_429 import GetWorkspaceResponse429
+from .get_workspace_response_429_meta import GetWorkspaceResponse429Meta
+from .get_workspace_response_500 import GetWorkspaceResponse500
+from .get_workspace_response_500_meta import GetWorkspaceResponse500Meta
 from .import_table_group_body import ImportTableGroupBody
 from .import_table_group_response_400 import ImportTableGroupResponse400
 from .import_table_group_response_400_error import ImportTableGroupResponse400Error
@@ -707,6 +816,23 @@ from .import_table_group_response_429 import ImportTableGroupResponse429
 from .import_table_group_response_429_meta import ImportTableGroupResponse429Meta
 from .import_table_group_response_500 import ImportTableGroupResponse500
 from .import_table_group_response_500_error import ImportTableGroupResponse500Error
+from .internal_server_error import InternalServerError
+from .internal_server_error_code import InternalServerErrorCode
+from .invite_workspace_user_response_400 import InviteWorkspaceUserResponse400
+from .invite_workspace_user_response_400_meta import InviteWorkspaceUserResponse400Meta
+from .invite_workspace_user_response_401 import InviteWorkspaceUserResponse401
+from .invite_workspace_user_response_401_meta import InviteWorkspaceUserResponse401Meta
+from .invite_workspace_user_response_404 import InviteWorkspaceUserResponse404
+from .invite_workspace_user_response_404_meta import InviteWorkspaceUserResponse404Meta
+from .invite_workspace_user_response_429 import InviteWorkspaceUserResponse429
+from .invite_workspace_user_response_429_meta import InviteWorkspaceUserResponse429Meta
+from .invite_workspace_user_response_500 import InviteWorkspaceUserResponse500
+from .invite_workspace_user_response_500_meta import InviteWorkspaceUserResponse500Meta
+from .license_data import LicenseData
+from .license_list_response import LicenseListResponse
+from .license_list_response_meta import LicenseListResponseMeta
+from .license_response import LicenseResponse
+from .license_response_meta import LicenseResponseMeta
 from .list_connector_logs_response_200 import ListConnectorLogsResponse200
 from .list_connector_logs_response_400 import ListConnectorLogsResponse400
 from .list_connector_logs_response_400_meta import ListConnectorLogsResponse400Meta
@@ -785,6 +911,14 @@ from .list_login_links_response_429 import ListLoginLinksResponse429
 from .list_login_links_response_429_meta import ListLoginLinksResponse429Meta
 from .list_login_links_response_500 import ListLoginLinksResponse500
 from .list_login_links_response_500_meta import ListLoginLinksResponse500Meta
+from .list_queries_response_401 import ListQueriesResponse401
+from .list_queries_response_401_meta import ListQueriesResponse401Meta
+from .list_queries_response_422 import ListQueriesResponse422
+from .list_queries_response_422_meta import ListQueriesResponse422Meta
+from .list_queries_response_429 import ListQueriesResponse429
+from .list_queries_response_429_meta import ListQueriesResponse429Meta
+from .list_queries_response_500 import ListQueriesResponse500
+from .list_queries_response_500_meta import ListQueriesResponse500Meta
 from .list_table_groups_response_200 import ListTableGroupsResponse200
 from .list_table_groups_response_401 import ListTableGroupsResponse401
 from .list_table_groups_response_401_meta import ListTableGroupsResponse401Meta
@@ -820,6 +954,34 @@ from .list_transfers_response_429 import ListTransfersResponse429
 from .list_transfers_response_429_meta import ListTransfersResponse429Meta
 from .list_transfers_response_500 import ListTransfersResponse500
 from .list_transfers_response_500_meta import ListTransfersResponse500Meta
+from .list_workspace_user_invites_response_400 import ListWorkspaceUserInvitesResponse400
+from .list_workspace_user_invites_response_400_meta import ListWorkspaceUserInvitesResponse400Meta
+from .list_workspace_user_invites_response_401 import ListWorkspaceUserInvitesResponse401
+from .list_workspace_user_invites_response_401_meta import ListWorkspaceUserInvitesResponse401Meta
+from .list_workspace_user_invites_response_404 import ListWorkspaceUserInvitesResponse404
+from .list_workspace_user_invites_response_404_meta import ListWorkspaceUserInvitesResponse404Meta
+from .list_workspace_user_invites_response_429 import ListWorkspaceUserInvitesResponse429
+from .list_workspace_user_invites_response_429_meta import ListWorkspaceUserInvitesResponse429Meta
+from .list_workspace_user_invites_response_500 import ListWorkspaceUserInvitesResponse500
+from .list_workspace_user_invites_response_500_meta import ListWorkspaceUserInvitesResponse500Meta
+from .list_workspace_users_response_400 import ListWorkspaceUsersResponse400
+from .list_workspace_users_response_400_meta import ListWorkspaceUsersResponse400Meta
+from .list_workspace_users_response_401 import ListWorkspaceUsersResponse401
+from .list_workspace_users_response_401_meta import ListWorkspaceUsersResponse401Meta
+from .list_workspace_users_response_404 import ListWorkspaceUsersResponse404
+from .list_workspace_users_response_404_meta import ListWorkspaceUsersResponse404Meta
+from .list_workspace_users_response_429 import ListWorkspaceUsersResponse429
+from .list_workspace_users_response_429_meta import ListWorkspaceUsersResponse429Meta
+from .list_workspace_users_response_500 import ListWorkspaceUsersResponse500
+from .list_workspace_users_response_500_meta import ListWorkspaceUsersResponse500Meta
+from .list_workspaces_response_400 import ListWorkspacesResponse400
+from .list_workspaces_response_400_meta import ListWorkspacesResponse400Meta
+from .list_workspaces_response_401 import ListWorkspacesResponse401
+from .list_workspaces_response_401_meta import ListWorkspacesResponse401Meta
+from .list_workspaces_response_429 import ListWorkspacesResponse429
+from .list_workspaces_response_429_meta import ListWorkspacesResponse429Meta
+from .list_workspaces_response_500 import ListWorkspacesResponse500
+from .list_workspaces_response_500_meta import ListWorkspacesResponse500Meta
 from .log_entry import LogEntry
 from .login_link import LoginLink
 from .login_link_response import LoginLinkResponse
@@ -839,12 +1001,23 @@ from .metadata_output_data_output_data_types import MetadataOutputDataOutputData
 from .metadata_output_data_rules import MetadataOutputDataRules
 from .metadata_output_data_rules_condition import MetadataOutputDataRulesCondition
 from .metadata_output_data_rules_lookup import MetadataOutputDataRulesLookup
+from .not_found_error import NotFoundError
+from .not_found_error_code import NotFoundErrorCode
 from .output_data_type_output import OutputDataTypeOutput
 from .paginated_transformations_output import PaginatedTransformationsOutput
 from .paginated_transformations_output_data import PaginatedTransformationsOutputData
 from .pagination import Pagination
 from .pagination_links import PaginationLinks
+from .permission_error import PermissionError_
+from .permission_error_code import PermissionErrorCode
+from .query import Query
 from .query_details import QueryDetails
+from .query_group import QueryGroup
+from .query_group_type import QueryGroupType
+from .query_list_response import QueryListResponse
+from .query_query_params import QueryQueryParams
+from .query_response import QueryResponse
+from .query_type import QueryType
 from .remove_accounts_from_group_body import RemoveAccountsFromGroupBody
 from .remove_accounts_from_group_body_data_sources_item import RemoveAccountsFromGroupBodyDataSourcesItem
 from .remove_accounts_from_group_response_400 import RemoveAccountsFromGroupResponse400
@@ -855,6 +1028,16 @@ from .remove_accounts_from_group_response_429 import RemoveAccountsFromGroupResp
 from .remove_accounts_from_group_response_429_meta import RemoveAccountsFromGroupResponse429Meta
 from .remove_accounts_from_group_response_500 import RemoveAccountsFromGroupResponse500
 from .remove_accounts_from_group_response_500_meta import RemoveAccountsFromGroupResponse500Meta
+from .remove_workspace_user_response_400 import RemoveWorkspaceUserResponse400
+from .remove_workspace_user_response_400_meta import RemoveWorkspaceUserResponse400Meta
+from .remove_workspace_user_response_401 import RemoveWorkspaceUserResponse401
+from .remove_workspace_user_response_401_meta import RemoveWorkspaceUserResponse401Meta
+from .remove_workspace_user_response_404 import RemoveWorkspaceUserResponse404
+from .remove_workspace_user_response_404_meta import RemoveWorkspaceUserResponse404Meta
+from .remove_workspace_user_response_429 import RemoveWorkspaceUserResponse429
+from .remove_workspace_user_response_429_meta import RemoveWorkspaceUserResponse429Meta
+from .remove_workspace_user_response_500 import RemoveWorkspaceUserResponse500
+from .remove_workspace_user_response_500_meta import RemoveWorkspaceUserResponse500Meta
 from .resource_url import ResourceURL
 from .response_meta import ResponseMeta
 from .response_meta_with_pagination import ResponseMetaWithPagination
@@ -889,6 +1072,10 @@ from .table_group_write_response_links import TableGroupWriteResponseLinks
 from .table_group_write_response_type import TableGroupWriteResponseType
 from .team_data import TeamData
 from .team_response import TeamResponse
+from .team_settings import TeamSettings
+from .team_settings_response import TeamSettingsResponse
+from .team_settings_response_data import TeamSettingsResponseData
+from .team_settings_response_data_type import TeamSettingsResponseDataType
 from .team_transformation_output import TeamTransformationOutput
 from .team_transformation_output_definition import TeamTransformationOutputDefinition
 from .team_transformation_output_field_type import TeamTransformationOutputFieldType
@@ -910,6 +1097,8 @@ from .test_connection_response_429_meta import TestConnectionResponse429Meta
 from .test_connection_response_500 import TestConnectionResponse500
 from .test_connection_response_500_meta import TestConnectionResponse500Meta
 from .test_connection_result import TestConnectionResult
+from .too_many_requests_error import TooManyRequestsError
+from .too_many_requests_error_code import TooManyRequestsErrorCode
 from .transfer_account import TransferAccount
 from .transfer_backfill_run_error import TransferBackfillRunError
 from .transfer_configuration_request import TransferConfigurationRequest
@@ -950,6 +1139,8 @@ from .transfer_segment import TransferSegment
 from .transfer_state_update_response import TransferStateUpdateResponse
 from .transfer_updated_response import TransferUpdatedResponse
 from .transformation_user_output import TransformationUserOutput
+from .unauthorized_error import UnauthorizedError
+from .unauthorized_error_code import UnauthorizedErrorCode
 from .update_account_group_body import UpdateAccountGroupBody
 from .update_account_group_response_400 import UpdateAccountGroupResponse400
 from .update_account_group_response_400_meta import UpdateAccountGroupResponse400Meta
@@ -1049,6 +1240,27 @@ from .update_login_link_response_429_meta import UpdateLoginLinkResponse429Meta
 from .update_login_link_response_500 import UpdateLoginLinkResponse500
 from .update_login_link_response_500_meta import UpdateLoginLinkResponse500Meta
 from .update_secret_request import UpdateSecretRequest
+from .update_team_api_key_body import UpdateTeamApiKeyBody
+from .update_team_api_key_response_400 import UpdateTeamApiKeyResponse400
+from .update_team_api_key_response_400_meta import UpdateTeamApiKeyResponse400Meta
+from .update_team_api_key_response_401 import UpdateTeamApiKeyResponse401
+from .update_team_api_key_response_401_meta import UpdateTeamApiKeyResponse401Meta
+from .update_team_api_key_response_404 import UpdateTeamApiKeyResponse404
+from .update_team_api_key_response_404_meta import UpdateTeamApiKeyResponse404Meta
+from .update_team_api_key_response_422 import UpdateTeamApiKeyResponse422
+from .update_team_api_key_response_422_meta import UpdateTeamApiKeyResponse422Meta
+from .update_team_api_key_response_429 import UpdateTeamApiKeyResponse429
+from .update_team_api_key_response_429_meta import UpdateTeamApiKeyResponse429Meta
+from .update_team_api_key_response_500 import UpdateTeamApiKeyResponse500
+from .update_team_api_key_response_500_meta import UpdateTeamApiKeyResponse500Meta
+from .update_team_settings_response_401 import UpdateTeamSettingsResponse401
+from .update_team_settings_response_401_meta import UpdateTeamSettingsResponse401Meta
+from .update_team_settings_response_422 import UpdateTeamSettingsResponse422
+from .update_team_settings_response_422_meta import UpdateTeamSettingsResponse422Meta
+from .update_team_settings_response_429 import UpdateTeamSettingsResponse429
+from .update_team_settings_response_429_meta import UpdateTeamSettingsResponse429Meta
+from .update_team_settings_response_500 import UpdateTeamSettingsResponse500
+from .update_team_settings_response_500_meta import UpdateTeamSettingsResponse500Meta
 from .update_transfer_response_400 import UpdateTransferResponse400
 from .update_transfer_response_400_meta import UpdateTransferResponse400Meta
 from .update_transfer_response_401 import UpdateTransferResponse401
@@ -1073,6 +1285,49 @@ from .update_transformation_response_429 import UpdateTransformationResponse429
 from .update_transformation_response_429_meta import UpdateTransformationResponse429Meta
 from .update_transformation_response_500 import UpdateTransformationResponse500
 from .update_transformation_response_500_meta import UpdateTransformationResponse500Meta
+from .update_workspace_api_key_body import UpdateWorkspaceApiKeyBody
+from .update_workspace_api_key_response_400 import UpdateWorkspaceApiKeyResponse400
+from .update_workspace_api_key_response_400_meta import UpdateWorkspaceApiKeyResponse400Meta
+from .update_workspace_api_key_response_401 import UpdateWorkspaceApiKeyResponse401
+from .update_workspace_api_key_response_401_meta import UpdateWorkspaceApiKeyResponse401Meta
+from .update_workspace_api_key_response_404 import UpdateWorkspaceApiKeyResponse404
+from .update_workspace_api_key_response_404_meta import UpdateWorkspaceApiKeyResponse404Meta
+from .update_workspace_api_key_response_422 import UpdateWorkspaceApiKeyResponse422
+from .update_workspace_api_key_response_422_meta import UpdateWorkspaceApiKeyResponse422Meta
+from .update_workspace_api_key_response_429 import UpdateWorkspaceApiKeyResponse429
+from .update_workspace_api_key_response_429_meta import UpdateWorkspaceApiKeyResponse429Meta
+from .update_workspace_api_key_response_500 import UpdateWorkspaceApiKeyResponse500
+from .update_workspace_api_key_response_500_meta import UpdateWorkspaceApiKeyResponse500Meta
+from .update_workspace_response_400 import UpdateWorkspaceResponse400
+from .update_workspace_response_400_meta import UpdateWorkspaceResponse400Meta
+from .update_workspace_response_401 import UpdateWorkspaceResponse401
+from .update_workspace_response_401_meta import UpdateWorkspaceResponse401Meta
+from .update_workspace_response_404 import UpdateWorkspaceResponse404
+from .update_workspace_response_404_meta import UpdateWorkspaceResponse404Meta
+from .update_workspace_response_429 import UpdateWorkspaceResponse429
+from .update_workspace_response_429_meta import UpdateWorkspaceResponse429Meta
+from .update_workspace_response_500 import UpdateWorkspaceResponse500
+from .update_workspace_response_500_meta import UpdateWorkspaceResponse500Meta
+from .update_workspace_user_invite_response_400 import UpdateWorkspaceUserInviteResponse400
+from .update_workspace_user_invite_response_400_meta import UpdateWorkspaceUserInviteResponse400Meta
+from .update_workspace_user_invite_response_401 import UpdateWorkspaceUserInviteResponse401
+from .update_workspace_user_invite_response_401_meta import UpdateWorkspaceUserInviteResponse401Meta
+from .update_workspace_user_invite_response_404 import UpdateWorkspaceUserInviteResponse404
+from .update_workspace_user_invite_response_404_meta import UpdateWorkspaceUserInviteResponse404Meta
+from .update_workspace_user_invite_response_429 import UpdateWorkspaceUserInviteResponse429
+from .update_workspace_user_invite_response_429_meta import UpdateWorkspaceUserInviteResponse429Meta
+from .update_workspace_user_invite_response_500 import UpdateWorkspaceUserInviteResponse500
+from .update_workspace_user_invite_response_500_meta import UpdateWorkspaceUserInviteResponse500Meta
+from .update_workspace_user_response_400 import UpdateWorkspaceUserResponse400
+from .update_workspace_user_response_400_meta import UpdateWorkspaceUserResponse400Meta
+from .update_workspace_user_response_401 import UpdateWorkspaceUserResponse401
+from .update_workspace_user_response_401_meta import UpdateWorkspaceUserResponse401Meta
+from .update_workspace_user_response_404 import UpdateWorkspaceUserResponse404
+from .update_workspace_user_response_404_meta import UpdateWorkspaceUserResponse404Meta
+from .update_workspace_user_response_429 import UpdateWorkspaceUserResponse429
+from .update_workspace_user_response_429_meta import UpdateWorkspaceUserResponse429Meta
+from .update_workspace_user_response_500 import UpdateWorkspaceUserResponse500
+from .update_workspace_user_response_500_meta import UpdateWorkspaceUserResponse500Meta
 from .upload_connector_logo_body import UploadConnectorLogoBody
 from .upload_connector_logo_response_201 import UploadConnectorLogoResponse201
 from .upload_connector_logo_response_400 import UploadConnectorLogoResponse400
@@ -1109,6 +1364,31 @@ from .validate_transfer_update_response_500 import ValidateTransferUpdateRespons
 from .validate_transfer_update_response_500_meta import ValidateTransferUpdateResponse500Meta
 from .validation_error import ValidationError
 from .validation_errors_response import ValidationErrorsResponse
+from .workspace import Workspace
+from .workspace_create_request import WorkspaceCreateRequest
+from .workspace_invitation import WorkspaceInvitation
+from .workspace_invitation_role import WorkspaceInvitationRole
+from .workspace_invite_list_response import WorkspaceInviteListResponse
+from .workspace_invite_list_response_data import WorkspaceInviteListResponseData
+from .workspace_invite_request import WorkspaceInviteRequest
+from .workspace_invite_request_invites_item import WorkspaceInviteRequestInvitesItem
+from .workspace_invite_request_invites_item_role import WorkspaceInviteRequestInvitesItemRole
+from .workspace_invite_response import WorkspaceInviteResponse
+from .workspace_invite_status_update_request import WorkspaceInviteStatusUpdateRequest
+from .workspace_invite_status_update_request_status import WorkspaceInviteStatusUpdateRequestStatus
+from .workspace_list_item import WorkspaceListItem
+from .workspace_list_response import WorkspaceListResponse
+from .workspace_list_response_data import WorkspaceListResponseData
+from .workspace_response import WorkspaceResponse
+from .workspace_subscription_type_0 import WorkspaceSubscriptionType0
+from .workspace_update_request import WorkspaceUpdateRequest
+from .workspace_user import WorkspaceUser
+from .workspace_user_list_response import WorkspaceUserListResponse
+from .workspace_user_list_response_data import WorkspaceUserListResponseData
+from .workspace_user_response import WorkspaceUserResponse
+from .workspace_user_role import WorkspaceUserRole
+from .workspace_user_role_update_request import WorkspaceUserRoleUpdateRequest
+from .workspace_user_role_update_request_role import WorkspaceUserRoleUpdateRequestRole
 
 __all__ = (
     "AbstractResponse",
@@ -1118,6 +1398,11 @@ __all__ = (
     "AccountTagListResponseData",
     "AccountTagOverview",
     "AccountTagResponse",
+    "ActionResult",
+    "ApiKey",
+    "ApiKeyListResponse",
+    "ApiKeyResponse",
+    "ApiKeyType",
     "AppendAccountsToGroupBody",
     "AppendAccountsToGroupBodyDataSourcesItem",
     "AppendAccountsToGroupResponse400",
@@ -1128,12 +1413,16 @@ __all__ = (
     "AppendAccountsToGroupResponse429Meta",
     "AppendAccountsToGroupResponse500",
     "AppendAccountsToGroupResponse500Meta",
+    "AssignResultData",
+    "AssignTeamLicenseUsersBody",
     "AuthMethod",
     "AvailableSourcesResponse",
     "Backfill",
     "BackfillResponse",
     "BackfillResponseMeta",
     "BackfillStatus",
+    "BadRequestError",
+    "BadRequestErrorCode",
     "BatchCreateTransfersBody",
     "BatchCreateTransfersResponse200",
     "BatchCreateTransfersResponse200Data",
@@ -1373,6 +1662,17 @@ __all__ = (
     "CreateLoginLinkResponse500",
     "CreateLoginLinkResponse500Meta",
     "CreateSecretRequest",
+    "CreateTeamApiKeyBody",
+    "CreateTeamApiKeyResponse400",
+    "CreateTeamApiKeyResponse400Meta",
+    "CreateTeamApiKeyResponse401",
+    "CreateTeamApiKeyResponse401Meta",
+    "CreateTeamApiKeyResponse422",
+    "CreateTeamApiKeyResponse422Meta",
+    "CreateTeamApiKeyResponse429",
+    "CreateTeamApiKeyResponse429Meta",
+    "CreateTeamApiKeyResponse500",
+    "CreateTeamApiKeyResponse500Meta",
     "CreateTransferResponse400",
     "CreateTransferResponse400Meta",
     "CreateTransferResponse401",
@@ -1397,6 +1697,29 @@ __all__ = (
     "CreateTransformationResponse429Meta",
     "CreateTransformationResponse500",
     "CreateTransformationResponse500Meta",
+    "CreateWorkspaceApiKeyBody",
+    "CreateWorkspaceApiKeyResponse400",
+    "CreateWorkspaceApiKeyResponse400Meta",
+    "CreateWorkspaceApiKeyResponse401",
+    "CreateWorkspaceApiKeyResponse401Meta",
+    "CreateWorkspaceApiKeyResponse404",
+    "CreateWorkspaceApiKeyResponse404Meta",
+    "CreateWorkspaceApiKeyResponse422",
+    "CreateWorkspaceApiKeyResponse422Meta",
+    "CreateWorkspaceApiKeyResponse429",
+    "CreateWorkspaceApiKeyResponse429Meta",
+    "CreateWorkspaceApiKeyResponse500",
+    "CreateWorkspaceApiKeyResponse500Meta",
+    "CreateWorkspaceResponse400",
+    "CreateWorkspaceResponse400Meta",
+    "CreateWorkspaceResponse401",
+    "CreateWorkspaceResponse401Meta",
+    "CreateWorkspaceResponse404",
+    "CreateWorkspaceResponse404Meta",
+    "CreateWorkspaceResponse429",
+    "CreateWorkspaceResponse429Meta",
+    "CreateWorkspaceResponse500",
+    "CreateWorkspaceResponse500Meta",
     "CustomFieldCreateRequest",
     "CustomFieldCreateRequestDataSourceItem",
     "CustomFieldCreateRequestFieldType",
@@ -1746,6 +2069,34 @@ __all__ = (
     "GetLoginLinkResponse429Meta",
     "GetLoginLinkResponse500",
     "GetLoginLinkResponse500Meta",
+    "GetQueryResponse401",
+    "GetQueryResponse401Meta",
+    "GetQueryResponse404",
+    "GetQueryResponse404Meta",
+    "GetQueryResponse422",
+    "GetQueryResponse422Meta",
+    "GetQueryResponse429",
+    "GetQueryResponse429Meta",
+    "GetQueryResponse500",
+    "GetQueryResponse500Meta",
+    "GetTeamApiKeyResponse400",
+    "GetTeamApiKeyResponse400Meta",
+    "GetTeamApiKeyResponse401",
+    "GetTeamApiKeyResponse401Meta",
+    "GetTeamApiKeyResponse404",
+    "GetTeamApiKeyResponse404Meta",
+    "GetTeamApiKeyResponse429",
+    "GetTeamApiKeyResponse429Meta",
+    "GetTeamApiKeyResponse500",
+    "GetTeamApiKeyResponse500Meta",
+    "GetTeamApiKeysResponse400",
+    "GetTeamApiKeysResponse400Meta",
+    "GetTeamApiKeysResponse401",
+    "GetTeamApiKeysResponse401Meta",
+    "GetTeamApiKeysResponse429",
+    "GetTeamApiKeysResponse429Meta",
+    "GetTeamApiKeysResponse500",
+    "GetTeamApiKeysResponse500Meta",
     "GetTeamBlendsResponse400",
     "GetTeamBlendsResponse400Meta",
     "GetTeamBlendsResponse401",
@@ -1765,6 +2116,14 @@ __all__ = (
     "GetTeamResponse429Meta",
     "GetTeamResponse500",
     "GetTeamResponse500Meta",
+    "GetTeamSettingsResponse401",
+    "GetTeamSettingsResponse401Meta",
+    "GetTeamSettingsResponse422",
+    "GetTeamSettingsResponse422Meta",
+    "GetTeamSettingsResponse429",
+    "GetTeamSettingsResponse429Meta",
+    "GetTeamSettingsResponse500",
+    "GetTeamSettingsResponse500Meta",
     "GetTransferOptionsResponse401",
     "GetTransferOptionsResponse401Meta",
     "GetTransferOptionsResponse403",
@@ -1793,6 +2152,36 @@ __all__ = (
     "GetTransferRunResponse429Meta",
     "GetTransferRunResponse500",
     "GetTransferRunResponse500Meta",
+    "GetWorkspaceApiKeyResponse400",
+    "GetWorkspaceApiKeyResponse400Meta",
+    "GetWorkspaceApiKeyResponse401",
+    "GetWorkspaceApiKeyResponse401Meta",
+    "GetWorkspaceApiKeyResponse404",
+    "GetWorkspaceApiKeyResponse404Meta",
+    "GetWorkspaceApiKeyResponse429",
+    "GetWorkspaceApiKeyResponse429Meta",
+    "GetWorkspaceApiKeyResponse500",
+    "GetWorkspaceApiKeyResponse500Meta",
+    "GetWorkspaceApiKeysResponse400",
+    "GetWorkspaceApiKeysResponse400Meta",
+    "GetWorkspaceApiKeysResponse401",
+    "GetWorkspaceApiKeysResponse401Meta",
+    "GetWorkspaceApiKeysResponse404",
+    "GetWorkspaceApiKeysResponse404Meta",
+    "GetWorkspaceApiKeysResponse429",
+    "GetWorkspaceApiKeysResponse429Meta",
+    "GetWorkspaceApiKeysResponse500",
+    "GetWorkspaceApiKeysResponse500Meta",
+    "GetWorkspaceResponse400",
+    "GetWorkspaceResponse400Meta",
+    "GetWorkspaceResponse401",
+    "GetWorkspaceResponse401Meta",
+    "GetWorkspaceResponse404",
+    "GetWorkspaceResponse404Meta",
+    "GetWorkspaceResponse429",
+    "GetWorkspaceResponse429Meta",
+    "GetWorkspaceResponse500",
+    "GetWorkspaceResponse500Meta",
     "ImportTableGroupBody",
     "ImportTableGroupResponse400",
     "ImportTableGroupResponse400Error",
@@ -1808,6 +2197,23 @@ __all__ = (
     "ImportTableGroupResponse429Meta",
     "ImportTableGroupResponse500",
     "ImportTableGroupResponse500Error",
+    "InternalServerError",
+    "InternalServerErrorCode",
+    "InviteWorkspaceUserResponse400",
+    "InviteWorkspaceUserResponse400Meta",
+    "InviteWorkspaceUserResponse401",
+    "InviteWorkspaceUserResponse401Meta",
+    "InviteWorkspaceUserResponse404",
+    "InviteWorkspaceUserResponse404Meta",
+    "InviteWorkspaceUserResponse429",
+    "InviteWorkspaceUserResponse429Meta",
+    "InviteWorkspaceUserResponse500",
+    "InviteWorkspaceUserResponse500Meta",
+    "LicenseData",
+    "LicenseListResponse",
+    "LicenseListResponseMeta",
+    "LicenseResponse",
+    "LicenseResponseMeta",
     "ListConnectorLogsResponse200",
     "ListConnectorLogsResponse400",
     "ListConnectorLogsResponse400Meta",
@@ -1886,6 +2292,14 @@ __all__ = (
     "ListLoginLinksResponse429Meta",
     "ListLoginLinksResponse500",
     "ListLoginLinksResponse500Meta",
+    "ListQueriesResponse401",
+    "ListQueriesResponse401Meta",
+    "ListQueriesResponse422",
+    "ListQueriesResponse422Meta",
+    "ListQueriesResponse429",
+    "ListQueriesResponse429Meta",
+    "ListQueriesResponse500",
+    "ListQueriesResponse500Meta",
     "ListTableGroupsResponse200",
     "ListTableGroupsResponse401",
     "ListTableGroupsResponse401Meta",
@@ -1921,6 +2335,34 @@ __all__ = (
     "ListTransfersResponse429Meta",
     "ListTransfersResponse500",
     "ListTransfersResponse500Meta",
+    "ListWorkspacesResponse400",
+    "ListWorkspacesResponse400Meta",
+    "ListWorkspacesResponse401",
+    "ListWorkspacesResponse401Meta",
+    "ListWorkspacesResponse429",
+    "ListWorkspacesResponse429Meta",
+    "ListWorkspacesResponse500",
+    "ListWorkspacesResponse500Meta",
+    "ListWorkspaceUserInvitesResponse400",
+    "ListWorkspaceUserInvitesResponse400Meta",
+    "ListWorkspaceUserInvitesResponse401",
+    "ListWorkspaceUserInvitesResponse401Meta",
+    "ListWorkspaceUserInvitesResponse404",
+    "ListWorkspaceUserInvitesResponse404Meta",
+    "ListWorkspaceUserInvitesResponse429",
+    "ListWorkspaceUserInvitesResponse429Meta",
+    "ListWorkspaceUserInvitesResponse500",
+    "ListWorkspaceUserInvitesResponse500Meta",
+    "ListWorkspaceUsersResponse400",
+    "ListWorkspaceUsersResponse400Meta",
+    "ListWorkspaceUsersResponse401",
+    "ListWorkspaceUsersResponse401Meta",
+    "ListWorkspaceUsersResponse404",
+    "ListWorkspaceUsersResponse404Meta",
+    "ListWorkspaceUsersResponse429",
+    "ListWorkspaceUsersResponse429Meta",
+    "ListWorkspaceUsersResponse500",
+    "ListWorkspaceUsersResponse500Meta",
     "LogEntry",
     "LoginLink",
     "LoginLinkResponse",
@@ -1940,12 +2382,23 @@ __all__ = (
     "MetadataOutputDataRulesCondition",
     "MetadataOutputDataRulesLookup",
     "MetaWithPagination",
+    "NotFoundError",
+    "NotFoundErrorCode",
     "OutputDataTypeOutput",
     "PaginatedTransformationsOutput",
     "PaginatedTransformationsOutputData",
     "Pagination",
     "PaginationLinks",
+    "PermissionError_",
+    "PermissionErrorCode",
+    "Query",
     "QueryDetails",
+    "QueryGroup",
+    "QueryGroupType",
+    "QueryListResponse",
+    "QueryQueryParams",
+    "QueryResponse",
+    "QueryType",
     "RemoveAccountsFromGroupBody",
     "RemoveAccountsFromGroupBodyDataSourcesItem",
     "RemoveAccountsFromGroupResponse400",
@@ -1956,6 +2409,16 @@ __all__ = (
     "RemoveAccountsFromGroupResponse429Meta",
     "RemoveAccountsFromGroupResponse500",
     "RemoveAccountsFromGroupResponse500Meta",
+    "RemoveWorkspaceUserResponse400",
+    "RemoveWorkspaceUserResponse400Meta",
+    "RemoveWorkspaceUserResponse401",
+    "RemoveWorkspaceUserResponse401Meta",
+    "RemoveWorkspaceUserResponse404",
+    "RemoveWorkspaceUserResponse404Meta",
+    "RemoveWorkspaceUserResponse429",
+    "RemoveWorkspaceUserResponse429Meta",
+    "RemoveWorkspaceUserResponse500",
+    "RemoveWorkspaceUserResponse500Meta",
     "ResourceURL",
     "ResponseMeta",
     "ResponseMetaWithPagination",
@@ -1990,6 +2453,10 @@ __all__ = (
     "TableGroupWriteResponseType",
     "TeamData",
     "TeamResponse",
+    "TeamSettings",
+    "TeamSettingsResponse",
+    "TeamSettingsResponseData",
+    "TeamSettingsResponseDataType",
     "TeamTransformationOutput",
     "TeamTransformationOutputDefinition",
     "TeamTransformationOutputFieldType",
@@ -2011,6 +2478,8 @@ __all__ = (
     "TestConnectionResponse500",
     "TestConnectionResponse500Meta",
     "TestConnectionResult",
+    "TooManyRequestsError",
+    "TooManyRequestsErrorCode",
     "TransferAccount",
     "TransferBackfillRunError",
     "TransferConfigurationRequest",
@@ -2049,6 +2518,8 @@ __all__ = (
     "TransferStateUpdateResponse",
     "TransferUpdatedResponse",
     "TransformationUserOutput",
+    "UnauthorizedError",
+    "UnauthorizedErrorCode",
     "UpdateAccountGroupBody",
     "UpdateAccountGroupResponse400",
     "UpdateAccountGroupResponse400Meta",
@@ -2146,6 +2617,27 @@ __all__ = (
     "UpdateLoginLinkResponse500",
     "UpdateLoginLinkResponse500Meta",
     "UpdateSecretRequest",
+    "UpdateTeamApiKeyBody",
+    "UpdateTeamApiKeyResponse400",
+    "UpdateTeamApiKeyResponse400Meta",
+    "UpdateTeamApiKeyResponse401",
+    "UpdateTeamApiKeyResponse401Meta",
+    "UpdateTeamApiKeyResponse404",
+    "UpdateTeamApiKeyResponse404Meta",
+    "UpdateTeamApiKeyResponse422",
+    "UpdateTeamApiKeyResponse422Meta",
+    "UpdateTeamApiKeyResponse429",
+    "UpdateTeamApiKeyResponse429Meta",
+    "UpdateTeamApiKeyResponse500",
+    "UpdateTeamApiKeyResponse500Meta",
+    "UpdateTeamSettingsResponse401",
+    "UpdateTeamSettingsResponse401Meta",
+    "UpdateTeamSettingsResponse422",
+    "UpdateTeamSettingsResponse422Meta",
+    "UpdateTeamSettingsResponse429",
+    "UpdateTeamSettingsResponse429Meta",
+    "UpdateTeamSettingsResponse500",
+    "UpdateTeamSettingsResponse500Meta",
     "UpdateTransferResponse400",
     "UpdateTransferResponse400Meta",
     "UpdateTransferResponse401",
@@ -2170,6 +2662,49 @@ __all__ = (
     "UpdateTransformationResponse429Meta",
     "UpdateTransformationResponse500",
     "UpdateTransformationResponse500Meta",
+    "UpdateWorkspaceApiKeyBody",
+    "UpdateWorkspaceApiKeyResponse400",
+    "UpdateWorkspaceApiKeyResponse400Meta",
+    "UpdateWorkspaceApiKeyResponse401",
+    "UpdateWorkspaceApiKeyResponse401Meta",
+    "UpdateWorkspaceApiKeyResponse404",
+    "UpdateWorkspaceApiKeyResponse404Meta",
+    "UpdateWorkspaceApiKeyResponse422",
+    "UpdateWorkspaceApiKeyResponse422Meta",
+    "UpdateWorkspaceApiKeyResponse429",
+    "UpdateWorkspaceApiKeyResponse429Meta",
+    "UpdateWorkspaceApiKeyResponse500",
+    "UpdateWorkspaceApiKeyResponse500Meta",
+    "UpdateWorkspaceResponse400",
+    "UpdateWorkspaceResponse400Meta",
+    "UpdateWorkspaceResponse401",
+    "UpdateWorkspaceResponse401Meta",
+    "UpdateWorkspaceResponse404",
+    "UpdateWorkspaceResponse404Meta",
+    "UpdateWorkspaceResponse429",
+    "UpdateWorkspaceResponse429Meta",
+    "UpdateWorkspaceResponse500",
+    "UpdateWorkspaceResponse500Meta",
+    "UpdateWorkspaceUserInviteResponse400",
+    "UpdateWorkspaceUserInviteResponse400Meta",
+    "UpdateWorkspaceUserInviteResponse401",
+    "UpdateWorkspaceUserInviteResponse401Meta",
+    "UpdateWorkspaceUserInviteResponse404",
+    "UpdateWorkspaceUserInviteResponse404Meta",
+    "UpdateWorkspaceUserInviteResponse429",
+    "UpdateWorkspaceUserInviteResponse429Meta",
+    "UpdateWorkspaceUserInviteResponse500",
+    "UpdateWorkspaceUserInviteResponse500Meta",
+    "UpdateWorkspaceUserResponse400",
+    "UpdateWorkspaceUserResponse400Meta",
+    "UpdateWorkspaceUserResponse401",
+    "UpdateWorkspaceUserResponse401Meta",
+    "UpdateWorkspaceUserResponse404",
+    "UpdateWorkspaceUserResponse404Meta",
+    "UpdateWorkspaceUserResponse429",
+    "UpdateWorkspaceUserResponse429Meta",
+    "UpdateWorkspaceUserResponse500",
+    "UpdateWorkspaceUserResponse500Meta",
     "UploadConnectorLogoBody",
     "UploadConnectorLogoResponse201",
     "UploadConnectorLogoResponse400",
@@ -2206,4 +2741,29 @@ __all__ = (
     "ValidateTransferUpdateResponse500Meta",
     "ValidationError",
     "ValidationErrorsResponse",
+    "Workspace",
+    "WorkspaceCreateRequest",
+    "WorkspaceInvitation",
+    "WorkspaceInvitationRole",
+    "WorkspaceInviteListResponse",
+    "WorkspaceInviteListResponseData",
+    "WorkspaceInviteRequest",
+    "WorkspaceInviteRequestInvitesItem",
+    "WorkspaceInviteRequestInvitesItemRole",
+    "WorkspaceInviteResponse",
+    "WorkspaceInviteStatusUpdateRequest",
+    "WorkspaceInviteStatusUpdateRequestStatus",
+    "WorkspaceListItem",
+    "WorkspaceListResponse",
+    "WorkspaceListResponseData",
+    "WorkspaceResponse",
+    "WorkspaceSubscriptionType0",
+    "WorkspaceUpdateRequest",
+    "WorkspaceUser",
+    "WorkspaceUserListResponse",
+    "WorkspaceUserListResponseData",
+    "WorkspaceUserResponse",
+    "WorkspaceUserRole",
+    "WorkspaceUserRoleUpdateRequest",
+    "WorkspaceUserRoleUpdateRequestRole",
 )

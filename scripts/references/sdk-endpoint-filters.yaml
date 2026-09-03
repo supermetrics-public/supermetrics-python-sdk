@@ -315,6 +315,91 @@ endpoints:
   - method: GET
     path: /v1/teams/{team_id}/users
 
+  # API Keys
+  #
+  # Core-API paths, the same shape as Custom Fields / Account Tags: the upstream path-level
+  # server is https://api.supermetrics.com and the "/v1" already sits in the path key. No
+  # rewrite_path — the SDK base_url is https://api.supermetrics.com (no /v1), so the /v1 must
+  # stay in the path; rewriting to /teams/... would drop it. (These paths are not matched by
+  # _DTS_PATH_PATTERN, so they correctly stay on the core host regardless.) Covers both
+  # team-level and workspace-level API keys.
+  - method: GET
+    path: /v1/teams/{team_id}/api_keys
+  - method: POST
+    path: /v1/teams/{team_id}/api_keys
+  - method: GET
+    path: /v1/teams/{team_id}/api_keys/{api_key_id}
+  - method: PATCH
+    path: /v1/teams/{team_id}/api_keys/{api_key_id}
+  - method: GET
+    path: /v1/teams/{team_id}/workspaces/{workspace_uuid}/api_keys
+  - method: POST
+    path: /v1/teams/{team_id}/workspaces/{workspace_uuid}/api_keys
+  - method: GET
+    path: /v1/teams/{team_id}/workspaces/{workspace_uuid}/api_keys/{api_key_id}
+  - method: PATCH
+    path: /v1/teams/{team_id}/workspaces/{workspace_uuid}/api_keys/{api_key_id}
+
+  # Saved Queries
+  #
+  # Core-API bare paths (upstream path-level server https://api.supermetrics.com); the path
+  # is already the final URL shape, so no rewrite_path. They do not match _DTS_PATH_PATTERN,
+  # so they stay on the default api.supermetrics.com host.
+  - method: GET
+    path: /queries
+  - method: GET
+    path: /query/{query_id}
+
+  # Team Settings
+  #
+  # Core-API bare path (upstream path-level server https://api.supermetrics.com); already the
+  # final URL shape, so no rewrite_path. Does not match _DTS_PATH_PATTERN.
+  - method: GET
+    path: /team/settings
+  - method: PATCH
+    path: /team/settings
+
+  # Workspaces
+  #
+  # Core-API paths, the same shape as Custom Fields / Account Tags: upstream path-level server
+  # https://api.supermetrics.com with the "/v1" already in the path key. No rewrite_path — the
+  # SDK base_url has no /v1, so it must stay in the path (see the API Keys note above).
+  # Workspace-level API keys live in the API Keys section above; the workspace license-pool
+  # paths are deliberately excluded here (handled in Item 20b).
+  - method: GET
+    path: /v1/teams/{team_id}/workspaces
+  - method: POST
+    path: /v1/teams/{team_id}/workspaces
+  - method: GET
+    path: /v1/teams/{team_id}/workspaces/{workspace_uuid}
+  - method: PATCH
+    path: /v1/teams/{team_id}/workspaces/{workspace_uuid}
+  - method: GET
+    path: /v1/teams/{team_id}/workspaces/{workspace_uuid}/users
+  - method: PATCH
+    path: /v1/teams/{team_id}/workspaces/{workspace_uuid}/users/{user_id}
+  - method: DELETE
+    path: /v1/teams/{team_id}/workspaces/{workspace_uuid}/users/{user_id}
+  - method: POST
+    path: /v1/teams/{team_id}/workspaces/{workspace_uuid}/users/invites
+  - method: GET
+    path: /v1/teams/{team_id}/workspaces/{workspace_uuid}/users/invites
+  - method: PATCH
+    path: /v1/teams/{team_id}/workspaces/{workspace_uuid}/users/invites
+
+  # Licenses (team-level)
+  #
+  # Core-API paths, the same shape as Custom Fields / Account Tags: upstream path-level server
+  # https://api.supermetrics.com with the "/v1" already in the path key. No rewrite_path — the
+  # SDK base_url has no /v1, so it must stay in the path (see the API Keys note above).
+  # Workspace license-pool allocation is excluded here (handled in Item 20b).
+  - method: GET
+    path: /v1/teams/{team_id}/licenses
+  - method: POST
+    path: /v1/teams/{team_id}/licenses/{license_id}/users
+  - method: DELETE
+    path: /v1/teams/{team_id}/licenses/{license_id}/users/{user_id}
+
   # ==========================================
   # EXAMPLE: Endpoint with comprehensive patches
   # ==========================================
