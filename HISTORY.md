@@ -10,8 +10,8 @@ New `client.table_groups` resource with four methods:
 - `export(group_id, version=)` — export a table group's full data model
   (tables, fields, and mappings)
 - `import_(body=)` — create a new table group from a data model definition
-- `edit(group_id, version=, body=)` — full-replace update of an existing
-  table group
+- `edit(group_id, body=)` — full-replace update of an existing table group
+  (`version` is a required field on `EditTableGroupBody`)
 
 The team identity comes from the API key (no `team_id` parameter). The natural
 workflow is export → edit locally → put back via `edit()`.
