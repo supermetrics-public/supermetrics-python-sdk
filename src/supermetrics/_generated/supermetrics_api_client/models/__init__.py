@@ -867,8 +867,10 @@ from .table_group import TableGroup
 from .table_group_export import TableGroupExport
 from .table_group_import import TableGroupImport
 from .table_group_links import TableGroupLinks
-from .table_group_response import TableGroupResponse
 from .table_group_type import TableGroupType
+from .table_group_write_response import TableGroupWriteResponse
+from .table_group_write_response_links import TableGroupWriteResponseLinks
+from .table_group_write_response_type import TableGroupWriteResponseType
 from .team_data import TeamData
 from .team_response import TeamResponse
 from .team_transformation_output import TeamTransformationOutput
@@ -1952,8 +1954,10 @@ __all__ = (
     "TableGroupExport",
     "TableGroupImport",
     "TableGroupLinks",
-    "TableGroupResponse",
     "TableGroupType",
+    "TableGroupWriteResponse",
+    "TableGroupWriteResponseLinks",
+    "TableGroupWriteResponseType",
     "TeamData",
     "TeamResponse",
     "TeamTransformationOutput",

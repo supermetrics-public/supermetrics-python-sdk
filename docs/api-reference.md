@@ -2717,13 +2717,13 @@ created = client.table_groups.import_(
         fields=[FieldDefinition(field_id="campaign_id", target_name="campaign_id")],
     )
 )
-print(f"Created: {created.group_id} (schema {created.schema_id})")
+print(f"Created: {created.group_id} ({created.group_name})")
 ```
 
 **Args:**
 - `body` (ImportTableGroupBody): Import payload with `version`, `group`, `tables`, and optionally `fields`
 
-**Returns:** `TableGroup` — the created group with its assigned `group_id` and `schema_id`.
+**Returns:** `TableGroupWriteResponse` — the created group with its assigned `group_id` and `group_name`.
 
 **Raises:** `ValidationError` on invalid data (400), `APIError` on name conflict (409).
 
@@ -2738,18 +2738,16 @@ from supermetrics import EditTableGroupBody
 export = client.table_groups.export(group_id="tg_123", version=1)
 updated = client.table_groups.edit(
     group_id="tg_123",
-    version=1,
-    body=EditTableGroupBody(group=export.group, tables=export.tables, fields=export.fields),
+    body=EditTableGroupBody(version=1, group=export.group, tables=export.tables, fields=export.fields),
 )
 ```
 
 **Args:**
 - `group_id` (str): Table group ID
-- `version` (int): Data model version
-- `body` (EditTableGroupBody): Edit payload with `group`, `tables`, and optionally `fields`.
+- `body` (EditTableGroupBody): Edit payload with `version`, `group`, `tables`, and optionally `fields`.
   Omitting `fields` clears all field mappings.
 
-**Returns:** `TableGroup` — the updated group.
+**Returns:** `TableGroupWriteResponse` — the updated group.
 
 **Async usage** (all four methods above are also available on `TableGroupsAsyncResource`):
 

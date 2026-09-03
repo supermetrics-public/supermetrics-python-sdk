@@ -492,8 +492,7 @@ print(f"Created: {created.group_id}")
 export = client.table_groups.export(group_id=created.group_id, version=1)
 updated = client.table_groups.edit(
     group_id=created.group_id,
-    version=1,
-    body=EditTableGroupBody(group=export.group, tables=export.tables, fields=export.fields),
+    body=EditTableGroupBody(version=1, group=export.group, tables=export.tables, fields=export.fields),
 )
 ```
 
