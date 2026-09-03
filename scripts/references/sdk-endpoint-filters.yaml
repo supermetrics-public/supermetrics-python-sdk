@@ -248,9 +248,9 @@ endpoints:
   #
   # Core-API paths, the same shape as Connector Builder: the upstream path-level server
   # is https://api.supermetrics.com and the "/v1" lives in the path. No rewrite_path —
-  # rewriting these to /teams/... would drop the /v1 the core API requires *and* move
-  # them into the shape _DTS_PATH_PATTERN inspects, which is how you accidentally send
-  # a core-API call to the Data Warehouse host.
+  # the SDK base_url is https://api.supermetrics.com (no /v1), so the /v1 must stay in the
+  # path; rewriting to /teams/... would drop it. (These paths are not matched by
+  # _DTS_PATH_PATTERN, so they correctly stay on the core host regardless.)
   - method: GET
     path: /v1/teams/{team_id}/custom-fields
   - method: POST
@@ -268,8 +268,9 @@ endpoints:
   #
   # Core-API paths, the same shape as Custom Fields and Connector Builder: the upstream
   # path-level server is https://api.supermetrics.com and the "/v1" lives in the path. No
-  # rewrite_path, for the same two reasons — rewriting to /teams/... would drop the /v1 the
-  # core API requires, and would move these into the shape _DTS_PATH_PATTERN inspects.
+  # rewrite_path — the SDK base_url is https://api.supermetrics.com (no /v1), so the /v1 must
+  # stay in the path; rewriting to /teams/... would drop it. (These paths are not matched by
+  # _DTS_PATH_PATTERN, so they correctly stay on the core host regardless.)
   - method: GET
     path: /v1/teams/{team_id}/account_tags
   - method: POST
@@ -289,9 +290,9 @@ endpoints:
   #
   # Core-API paths, the same shape as Custom Fields: the upstream path-level server is
   # https://api.supermetrics.com and the "/v1" already sits in the path key. No
-  # rewrite_path, for the same two reasons — rewriting to /teams/... would drop the /v1
-  # the core API requires, and it would move these paths into the shape
-  # _DTS_PATH_PATTERN matches, sending a core-API call to the Data Warehouse host.
+  # rewrite_path — the SDK base_url is https://api.supermetrics.com (no /v1), so the /v1
+  # must stay in the path; rewriting to /teams/... would drop it. (These paths are not
+  # matched by _DTS_PATH_PATTERN, so they correctly stay on the core host regardless.)
   - method: GET
     path: /v1/teams/{team_id}/data-blending/blends
   - method: POST
@@ -307,9 +308,9 @@ endpoints:
   #
   # Core-API paths, the same shape as Custom Fields / Account Tags / Blends: the upstream
   # path-level server is https://api.supermetrics.com and the "/v1" already sits in the
-  # path key. No rewrite_path, for the same two reasons — rewriting to /teams/... would
-  # drop the /v1 the core API requires, and it would move these paths into the shape
-  # _DTS_PATH_PATTERN matches, sending a core-API call to the Data Warehouse host.
+  # path key. No rewrite_path — the SDK base_url is https://api.supermetrics.com (no /v1),
+  # so the /v1 must stay in the path; rewriting to /teams/... would drop it. (These paths
+  # are not matched by _DTS_PATH_PATTERN, so they correctly stay on the core host regardless.)
   - method: GET
     path: /v1/teams/{team_id}
   - method: GET
