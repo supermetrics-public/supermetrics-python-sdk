@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+### Destinations: batch secret rotation
+
+New method on `client.destinations`:
+
+- `batch_update(team_id, *, destination_type=, updates=)` — rotate secrets for
+  up to 100 destinations of the same type in a single request. Each update is
+  applied independently; partial failures are reported per item with
+  `has_errors`, `error_code` and `message`.
+
+Available on sync and async clients, mirrored under `with_raw_response`,
+and takes the usual `auth_token` / `headers` / `timeout` overrides.
+
+`BatchUpdateDestinationsBodyUpdatesItem` is exported from `supermetrics` for
+convenience:
+`from supermetrics import BatchUpdateDestinationsBodyUpdatesItem`.
+
 ### Table Groups: list, export, import, edit
 
 New `client.table_groups` resource with four methods:

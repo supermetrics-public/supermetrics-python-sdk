@@ -39,6 +39,22 @@ from .batch_create_transfers_response_403 import BatchCreateTransfersResponse403
 from .batch_create_transfers_response_403_meta import BatchCreateTransfersResponse403Meta
 from .batch_create_transfers_response_500 import BatchCreateTransfersResponse500
 from .batch_create_transfers_response_500_meta import BatchCreateTransfersResponse500Meta
+from .batch_update_destinations_body import BatchUpdateDestinationsBody
+from .batch_update_destinations_body_updates_item import BatchUpdateDestinationsBodyUpdatesItem
+from .batch_update_destinations_response_200 import BatchUpdateDestinationsResponse200
+from .batch_update_destinations_response_200_data import BatchUpdateDestinationsResponse200Data
+from .batch_update_destinations_response_200_data_results_item import BatchUpdateDestinationsResponse200DataResultsItem
+from .batch_update_destinations_response_200_data_results_item_status import (
+    BatchUpdateDestinationsResponse200DataResultsItemStatus,
+)
+from .batch_update_destinations_response_400 import BatchUpdateDestinationsResponse400
+from .batch_update_destinations_response_400_meta import BatchUpdateDestinationsResponse400Meta
+from .batch_update_destinations_response_401 import BatchUpdateDestinationsResponse401
+from .batch_update_destinations_response_401_meta import BatchUpdateDestinationsResponse401Meta
+from .batch_update_destinations_response_403 import BatchUpdateDestinationsResponse403
+from .batch_update_destinations_response_403_meta import BatchUpdateDestinationsResponse403Meta
+from .batch_update_destinations_response_500 import BatchUpdateDestinationsResponse500
+from .batch_update_destinations_response_500_meta import BatchUpdateDestinationsResponse500Meta
 from .blend_base_request import BlendBaseRequest
 from .blend_config import BlendConfig
 from .blend_config_output import BlendConfigOutput
@@ -1130,6 +1146,20 @@ __all__ = (
     "BatchCreateTransfersResponse403Meta",
     "BatchCreateTransfersResponse500",
     "BatchCreateTransfersResponse500Meta",
+    "BatchUpdateDestinationsBody",
+    "BatchUpdateDestinationsBodyUpdatesItem",
+    "BatchUpdateDestinationsResponse200",
+    "BatchUpdateDestinationsResponse200Data",
+    "BatchUpdateDestinationsResponse200DataResultsItem",
+    "BatchUpdateDestinationsResponse200DataResultsItemStatus",
+    "BatchUpdateDestinationsResponse400",
+    "BatchUpdateDestinationsResponse400Meta",
+    "BatchUpdateDestinationsResponse401",
+    "BatchUpdateDestinationsResponse401Meta",
+    "BatchUpdateDestinationsResponse403",
+    "BatchUpdateDestinationsResponse403Meta",
+    "BatchUpdateDestinationsResponse500",
+    "BatchUpdateDestinationsResponse500Meta",
     "BlendBaseRequest",
     "BlendConfig",
     "BlendConfigOutput",

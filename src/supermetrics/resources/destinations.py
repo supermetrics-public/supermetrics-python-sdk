@@ -9,6 +9,7 @@ import httpx
 from supermetrics._generated.supermetrics_api_client import AuthenticatedClient
 from supermetrics._generated.supermetrics_api_client import Client as GeneratedClient
 from supermetrics._generated.supermetrics_api_client.api.data_destinations import (
+    batch_update_destinations,
     create_destination,
     delete_destination,
     get_destination,
@@ -16,6 +17,18 @@ from supermetrics._generated.supermetrics_api_client.api.data_destinations impor
     list_destinations,
     test_connection,
     update_destination,
+)
+from supermetrics._generated.supermetrics_api_client.models.batch_update_destinations_body import (
+    BatchUpdateDestinationsBody,
+)
+from supermetrics._generated.supermetrics_api_client.models.batch_update_destinations_body_updates_item import (
+    BatchUpdateDestinationsBodyUpdatesItem,
+)
+from supermetrics._generated.supermetrics_api_client.models.batch_update_destinations_response_200 import (
+    BatchUpdateDestinationsResponse200,
+)
+from supermetrics._generated.supermetrics_api_client.models.batch_update_destinations_response_200_data import (
+    BatchUpdateDestinationsResponse200Data,
 )
 from supermetrics._generated.supermetrics_api_client.models.create_destination_request import CreateDestinationRequest
 from supermetrics._generated.supermetrics_api_client.models.create_destination_request_fields import (
@@ -47,6 +60,7 @@ from supermetrics.resources._error_handlers import _raise_for_status, api_error_
 # keeps ``list[DestinationListItem]`` in a later method meaning a list of destinations
 # rather than a subscript of ``DestinationsResource.list``. Do not inline these back.
 DestinationItemList = list[DestinationListItem]
+BatchUpdateItemList = list[BatchUpdateDestinationsBodyUpdatesItem]
 FieldMap = dict[str, Any]
 
 
@@ -447,6 +461,46 @@ class DestinationsAsyncResource:
                 response.parsed,
                 endpoint,
                 not_found_msg="Destination not found or you do not have access to it",
+                headers=response.headers,
+                raw_body=response.content,
+            )
+
+    async def batch_update(
+        self,
+        team_id: int,
+        *,
+        destination_type: str,
+        updates: BatchUpdateItemList,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> BatchUpdateDestinationsResponse200Data:
+        """Rotate secrets for multiple destinations in a single request.
+
+        Async version of DestinationsResource.batch_update(). See sync version for full documentation.
+        """
+        endpoint = f"/teams/{team_id}/destinations/batch"
+        with (
+            api_error_handler(endpoint, context_400="Invalid batch update request"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
+            body = BatchUpdateDestinationsBody(
+                type_=destination_type,
+                updates=updates,
+            )
+            response = await batch_update_destinations.asyncio_detailed(
+                client=cast(AuthenticatedClient, self._client),
+                team_id=team_id,
+                body=body,
+            )
+            if response.status_code == 200:
+                parsed = cast(BatchUpdateDestinationsResponse200, response.parsed)
+                return cast(BatchUpdateDestinationsResponse200Data, parsed.data)
+            _raise_for_status(
+                int(response.status_code),
+                response.parsed,
+                endpoint,
+                bad_request_msg="Invalid batch update request",
                 headers=response.headers,
                 raw_body=response.content,
             )
@@ -1037,6 +1091,91 @@ class DestinationsResource:
                 response.parsed,
                 endpoint,
                 not_found_msg="Destination not found or you do not have access to it",
+                headers=response.headers,
+                raw_body=response.content,
+            )
+
+    def batch_update(
+        self,
+        team_id: int,
+        *,
+        destination_type: str,
+        updates: BatchUpdateItemList,
+        auth_token: str | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: float | httpx.Timeout | None = None,
+    ) -> BatchUpdateDestinationsResponse200Data:
+        """Rotate secrets for multiple destinations of the same type in a single request.
+
+        Each update is applied independently — if one fails, the others still
+        succeed. The response carries a ``has_errors`` flag for quick failure
+        detection and a per-item ``results`` list with ``destination_id``,
+        ``status`` (``"success"`` or ``"error"``), and, on failure, ``error_code``
+        and ``message``.
+
+        Batch-level validations (checked before any processing):
+        - The updates list must contain between 1 and 100 items.
+        - Each item must include a valid ``destination_id`` and a non-empty
+          ``new_secret``.
+        - Duplicate ``destination_id`` values are not allowed.
+
+        Args:
+            team_id: The unique identifier of the team.
+            destination_type: Destination type shared by all items in the batch
+                (e.g. ``"DWH_SNOWFLAKE"``).
+            updates: Secret rotations to apply — each a
+                ``BatchUpdateDestinationsBodyUpdatesItem(destination_id=...,
+                new_secret=...)``.
+            auth_token: Bearer token to use for this request only, overriding the
+                client credential.
+            headers: Extra HTTP headers for this request only.
+            timeout: Timeout override for this request only.
+
+        Returns:
+            BatchUpdateDestinationsResponse200Data: Results with ``has_errors``
+                flag and per-item ``results``.
+
+        Raises:
+            AuthenticationError: If the API key is invalid or expired (HTTP 401).
+            ValidationError: If the batch request is invalid (HTTP 400).
+            APIError: If the API returns a server error (HTTP 403, 429, 5xx).
+            NetworkError: If a network error occurs during the request.
+
+        Example:
+            >>> from supermetrics import BatchUpdateDestinationsBodyUpdatesItem
+            >>> results = client.destinations.batch_update(
+            ...     team_id=12345,
+            ...     destination_type="DWH_SNOWFLAKE",
+            ...     updates=[
+            ...         BatchUpdateDestinationsBodyUpdatesItem(
+            ...             destination_id=8, new_secret="new-password-123"
+            ...         ),
+            ...     ],
+            ... )
+            >>> print(f"Errors: {results.has_errors}")
+        """
+        endpoint = f"/teams/{team_id}/destinations/batch"
+        with (
+            api_error_handler(endpoint, context_400="Invalid batch update request"),
+            request_options(auth_token=auth_token, headers=headers, timeout=timeout),
+        ):
+            body = BatchUpdateDestinationsBody(
+                type_=destination_type,
+                updates=updates,
+            )
+            response = batch_update_destinations.sync_detailed(
+                client=cast(AuthenticatedClient, self._client),
+                team_id=team_id,
+                body=body,
+            )
+            if response.status_code == 200:
+                parsed = cast(BatchUpdateDestinationsResponse200, response.parsed)
+                return cast(BatchUpdateDestinationsResponse200Data, parsed.data)
+            _raise_for_status(
+                int(response.status_code),
+                response.parsed,
+                endpoint,
+                bad_request_msg="Invalid batch update request",
                 headers=response.headers,
                 raw_body=response.content,
             )

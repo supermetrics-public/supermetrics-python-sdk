@@ -1568,6 +1568,121 @@ paths:
           $ref: '#/components/responses/InternalServerError'
       security:
       - ApiKeyAuth: []
+  /teams/{team_id}/destinations/batch:
+    patch:
+      summary: Batch rotate destination secrets
+      description: 'Rotate secrets for multiple destinations of the same type in a
+        single request.
+
+        Each update is applied independently — if one fails, the others still succeed.
+
+
+        Batch-level validations (checked before any processing):
+
+        - The updates array must contain between 1 and 100 items.
+
+        - Each item must include a valid destination_id and a non-empty new_secret.
+
+        - Duplicate destination_id values are not allowed.
+
+        '
+      operationId: batchUpdateDestinations
+      tags:
+      - Data Destinations
+      requestBody:
+        description: Batch of secret rotations sharing a single destination type
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - type
+              - updates
+              properties:
+                type:
+                  type: string
+                  description: Destination type shared by all items in the batch
+                  example: DWH_SNOWFLAKE
+                updates:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  items:
+                    type: object
+                    required:
+                    - destination_id
+                    - new_secret
+                    properties:
+                      destination_id:
+                        type: integer
+                        description: ID of the destination to rotate the secret for
+                      new_secret:
+                        type: string
+                        description: New secret value for credential rotation
+      responses:
+        '200':
+          description: Batch processed
+          headers:
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/Access-Control-Allow-Origin'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+                  data:
+                    type: object
+                    required:
+                    - has_errors
+                    - results
+                    properties:
+                      has_errors:
+                        type: boolean
+                        description: True if any item in the batch failed. Allows
+                          quick failure detection without iterating all results.
+                      results:
+                        type: array
+                        items:
+                          type: object
+                          required:
+                          - destination_id
+                          - status
+                          properties:
+                            destination_id:
+                              type: integer
+                            status:
+                              type: string
+                              enum:
+                              - success
+                              - error
+                            error_code:
+                              type: string
+                              description: Error code identifying the failure reason.
+                                Only present when status is error.
+                            message:
+                              type: string
+                              description: Human-readable error description. Only
+                                present when status is error.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+      - ApiKeyAuth: []
+    parameters:
+    - $ref: '#/components/parameters/TeamId'
+    servers:
+    - url: https://dts-api.supermetrics.com/v1
+      description: Global production public Supermetrics Data Warehouse Destinations
+        API base path.
+      x-internal: false
   /teams/{team_id}/destinations/test-connection:
     post:
       summary: Test destination connection

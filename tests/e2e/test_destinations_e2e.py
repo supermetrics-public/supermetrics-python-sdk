@@ -19,7 +19,7 @@ from typing import Any
 
 import pytest
 
-from supermetrics import SupermetricsAsyncClient, SupermetricsClient
+from supermetrics import BatchUpdateDestinationsBodyUpdatesItem, SupermetricsAsyncClient, SupermetricsClient
 from supermetrics._generated.supermetrics_api_client.models.destination_info import DestinationInfo
 from supermetrics._generated.supermetrics_api_client.models.destination_usage import DestinationUsage
 
@@ -53,6 +53,7 @@ DESTINATIONS = f"/teams/{TEAM_ID}/destinations"
 DESTINATION = f"{DESTINATIONS}/{DESTINATION_ID}"
 CONNECTION_TEST = f"{DESTINATIONS}/test-connection"
 USAGE = f"{DESTINATION}/usage"
+BATCH = f"{DESTINATIONS}/batch"
 
 #: Every wrapped response carries this envelope metadata.
 META: dict[str, Any] = {"request_id": "req_0123456789ab"}
@@ -146,6 +147,33 @@ USAGE_IN_USE_BODY: dict[str, Any] = {
 }
 USAGE_UNUSED_BODY: dict[str, Any] = {"meta": META, "data": {"is_used": False, "transfers": []}}
 
+#: PATCH .../destinations/batch — wrapped.
+BATCH_SUCCESS_BODY: dict[str, Any] = {
+    "meta": META,
+    "data": {
+        "has_errors": False,
+        "results": [
+            {"destination_id": 8, "status": "success"},
+            {"destination_id": 9, "status": "success"},
+        ],
+    },
+}
+BATCH_PARTIAL_FAILURE_BODY: dict[str, Any] = {
+    "meta": META,
+    "data": {
+        "has_errors": True,
+        "results": [
+            {"destination_id": 8, "status": "success"},
+            {
+                "destination_id": 9,
+                "status": "error",
+                "error_code": "INVALID_SECRET",
+                "message": "Secret validation failed",
+            },
+        ],
+    },
+}
+
 
 def _configuration() -> dict[str, Any]:
     """Build the three required arguments shared by create, update and test_connection."""
@@ -158,7 +186,7 @@ def _error_envelope(code: str, message: str) -> dict[str, object]:
 
 
 class TestDestinationsResource:
-    """Synchronous destinations — all seven methods, both directions on the wire."""
+    """Synchronous destinations — all eight methods, both directions on the wire."""
 
     def test_list_unwraps_the_envelope_and_gets_the_collection(self, api_server: MockAPIServer) -> None:
         """The envelope is stripped and the items keep their flat list-item shape."""
@@ -412,6 +440,71 @@ class TestDestinationsResource:
         assert request.path == USAGE
         assert request.bearer_token == "not-a-real-key"
 
+    # ── batch_update ────────────────────────────────────────────────────
+
+    def test_batch_update_sends_patch_and_unwraps_results(self, api_server: MockAPIServer) -> None:
+        """batch_update sends a PATCH with type and updates, and returns the data envelope."""
+        api_server.route(BATCH, ScriptedResponse(json_body=BATCH_SUCCESS_BODY))
+
+        with SupermetricsClient(api_key="not-a-real-key", base_url=api_server.base_url) as client:
+            result = client.destinations.batch_update(
+                team_id=TEAM_ID,
+                destination_type="DWH_SNOWFLAKE",
+                updates=[
+                    BatchUpdateDestinationsBodyUpdatesItem(destination_id=8, new_secret="not-a-real-secret-1"),
+                    BatchUpdateDestinationsBodyUpdatesItem(destination_id=9, new_secret="not-a-real-secret-2"),
+                ],
+            )
+
+        assert result.has_errors is False
+        assert len(result.results) == 2
+        assert result.results[0].destination_id == 8
+        assert result.results[0].status == "success"
+
+        request = api_server.last_request
+        assert request.method == "PATCH"
+        assert request.path == BATCH
+        assert request.bearer_token == "not-a-real-key"
+        body = request.json()
+        assert body["type"] == "DWH_SNOWFLAKE"
+        assert len(body["updates"]) == 2
+        assert body["updates"][0]["destination_id"] == 8
+        assert body["updates"][0]["new_secret"] == "not-a-real-secret-1"
+
+    def test_batch_update_partial_failure_surfaces_per_item_errors(self, api_server: MockAPIServer) -> None:
+        """A partial-failure batch returns has_errors=True with error details on failed items."""
+        api_server.route(BATCH, ScriptedResponse(json_body=BATCH_PARTIAL_FAILURE_BODY))
+
+        with SupermetricsClient(api_key="not-a-real-key", base_url=api_server.base_url) as client:
+            result = client.destinations.batch_update(
+                team_id=TEAM_ID,
+                destination_type="DWH_SNOWFLAKE",
+                updates=[
+                    BatchUpdateDestinationsBodyUpdatesItem(destination_id=8, new_secret="not-a-real-secret-1"),
+                    BatchUpdateDestinationsBodyUpdatesItem(destination_id=9, new_secret="not-a-real-secret-2"),
+                ],
+            )
+
+        assert result.has_errors is True
+        assert result.results[0].status == "success"
+        assert result.results[1].status == "error"
+        assert result.results[1].error_code == "INVALID_SECRET"
+        assert result.results[1].message == "Secret validation failed"
+
+    def test_batch_update_validation_error_on_400(self, api_server: MockAPIServer) -> None:
+        """A 400 from the batch endpoint raises SupermetricsValidationError."""
+        api_server.route(
+            BATCH,
+            ScriptedResponse(status=400, json_body=_error_envelope("INVALID_REQUEST", "Duplicate destination_id")),
+        )
+
+        with SupermetricsClient(api_key="not-a-real-key", base_url=api_server.base_url) as client:
+            with pytest.raises(SupermetricsValidationError) as exc_info:
+                client.destinations.batch_update(team_id=TEAM_ID, destination_type="DWH_SNOWFLAKE", updates=[])
+
+        assert exc_info.value.status_code == 400
+        assert api_server.last_request.method == "PATCH"
+
 
 class TestDestinationsAsyncResource:
     """Asynchronous destinations — same wire behaviour, own event hooks."""
@@ -648,6 +741,52 @@ class TestDestinationsAsyncResource:
         assert request.method == "GET"
         assert request.path == USAGE
         assert request.bearer_token == "not-a-real-key"
+
+    # ── batch_update (async) ────────────────────────────────────────────
+
+    @pytest.mark.asyncio
+    async def test_batch_update_sends_patch_and_unwraps_results(self, api_server: MockAPIServer) -> None:
+        """Async batch_update sends PATCH with type and updates, returns data."""
+        api_server.route(BATCH, ScriptedResponse(json_body=BATCH_SUCCESS_BODY))
+
+        async with SupermetricsAsyncClient(api_key="not-a-real-key", base_url=api_server.base_url) as client:
+            result = await client.destinations.batch_update(
+                team_id=TEAM_ID,
+                destination_type="DWH_SNOWFLAKE",
+                updates=[
+                    BatchUpdateDestinationsBodyUpdatesItem(destination_id=8, new_secret="not-a-real-secret-1"),
+                    BatchUpdateDestinationsBodyUpdatesItem(destination_id=9, new_secret="not-a-real-secret-2"),
+                ],
+            )
+
+        assert result.has_errors is False
+        assert len(result.results) == 2
+
+        request = api_server.last_request
+        assert request.method == "PATCH"
+        assert request.path == BATCH
+        body = request.json()
+        assert body["type"] == "DWH_SNOWFLAKE"
+        assert len(body["updates"]) == 2
+
+    @pytest.mark.asyncio
+    async def test_batch_update_partial_failure(self, api_server: MockAPIServer) -> None:
+        """Async partial-failure batch surfaces per-item errors."""
+        api_server.route(BATCH, ScriptedResponse(json_body=BATCH_PARTIAL_FAILURE_BODY))
+
+        async with SupermetricsAsyncClient(api_key="not-a-real-key", base_url=api_server.base_url) as client:
+            result = await client.destinations.batch_update(
+                team_id=TEAM_ID,
+                destination_type="DWH_SNOWFLAKE",
+                updates=[
+                    BatchUpdateDestinationsBodyUpdatesItem(destination_id=8, new_secret="not-a-real-secret-1"),
+                    BatchUpdateDestinationsBodyUpdatesItem(destination_id=9, new_secret="not-a-real-secret-2"),
+                ],
+            )
+
+        assert result.has_errors is True
+        assert result.results[1].status == "error"
+        assert result.results[1].error_code == "INVALID_SECRET"
 
 
 class TestDestinationsRequestOptions:

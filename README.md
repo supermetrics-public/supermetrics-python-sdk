@@ -15,7 +15,7 @@ Official Python client for Supermetrics
 * Fully typed request and response models, generated from the spec as `attrs` classes
 * Comprehensive API coverage: login links (including update), logins (including account
   listing and revocation), accounts, queries, DWH transfers (including clone and batch
-  create) and transfer runs, DWH destinations, DWH table groups (list, export, import,
+  create) and transfer runs, DWH destinations (including batch secret rotation), DWH table groups (list, export, import,
   edit), DWH backfills, custom fields, data blending, account tags, Connector Builder
 * Custom exception hierarchy with HTTP status code mapping
 * Resource-based API organization
@@ -449,6 +449,22 @@ if usage.is_used:
         print(f"still used by {transfer.transfer_id}: {transfer.transfer_name}")
 else:
     client.destinations.delete(team_id=12345, destination_id=8)
+
+# Rotate secrets for multiple destinations of the same type in one call
+from supermetrics import BatchUpdateDestinationsBodyUpdatesItem
+
+results = client.destinations.batch_update(
+    team_id=12345,
+    destination_type="DWH_SNOWFLAKE",
+    updates=[
+        BatchUpdateDestinationsBodyUpdatesItem(destination_id=8, new_secret="not-a-real-new-password"),
+        BatchUpdateDestinationsBodyUpdatesItem(destination_id=9, new_secret="not-a-real-new-password"),
+    ],
+)
+if results.has_errors:
+    for item in results.results:
+        if item.status == "error":
+            print(f"  destination {item.destination_id} failed: {item.error_code}")
 ```
 
 ### Data Warehouse Table Groups

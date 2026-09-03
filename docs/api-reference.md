@@ -2621,7 +2621,49 @@ else:
     client.destinations.delete(team_id=12345, destination_id=8)
 ```
 
-**Async usage** (all seven methods above are also available on
+#### batch_update()
+
+Rotate secrets for multiple destinations of the same type in a single request.
+Each update is applied independently — if one fails, the others still succeed.
+
+```python
+from supermetrics import BatchUpdateDestinationsBodyUpdatesItem
+
+results = client.destinations.batch_update(
+    team_id=12345,
+    destination_type="DWH_SNOWFLAKE",
+    updates=[
+        BatchUpdateDestinationsBodyUpdatesItem(destination_id=8, new_secret="not-a-real-new-password"),
+        BatchUpdateDestinationsBodyUpdatesItem(destination_id=9, new_secret="not-a-real-new-password"),
+    ],
+)
+```
+
+**Parameters:**
+
+- `team_id` (int, required): Unique identifier of the team
+- `destination_type` (str, required): Destination type shared by all items in the batch
+  (e.g. `"DWH_SNOWFLAKE"`)
+- `updates` (list[BatchUpdateDestinationsBodyUpdatesItem], required): Secret rotations to
+  apply — each carries `destination_id` and `new_secret`. Between 1 and 100 items;
+  duplicates are rejected.
+
+**Returns:** `BatchUpdateDestinationsResponse200Data` with `has_errors` (bool) and
+`results`, a list of items carrying `destination_id`, `status` (`"success"` or `"error"`),
+and, on failure, `error_code` and `message`.
+
+**Raises:** `SupermetricsAuthError` (401), `SupermetricsForbiddenError` (403), `SupermetricsValidationError` (400), `SupermetricsRateLimitError` (429), `SupermetricsServerError` (500), `NetworkError`
+
+**Example:**
+
+```python
+if results.has_errors:
+    for item in results.results:
+        if item.status == "error":
+            print(f"  destination {item.destination_id} failed: {item.error_code}")
+```
+
+**Async usage** (all eight methods above are also available on
 `DestinationsAsyncResource`):
 
 ```python

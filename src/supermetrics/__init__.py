@@ -2,6 +2,9 @@
 
 from supermetrics.__version__ import __version__
 from supermetrics._auth import AsyncTokenProvider, TokenProvider
+from supermetrics._generated.supermetrics_api_client.models.batch_update_destinations_body_updates_item import (
+    BatchUpdateDestinationsBodyUpdatesItem,
+)
 from supermetrics._generated.supermetrics_api_client.models.blend_config import BlendConfig
 from supermetrics._generated.supermetrics_api_client.models.blend_config_query_table import BlendConfigQueryTable
 from supermetrics._generated.supermetrics_api_client.models.blend_datasource_field_ref import BlendDatasourceFieldRef
@@ -107,6 +110,8 @@ __all__ = [
     "TransferDataSourceSetting",
     "CloneTransferBody",
     "TransferConfigurationRequest",
+    # Destination batch update. batch_update() takes a list of these.
+    "BatchUpdateDestinationsBodyUpdatesItem",
     # Table group request models. import_ and edit take these as the body payload.
     "ImportTableGroupBody",
     "EditTableGroupBody",
