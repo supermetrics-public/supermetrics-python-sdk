@@ -1904,11 +1904,20 @@ paths:
             example: 0
       responses:
         '200':
-          description: Query executed successfully
+          description: |
+            Query executed successfully, or — when `sync_timeout` elapses before the query
+            finishes — the schedule handle needed to poll `/query/status`.
+
+            Branch on `meta.status_code`, never on the HTTP status. An unfinished query
+            also answers 2xx, with `data: []` and `meta.status_code: RUNNING`; teams
+            carrying the `getQueryTimeoutHttpAs202` feature receive 202 rather than 200 in
+            that case. Only `meta.status_code: SUCCESS` means the rows are present.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DataResponse'
+                oneOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - $ref: '#/components/schemas/QueryStatusResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1977,11 +1986,20 @@ paths:
               fields: date,sessions
       responses:
         '200':
-          description: Query executed successfully
+          description: |
+            Query executed successfully, or — when `sync_timeout` elapses before the query
+            finishes — the schedule handle needed to poll `/query/status`.
+
+            Branch on `meta.status_code`, never on the HTTP status. An unfinished query
+            also answers 2xx, with `data: []` and `meta.status_code: RUNNING`; teams
+            carrying the `getQueryTimeoutHttpAs202` feature receive 202 rather than 200 in
+            that case. Only `meta.status_code: SUCCESS` means the rows are present.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DataResponse'
+                oneOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - $ref: '#/components/schemas/QueryStatusResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':

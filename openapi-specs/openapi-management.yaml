@@ -3413,6 +3413,72 @@ components:
                   type: string
                   enum:
                     - team_settings
+    FieldsCompatibilityEnhancedOutput:
+      type: object
+      description: Result of a field compatibility check with conflict details.
+      required:
+        - isCompatible
+      properties:
+        isCompatible:
+          type: boolean
+          description: Whether the given fields can coexist in one table.
+        conflicts:
+          type: array
+          nullable: true
+          maxItems: 200
+          description: Present when incompatible. Each entry names a field and the fields it conflicts with.
+          items:
+            type: object
+            required:
+              - field_id
+              - conflicts_with
+              - reason
+            properties:
+              field_id:
+                type: string
+                maxLength: 255
+                description: The field that has conflicts.
+              conflicts_with:
+                type: array
+                maxItems: 200
+                items:
+                  type: string
+                  maxLength: 255
+                description: Field IDs this field conflicts with.
+              reason:
+                type: string
+                maxLength: 100
+                description: 'Why they conflict: no_shared_report_type or incompatible_fields.'
+        incompatible:
+          type: object
+          nullable: true
+          description: When isCompatible is true, lists catalog fields that cannot be added without breaking compatibility.
+          properties:
+            dimensions:
+              type: object
+              properties:
+                items:
+                  type: array
+                  maxItems: 5000
+                  items:
+                    type: string
+                    maxLength: 255
+            metrics:
+              type: object
+              properties:
+                items:
+                  type: array
+                  maxItems: 5000
+                  items:
+                    type: string
+                    maxLength: 255
+        errors:
+          type: array
+          maxItems: 100
+          items:
+            type: string
+            maxLength: 2000
+          description: Error messages from the compatibility check.
     DatasourceOption:
       type: object
       properties:
@@ -9910,6 +9976,119 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - ApiKeyAuth:
+            - default
+      tags:
+        - Datasources
+  /v1/teams/{team_id}/datasource/{data_source_id}/fields-compatibility:
+    servers:
+      - url: https://api.supermetrics.com
+        description: production server
+        x-internal: false
+    post:
+      summary: Check field compatibility for a data source
+      description: Checks if given fields are compatible and returns structured conflict details when incompatible, including which specific fields conflict and why.
+      operationId: checkTeamScopedFieldsCompatibility
+      parameters:
+        - name: team_id
+          in: path
+          required: true
+          description: Team ID
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            maximum: 9223372036854776000
+        - name: data_source_id
+          in: path
+          required: true
+          description: Data source identifier
+          schema:
+            type: string
+            maxLength: 100
+      requestBody:
+        required: true
+        description: Fields and query context to evaluate for compatibility.
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fields
+              properties:
+                product_id:
+                  type: string
+                  enum:
+                    - none
+                    - sheets
+                    - api
+                    - ds
+                    - dwh_bq
+                  description: Product context (e.g. api, dwh_bq). Defaults to none.
+                report_type:
+                  type: string
+                  maxLength: 64
+                  description: Report type ID. Required if the connector has a report type selector.
+                start_date:
+                  type: string
+                  format: date
+                  maxLength: 10
+                  description: Start date for date-dependent field availability.
+                end_date:
+                  type: string
+                  format: date
+                  maxLength: 10
+                  description: End date for date-dependent field availability.
+                timezone:
+                  type: string
+                  maxLength: 64
+                  description: Timezone for date interpretation (±HH:MM).
+                fields:
+                  type: array
+                  minItems: 2
+                  maxItems: 200
+                  description: Field IDs to check compatibility for
+                  items:
+                    type: string
+                    maxLength: 255
+                filters:
+                  type: array
+                  maxItems: 50
+                  description: Filters to apply to the compatibility check.
+                  items:
+                    type: string
+                    maxLength: 255
+                data_source_account_id:
+                  type: string
+                  maxLength: 128
+                  description: Account ID for account-specific custom fields.
+                data_source_user_name:
+                  type: string
+                  maxLength: 128
+                  description: Data source user name for account-specific fields.
+            example:
+              product_id: api
+              fields:
+                - BidModifier
+                - SearchClickShare
+      responses:
+        '200':
+          description: Fields compatibility check completed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldsCompatibilityEnhancedOutput'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '429':
           $ref: '#/components/responses/TooManyRequests'
         '500':
