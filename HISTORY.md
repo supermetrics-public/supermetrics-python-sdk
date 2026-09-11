@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Document missing examples and fix stale repo links in docs/README.md.
+
 ### Destinations: batch secret rotation
 
 New method on `client.destinations`:
