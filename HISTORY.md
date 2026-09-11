@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Documentation
+
+- Added missing `connector_builder_flow.py` and `multi_tenant_flow.py` entries
+  to `docs/README.md` example list.
+- Fixed three stale `SuperPy-SDK` links in `docs/README.md` to point at
+  `supermetrics-python-sdk`.
+
 ### Destinations: batch secret rotation
 
 New method on `client.destinations`:
