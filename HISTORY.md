@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Examples
+
+- Added `data_warehouse_flow.py`: end-to-end transfer lifecycle covering
+  source discovery, validation, creation, pause/resume, run inspection,
+  backfill creation and cancellation.
+
 ### Destinations: batch secret rotation
 
 New method on `client.destinations`:

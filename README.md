@@ -597,6 +597,7 @@ See the [examples/](./examples/) directory for complete working examples:
 - `complete_flow.py` - Full sync workflow from authentication to query execution
 - `async_flow.py` - Async version of complete workflow
 - `connector_builder_flow.py` - Connector Builder end-to-end operations (supports `--base-url` for local dev)
+- `data_warehouse_flow.py` - Transfer lifecycle with validation, runs, and backfills
 
 See [examples/README.md](./examples/README.md) for setup and running instructions.
 
