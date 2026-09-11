@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add Mitesh Lakhani to CONTRIBUTORS.md.
+
 ### Destinations: batch secret rotation
 
 New method on `client.destinations`:
