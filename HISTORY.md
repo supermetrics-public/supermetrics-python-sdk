@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Contributors
+
+- Added Leo Idir (@leoidir) to CONTRIBUTORS.md.
+
 ### Destinations: batch secret rotation
 
 New method on `client.destinations`:
