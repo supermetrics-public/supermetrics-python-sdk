@@ -19,7 +19,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install uv with Python 3.13
-        uses: astral-sh/setup-uv@v10.0.1
+        uses: astral-sh/setup-uv@v10.1.0
         with:
           python-version: "3.13"
 
@@ -41,7 +41,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install uv with Python 3.13
-        uses: astral-sh/setup-uv@v10.0.1
+        uses: astral-sh/setup-uv@v10.1.0
         with:
           python-version: "3.13"
 
@@ -71,7 +71,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install uv with python ${{ matrix.python-version }}
-        uses: astral-sh/setup-uv@v10.0.1
+        uses: astral-sh/setup-uv@v10.1.0
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -115,7 +115,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install uv with python ${{ matrix.python-version }}
-        uses: astral-sh/setup-uv@v10.0.1
+        uses: astral-sh/setup-uv@v10.1.0
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -136,7 +136,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install uv with Python 3.13
-        uses: astral-sh/setup-uv@v10.0.1
+        uses: astral-sh/setup-uv@v10.1.0
         with:
           python-version: "3.13"
 
