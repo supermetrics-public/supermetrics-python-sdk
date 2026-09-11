@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Examples
+
+- Added `destination_setup_flow.py`: end-to-end destination setup with
+  connection testing, creation, inspection, usage check, and cleanup.
+
 ### Destinations: batch secret rotation
 
 New method on `client.destinations`:
