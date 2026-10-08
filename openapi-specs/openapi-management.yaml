@@ -3413,6 +3413,72 @@ components:
                   type: string
                   enum:
                     - team_settings
+    FieldsCompatibilityEnhancedOutput:
+      type: object
+      description: Result of a field compatibility check with conflict details.
+      required:
+        - isCompatible
+      properties:
+        isCompatible:
+          type: boolean
+          description: Whether the given fields can coexist in one table.
+        conflicts:
+          type: array
+          nullable: true
+          maxItems: 200
+          description: Present when incompatible. Each entry names a field and the fields it conflicts with.
+          items:
+            type: object
+            required:
+              - field_id
+              - conflicts_with
+              - reason
+            properties:
+              field_id:
+                type: string
+                maxLength: 255
+                description: The field that has conflicts.
+              conflicts_with:
+                type: array
+                maxItems: 200
+                items:
+                  type: string
+                  maxLength: 255
+                description: Field IDs this field conflicts with.
+              reason:
+                type: string
+                maxLength: 100
+                description: 'Why they conflict: no_shared_report_type or incompatible_fields.'
+        incompatible:
+          type: object
+          nullable: true
+          description: When isCompatible is true, lists catalog fields that cannot be added without breaking compatibility.
+          properties:
+            dimensions:
+              type: object
+              properties:
+                items:
+                  type: array
+                  maxItems: 5000
+                  items:
+                    type: string
+                    maxLength: 255
+            metrics:
+              type: object
+              properties:
+                items:
+                  type: array
+                  maxItems: 5000
+                  items:
+                    type: string
+                    maxLength: 255
+        errors:
+          type: array
+          maxItems: 100
+          items:
+            type: string
+            maxLength: 2000
+          description: Error messages from the compatibility check.
     DatasourceOption:
       type: object
       properties:
@@ -9919,6 +9985,119 @@ paths:
             - default
       tags:
         - Datasources
+  /v1/teams/{team_id}/datasource/{data_source_id}/fields-compatibility:
+    servers:
+      - url: https://api.supermetrics.com
+        description: production server
+        x-internal: false
+    post:
+      summary: Check field compatibility for a data source
+      description: Checks if given fields are compatible and returns structured conflict details when incompatible, including which specific fields conflict and why.
+      operationId: checkTeamScopedFieldsCompatibility
+      parameters:
+        - name: team_id
+          in: path
+          required: true
+          description: Team ID
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            maximum: 9223372036854776000
+        - name: data_source_id
+          in: path
+          required: true
+          description: Data source identifier
+          schema:
+            type: string
+            maxLength: 100
+      requestBody:
+        required: true
+        description: Fields and query context to evaluate for compatibility.
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fields
+              properties:
+                product_id:
+                  type: string
+                  enum:
+                    - none
+                    - sheets
+                    - api
+                    - ds
+                    - dwh_bq
+                  description: Product context (e.g. api, dwh_bq). Defaults to none.
+                report_type:
+                  type: string
+                  maxLength: 64
+                  description: Report type ID. Required if the connector has a report type selector.
+                start_date:
+                  type: string
+                  format: date
+                  maxLength: 10
+                  description: Start date for date-dependent field availability.
+                end_date:
+                  type: string
+                  format: date
+                  maxLength: 10
+                  description: End date for date-dependent field availability.
+                timezone:
+                  type: string
+                  maxLength: 64
+                  description: Timezone for date interpretation (±HH:MM).
+                fields:
+                  type: array
+                  minItems: 2
+                  maxItems: 200
+                  description: Field IDs to check compatibility for
+                  items:
+                    type: string
+                    maxLength: 255
+                filters:
+                  type: array
+                  maxItems: 50
+                  description: Filters to apply to the compatibility check.
+                  items:
+                    type: string
+                    maxLength: 255
+                data_source_account_id:
+                  type: string
+                  maxLength: 128
+                  description: Account ID for account-specific custom fields.
+                data_source_user_name:
+                  type: string
+                  maxLength: 128
+                  description: Data source user name for account-specific fields.
+            example:
+              product_id: api
+              fields:
+                - BidModifier
+                - SearchClickShare
+      responses:
+        '200':
+          description: Fields compatibility check completed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldsCompatibilityEnhancedOutput'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - ApiKeyAuth:
+            - default
+      tags:
+        - Datasources
   /v1/teams/{team_id}/connector_builder/connectors:
     servers:
       - url: https://api.supermetrics.com
@@ -10916,8 +11095,13 @@ paths:
 
         **What happens when you cancel:**
         - Backfill status is changed to "CANCELLED"
-        - All pending/queued transfer runs associated with this backfill are cancelled
-        - Transfer runs that are already running will complete
+        - Transfer runs that have not started are cancelled. This covers runs in `CREATED`,
+          `SCHEDULED` and `QUEUED` state. Cancellation is asynchronous: some runs may still show
+          their previous state in the response and are cancelled within about 15 minutes
+        - Transfer runs that are already running or finishing are **not** cancelled and will complete.
+          Stopping a run half-way could leave the destination with some tables updated and others not
+        - If a queued run's task cannot be stopped, that run keeps its current state instead of being
+          marked cancelled. A queued run whose task has already expired is marked cancelled
         - The backfill's `end_time` is set to the cancellation time
         - The `removed_time` and `removed_user_id` fields are set
 
@@ -10930,7 +11114,7 @@ paths:
         **Important Notes:**
         - The backfill must exist and belong to your team
         - You must have `dwh.transfer.edit` permission
-        - Only backfills with incomplete status (CREATED, SCHEDULED, RUNNING, FAILED) can be cancelled
+        - Only backfills with incomplete status (CREATED, SCHEDULED, RUNNING) can be cancelled
         - Returns 404 if the backfill does not exist or does not belong to your team
         - Returns 422 if the backfill cannot be updated (e.g., already in a final state)
       operationId: updateBackfillStatus
@@ -11102,6 +11286,27 @@ paths:
           schema:
             type: string
             maxLength: 255
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of destinations to return. When omitted, all destinations are returned (backward compatible). Capped at 2000.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 2000
+        - name: offset
+          in: query
+          required: false
+          description: Number of destinations to skip before returning results. Only applies when limit is also provided. When omitted, defaults to 0.
+          schema:
+            type: integer
+            minimum: 0
+        - name: include_total_count
+          in: query
+          required: false
+          description: When true, include total count in the pagination object. Requires an additional COUNT query. Omit for better performance when total is not needed — use `has_more` and `next_offset` for efficient pagination.
+          schema:
+            type: boolean
       responses:
         '200':
           description: Destinations retrieved successfully
@@ -11111,11 +11316,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DestinationListResponse'
+                allOf:
+                  - $ref: '#/components/schemas/DestinationListResponse'
+                  - type: object
+                    properties:
+                      pagination:
+                        type: object
+                        description: Pagination metadata. Always present. When no pagination params are provided, has_more is false and other fields are null (backward compatible).
+                        required:
+                          - has_more
+                        properties:
+                          has_more:
+                            type: boolean
+                            description: Whether more items exist beyond this page.
+                          next_offset:
+                            type: integer
+                            nullable: true
+                            description: Offset to use for the next page. Null when has_more is false.
+                          limit:
+                            type: integer
+                            nullable: true
+                            description: The limit that was applied. Null when no limit was requested.
+                          total:
+                            type: integer
+                            nullable: true
+                            description: Total number of items matching the query. Only present when include_total_count=true.
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
         '500':
@@ -12103,7 +12334,22 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TransferConfigurationRequest'
+              allOf:
+                - $ref: '#/components/schemas/TransferConfigurationRequest'
+                - type: object
+                  properties:
+                    accounts:
+                      maxItems: 5000
+                    segments:
+                      maxItems: 50
+                    schedule:
+                      maxItems: 1
+                    data_source_settings:
+                      maxItems: 100
+                    subscriptions:
+                      maxItems: 50
+                    notification_recipients:
+                      maxItems: 50
       responses:
         '201':
           description: Transfer created successfully
@@ -12150,6 +12396,27 @@ paths:
         - Data Transfers
       parameters:
         - $ref: '#/components/parameters/TeamId'
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of transfers to return. When omitted, all transfers are returned (backward compatible). Capped at 5000.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5000
+        - name: offset
+          in: query
+          required: false
+          description: Number of transfers to skip before returning results. Only applies when limit is also provided. When omitted, defaults to 0.
+          schema:
+            type: integer
+            minimum: 0
+        - name: include_total_count
+          in: query
+          required: false
+          description: When true, include total count in the pagination object. Requires an additional COUNT query. Omit for better performance when total is not needed — use `has_more` and `next_offset` for efficient pagination.
+          schema:
+            type: boolean
       responses:
         '200':
           description: Transfers retrieved successfully
@@ -12159,7 +12426,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TransferListResponse'
+                allOf:
+                  - $ref: '#/components/schemas/TransferListResponse'
+                  - type: object
+                    properties:
+                      pagination:
+                        type: object
+                        description: Pagination metadata. Always present. When no pagination params are provided, has_more is false and other fields are null (backward compatible).
+                        required:
+                          - has_more
+                        properties:
+                          has_more:
+                            type: boolean
+                            description: Whether more items exist beyond this page.
+                          next_offset:
+                            type: integer
+                            nullable: true
+                            description: Offset to use for the next page. Null when has_more is false.
+                          limit:
+                            type: integer
+                            nullable: true
+                            description: The limit that was applied. Null when no limit was requested.
+                          total:
+                            type: integer
+                            nullable: true
+                            description: Total number of items matching the query. Only present when include_total_count=true.
               example:
                 meta:
                   request_id: 019461A0-0000-7000-8000-000000000000
@@ -12176,10 +12467,17 @@ paths:
                     accounts: []
                     account_details: []
                     backfill: null
+                pagination:
+                  has_more: true
+                  next_offset: 10
+                  limit: 10
+                  total: null
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '429':
           $ref: '#/components/responses/TooManyRequests'
         '500':
@@ -12223,7 +12521,22 @@ paths:
                   maxItems: 100
                   description: Array of transfer configurations, each using the same schema as the single-create endpoint
                   items:
-                    $ref: '#/components/schemas/TransferConfigurationRequest'
+                    allOf:
+                      - $ref: '#/components/schemas/TransferConfigurationRequest'
+                      - type: object
+                        properties:
+                          accounts:
+                            maxItems: 5000
+                          segments:
+                            maxItems: 50
+                          schedule:
+                            maxItems: 1
+                          data_source_settings:
+                            maxItems: 100
+                          subscriptions:
+                            maxItems: 50
+                          notification_recipients:
+                            maxItems: 50
       responses:
         '200':
           description: Batch processed
@@ -12404,7 +12717,22 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TransferConfigurationRequest'
+              allOf:
+                - $ref: '#/components/schemas/TransferConfigurationRequest'
+                - type: object
+                  properties:
+                    accounts:
+                      maxItems: 5000
+                    segments:
+                      maxItems: 50
+                    schedule:
+                      maxItems: 1
+                    data_source_settings:
+                      maxItems: 100
+                    subscriptions:
+                      maxItems: 50
+                    notification_recipients:
+                      maxItems: 50
       responses:
         '200':
           description: Transfer updated successfully
@@ -12544,7 +12872,7 @@ paths:
                   example: 8
                 accounts:
                   type: array
-                  maxItems: 1000
+                  maxItems: 5000
                   description: Data source accounts (replaces source accounts entirely)
                   items:
                     type: object
@@ -12566,7 +12894,7 @@ paths:
                         maxLength: 100
                 segments:
                   type: array
-                  maxItems: 100
+                  maxItems: 50
                   description: Data segments (replaces source segments entirely)
                   items:
                     type: object
@@ -12585,7 +12913,7 @@ paths:
                         maxLength: 255
                 schedule:
                   type: array
-                  maxItems: 10
+                  maxItems: 1
                   description: Transfer execution schedule (replaces source schedule entirely)
                   items:
                     type: object
@@ -12865,7 +13193,22 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TransferConfigurationRequest'
+              allOf:
+                - $ref: '#/components/schemas/TransferConfigurationRequest'
+                - type: object
+                  properties:
+                    accounts:
+                      maxItems: 5000
+                    segments:
+                      maxItems: 50
+                    schedule:
+                      maxItems: 1
+                    data_source_settings:
+                      maxItems: 100
+                    subscriptions:
+                      maxItems: 50
+                    notification_recipients:
+                      maxItems: 50
       responses:
         '200':
           description: Validation completed
@@ -12921,7 +13264,22 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TransferConfigurationRequest'
+              allOf:
+                - $ref: '#/components/schemas/TransferConfigurationRequest'
+                - type: object
+                  properties:
+                    accounts:
+                      maxItems: 5000
+                    segments:
+                      maxItems: 50
+                    schedule:
+                      maxItems: 1
+                    data_source_settings:
+                      maxItems: 100
+                    subscriptions:
+                      maxItems: 50
+                    notification_recipients:
+                      maxItems: 50
       responses:
         '200':
           description: Validation completed
