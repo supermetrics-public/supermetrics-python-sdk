@@ -34,6 +34,8 @@ tags:
     description: Retrieve API usage rollups — timeseries, top breakdowns, errors, and summary
   - name: Raw Usage Data Export
     description: Endpoints for creating and retrieving a team's raw usage reposts.
+  - name: Campaign Management
+    description: Create, update, and manage advertising campaigns, audiences, conversions, keywords, and related assets
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -853,6 +855,24 @@ components:
           $ref: '#/components/schemas/Meta'
       required:
         - meta
+    DestinationLogoItem:
+      type: object
+      description: A single provider logo for a multi-logo destination.
+      properties:
+        name:
+          type: string
+          maxLength: 255
+          description: Provider name.
+          example: Claude
+        url:
+          type: string
+          maxLength: 500
+          format: uri
+          description: Provider logo URL.
+          example: https://assets.supermetrics.com/logos/claude.png
+      required:
+        - name
+        - url
     DestinationSearchItem:
       type: object
       description: A single destination returned by a search.
@@ -883,6 +903,12 @@ components:
           format: uri
           description: Destination logo URL.
           example: https://assets.supermetrics.com/logos/gawa.png
+        logo_urls:
+          type: array
+          description: Ordered list of provider logos for multi-logo destinations. Omitted when the destination has a single logo.
+          maxItems: 10
+          items:
+            $ref: '#/components/schemas/DestinationLogoItem'
     DestinationSearchData:
       type: object
       description: Container for the destination search result list.
@@ -1388,6 +1414,91 @@ components:
           nullable: true
           description: URL of the last page, or null when not applicable.
           example: null
+    ReleaseNotesResponse:
+      type: object
+      properties:
+        meta:
+          type: object
+        data:
+          $ref: '#/components/schemas/ReleaseNotes'
+    ReleaseNotes:
+      type: object
+      required:
+        - entries
+        - total
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReleaseNote'
+        total:
+          type: integer
+          description: Notes matching the filters before limit is applied.
+    ReleaseNote:
+      type: object
+      required:
+        - id
+        - date
+        - type
+        - significance
+        - connectors
+        - body
+      properties:
+        id:
+          type: string
+          description: Stable identifier, the fragment name without extension.
+          example: 2026-10-02-aw-keyword-ideas-language
+        date:
+          type: string
+          format: date
+        type:
+          type: string
+          enum:
+            - added
+            - changed
+            - fixed
+            - removed
+        significance:
+          type: string
+          enum:
+            - patch
+            - minor
+            - major
+          description: '`major` marks a breaking change to the Campaign Management API.'
+        connectors:
+          type: array
+          items:
+            type: string
+          description: Data source codes the change is limited to; empty when it applies to every data source.
+        body:
+          type: string
+          description: The entry in Markdown.
+    BadRequestError:
+      type: object
+      properties:
+        message:
+          type: string
+          maxLength: 255
+          pattern: ^.+$
+          description: Bad request error
+        code:
+          type: string
+          enum:
+            - BAD_REQUEST
+          description: BAD_REQUEST
+    UnprocessableEntityError:
+      type: object
+      properties:
+        message:
+          type: string
+          maxLength: 255
+          pattern: ^.+$
+          description: Validation failed for the request parameters
+        code:
+          type: string
+          enum:
+            - UNPROCESSABLE_ENTITY
+          description: UNPROCESSABLE_ENTITY
   headers:
     X-RateLimit-Limit:
       description: Request limit per hour
@@ -1904,11 +2015,20 @@ paths:
             example: 0
       responses:
         '200':
-          description: Query executed successfully
+          description: |
+            Query executed successfully, or — when `sync_timeout` elapses before the query
+            finishes — the schedule handle needed to poll `/query/status`.
+
+            Branch on `meta.status_code`, never on the HTTP status. An unfinished query
+            also answers 2xx, with `data: []` and `meta.status_code: RUNNING`; teams
+            carrying the `getQueryTimeoutHttpAs202` feature receive 202 rather than 200 in
+            that case. Only `meta.status_code: SUCCESS` means the rows are present.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DataResponse'
+                oneOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - $ref: '#/components/schemas/QueryStatusResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1977,11 +2097,20 @@ paths:
               fields: date,sessions
       responses:
         '200':
-          description: Query executed successfully
+          description: |
+            Query executed successfully, or — when `sync_timeout` elapses before the query
+            finishes — the schedule handle needed to poll `/query/status`.
+
+            Branch on `meta.status_code`, never on the HTTP status. An unfinished query
+            also answers 2xx, with `data: []` and `meta.status_code: RUNNING`; teams
+            carrying the `getQueryTimeoutHttpAs202` feature receive 202 rather than 200 in
+            that case. Only `meta.status_code: SUCCESS` means the rows are present.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DataResponse'
+                oneOf:
+                  - $ref: '#/components/schemas/DataResponse'
+                  - $ref: '#/components/schemas/QueryStatusResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3235,3 +3364,1340 @@ paths:
             - usage_export_read
       tags:
         - Raw Usage Data Export
+  /campaigns:
+    servers:
+      - url: https://api.supermetrics.com
+        description: Production server
+    get:
+      summary: List Campaigns
+      description: List campaigns for an account
+      operationId: listCampaigns
+      tags:
+        - Campaign Management
+      parameters:
+        - name: ds_id
+          in: query
+          required: true
+          description: Data source code
+          schema:
+            type: string
+        - name: account_id
+          in: query
+          required: true
+          description: Platform ad account ID
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          description: 'Filter by status: ENABLED, PAUSED, or REMOVED'
+          schema:
+            type: string
+        - name: max_rows
+          in: query
+          required: false
+          description: Max results (default 50)
+          schema:
+            type: integer
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: |
+            List of campaigns.
+
+            Each result may carry `derived_fields`: a list naming response fields whose value
+            SuperAPI synthesised rather than read from the platform (currently `start_date` /
+            `end_date` on meta_ads, filled in from the ad sets when the campaign carries none of
+            its own). Absent when nothing was synthesised. A value named there can change when the
+            ad-set composition changes, without anyone writing to the campaign.
+
+            Each result may carry `account_currency`: the connected ad account's ISO 4217 currency,
+            which monetary values in the result are denominated in. Absent when it could not be
+            resolved.
+  /campaign:
+    servers:
+      - url: https://api.supermetrics.com
+        description: Production server
+    post:
+      summary: Create Campaign
+      description: Create a new advertising campaign
+      operationId: createCampaign
+      tags:
+        - Campaign Management
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - ds_id
+                - account_id
+                - name
+              properties:
+                ds_id:
+                  type: string
+                  description: Data source code (e.g. AW, FA)
+                account_id:
+                  type: string
+                  description: Platform ad account ID
+                name:
+                  type: string
+                  description: Campaign name
+                status:
+                  type: string
+                  description: 'Campaign status: ENABLED or PAUSED (default: PAUSED)'
+                budget_amount:
+                  type: number
+                  description: Budget amount in account currency
+                budget_type:
+                  type: string
+                  description: 'Budget type: DAILY or LIFETIME'
+                start_date:
+                  type: string
+                  description: Start date (YYYY-MM-DD) or datetime (YYYY-MM-DDThh:mm:ss)
+                end_date:
+                  type: string
+                  description: End date (YYYY-MM-DD) or datetime (YYYY-MM-DDThh:mm:ss)
+                targeting:
+                  type: object
+                  description: Campaign-level targeting defaults (locations, age, genders, languages, platforms, devices, location_details for sub-country geo targeting, etc.)
+                extensions:
+                  type: object
+                  description: Ad extensions (sitelinks, callouts, structured_snippets, images, calls, locations, promotions, lead_forms)
+                bidding_strategy:
+                  type: string
+                  description: 'Bidding strategy. AW: MANUAL_CPC, MAXIMIZE_CLICKS, MAXIMIZE_CONVERSIONS, TARGET_CPA, MAXIMIZE_CONVERSION_VALUE, TARGET_ROAS. AC: MAX_CLICKS, MAX_CONVERSIONS, MANUAL_CPC, ENHANCED_CPC, TARGET_CPA, TARGET_ROAS. FA: LOWEST_COST_WITHOUT_CAP, LOWEST_COST_WITH_BID_CAP, COST_CAP, TARGET_ROAS. For TARGET_ROAS set the target via platform_settings.bidding_config.target_roas (float multiplier e.g. 3.5 = 350%)'
+                platform_settings:
+                  type: object
+                  description: 'Platform-specific campaign settings. Includes bidding_config: {target_roas (float, e.g. 3.5), target_cpa (float in account currency, e.g. 5.0), target_spend_cpc_bid_ceiling (AW MAXIMIZE_CLICKS max CPC, account currency)}'
+                ad_groups:
+                  type: array
+                  description: Array of ad groups with optional ads. Omit for platform defaults.
+                  items:
+                    type: object
+                url_tags:
+                  type: string
+                  description: URL suffix / tracking parameters appended to all final URLs (e.g. utm_source=google&utm_medium=cpc)
+                contains_eu_political_ads:
+                  type: boolean
+                  nullable: true
+                  description: 'AW only: the advertiser''s declaration of whether this campaign contains EU political advertising, which Google requires on every campaign. Set false unless the campaign runs political ads targeting the EU. If omitted or null, false is declared and the response says so.'
+      security:
+        - ApiKeyAuth:
+            - ds_platform_write
+      responses:
+        '200':
+          description: |
+            Request accepted. The campaign exists, but ad sets or ads within it may have
+            been refused — check `write_status` (applied / partial_failure / failed) and
+            the `failures` array.
+
+            Each result may carry `derived_fields`: a list naming response fields whose value
+            SuperAPI synthesised rather than read from the platform (currently `start_date` /
+            `end_date` on meta_ads, filled in from the ad sets when the campaign carries none of
+            its own). Absent when nothing was synthesised. A value named there can change when the
+            ad-set composition changes, without anyone writing to the campaign.
+
+            Each result may carry `account_currency`: the connected ad account's ISO 4217 currency,
+            which monetary values in the result are denominated in. Absent when it could not be
+            resolved.
+  /campaign/{campaign_id}:
+    servers:
+      - url: https://api.supermetrics.com
+        description: Production server
+    get:
+      summary: Get Campaign
+      description: Get a single campaign with its hierarchy
+      operationId: getCampaign
+      tags:
+        - Campaign Management
+      parameters:
+        - name: campaign_id
+          in: path
+          required: true
+          description: Platform campaign ID
+          schema:
+            type: string
+        - name: ds_id
+          in: query
+          required: true
+          description: Data source code
+          schema:
+            type: string
+        - name: account_id
+          in: query
+          required: true
+          description: Platform ad account ID
+          schema:
+            type: string
+        - name: detail_level
+          in: query
+          required: false
+          description: 'Level of detail in response: full (default), campaign (campaign-level only), ad_group (ad group level, ads summarized)'
+          schema:
+            type: string
+            enum:
+              - full
+              - campaign
+              - ad_group
+            default: full
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: |
+            Campaign details.
+
+            Each result may carry `derived_fields`: a list naming response fields whose value
+            SuperAPI synthesised rather than read from the platform (currently `start_date` /
+            `end_date` on meta_ads, filled in from the ad sets when the campaign carries none of
+            its own). Absent when nothing was synthesised. A value named there can change when the
+            ad-set composition changes, without anyone writing to the campaign.
+
+            Each result may carry `account_currency`: the connected ad account's ISO 4217 currency,
+            which monetary values in the result are denominated in. Absent when it could not be
+            resolved.
+    patch:
+      summary: Update Campaign
+      description: Update an existing campaign
+      operationId: updateCampaign
+      tags:
+        - Campaign Management
+      parameters:
+        - name: campaign_id
+          in: path
+          required: true
+          description: Platform campaign ID to update
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - ds_id
+                - account_id
+              properties:
+                ds_id:
+                  type: string
+                  description: Data source code
+                account_id:
+                  type: string
+                  description: Platform ad account ID
+                name:
+                  type: string
+                  description: New campaign name
+                budget_amount:
+                  type: number
+                  description: New budget amount
+                budget_type:
+                  type: string
+                  description: New budget type
+                start_date:
+                  type: string
+                  description: New start date (YYYY-MM-DD) or datetime (YYYY-MM-DDThh:mm:ss)
+                end_date:
+                  type: string
+                  description: New end date (YYYY-MM-DD) or datetime (YYYY-MM-DDThh:mm:ss)
+                targeting:
+                  type: object
+                  description: Campaign-level targeting defaults (locations, age, genders, languages, platforms, devices, location_details for sub-country geo targeting, etc.)
+                extensions:
+                  type: object
+                  description: Ad extensions (sitelinks, callouts, structured_snippets, images, calls, locations, promotions, lead_forms)
+                platform_settings:
+                  type: object
+                  description: 'Platform-specific settings to update. Includes bidding_config: {target_roas (float, e.g. 3.5), target_cpa (float in account currency, e.g. 5.0), target_spend_cpc_bid_ceiling (AW MAXIMIZE_CLICKS max CPC, account currency)}. AW: re-stating a campaign-level bidding_strategy without its value keeps the current value; on a portfolio campaign, naming a different strategy switches it to campaign-level'
+                status:
+                  type: string
+                  description: 'New status: ENABLED, PAUSED, or REMOVED'
+                bidding_strategy:
+                  type: string
+                  description: 'New bidding strategy. AW: MANUAL_CPC, MAXIMIZE_CLICKS, MAXIMIZE_CONVERSIONS, TARGET_CPA, MAXIMIZE_CONVERSION_VALUE, TARGET_ROAS. AC: MAX_CLICKS, MAX_CONVERSIONS, MANUAL_CPC, ENHANCED_CPC, TARGET_CPA, TARGET_ROAS. FA: LOWEST_COST_WITHOUT_CAP, LOWEST_COST_WITH_BID_CAP, COST_CAP, TARGET_ROAS. For TARGET_ROAS set the target via platform_settings.bidding_config.target_roas (float multiplier e.g. 3.5 = 350%)'
+                ad_groups:
+                  type: array
+                  description: Ad groups to create under the campaign
+                  items:
+                    type: object
+                remove_ad_ids:
+                  type: array
+                  description: Ad IDs to remove from the campaign
+                  items:
+                    type: string
+                remove_ad_group_ids:
+                  type: array
+                  description: Ad group IDs to remove from the campaign
+                  items:
+                    type: string
+                url_tags:
+                  type: string
+                  nullable: true
+                  description: URL suffix / tracking parameters appended to all final URLs (e.g. utm_source=google&utm_medium=cpc). Omit or send null to keep the current value; an empty string clears it where the platform supports it (AW).
+                contains_eu_political_ads:
+                  type: boolean
+                  nullable: true
+                  description: 'AW only: the advertiser''s declaration of whether this campaign contains EU political advertising. Used when changing location targeting on a campaign that has not declared it yet; if omitted or null there, false is declared and the response says so. Ignored once the campaign already carries a declaration.'
+      security:
+        - ApiKeyAuth:
+            - ds_platform_write
+      responses:
+        '200':
+          description: |
+            Request accepted. A 200 does not mean everything was applied — check
+            `write_status` (applied / partial_failure / failed) and the `failures`
+            array, which lists each requested change the platform refused.
+
+            Each result may carry `derived_fields`: a list naming response fields whose value
+            SuperAPI synthesised rather than read from the platform (currently `start_date` /
+            `end_date` on meta_ads, filled in from the ad sets when the campaign carries none of
+            its own). Absent when nothing was synthesised. A value named there can change when the
+            ad-set composition changes, without anyone writing to the campaign.
+
+            Each result may carry `account_currency`: the connected ad account's ISO 4217 currency,
+            which monetary values in the result are denominated in. Absent when it could not be
+            resolved.
+  /campaign/{campaign_id}/status:
+    servers:
+      - url: https://api.supermetrics.com
+        description: Production server
+    patch:
+      summary: Update Campaign Status
+      description: Change campaign status (pause/resume/enable)
+      operationId: updateCampaignStatus
+      tags:
+        - Campaign Management
+      parameters:
+        - name: campaign_id
+          in: path
+          required: true
+          description: Campaign ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - ds_id
+                - account_id
+                - status
+              properties:
+                ds_id:
+                  type: string
+                  description: Data source code
+                account_id:
+                  type: string
+                  description: Platform ad account ID
+                status:
+                  type: string
+                  description: 'New status: ENABLED or PAUSED'
+      security:
+        - ApiKeyAuth:
+            - ds_platform_write
+      responses:
+        '200':
+          description: |
+            Status updated successfully.
+
+            Each result may carry `account_currency`: the connected ad account's ISO 4217 currency,
+            which monetary values in the result are denominated in. Absent when it could not be
+            resolved.
+  /campaign/confirm:
+    servers:
+      - url: https://api.supermetrics.com
+        description: Production server
+    post:
+      summary: Confirm Campaign Change
+      description: Apply a campaign change that was staged for verification
+      operationId: confirmCampaignChange
+      tags:
+        - Campaign Management
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - verification_token
+              properties:
+                verification_token:
+                  type: string
+                  description: Single-use token returned in a verification_required response
+      security:
+        - ApiKeyAuth:
+            - ds_platform_write
+      responses:
+        '200':
+          description: |
+            Change applied.
+
+            Each result may carry `account_currency`: the connected ad account's ISO 4217 currency,
+            which monetary values in the result are denominated in. Absent when it could not be
+            resolved.
+  /campaign/history:
+    servers:
+      - url: https://api.supermetrics.com
+        description: Production server
+    get:
+      summary: Campaign History
+      description: List change history for campaigns
+      operationId: listCampaignHistory
+      tags:
+        - Campaign Management
+      parameters:
+        - name: ds_id
+          in: query
+          required: true
+          description: Data source code (AW or FA)
+          schema:
+            type: string
+        - name: account_id
+          in: query
+          required: true
+          description: Platform ad account ID
+          schema:
+            type: string
+        - name: campaign_id
+          in: query
+          required: false
+          description: Filter to specific campaign
+          schema:
+            type: string
+        - name: max_rows
+          in: query
+          required: false
+          description: Max results (default 20)
+          schema:
+            type: integer
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Campaign history records
+  /campaign/assets:
+    servers:
+      - url: https://api.supermetrics.com
+        description: Production server
+    get:
+      summary: List Campaign Assets
+      description: List available ad assets for an account
+      operationId: listCampaignAssets
+      tags:
+        - Campaign Management
+      parameters:
+        - name: ds_id
+          in: query
+          required: true
+          description: Data source code (e.g. AW, FA)
+          schema:
+            type: string
+        - name: account_id
+          in: query
+          required: true
+          description: Platform ad account ID
+          schema:
+            type: string
+        - name: type
+          in: query
+          required: false
+          description: 'Asset type to list: image, video, page (FA only), post (FA only), spark_ads (TIK only), identity (TIK only). Default: image'
+          schema:
+            type: string
+        - name: page_id
+          in: query
+          required: false
+          description: Facebook Page ID for listing posts (type=post). If omitted, posts from the first available page are returned.
+          schema:
+            type: string
+        - name: max_rows
+          in: query
+          required: false
+          description: Max results (default 50)
+          schema:
+            type: integer
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: List of available assets
+  /campaign/audiences:
+    servers:
+      - url: https://api.supermetrics.com
+        description: Production server
+    get:
+      summary: List Campaign Audiences
+      description: List available audiences for targeting
+      operationId: listCampaignAudiences
+      tags:
+        - Campaign Management
+      parameters:
+        - name: ds_id
+          in: query
+          required: true
+          description: Data source code (e.g. AW, FA)
+          schema:
+            type: string
+        - name: account_id
+          in: query
+          required: true
+          description: Platform ad account ID
+          schema:
+            type: string
+        - name: type
+          in: query
+          required: false
+          description: 'Filter by type: remarketing, interest, custom, lookalike, saved'
+          schema:
+            type: string
+        - name: max_rows
+          in: query
+          required: false
+          description: 'Accepted but ignored: all audiences are returned. Previously truncated the list, which discarded the writable rows.'
+          schema:
+            type: integer
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: List of available audiences
+  /campaign/audience:
+    servers:
+      - url: https://api.supermetrics.com
+        description: Production server
+    post:
+      summary: Create Campaign Audience
+      description: Create a new audience for targeting
+      operationId: createCampaignAudience
+      tags:
+        - Campaign Management
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - ds_id
+                - account_id
+                - name
+              properties:
+                ds_id:
+                  type: string
+                  description: Data source code (e.g. AW, FA)
+                account_id:
+                  type: string
+                  description: Platform ad account ID
+                name:
+                  type: string
+                  description: Audience name
+                type:
+                  type: string
+                  description: Audience type (e.g. RULE_BASED, CUSTOM, or AUDIENCE to build a Google Ads Audience resource from user_lists/custom_audiences/demographics)
+                params:
+                  type: object
+                  description: Platform-specific audience parameters (e.g. url_contains, membership_days, rule)
+      security:
+        - ApiKeyAuth:
+            - ds_platform_write
+      responses:
+        '200':
+          description: Audience created successfully
+  /campaign/conversions:
+    servers:
+      - url: https://api.supermetrics.com
+        description: Production server
+    get:
+      summary: List Campaign Conversions
+      description: List available conversion actions
+      operationId: listCampaignConversions
+      tags:
+        - Campaign Management
+      parameters:
+        - name: ds_id
+          in: query
+          required: true
+          description: Data source code (e.g. AW, FA)
+          schema:
+            type: string
+        - name: account_id
+          in: query
+          required: true
+          description: Platform ad account ID
+          schema:
+            type: string
+        - name: max_rows
+          in: query
+          required: false
+          description: Max results (default 50)
+          schema:
+            type: integer
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: List of available conversion actions
+  /campaign/conversion:
+    servers:
+      - url: https://api.supermetrics.com
+        description: Production server
+    post:
+      summary: Create Campaign Conversion
+      description: Create a new conversion action
+      operationId: createCampaignConversion
+      tags:
+        - Campaign Management
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - ds_id
+                - account_id
+                - name
+              properties:
+                ds_id:
+                  type: string
+                  description: Data source code (e.g. AW, FA)
+                account_id:
+                  type: string
+                  description: Platform ad account ID
+                name:
+                  type: string
+                  description: Conversion action name
+                type:
+                  type: string
+                  description: Conversion type (e.g. WEBPAGE, UPLOAD)
+                params:
+                  type: object
+                  description: Platform-specific conversion parameters (e.g. category, counting, value)
+      security:
+        - ApiKeyAuth:
+            - ds_platform_write
+      responses:
+        '200':
+          description: Conversion created successfully
+  /campaign/experiments:
+    servers:
+      - url: https://api.supermetrics.com
+        description: Production server
+    get:
+      summary: List Campaign Experiments
+      description: List campaign experiments (A/B tests)
+      operationId: listCampaignExperiments
+      tags:
+        - Campaign Management
+      parameters:
+        - name: ds_id
+          in: query
+          required: true
+          description: Data source code (AW)
+          schema:
+            type: string
+        - name: account_id
+          in: query
+          required: true
+          description: Platform ad account ID
+          schema:
+            type: string
+        - name: max_rows
+          in: query
+          required: false
+          description: Max results (default 50)
+          schema:
+            type: integer
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Campaign experiments
+  /campaign/negative_keyword_lists:
+    servers:
+      - url: https://api.supermetrics.com
+        description: Production server
+    get:
+      summary: List Negative Keyword Lists
+      description: List shared negative keyword lists with their keywords and campaigns
+      operationId: listCampaignNegativeKeywordLists
+      tags:
+        - Campaign Management
+      parameters:
+        - name: ds_id
+          in: query
+          required: true
+          description: Data source code (AW)
+          schema:
+            type: string
+        - name: account_id
+          in: query
+          required: true
+          description: Platform ad account ID
+          schema:
+            type: string
+        - name: max_rows
+          in: query
+          required: false
+          description: Max results (default 50)
+          schema:
+            type: integer
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Shared negative keyword lists
+  /campaign/forecast:
+    servers:
+      - url: https://api.supermetrics.com
+        description: Production server
+    post:
+      summary: Get Performance Forecast
+      description: Get performance forecasts at multiple bid/budget levels
+      operationId: forecastCampaign
+      tags:
+        - Campaign Management
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - ds_id
+                - account_id
+                - bids
+              properties:
+                ds_id:
+                  type: string
+                  description: Data source code (AW, FA)
+                account_id:
+                  type: string
+                  description: Platform ad account ID
+                bids:
+                  type: string
+                  description: Comma-separated bid/budget levels in account currency (max 10)
+                targeting:
+                  type: object
+                  description: 'Targeting: location, language, keywords, match_type (AW), geo_locations, age_min, age_max, genders (FA)'
+                optimization_goal:
+                  type: string
+                  enum:
+                    - REACH
+                    - IMPRESSIONS
+                    - LINK_CLICKS
+                    - LANDING_PAGE_VIEWS
+                    - VIDEO_VIEWS
+                    - THRUPLAY
+                    - POST_ENGAGEMENT
+                    - PAGE_LIKES
+                    - BRAND_AWARENESS
+                    - CONVERSIONS
+                    - APP_INSTALLS
+                  description: 'Optimization goal (default: LINK_CLICKS, FA only)'
+                forecast_start:
+                  type: string
+                  description: Forecast start date YYYY-MM-DD (AW only)
+                forecast_end:
+                  type: string
+                  description: Forecast end date YYYY-MM-DD (AW only)
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Forecast data per bid/budget level
+  /campaign/reach/estimate:
+    servers:
+      - url: https://api.supermetrics.com
+        description: Production server
+    post:
+      summary: Estimate Audience Reach
+      description: Estimate audience reach for targeting criteria
+      operationId: estimateCampaignReach
+      tags:
+        - Campaign Management
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - ds_id
+                - account_id
+                - targeting
+              properties:
+                ds_id:
+                  type: string
+                  description: Data source code (FA only)
+                account_id:
+                  type: string
+                  description: Platform ad account ID
+                targeting:
+                  type: object
+                  description: Targeting criteria (locations, age_min, age_max, genders, languages, interests)
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Reach estimate data
+  /campaign/recommendations:
+    servers:
+      - url: https://api.supermetrics.com
+        description: Production server
+    get:
+      summary: List Campaign Recommendations
+      description: List optimization recommendations for campaigns
+      operationId: listCampaignRecommendations
+      tags:
+        - Campaign Management
+      parameters:
+        - name: ds_id
+          in: query
+          required: true
+          description: Data source code (AW or FA)
+          schema:
+            type: string
+        - name: account_id
+          in: query
+          required: true
+          description: Platform ad account ID
+          schema:
+            type: string
+        - name: campaign_id
+          in: query
+          required: false
+          description: Filter to specific campaign
+          schema:
+            type: string
+        - name: since
+          in: query
+          required: false
+          description: Start date for recommendations (YYYY-MM-DD format, Meta only, defaults to 30 days ago)
+          schema:
+            type: string
+        - name: max_rows
+          in: query
+          required: false
+          description: Max results (default 50)
+          schema:
+            type: integer
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Campaign recommendations
+  /campaign/keyword/ideas:
+    servers:
+      - url: https://api.supermetrics.com
+        description: Production server
+    get:
+      summary: Get Keyword Ideas
+      description: Get keyword suggestions based on a seed keyword or URL
+      operationId: getCampaignKeywordIdeas
+      tags:
+        - Campaign Management
+      parameters:
+        - name: ds_id
+          in: query
+          required: true
+          description: Data source code (only AW supported)
+          schema:
+            type: string
+        - name: account_id
+          in: query
+          required: true
+          description: Platform ad account ID
+          schema:
+            type: string
+        - name: keyword
+          in: query
+          required: false
+          description: Seed keyword to get ideas from
+          schema:
+            type: string
+        - name: url
+          in: query
+          required: false
+          description: URL to extract keyword ideas from
+          schema:
+            type: string
+        - name: language
+          in: query
+          required: false
+          description: 'Language: ISO 639-1 code or English name, e.g. en, fr, English (default: en)'
+          schema:
+            type: string
+        - name: location
+          in: query
+          required: false
+          description: 'Location: ISO country code (AU), country/region/city name (Queensland, Australia) or Google Ads geo target ID (default: US)'
+          schema:
+            type: string
+        - name: max_rows
+          in: query
+          required: false
+          description: 'Max results to return (default: 20)'
+          schema:
+            type: integer
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Keyword suggestions
+  /campaign/keyword/volumes:
+    servers:
+      - url: https://api.supermetrics.com
+        description: Production server
+    get:
+      summary: Get Keyword Volumes
+      description: Get search volume data for a list of keywords
+      operationId: getCampaignKeywordVolumes
+      tags:
+        - Campaign Management
+      parameters:
+        - name: ds_id
+          in: query
+          required: true
+          description: Data source code (AW only)
+          schema:
+            type: string
+        - name: account_id
+          in: query
+          required: true
+          description: Platform ad account ID
+          schema:
+            type: string
+        - name: keywords
+          in: query
+          required: true
+          description: Comma-separated list of keywords or JSON array
+          schema:
+            type: string
+        - name: language
+          in: query
+          required: false
+          description: 'Language: ISO 639-1 code or English name, e.g. en, fr, English (default: en)'
+          schema:
+            type: string
+        - name: location
+          in: query
+          required: false
+          description: 'Location: ISO country code (AU), country/region/city name (Queensland, Australia) or Google Ads geo target ID (default: US)'
+          schema:
+            type: string
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Keyword volume data
+  /campaign/targeting/search:
+    servers:
+      - url: https://api.supermetrics.com
+        description: Production server
+    get:
+      summary: Search Targeting
+      description: Search for targetable audiences by type and query
+      operationId: searchCampaignTargeting
+      tags:
+        - Campaign Management
+      parameters:
+        - name: ds_id
+          in: query
+          required: true
+          description: Data source code
+          schema:
+            type: string
+        - name: account_id
+          in: query
+          required: true
+          description: Platform ad account ID
+          schema:
+            type: string
+        - name: query
+          in: query
+          required: true
+          description: Search query
+          schema:
+            type: string
+        - name: type
+          in: query
+          required: false
+          description: 'Targeting category type (default: interest). Cross-platform: interest (AW/FA/LIA/TIK/SCM), industry (FA/LIA), school (FA/LIA), field_of_study (FA/LIA), employer (FA/LIA), job_title (FA/LIA). Platform-specific: behavior, demographic, life_event, income, family_status (FA); topic (AW); skill, degree, seniority, job_function (LIA); scls, visitation, vac, shopper, shp, nielsen, nln, age_group, gender, language, advanced_demo, os_type, carrier, device_make, connection, metro (SCM). Geo (FA): country, city, region, zip, geo_market, location (all geo types)'
+          schema:
+            type: string
+            enum:
+              - interest
+              - industry
+              - school
+              - field_of_study
+              - employer
+              - job_title
+              - behavior
+              - demographic
+              - life_event
+              - topic
+              - income
+              - family_status
+              - skill
+              - degree
+              - seniority
+              - job_function
+              - education_school
+              - education_major
+              - work_employer
+              - work_position
+              - scls
+              - visitation
+              - vac
+              - shopper
+              - shp
+              - nielsen
+              - nln
+              - age_group
+              - gender
+              - language
+              - advanced_demo
+              - os_type
+              - carrier
+              - device_make
+              - connection
+              - metro
+              - country
+              - city
+              - region
+              - zip
+              - geo_market
+              - location
+        - name: max_rows
+          in: query
+          required: false
+          description: 'Max results (default: 20)'
+          schema:
+            type: integer
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: List of matching targeting options
+  /campaign/image/generate:
+    servers:
+      - url: https://api.supermetrics.com
+        description: Production server
+    post:
+      summary: Generate AI Images
+      description: Generate AI images from a text prompt
+      operationId: generateCampaignImage
+      tags:
+        - Campaign Management
+      parameters:
+        - name: prompt
+          in: query
+          required: true
+          description: Text prompt for AI image generation
+          schema:
+            type: string
+            maxLength: 2000
+        - name: width
+          in: query
+          required: false
+          description: Image width in pixels (default 1200)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 2048
+        - name: height
+          in: query
+          required: false
+          description: Image height in pixels (default 628)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 2048
+        - name: count
+          in: query
+          required: false
+          description: Number of images to generate (default 1, max 4)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 4
+        - name: quality
+          in: query
+          required: false
+          description: 'Image quality: ''quick'' for fast generation (~3s), ''high'' for maximum quality (~10s). Default: high'
+          schema:
+            type: string
+            enum:
+              - quick
+              - high
+            default: high
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Generated images with signed URLs
+  /campaign/data-sources/{ds_id}/write-access-accounts:
+    servers:
+      - url: https://api.supermetrics.com
+        description: Production server
+    get:
+      summary: List Write Access Accounts
+      description: List ad accounts with campaign write access enabled
+      operationId: listCampaignWriteAccessAccounts
+      tags:
+        - Campaign Management
+      parameters:
+        - name: ds_id
+          in: path
+          required: true
+          description: Data source code (e.g. AW, FA)
+          schema:
+            type: string
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: List of accounts with write access
+    post:
+      summary: Enable Campaign Write Access
+      description: Enable campaign write access for an ad account
+      operationId: enableCampaignWriteAccessAccounts
+      tags:
+        - Campaign Management
+      parameters:
+        - name: ds_id
+          in: path
+          required: true
+          description: Data source code (e.g. AW, FA)
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - account_id
+              properties:
+                account_id:
+                  type: string
+                  description: Platform ad account ID
+                verification_level:
+                  type: string
+                  description: 'Approval level before live changes apply: none, budget, enabling, all'
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Write access enabled successfully
+  /campaign/data-sources/{ds_id}/write-access-accounts/{account_id}:
+    servers:
+      - url: https://api.supermetrics.com
+        description: Production server
+    delete:
+      summary: Disable Campaign Write Access
+      description: Disable campaign write access for an ad account
+      operationId: disableCampaignWriteAccessAccount
+      tags:
+        - Campaign Management
+      parameters:
+        - name: ds_id
+          in: path
+          required: true
+          description: Data source code (e.g. AW, FA)
+          schema:
+            type: string
+        - name: account_id
+          in: path
+          required: true
+          description: Platform ad account ID
+          schema:
+            type: string
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Write access disabled successfully
+  /teams/{team_id}/business-context:
+    servers:
+      - url: https://api.supermetrics.com
+        description: Production server
+    get:
+      summary: List Business Contexts
+      description: List business contexts for the team, optionally filtered by data source, account, or tags
+      operationId: getBusinessContext
+      tags:
+        - Campaign Management
+      parameters:
+        - name: team_id
+          in: path
+          required: true
+          description: Team ID
+          schema:
+            type: integer
+        - name: ds_id
+          in: query
+          required: false
+          description: Data source code to filter by (e.g. AW, FA)
+          schema:
+            type: string
+        - name: account_id
+          in: query
+          required: false
+          description: Platform ad account ID to filter by. Requires ds_id
+          schema:
+            type: string
+        - name: tags
+          in: query
+          required: false
+          description: Filter by tags — a record matches if it carries any of the given tags (OR). Values may be comma-joined, so ["a,b"] and ["a","b"] both match records tagged a or b
+          schema:
+            type: string
+      security:
+        - ApiKeyAuth:
+            - business_context_read
+            - any_api_key
+      responses:
+        '200':
+          description: List of business contexts
+    post:
+      summary: Save Business Context
+      description: Create or update business context at team, data source, or account level
+      operationId: saveBusinessContext
+      tags:
+        - Campaign Management
+      parameters:
+        - name: team_id
+          in: path
+          required: true
+          description: Team ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - context_text
+              properties:
+                ds_id:
+                  type: string
+                  description: Data source code (e.g. AW, FA). Omit for team-level context
+                account_id:
+                  type: string
+                  description: Platform ad account ID. Requires ds_id. Omit for team or data-source-level context
+                context_text:
+                  type: string
+                  description: Free-form context text with campaign guidelines and policies
+                tags:
+                  type: string
+                  description: 'JSON array of tags or comma-separated string (e.g. ["budget","targeting"] or "budget,targeting"). Tags identify the record within a scope: a different tag set is stored as a separate record. An individual tag may not contain a comma'
+                mode:
+                  type: string
+                  description: 'Save mode: ''replace'' (default) overwrites the context, ''append'' concatenates new text to it. Tags identify a record within a scope, so a scope can hold several records (one per distinct tag set) and both modes act on the record matching the request''s tags'
+      security:
+        - ApiKeyAuth:
+            - business_context_write
+            - any_api_key
+      responses:
+        '200':
+          description: Business context saved successfully
+    delete:
+      summary: Delete Business Context
+      description: Delete business context at team, data source, or account level
+      operationId: deleteBusinessContext
+      tags:
+        - Campaign Management
+      parameters:
+        - name: team_id
+          in: path
+          required: true
+          description: Team ID
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                ds_id:
+                  type: string
+                  description: Data source code (e.g. AW, FA). Omit to delete team-level context
+                account_id:
+                  type: string
+                  description: Platform ad account ID. Requires ds_id. Omit to delete team or data-source-level context
+                tags:
+                  type: string
+                  description: JSON array of tags or comma-separated string identifying the record to delete at this scope (e.g. ["budget"]). Omit to delete the untagged record at the scope. An individual tag may not contain a comma
+      security:
+        - ApiKeyAuth:
+            - business_context_write
+            - any_api_key
+      responses:
+        '200':
+          description: Business context deleted successfully
+  /campaign/release-notes:
+    servers:
+      - url: https://api.supermetrics.com
+        description: Production server
+    get:
+      summary: List Campaign Management release notes
+      description: List public Campaign Management release notes, newest first
+      operationId: listCampaignReleaseNotes
+      tags:
+        - Campaign Management
+      security: []
+      parameters:
+        - name: ds_id
+          in: query
+          required: false
+          description: Only notes that apply to this data source, plus those that apply to every data source
+          schema:
+            type: string
+            example: AW
+        - name: since
+          in: query
+          required: false
+          description: 'Only notes dated on or after this day, format: YYYY-MM-DD'
+          schema:
+            type: string
+            format: date
+        - name: limit
+          in: query
+          required: false
+          description: Max notes to return (default 50)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+      responses:
+        '200':
+          description: Release notes, newest first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReleaseNotesResponse'
+        '400':
+          description: The data source does not support campaign management.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+        '422':
+          description: A query parameter is malformed or out of range.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnprocessableEntityError'
