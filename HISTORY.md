@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 0.6.0 (2026-10-30)
+## 0.6.0 (2026-11-02)
 
 ### Destinations: batch secret rotation
 
